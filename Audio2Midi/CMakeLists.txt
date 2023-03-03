@@ -1,6 +1,6 @@
 project(Audio2Midi VERSION 0.0.1)
 
-set (BaseTargetName Audio2Midi)
+set(BaseTargetName Audio2Midi)
 
 juce_add_plugin("${BaseTargetName}"
         # VERSION ...                               # Set this if the plugin version is different to the project version
@@ -20,6 +20,9 @@ juce_add_plugin("${BaseTargetName}"
 
 juce_generate_juce_header(${PROJECT_NAME})
 
+file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/ModelData/*.json)
+juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
+
 target_sources(${BaseTargetName} PRIVATE
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
@@ -36,6 +39,8 @@ target_link_libraries(${BaseTargetName} PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp
         RTNeural
+        bin_data
+        PUBLIC
         juce_recommended_config_flags
         juce_recommended_lto_flags
         juce_recommended_warning_flags)

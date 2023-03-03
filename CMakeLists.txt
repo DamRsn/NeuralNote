@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(Audio2MidiPlugin)
 
+# C++ settings
+set(CMAKE_CXX_STANDARD 17)
+enable_language(CXX)
+
 #Compile commands, useful for some IDEs like VS-Code
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
