@@ -1,0 +1,7 @@
+add_subdirectory(NewPluginTemplate)
+add_subdirectory(PluginWithCustomModule)
+add_subdirectory(CustomStandaloneFilter)
+add_subdirectory(MinimalPluginTemplate)
+add_subdirectory(MidiFXTemplate)
+add_subdirectory(MaxParametersPlugin)
+add_subdirectory(DummySynth)

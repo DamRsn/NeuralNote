@@ -1,0 +1,7 @@
+add_subdirectory(ConsoleAppTemplate)
+add_subdirectory(GuiAppTemplate)
+add_subdirectory(CustomModuleTest)
+add_subdirectory(AutomaticBinaryData)
+add_subdirectory(AudioAppTemplate)
+add_subdirectory(SideThreadPaint)
+add_subdirectory(DynamicLibrary)
