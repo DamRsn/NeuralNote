@@ -3,7 +3,6 @@
 SDKs
 
 build
-build-ios
 
 cmake-build-debug
 cmake-build-release
@@ -25,6 +24,3 @@ xcschememanagement.plist
 *.cpb
 Makefile
 
-workspace.xml
-xcuserdata
-/Apps/SerumStandAlone/Builds/MacOSX/RecentFilesMenuTemplate.nib
