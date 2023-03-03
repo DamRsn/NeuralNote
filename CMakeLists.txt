@@ -16,17 +16,10 @@ endif()
 #static linking in Windows
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-# Add JUCE
 add_subdirectory(JUCE)
+
 add_subdirectory(Audio2Midi)
 
-#By default, we are building the provided plugin/app examples:
-option(BUILD_JUCE_PROTOTYPE_EXAMPLES "Build JUCE prototype examples" ON)
-
-#optionally, we're also adding the unit tests:
-option(BUILD_UNIT_TESTS "Build JUCE prototype examples" ON)
-
 if (BUILD_UNIT_TESTS)
-    enable_testing()
     add_subdirectory(Tests)
 endif()
