@@ -23,7 +23,8 @@ juce_generate_juce_header(${PROJECT_NAME})
 target_sources(${BaseTargetName} PRIVATE
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
-        Source/ProcessorBase.cpp)
+        Source/ProcessorBase.cpp
+        Model/BasicPitchCNN.cpp)
 
 target_compile_definitions(${BaseTargetName}
         PUBLIC
@@ -34,6 +35,7 @@ target_compile_definitions(${BaseTargetName}
 target_link_libraries(${BaseTargetName} PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp
+        RTNeural
         juce_recommended_config_flags
         juce_recommended_lto_flags
         juce_recommended_warning_flags)

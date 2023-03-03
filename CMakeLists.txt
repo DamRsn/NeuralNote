@@ -17,7 +17,7 @@ endif()
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_subdirectory(JUCE)
-
+add_subdirectory(RTNeural)
 add_subdirectory(Audio2Midi)
 
 if (BUILD_UNIT_TESTS)
