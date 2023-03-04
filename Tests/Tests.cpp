@@ -25,7 +25,7 @@ int main()
     const float* stacked_cqt_data =
         feature_calculator.computeFeatures(x.data(), num_input_samples, num_out_frames);
 
-    std::cout << num_out_frames << std::endl;
+    auto stop_time_onnx = std::chrono::high_resolution_clock::now();
 
     for (size_t i = 0; i < num_out_frames; i++)
     {
@@ -38,8 +38,13 @@ int main()
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> execution_duration = end_time - start_time;
+    std::chrono::duration<double> execution_duration_onnx = stop_time_onnx - start_time;
+    std::chrono::duration<double> execution_duration_cnn = end_time- stop_time_onnx;
 
-    std::cout << "Execution time: " << execution_duration.count() << " seconds" << std::endl;
+    std::cout << "To process " << num_input_samples / 22050 << " seconds:" << std::endl;
+    std::cout << "Total Execution time: " << execution_duration.count() << " seconds" << std::endl;
+    std::cout << "Execution time Features (ONNX): " << execution_duration_onnx.count() << " seconds" << std::endl;
+    std::cout << "Execution time CNN (RTNeural): " << execution_duration_cnn.count() << " seconds" << std::endl;
 
     std::cout << "Success" << std::endl;
 }
