@@ -20,7 +20,7 @@ public:
 
     int getNumFramesLookahead() const;
 
-    void frameInference(std::vector<float>& inputData,
+    void frameInference(const std::vector<float>& inData,
                         std::vector<float>& outContours,
                         std::vector<float>& outNotes,
                         std::vector<float>& outOnsets);

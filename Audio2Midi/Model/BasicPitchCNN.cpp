@@ -46,12 +46,12 @@ int BasicPitchCNN::getNumFramesLookahead() const
     return 0;
 }
 
-void BasicPitchCNN::frameInference(std::vector<float>& inputData,
+void BasicPitchCNN::frameInference(const std::vector<float>& inData,
                                    std::vector<float>& outContours,
                                    std::vector<float>& outNotes,
                                    std::vector<float>& outOnsets)
 {
-    ignoreUnused(inputData);
+    ignoreUnused(inData);
     ignoreUnused(outContours);
     ignoreUnused(outNotes);
     ignoreUnused(outOnsets);
