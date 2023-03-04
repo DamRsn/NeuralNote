@@ -18,10 +18,6 @@ Features::Features()
 
 }
 
-Features::~Features()
-{
-}
-
 const float* Features::computeFeatures(float* inAudio, size_t inNumSamples, size_t& outNumFrames)
 {
     mInputShape[0] = 1;

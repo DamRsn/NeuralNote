@@ -14,7 +14,7 @@ class Features
 public:
     Features();
 
-    ~Features();
+    ~Features() = default;
 
     const float* computeFeatures(float* inAudio, size_t inNumSamples, size_t& outNumFrames);
 
