@@ -49,7 +49,7 @@ file(GLOB HEADERS_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*/*.h)
 
 target_sources(${BaseTargetName} PRIVATE ${SOURCES_PLUGIN} ${HEADERS_PLUGIN})
 
-file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/ModelData/*.json)
+file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/ModelData/*.json  ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/ModelData/*.onnx)
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 
 target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)

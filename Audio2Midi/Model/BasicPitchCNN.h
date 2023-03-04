@@ -5,6 +5,7 @@
 #ifndef BasicPitchCNN_h
 #define BasicPitchCNN_h
 
+#include "Constants.h"
 #include "RTNeural/RTNeural.h"
 #include "json.hpp"
 #include <JuceHeader.h>
@@ -26,14 +27,15 @@ public:
                         std::vector<float>& outOnsets);
 
 private:
-    static constexpr int NUM_HARMONICS = 8;
-    static constexpr int NUM_FREQ_IN = 264;
-    static constexpr int NUM_FREQ_OUT = 88;
 
     size_t mCurrentFrameIndex = 0;
 
     alignas(RTNEURAL_DEFAULT_ALIGNMENT)
         std::array<float, NUM_FREQ_IN * NUM_HARMONICS> mInputArray;
+
+    std::array< std::array<float, NUM_FREQ_OUT>, 5> mContoursCircularBuffer;
+    std::array< std::array<float, NUM_FREQ_OUT>, 5> mNotesCircularBuffer;
+    std::array< std::array<float, NUM_FREQ_OUT>, 5> mOnsetCircularBuffer;
 
     RTNeural::ModelT<
         float,
