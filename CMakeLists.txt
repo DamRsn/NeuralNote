@@ -15,13 +15,13 @@ option(UniversalBinary "Build universal binary for mac" OFF)
 
 if (UniversalBinary)
     set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
-endif()
+endif ()
 
 #static linking in Windows
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-add_subdirectory(JUCE)
-add_subdirectory(RTNeural)
+add_subdirectory(ThirdParty/JUCE)
+add_subdirectory(ThirdParty/RTNeural)
 
 set(BaseTargetName Audio2Midi)
 
@@ -49,7 +49,7 @@ file(GLOB HEADERS_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*/*.h)
 
 target_sources(${BaseTargetName} PRIVATE ${SOURCES_PLUGIN} ${HEADERS_PLUGIN})
 
-file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/ModelData/*.json  ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/ModelData/*.onnx)
+file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.onnx)
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 
 target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
@@ -64,29 +64,29 @@ target_compile_definitions(${BaseTargetName}
 # Directory containing onnxruntime
 if (APPLE)
     set(ONNXRUNTIME_DIRNAME onnxruntime-osx-universal2-1.14.1)
-elseif(WIN32)
+elseif (WIN32)
     set(ONNXRUNTIME_DIRNAME onnxruntime-win-x64-1.14.1)
-endif()
+endif ()
 
 add_library(onnxruntime SHARED IMPORTED)
 
 if (APPLE)
-    set_property(TARGET onnxruntime PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/lib/libonnxruntime.dylib)
+    set_property(TARGET onnxruntime PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/lib/libonnxruntime.dylib)
 
-elseif(WIN32)
+elseif (WIN32)
     set_property(TARGET onnxruntime APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 
     set_target_properties(onnxruntime PROPERTIES
             IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-            IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_LIST_DIR}/ThirdParty/${ONNXRUNTIME_DIRNAME}/lib/onnxruntime.dll"
-            IMPORTED_IMPLIB_RELEASE "${CMAKE_CURRENT_LIST_DIR}/ThirdParty/${ONNXRUNTIME_DIRNAME}/lib/onnxruntime.lib"
+            IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_LIST_DIR}/ThirdParty/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/lib/onnxruntime.dll"
+            IMPORTED_IMPLIB_RELEASE "${CMAKE_CURRENT_LIST_DIR}/ThirdParty/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/lib/onnxruntime.lib"
             )
     set_target_properties(onnxruntime PROPERTIES
             MAP_IMPORTED_CONFIG_DEBUG Release
             MAP_IMPORTED_CONFIG_MINSIZEREL Release
             MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
             )
-endif()
+endif ()
 
 
 target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
@@ -105,4 +105,4 @@ target_link_libraries(${BaseTargetName}
 
 if (BUILD_UNIT_TESTS)
     add_subdirectory(Tests)
-endif()
+endif ()

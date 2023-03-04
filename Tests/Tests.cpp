@@ -1,21 +1,22 @@
 #include <JuceHeader.h>
-
-template <typename T>
-bool checkMax(T first, T second)
-{
-    return juce::jmax(first, second) == std::max(first, second);
-}
+#include "Features.h"
+#include <vector>
 
 int main()
 {
-    if (checkMax(1, 2))
-    {
-        std::cout << "SUCCESS" << std::endl;
-        return 0;
-    }
-    else
-    {
-        std::cout << "ERROR" << std::endl;
-        return 1;
-    }
+    std::vector<float> x;
+
+    Features feature_calculator;
+    size_t num_input_samples = 100000;
+    x.resize(num_input_samples);
+
+    size_t num_out_frames;
+
+    const float* stacked_cqt_data =
+        feature_calculator.computeFeatures(x.data(), num_input_samples, num_out_frames);
+
+    std::cout << num_out_frames << std::endl;
+
+
+
 }

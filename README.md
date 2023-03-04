@@ -35,4 +35,4 @@ cmake --build .
 ## Get ONNXRuntime dynamic library:
 Download `onnxruntime-osx-universal2-1.14.1` for mac or `onnxruntime-win-x64-1.14.1` for windows [here](https://github.com/microsoft/onnxruntime/releases/tag/v1.14.1)
 
-Unzip it and put it in `ONNXRuntime/`.
+Unzip it and put it in `ThirdParty/ONNXRuntime/`.

@@ -24,4 +24,4 @@ xcschememanagement.plist
 *.cpb
 Makefile
 
-ONNXRuntime/onnxruntime-*
+ThirdParty/ONNXRuntime
