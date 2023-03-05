@@ -64,20 +64,9 @@ void BasicPitchCNN::reset()
     mConcat2Idx = 0;
 
     mInputArray.fill(0.0f);
-
-//    // Run inference for correct initialisation
-//    for (int i = 0; i < 2 * mTotalLookahead + 1; i++)
-//    {
-//        _runModels();
-//
-//        // Increment index for different circular buffers
-//        mContourIdx = (mContourIdx == mNumContourStored - 1) ? 0 : mContourIdx + 1;
-//        mNoteIdx = (mNoteIdx == mNumNoteStored - 1) ? 0 : mNoteIdx + 1;
-//        mConcat2Idx = (mConcat2Idx == mNumConcat2Stored - 1) ? 0 : mConcat2Idx + 1;
-//    }
 }
 
-int BasicPitchCNN::getNumFramesLookahead() const
+int BasicPitchCNN::getNumFramesLookahead()
 {
     return mTotalLookahead;
 }
