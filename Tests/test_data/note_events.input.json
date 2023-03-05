@@ -1,0 +1,10 @@
+{
+  "n_frames": 274,
+  "pitchBend": "single",
+  "onsetThreshold": 0.5,
+  "frameThreshold": 0.3,
+  "minNoteLength": 5,
+  "melodiaTrick": true,
+  "energyThreshold": 11,
+  "inferOnsets": true
+}
