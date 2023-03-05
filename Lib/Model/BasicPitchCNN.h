@@ -27,6 +27,10 @@ public:
                         std::vector<float>& outOnsets);
 
 private:
+    void _runModels();
+
+    void _concat();
+
     static constexpr int _wrapIndex(int inIndex, int inSize);
 
     alignas(RTNEURAL_DEFAULT_ALIGNMENT)
@@ -47,8 +51,7 @@ private:
     static constexpr int mNumConcat2Stored =
         mLookaheadCNNContour + mLookaheadCNNNote - mLookaheadCNNOnsetInput + 1;
 
-    std::array<std::array<float, NUM_FREQ_OUT>, mNumContourStored>
-        mContoursCircularBuffer;
+    std::array<std::array<float, NUM_FREQ_IN>, mNumContourStored> mContoursCircularBuffer;
     std::array<std::array<float, NUM_FREQ_OUT>, mNumNoteStored>
         mNotesCircularBuffer; // Also concat 1
     std::array<std::array<float, 32 * NUM_FREQ_OUT>, mNumConcat2Stored>
