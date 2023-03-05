@@ -64,7 +64,7 @@ void BasicPitchCNN::reset()
     mConcat2Idx = 0;
 }
 
-constexpr int BasicPitchCNN::getNumFramesLookahead()
+int BasicPitchCNN::getNumFramesLookahead() const
 {
     return mTotalLookahead;
 }

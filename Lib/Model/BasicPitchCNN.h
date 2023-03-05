@@ -19,7 +19,7 @@ public:
 
     void reset();
 
-    static constexpr int getNumFramesLookahead();
+    int getNumFramesLookahead() const;
 
     void frameInference(const std::vector<float>& inData,
                         std::vector<float>& outContours,
