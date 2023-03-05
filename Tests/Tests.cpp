@@ -2,6 +2,9 @@
 #include "Features.h"
 #include "BasicPitchCNN.h"
 #include <vector>
+#include "test_utils.h"
+#include "features_test.h"
+#include "full_model_test.h"
 
 #include <chrono>
 
@@ -47,4 +50,7 @@ int main()
     std::cout << "Execution time CNN (RTNeural): " << execution_duration_cnn.count() << " seconds" << std::endl;
 
     std::cout << "Success" << std::endl;
+
+    std::cout << std::endl << "FEATURE TEST" << std::endl;
+    feature_test();
 }

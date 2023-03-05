@@ -138,9 +138,9 @@ void BasicPitchCNN::frameInference(const std::vector<float>& inData,
         outContours.begin());
 
     // Increment index for different circular buffers
-    mContourIdx = (mContourIdx + 1 == mNumContourStored) ? 0 : mContourIdx + 1;
-    mNoteIdx = (mNoteIdx + 1 == mNumNoteStored) ? 0 : mNoteIdx + 1;
-    mConcat2Idx = (mConcat2Idx + 1 == mNumConcat2Stored) ? 0 : mConcat2Idx + 1;
+    mContourIdx = (mContourIdx == mNumContourStored - 1) ? 0 : mContourIdx + 1;
+    mNoteIdx = (mNoteIdx== mNumNoteStored - 1) ? 0 : mNoteIdx + 1;
+    mConcat2Idx = (mConcat2Idx == mNumConcat2Stored - 1) ? 0 : mConcat2Idx + 1;
 }
 
 constexpr int BasicPitchCNN::_wrapIndex(int inIndex, int inSize)

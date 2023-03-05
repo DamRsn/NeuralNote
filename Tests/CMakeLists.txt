@@ -37,5 +37,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         juce_recommended_warning_flags
         )
 
+target_compile_definitions(${PROJECT_NAME}
+        PRIVATE
+        TEST_DATA_DIR="${CMAKE_CURRENT_LIST_DIR}/test_data"
+        )
+
 
 
