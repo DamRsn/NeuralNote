@@ -6,7 +6,7 @@
 #include "features_test.h"
 #include "cnn_test.h"
 #include "perf_test.h"
-
+#include "notes_test.h"
 
 int main()
 {
@@ -20,6 +20,9 @@ int main()
 
     std::cout << std::endl << "PERF TEST" << std::endl;
     result |= !perf_test();
+
+    std::cout << std::endl << "NOTES TEST" << std::endl;
+    result |= !notes_test();
 
     return result;
 }
