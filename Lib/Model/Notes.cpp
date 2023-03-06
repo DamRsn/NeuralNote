@@ -4,13 +4,13 @@
 
 #include "Notes.h"
 
-std::vector<NoteEvent> NotesConverter::convert(
+std::vector<Notes::Event> Notes::convert(
     const std::vector<float>& inNotesPG,
     const std::vector<float>& inOnsetsPG,
     const std::vector<float>& inContoursPG,
-    Params inParams
+    ConvertParams inParams
 )
 {
-    return std::vector<NoteEvent>();
+    return std::vector<Notes::Event>();
 }
 

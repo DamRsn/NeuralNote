@@ -32,11 +32,11 @@ bool notes_test() {
 
     std::ifstream f_input("test_data/note_events.input.json");
     std::ifstream f_expected("test_data/note_events.output.json");
-    auto params = json::parse(f_input).get<NotesConverter::Params>();
-    auto expected = json::parse(f_expected).get<std::vector<NoteEvent>>();
+    auto params = json::parse(f_input).get<Notes::ConvertParams>();
+    auto expected = json::parse(f_expected).get<std::vector<Notes::Event>>();
 
-    NotesConverter c;
-    auto note_events = c.convert(notes_pg, onsets_pg, contours_pg, params);
+    Notes n;
+    auto note_events = n.convert(notes_pg, onsets_pg, contours_pg, params);
 
     if (note_events.size() != expected.size()) {
         std::cout << "FAIL: Got " << note_events.size() << " elements in array, expected " << expected.size() << std::endl;
