@@ -11,10 +11,11 @@ struct ProcessorBase : juce::AudioProcessor
     ProcessorBase();
     explicit ProcessorBase(const BusesProperties& ioLayouts);
 
-    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
     bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+
+    using AudioProcessor::prepareToPlay;
 
     using AudioProcessor::processBlock;
 
@@ -39,5 +40,4 @@ struct ProcessorBase : juce::AudioProcessor
 
     static BusesProperties getDefaultProperties();
 };
-}
-
+} // namespace PluginHelpers

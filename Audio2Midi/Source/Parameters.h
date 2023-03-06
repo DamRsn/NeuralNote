@@ -8,6 +8,7 @@ struct Parameters
     {
         processor.addParameter(gain);
         processor.addParameter(enable);
+        processor.addParameter(record);
     }
 
     //Raw pointers. They will be owned by either the processor or the APVTS (if you use it)
@@ -16,4 +17,7 @@ struct Parameters
 
     juce::AudioParameterBool* enable =
         new juce::AudioParameterBool({"Enable", 1}, "Enable", true);
+
+    juce::AudioParameterBool* record =
+        new juce::AudioParameterBool({"Record", 1}, "Record", false);
 };

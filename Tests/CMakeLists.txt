@@ -33,9 +33,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         bin_data
         PUBLIC
         juce_recommended_config_flags
-        juce_recommended_lto_flags
-        juce_recommended_warning_flags
-        )
+        juce_recommended_lto_flags)
+        #juce_recommended_warning_flags
 
 target_compile_definitions(${PROJECT_NAME}
         PRIVATE

@@ -44,15 +44,35 @@ juce_add_plugin("${BaseTargetName}"
 juce_generate_juce_header(${BaseTargetName})
 
 # Source files
-file(GLOB SOURCES_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*/*.cpp)
-file(GLOB HEADERS_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*/*.h)
+file(GLOB_RECURSE SOURCES_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*.cpp ${CMAKE_CURRENT_LIST_DIR}/Lib/*.cpp)
+file(GLOB_RECURSE HEADERS_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*.h ${CMAKE_CURRENT_LIST_DIR}/Lib/*.h)
 
 target_sources(${BaseTargetName} PRIVATE ${SOURCES_PLUGIN} ${HEADERS_PLUGIN})
+
+file(GLOB_RECURSE lib_dirs LIST_DIRECTORIES true ${CMAKE_CURRENT_LIST_DIR}/Lib/*)
+
+foreach (dir ${lib_dirs})
+    IF (IS_DIRECTORY ${dir})
+        target_include_directories(${BaseTargetName} PRIVATE ${dir})
+    ELSE ()
+        CONTINUE()
+    ENDIF ()
+endforeach ()
+
+file(GLOB_RECURSE source_dirs LIST_DIRECTORIES true ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*)
+
+foreach (dir ${source_dirs})
+    IF (IS_DIRECTORY ${dir})
+        target_include_directories(${BaseTargetName} PRIVATE ${dir})
+    ELSE ()
+        CONTINUE()
+    ENDIF ()
+endforeach ()
 
 file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.onnx)
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 
-target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
+target_include_directories(${BaseTargetName} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
 
 target_compile_definitions(${BaseTargetName}
         PUBLIC
@@ -89,7 +109,7 @@ elseif (WIN32)
 endif ()
 
 
-target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
+target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
 
 target_link_libraries(${BaseTargetName}
         PRIVATE
@@ -100,8 +120,8 @@ target_link_libraries(${BaseTargetName}
         bin_data
         PUBLIC
         juce_recommended_config_flags
-        juce_recommended_lto_flags
-        juce_recommended_warning_flags)
+        juce_recommended_lto_flags)
+# juce_recommended_warning_flags)
 
 if (BUILD_UNIT_TESTS)
     add_subdirectory(Tests)

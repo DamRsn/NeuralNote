@@ -45,6 +45,7 @@ int DownSampler::processBlock(const AudioBuffer<float>& inBuffer,
 {
     jassert(mNumInputSamplesAvailable + inNumSamples <= mInternalBuffer.getNumSamples());
 
+    mInternalBuffer.copyFrom(0, mNumInputSamplesAvailable, inBuffer, 0, 0, inNumSamples);
     float* internal_buffer_ptr = mInternalBuffer.getWritePointer(0);
 
     // Lowpass filter and copy data in internal buffer at the same time
@@ -53,7 +54,8 @@ int DownSampler::processBlock(const AudioBuffer<float>& inBuffer,
         for (auto& lowpass_filter: mLowpassFilters)
         {
             internal_buffer_ptr[mNumInputSamplesAvailable + i] =
-                lowpass_filter.processSample(inBuffer.getSample(0, i));
+                lowpass_filter.processSample(
+                    internal_buffer_ptr[mNumInputSamplesAvailable + i]);
         }
     }
 
