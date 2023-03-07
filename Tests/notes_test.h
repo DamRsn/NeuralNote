@@ -24,15 +24,15 @@ using json = nlohmann::json;
  */
 bool notes_test() {
     // inputs are the model's output + JSON params
-    std::ifstream f_notes_pg("test_data/notes.csv");
-    std::ifstream f_onsets_pg("test_data/onsets.csv");
-    std::ifstream f_contours_pg("test_data/contours.csv");
+    std::ifstream f_notes_pg(std::string(TEST_DATA_DIR) + "/notes.csv");
+    std::ifstream f_onsets_pg(std::string(TEST_DATA_DIR) + "/onsets.csv");
+    std::ifstream f_contours_pg(std::string(TEST_DATA_DIR) + "/contours.csv");
     auto notes_pg_1d = test_utils::loadCSVDataFile<float>(f_notes_pg);
     auto onsets_pg_1d = test_utils::loadCSVDataFile<float>(f_onsets_pg);
     auto contours_pg_1d = test_utils::loadCSVDataFile<float>(f_contours_pg);
 
-    std::ifstream f_input("test_data/note_events.input.json");
-    std::ifstream f_expected("test_data/note_events.output.json");
+    std::ifstream f_input(std::string(TEST_DATA_DIR) + "/note_events.input.json");
+    std::ifstream f_expected(std::string(TEST_DATA_DIR) + "/note_events.output.json");
     auto params = json::parse(f_input).get<Notes::ConvertParams>();
     auto expected = json::parse(f_expected).get<std::vector<Notes::Event>>();
 
