@@ -75,3 +75,9 @@ int DownSampler::processBlock(const AudioBuffer<float>& inBuffer,
 
     return num_out_samples_to_produce;
 }
+
+int DownSampler::numOutSamplesOnNextProcessBlock(int inNumSamples)
+{
+    return static_cast<int>(
+        std::floor(mNumInputSamplesAvailable + inNumSamples / mSpeedRatio));
+}

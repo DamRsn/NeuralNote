@@ -22,6 +22,8 @@ public:
                      float* outBuffer,
                      int inNumSamples);
 
+    int numOutSamplesOnNextProcessBlock(int inNumSamples);
+
 private:
     LagrangeInterpolator mInterpolator;
 

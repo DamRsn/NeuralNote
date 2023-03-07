@@ -45,6 +45,8 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     mMinNoteDuration =
         std::make_unique<RotarySlider>("Min Note Duration", 3, 50, 1, true);
     addAndMakeVisible(*mMinNoteDuration);
+
+    startTimerHz(30);
 }
 
 Audio2MidiMainView::~Audio2MidiMainView()
@@ -69,7 +71,9 @@ void Audio2MidiMainView::paint(Graphics& g)
 
     g.setColour(juce::Colours::black);
 
-    g.drawText("YAY", getLocalBounds(), juce::Justification::centred);
+    g.drawText(std::to_string(static_cast<int>(mProcessor.getState())),
+               getLocalBounds(),
+               juce::Justification::centred);
 }
 
 void Audio2MidiMainView::timerCallback()
@@ -78,6 +82,8 @@ void Audio2MidiMainView::timerCallback()
     {
         mRecordButton->setToggleState(false, juce::NotificationType::sendNotification);
     }
+
+    repaint();
 }
 
 void Audio2MidiMainView::sliderValueChanged(juce::Slider* inSliderPtr)

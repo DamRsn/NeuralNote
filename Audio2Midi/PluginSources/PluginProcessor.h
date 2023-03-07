@@ -8,17 +8,18 @@
 
 struct UIParameters
 {
-    std::atomic<float> noteSegmentationThreshold;
-    std::atomic<float> modelConfidenceThreshold;
-    std::atomic<float> minNoteDurationMs;
-    std::atomic<bool> recordOn;
+    std::atomic<float> noteSegmentationThreshold = 0.5;
+    std::atomic<float> modelConfidenceThreshold = 0.5;
+    std::atomic<float> minNoteDurationMs = 11;
+    std::atomic<bool> recordOn = false;
 };
 
 enum State
 {
-    EmptyAudioAndMidiRegion = 0,
+    EmptyAudioAndMidiRegions = 0,
     Recording,
-    PopulatedAudioAndMidiRegion
+    Processing,
+    PopulatedAudioAndMidiRegions
 };
 
 class Audio2MidiAudioProcessor : public PluginHelpers::ProcessorBase
@@ -35,19 +36,22 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    State getState() const { return mState; };
+    State getState() const { return mState.load(); };
 
     UIParameters mParameters;
 
 private:
     DownSampler mDownSampler;
 
-    State mState = EmptyAudioAndMidiRegion;
+    std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
     std::vector<float> mAudioToConvert;
 
+    juce::ThreadPool mThreadPool;
+
+    int mIndex = 0;
     const double mBasicPitchSampleRate = 22050.0;
-    const double mMaxDuration = 3 * 60;
+    const double mMaxDuration = 10;
     const size_t mMaxNumSamplesToConvert =
         static_cast<size_t>(mBasicPitchSampleRate * mMaxDuration);
 };
