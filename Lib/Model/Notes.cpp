@@ -5,9 +5,9 @@
 #include "Notes.h"
 
 std::vector<Notes::Event> Notes::convert(
-    const std::vector<float>& inNotesPG,
-    const std::vector<float>& inOnsetsPG,
-    const std::vector<float>& inContoursPG,
+    const std::vector<std::vector<float>>& inNotesPG,
+    const std::vector<std::vector<float>>& inOnsetsPG,
+    const std::vector<std::vector<float>>& inContoursPG,
     ConvertParams inParams
 )
 {

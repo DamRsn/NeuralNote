@@ -35,7 +35,7 @@ if len(sys.argv) != 6:
     print("Usage: %s <input.json> <notes.csv> <onsets.csv> <contours.csv> <output.json>" % sys.argv[0])
     print("""
 Structure of <input.json>: {
-    "n_frames": <int>,
+    "numFrames": <int>,
     "onsetThreshold": <0.0..1.0>,
     "frameThreshold": <0.0..1.0>,
     "minNoteLength": <int>,
@@ -53,7 +53,7 @@ Structure of <input.json>: {
 with open(sys.argv[1], 'r') as openfile:
     params = json.load(openfile)
 
-n_frames = int(params["n_frames"])
+n_frames = int(params["numFrames"])
 
 pitch_bend = params.get("pitchBend", None)
 
