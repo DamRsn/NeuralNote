@@ -1,5 +1,5 @@
 {
-  "n_frames": 274,
+  "numFrames": 274,
   "pitchBend": "single",
   "onsetThreshold": 0.5,
   "frameThreshold": 0.3,

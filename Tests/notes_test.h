@@ -10,6 +10,7 @@
 
 #include "Notes.h"
 #include "test_utils.h"
+#include "Utils.h"
 
 using json = nlohmann::json;
 
@@ -26,14 +27,18 @@ bool notes_test() {
     std::ifstream f_notes_pg("test_data/notes.csv");
     std::ifstream f_onsets_pg("test_data/onsets.csv");
     std::ifstream f_contours_pg("test_data/contours.csv");
-    auto notes_pg = test_utils::loadCSVDataFile<float>(f_notes_pg);
-    auto onsets_pg = test_utils::loadCSVDataFile<float>(f_onsets_pg);
-    auto contours_pg = test_utils::loadCSVDataFile<float>(f_contours_pg);
+    auto notes_pg_1d = test_utils::loadCSVDataFile<float>(f_notes_pg);
+    auto onsets_pg_1d = test_utils::loadCSVDataFile<float>(f_onsets_pg);
+    auto contours_pg_1d = test_utils::loadCSVDataFile<float>(f_contours_pg);
 
     std::ifstream f_input("test_data/note_events.input.json");
     std::ifstream f_expected("test_data/note_events.output.json");
     auto params = json::parse(f_input).get<Notes::ConvertParams>();
     auto expected = json::parse(f_expected).get<std::vector<Notes::Event>>();
+
+    auto notes_pg = test_utils::convert_1d_to_2d<float>(notes_pg_1d, -1, NUM_FREQ_OUT);
+    auto onsets_pg = test_utils::convert_1d_to_2d<float>(onsets_pg_1d, -1, NUM_FREQ_OUT);
+    auto contours_pg = test_utils::convert_1d_to_2d<float>(contours_pg_1d, -1, NUM_FREQ_IN);
 
     Notes n;
     auto note_events = n.convert(notes_pg, onsets_pg, contours_pg, params);

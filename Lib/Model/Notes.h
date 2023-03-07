@@ -43,12 +43,11 @@ public:
 
     // PG stands for posteriorgrams
     std::vector<Notes::Event> convert(
-        const std::vector<float>& inNotesPG,
-        const std::vector<float>& inOnsetsPG,
-        const std::vector<float>& inContoursPG,
+        const std::vector<std::vector<float>>& inNotesPG,
+        const std::vector<std::vector<float>>& inOnsetsPG,
+        const std::vector<std::vector<float>>& inContoursPG,
         ConvertParams inParams
     );
-
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Notes::Event, start, end, pitch, amplitude, bends)
