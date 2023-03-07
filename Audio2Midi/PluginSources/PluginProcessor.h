@@ -1,10 +1,25 @@
 #pragma once
 
+#include "atomic"
 #include <JuceHeader.h>
 
 #include "DownSampler.h"
-#include "Parameters.h"
 #include "ProcessorBase.h"
+
+struct UIParameters
+{
+    std::atomic<float> noteSegmentationThreshold;
+    std::atomic<float> modelConfidenceThreshold;
+    std::atomic<float> minNoteDurationMs;
+    std::atomic<bool> recordOn;
+};
+
+enum State
+{
+    EmptyAudioAndMidiRegion = 0,
+    Recording,
+    PopulatedAudioAndMidiRegion
+};
 
 class Audio2MidiAudioProcessor : public PluginHelpers::ProcessorBase
 {
@@ -20,10 +35,14 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-private:
-    Parameters parameters;
+    State getState() const { return mState; };
 
+    UIParameters mParameters;
+
+private:
     DownSampler mDownSampler;
+
+    State mState = EmptyAudioAndMidiRegion;
 
     std::vector<float> mAudioToConvert;
 

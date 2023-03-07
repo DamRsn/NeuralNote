@@ -3,7 +3,6 @@
 
 Audio2MidiAudioProcessor::Audio2MidiAudioProcessor()
 {
-    parameters.add(*this);
     mAudioToConvert.reserve(mMaxNumSamplesToConvert);
 }
 
@@ -18,14 +17,13 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 {
     juce::ignoreUnused(midiMessages);
 
-    if (parameters.enable->get())
-        buffer.applyGain(parameters.gain->get());
-    else
-        buffer.clear();
-
-    if(parameters.record->get()) {
-//        std::copy()
+    if (mParameters.recordOn.load())
+    {
+        if (mState != Recording)
+            mState = Recording;
     }
+
+    buffer.clear();
 }
 
 juce::AudioProcessorEditor* Audio2MidiAudioProcessor::createEditor()

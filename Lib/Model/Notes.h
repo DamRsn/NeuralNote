@@ -8,18 +8,25 @@
 #include <json.hpp>
 #include <vector>
 
-enum PitchBend { NoPitchBend, SinglePitchBend, MultiPitchBend};
+enum PitchBend
+{
+    NoPitchBend,
+    SinglePitchBend,
+    MultiPitchBend
+};
 
-NLOHMANN_JSON_SERIALIZE_ENUM(PitchBend, {
-    {NoPitchBend, nullptr},
-    {SinglePitchBend, "single"},
-    {MultiPitchBend, "multi"},
-})
+NLOHMANN_JSON_SERIALIZE_ENUM(PitchBend,
+                             {
+                                 {NoPitchBend, nullptr},
+                                 {SinglePitchBend, "single"},
+                                 {MultiPitchBend, "multi"},
+                             })
 
 class Notes
 {
 public:
-    typedef struct Event {
+    typedef struct Event
+    {
         float start;
         float end;
         int pitch;
@@ -29,9 +36,10 @@ public:
         bool operator==(const struct Event&) const = default;
     } Event;
 
-    typedef struct {
-        float onsetThreshold;
-        float frameThreshold;
+    typedef struct
+    {
+        float onsetThreshold; // Confidence threshold (0.05 to 0.95, More-Less notes)
+        float frameThreshold; // Note segmentation (0.05 - 0.95, Split-Merge Notes)
         int minNoteLength;
         bool inferOnsets;
         float maxFrequency;
@@ -42,15 +50,23 @@ public:
     } ConvertParams;
 
     // PG stands for posteriorgrams
-    std::vector<Notes::Event> convert(
-        const std::vector<std::vector<float>>& inNotesPG,
-        const std::vector<std::vector<float>>& inOnsetsPG,
-        const std::vector<std::vector<float>>& inContoursPG,
-        ConvertParams inParams
-    );
+    std::vector<Notes::Event> convert(const std::vector<std::vector<float>>& inNotesPG,
+                                      const std::vector<std::vector<float>>& inOnsetsPG,
+                                      const std::vector<std::vector<float>>& inContoursPG,
+                                      ConvertParams inParams);
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Notes::Event, start, end, pitch, amplitude, bends)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Notes::ConvertParams, onsetThreshold, frameThreshold, minNoteLength, inferOnsets, maxFrequency, minFrequency, melodiaTrick, pitchBend, energyThreshold)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+    Notes::Event, start, end, pitch, amplitude, bends)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Notes::ConvertParams,
+                                                onsetThreshold,
+                                                frameThreshold,
+                                                minNoteLength,
+                                                inferOnsets,
+                                                maxFrequency,
+                                                minFrequency,
+                                                melodiaTrick,
+                                                pitchBend,
+                                                energyThreshold)
 
 #endif // Notes_h
