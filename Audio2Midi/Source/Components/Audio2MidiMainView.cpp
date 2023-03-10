@@ -65,10 +65,6 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     startTimerHz(30);
 }
 
-Audio2MidiMainView::~Audio2MidiMainView()
-{
-}
-
 void Audio2MidiMainView::resized()
 {
     mRecordButton->setBounds(400, 30, 70, 70);

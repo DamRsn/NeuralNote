@@ -71,19 +71,18 @@ int BasicPitchCNN::getNumFramesLookahead()
     return mTotalLookahead;
 }
 
-void BasicPitchCNN::frameInference(const std::vector<float>& inData,
+void BasicPitchCNN::frameInference(const float* inData,
                                    std::vector<float>& outContours,
                                    std::vector<float>& outNotes,
                                    std::vector<float>& outOnsets)
 {
     // Checks on parameters
-    assert(inData.size() == NUM_HARMONICS * NUM_FREQ_IN);
     assert(outContours.size() == NUM_FREQ_IN);
     assert(outNotes.size() == NUM_FREQ_OUT);
     assert(outOnsets.size() == NUM_FREQ_OUT);
 
     // Copy data in aligned input array for inference
-    std::copy(inData.begin(), inData.end(), mInputArray.begin());
+    std::copy(inData, inData + NUM_HARMONICS * NUM_FREQ_IN, mInputArray.begin());
 
     _runModels();
 

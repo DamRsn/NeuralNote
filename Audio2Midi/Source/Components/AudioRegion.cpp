@@ -74,16 +74,21 @@ void AudioRegion::filesDropped(const StringArray& files, int x, int y)
         files[0], mAudioProcessor.getAudioBufferForMidi(), num_loaded_samples);
 
     if (!success)
+    {
+        num_loaded_samples = 0;
         juce::NativeMessageBox::showMessageBoxAsync(
             juce::MessageBoxIconType::NoIcon,
             "Could not load the audio sample.",
             "Check your file format (Accepted formats: .wav, .aiff, .flac). The maximum accepted duration is 3 minutes.");
+    }
 
     mAudioProcessor.setNumSamplesAcquired(num_loaded_samples);
 
     mThumbnail.reset(1, BASIC_PITCH_SAMPLE_RATE, num_loaded_samples);
     mThumbnail.addBlock(
         0, mAudioProcessor.getAudioBufferForMidi(), 0, num_loaded_samples);
+
+    mAudioProcessor.launchTranscribeJob();
 
     repaint();
 }

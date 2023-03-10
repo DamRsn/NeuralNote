@@ -5,6 +5,7 @@
 
 #include "DownSampler.h"
 #include "ProcessorBase.h"
+#include "BasicPitch.h"
 
 struct UIParameters
 {
@@ -42,20 +43,29 @@ public:
 
     AudioBuffer<float>& getAudioBufferForMidi();
 
-    int getNumSamplesAcquired();
+    int getNumSamplesAcquired() const;
 
     void setNumSamplesAcquired(int inNumSamplesAcquired);
 
     UIParameters mParameters;
 
+    void launchTranscribeJob();
+
 private:
+    void _runModel();
+
     DownSampler mDownSampler;
 
     std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
     AudioBuffer<float> mAudioBufferForMIDITranscription;
 
+    BasicPitch mBasicPitch;
+    std::vector<Notes::Event> mNotesEvent;
+    std::vector<Notes::Event> mNotesEventPostProcessed;
+
     juce::ThreadPool mThreadPool;
+    std::function<void()> mJobLambda;
 
     int mNumSamplesAcquired = 0;
     const double mBasicPitchSampleRate = 22050.0;

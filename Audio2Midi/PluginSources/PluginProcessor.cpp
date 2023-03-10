@@ -6,6 +6,8 @@ Audio2MidiAudioProcessor::Audio2MidiAudioProcessor()
 {
     mAudioBufferForMIDITranscription.setSize(1, mMaxNumSamplesToConvert);
     mAudioBufferForMIDITranscription.clear();
+
+    mJobLambda = [this]() { _runModel(); };
 }
 
 void Audio2MidiAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
@@ -33,9 +35,7 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         if (mNumSamplesAcquired + num_new_down_samples >= mMaxNumSamplesToConvert)
         {
             mParameters.recordOn.store(false);
-            // TODO: Thread pool add job to run model and get pg
-
-            mState.store(Processing);
+            launchTranscribeJob();
         }
         else
         {
@@ -59,9 +59,7 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         // If we were previously recording but recordOn is no longer true (user clicked record button to stop it).
         if (mState.load() == Recording)
         {
-            // Start processing
-            mState.store(Processing);
-            // TODO: Thread pool add job to run model and get pg
+            launchTranscribeJob();
         }
     }
 
@@ -91,7 +89,7 @@ AudioBuffer<float>& Audio2MidiAudioProcessor::getAudioBufferForMidi()
     return mAudioBufferForMIDITranscription;
 }
 
-int Audio2MidiAudioProcessor::getNumSamplesAcquired()
+int Audio2MidiAudioProcessor::getNumSamplesAcquired() const
 {
     return mNumSamplesAcquired;
 }
@@ -99,6 +97,30 @@ int Audio2MidiAudioProcessor::getNumSamplesAcquired()
 void Audio2MidiAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
 {
     mNumSamplesAcquired = inNumSamplesAcquired;
+}
+
+void Audio2MidiAudioProcessor::launchTranscribeJob()
+{
+    if (mNumSamplesAcquired >= 1 * AUDIO_SAMPLE_RATE)
+    {
+        mThreadPool.addJob(mJobLambda);
+        mState.store(Processing);
+    }
+    else
+    {
+        mState.store(EmptyAudioAndMidiRegions);
+    }
+}
+
+void Audio2MidiAudioProcessor::_runModel()
+{
+    mNotesEvent = mBasicPitch.transribeToMIDI(
+        mAudioBufferForMIDITranscription.getWritePointer(0), mNumSamplesAcquired);
+    mState.store(PopulatedAudioAndMidiRegions);
+
+    std::cout << "Processing finished" << mNotesEvent.size() << std::endl;
+
+    // TODO: Notify UI
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
