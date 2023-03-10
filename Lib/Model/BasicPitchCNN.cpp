@@ -77,10 +77,10 @@ void BasicPitchCNN::frameInference(const std::vector<float>& inData,
                                    std::vector<float>& outOnsets)
 {
     // Checks on parameters
-    jassert(inData.size() == NUM_HARMONICS * NUM_FREQ_IN);
-    jassert(outContours.size() == NUM_FREQ_IN);
-    jassert(outNotes.size() == NUM_FREQ_OUT);
-    jassert(outOnsets.size() == NUM_FREQ_OUT);
+    assert(inData.size() == NUM_HARMONICS * NUM_FREQ_IN);
+    assert(outContours.size() == NUM_FREQ_IN);
+    assert(outNotes.size() == NUM_FREQ_OUT);
+    assert(outOnsets.size() == NUM_FREQ_OUT);
 
     // Copy data in aligned input array for inference
     std::copy(inData.begin(), inData.end(), mInputArray.begin());

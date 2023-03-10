@@ -33,8 +33,8 @@ const float*
     mOutput = mSession.Run(mRunOptions, mInputNames, mInput.data(), 1, mOutputNames, 1);
 
     auto out_shape = mOutput[0].GetTensorTypeAndShapeInfo().GetShape();
-    jassert(out_shape[0] == 1 && out_shape[2] == NUM_FREQ_IN
-            && out_shape[3] == NUM_HARMONICS);
+    assert(out_shape[0] == 1 && out_shape[2] == NUM_FREQ_IN
+           && out_shape[3] == NUM_HARMONICS);
 
     outNumFrames = static_cast<size_t>(out_shape[1]);
 

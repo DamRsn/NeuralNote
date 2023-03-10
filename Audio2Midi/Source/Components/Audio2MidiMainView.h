@@ -17,9 +17,7 @@ class Audio2MidiMainView
     , public juce::Timer
 {
 public:
-    Audio2MidiMainView(Audio2MidiAudioProcessor& processor);
-
-    ~Audio2MidiMainView();
+    explicit Audio2MidiMainView(Audio2MidiAudioProcessor& processor);
 
     void resized() override;
 
@@ -51,7 +49,7 @@ private:
     std::unique_ptr<juce::ToggleButton> mPitchBendCheckbox;
 
     std::unique_ptr<ComboBox> mKey; // C, C#, D, D# ...
-    std::unique_ptr<ComboBox> mMode; // Major, Minor
+    std::unique_ptr<ComboBox> mMode; // Major, Minor, Chromatic
 
     // Eventually quantise functionality: need for time division, quantize force (0 - 100)
 };

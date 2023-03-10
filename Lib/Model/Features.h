@@ -5,8 +5,10 @@
 #ifndef Features_h
 #define Features_h
 
+#include "cassert"
 #include <onnxruntime_cxx_api.h>
-#include <JuceHeader.h>
+
+#include "BinaryData.h"
 #include "Constants.h"
 
 class Features

@@ -37,7 +37,7 @@ bool notes_test()
     auto all_cases = json::parse(f_input).get<std::vector<Notes::ConvertParams>>();
     auto all_expected =
         json::parse(f_expected).get<std::vector<std::vector<Notes::Event>>>();
-    assert(all_cases.size() == expected.size());
+    assert(all_cases.size() == all_expected.size());
 
     auto notes_pg = test_utils::convert_1d_to_2d<float>(notes_pg_1d, -1, NUM_FREQ_OUT);
     auto onsets_pg = test_utils::convert_1d_to_2d<float>(onsets_pg_1d, -1, NUM_FREQ_OUT);

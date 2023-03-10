@@ -5,10 +5,11 @@
 #ifndef BasicPitchCNN_h
 #define BasicPitchCNN_h
 
-#include "Constants.h"
-#include "RTNeural/RTNeural.h"
 #include "json.hpp"
-#include <JuceHeader.h>
+#include "RTNeural/RTNeural.h"
+
+#include "BinaryData.h"
+#include "Constants.h"
 
 class BasicPitchCNN
 {
@@ -34,9 +35,10 @@ private:
     static constexpr int _wrapIndex(int inIndex, int inSize);
 
     alignas(RTNEURAL_DEFAULT_ALIGNMENT)
-        std::array<float, NUM_FREQ_IN * NUM_HARMONICS> mInputArray;
+        std::array<float, NUM_FREQ_IN * NUM_HARMONICS> mInputArray {};
 
-    alignas(RTNEURAL_DEFAULT_ALIGNMENT) std::array<float, 33 * NUM_FREQ_OUT> mConcatArray;
+    alignas(
+        RTNEURAL_DEFAULT_ALIGNMENT) std::array<float, 33 * NUM_FREQ_OUT> mConcatArray {};
 
     static constexpr int mLookaheadCNNContour = 3;
     static constexpr int mLookaheadCNNNote = 6;
@@ -51,11 +53,12 @@ private:
     static constexpr int mNumConcat2Stored =
         mLookaheadCNNContour + mLookaheadCNNNote - mLookaheadCNNOnsetInput + 1;
 
-    std::array<std::array<float, NUM_FREQ_IN>, mNumContourStored> mContoursCircularBuffer;
+    std::array<std::array<float, NUM_FREQ_IN>, mNumContourStored>
+        mContoursCircularBuffer {};
     std::array<std::array<float, NUM_FREQ_OUT>, mNumNoteStored>
-        mNotesCircularBuffer; // Also concat 1
+        mNotesCircularBuffer {}; // Also concat 1
     std::array<std::array<float, 32 * NUM_FREQ_OUT>, mNumConcat2Stored>
-        mConcat2CircularBuffer;
+        mConcat2CircularBuffer {};
 
     int mContourIdx = 0;
     int mNoteIdx = 0;
