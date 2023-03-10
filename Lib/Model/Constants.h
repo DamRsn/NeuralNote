@@ -8,5 +8,6 @@
 static constexpr int NUM_HARMONICS = 8;
 static constexpr int NUM_FREQ_IN = 264;
 static constexpr int NUM_FREQ_OUT = 88;
+static constexpr double BASIC_PITCH_SAMPLE_RATE = 22050.0;
 
 #endif //AUDIO2MIDIPLUGIN_CONSTANTS_H

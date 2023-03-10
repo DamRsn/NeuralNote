@@ -4,7 +4,8 @@
 Audio2MidiAudioProcessor::Audio2MidiAudioProcessor()
     : mThreadPool(1)
 {
-    mAudioToConvert.resize(mMaxNumSamplesToConvert, 0.0f);
+    mAudioBufferForMIDITranscription.setSize(1, mMaxNumSamplesToConvert);
+    mAudioBufferForMIDITranscription.clear();
 }
 
 void Audio2MidiAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
@@ -20,11 +21,16 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     if (mParameters.recordOn.load())
     {
         if (mState.load() != Recording)
+        {
             mState.store(Recording);
+            mDownSampler.reset();
+        }
 
         // If we have reached maximum number of samples that can be processed: stop record and launch processing
-        if (mDownSampler.numOutSamplesOnNextProcessBlock(buffer.getNumSamples()) + mIndex
-            >= mMaxNumSamplesToConvert)
+        int num_new_down_samples =
+            mDownSampler.numOutSamplesOnNextProcessBlock(buffer.getNumSamples());
+
+        if (mNumSamplesAcquired + num_new_down_samples >= mMaxNumSamplesToConvert)
         {
             mParameters.recordOn.store(false);
             // TODO: Thread pool add job to run model and get pg
@@ -39,9 +45,13 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
             // Fill buffer with 22050 Hz audio
             int num_samples_written = mDownSampler.processBlock(
-                buffer, mAudioToConvert.data() + mIndex, buffer.getNumSamples());
+                buffer,
+                mAudioBufferForMIDITranscription.getWritePointer(0, mNumSamplesAcquired),
+                buffer.getNumSamples());
 
-            mIndex += num_samples_written;
+            jassert(num_samples_written <= num_new_down_samples);
+
+            mNumSamplesAcquired += num_samples_written;
         }
     }
     else
@@ -69,6 +79,26 @@ void Audio2MidiAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 
 void Audio2MidiAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
+}
+void Audio2MidiAudioProcessor::clear()
+{
+    mNumSamplesAcquired = 0;
+    mAudioBufferForMIDITranscription.clear();
+}
+
+AudioBuffer<float>& Audio2MidiAudioProcessor::getAudioBufferForMidi()
+{
+    return mAudioBufferForMIDITranscription;
+}
+
+int Audio2MidiAudioProcessor::getNumSamplesAcquired()
+{
+    return mNumSamplesAcquired;
+}
+
+void Audio2MidiAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
+{
+    mNumSamplesAcquired = inNumSamplesAcquired;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

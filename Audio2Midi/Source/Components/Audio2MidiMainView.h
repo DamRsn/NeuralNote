@@ -7,6 +7,7 @@
 
 #include <JuceHeader.h>
 
+#include "AudioRegion.h"
 #include "PluginProcessor.h"
 #include "RotarySlider.h"
 
@@ -32,6 +33,8 @@ private:
     void updateEnablement();
 
     Audio2MidiAudioProcessor& mProcessor;
+
+    AudioRegion mAudioRegion;
 
     std::unique_ptr<juce::Slider> mGainSlider;
     std::unique_ptr<juce::Button> mMuteButton;

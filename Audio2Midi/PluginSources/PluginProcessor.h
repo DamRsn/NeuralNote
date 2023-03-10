@@ -38,6 +38,14 @@ public:
 
     State getState() const { return mState.load(); };
 
+    void clear();
+
+    AudioBuffer<float>& getAudioBufferForMidi();
+
+    int getNumSamplesAcquired();
+
+    void setNumSamplesAcquired(int inNumSamplesAcquired);
+
     UIParameters mParameters;
 
 private:
@@ -45,13 +53,13 @@ private:
 
     std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
-    std::vector<float> mAudioToConvert;
+    AudioBuffer<float> mAudioBufferForMIDITranscription;
 
     juce::ThreadPool mThreadPool;
 
-    int mIndex = 0;
+    int mNumSamplesAcquired = 0;
     const double mBasicPitchSampleRate = 22050.0;
-    const double mMaxDuration = 10;
-    const size_t mMaxNumSamplesToConvert =
-        static_cast<size_t>(mBasicPitchSampleRate * mMaxDuration);
+    const double mMaxDuration = 3 * 60;
+    const int mMaxNumSamplesToConvert =
+        static_cast<int>(mBasicPitchSampleRate * mMaxDuration);
 };

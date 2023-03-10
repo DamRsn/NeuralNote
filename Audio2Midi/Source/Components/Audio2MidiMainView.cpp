@@ -6,6 +6,7 @@
 
 Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     : mProcessor(processor)
+    , mAudioRegion(processor)
 {
     mRecordButton = std::make_unique<TextButton>("Record");
     mRecordButton->setButtonText("Record");
@@ -32,6 +33,12 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     mClearButton->setColour(TextButton::ColourIds::buttonColourId,
                             juce::Colours::whitesmoke);
     mClearButton->setColour(TextButton::ColourIds::textColourOffId, juce::Colours::black);
+    mClearButton->onClick = [this]()
+    {
+        mProcessor.clear();
+        repaint();
+    };
+
     addAndMakeVisible(*mClearButton);
 
     mModelConfidenceThresholdSlider =
@@ -46,6 +53,8 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
         std::make_unique<RotarySlider>("Min Note Duration", 3, 50, 1, true);
     addAndMakeVisible(*mMinNoteDuration);
 
+    addAndMakeVisible(mAudioRegion);
+
     startTimerHz(30);
 }
 
@@ -55,8 +64,10 @@ Audio2MidiMainView::~Audio2MidiMainView()
 
 void Audio2MidiMainView::resized()
 {
-    mRecordButton->setBounds(300, 30, 70, 70);
-    mClearButton->setBounds(300, 130, 70, 70);
+    mRecordButton->setBounds(400, 30, 70, 70);
+    mClearButton->setBounds(400, 130, 70, 70);
+
+    mAudioRegion.setBounds(200, 20, 180, 75);
 
     int knob_size = 100;
     mModelConfidenceThresholdSlider->setBounds(20, 20, knob_size, knob_size);
