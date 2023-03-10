@@ -4,6 +4,15 @@
 
 #include "Notes.h"
 
+bool Notes::Event::operator==(const Notes::Event& other) const
+{
+    return this->start == other.start
+        && this->end == other.end
+        && this->pitch == other.pitch
+        && this->amplitude == other.amplitude
+        && this->bends == other.bends;
+}
+
 std::vector<Notes::Event> Notes::convert(
     const std::vector<std::vector<float>>& inNotesPG,
     const std::vector<std::vector<float>>& inOnsetsPG,
@@ -12,6 +21,7 @@ std::vector<Notes::Event> Notes::convert(
 )
 {
     std::vector<Notes::Event> events;
+    events.reserve(1000);
 
     auto n_frames = inNotesPG.size();
     if (n_frames == 0)
@@ -90,8 +100,8 @@ std::vector<Notes::Event> Notes::convert(
             amplitude /= (i - frame_idx);
 
             events.push_back(Notes::Event{
-                .start = _model_frame_to_time(frame_idx),
-                .end = _model_frame_to_time(i),
+                .start = _modelFrameToTime(frame_idx),
+                .end = _modelFrameToTime(i),
                 .pitch = freq_idx + MIDI_OFFSET,
                 .amplitude = amplitude,
             });

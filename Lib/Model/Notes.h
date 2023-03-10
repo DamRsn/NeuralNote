@@ -35,7 +35,7 @@ public:
         double amplitude;
         std::vector<int> bends;
 
-        bool operator==(const struct Event&) const = default;
+        bool operator==(const struct Event&) const;
     } Event;
 
     typedef struct
@@ -58,7 +58,7 @@ public:
                                       ConvertParams inParams);
 
 private:
-    static inline double _model_frame_to_time(int frame)
+    static inline double _modelFrameToTime(int frame)
     {
         // The following are compile-time computed consts only used here.
         // If they need to be used elsewhere, please move to Constants.h

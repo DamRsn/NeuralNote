@@ -57,7 +57,7 @@ n_frames = int(params["numFrames"])
 
 pitch_bend = params.get("pitchBend", None)
 
-if pitch_bend == None or pitch_bend == "none":
+if pitch_bend == None:
     include_pitch_bends = False
 elif pitch_bend == "multi":
     include_pitch_bends = True
