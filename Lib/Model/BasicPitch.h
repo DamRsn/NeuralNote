@@ -19,15 +19,20 @@ public:
 
     void setParameters();
 
-    std::vector<Notes::Event> transribeToMIDI(float* inAudio, int inNumSamples);
+    void transribeToMIDI(float* inAudio, int inNumSamples);
 
-    std::vector<Notes::Event> updateMIDI();
+    void updateMIDI();
+
+    const std::vector<Notes::Event>& getNoteEvents() const;
 
 private:
     std::vector<std::vector<float>> mContoursPG;
     std::vector<std::vector<float>> mNotesPG;
     std::vector<std::vector<float>> mOnsetsPG;
 
+    std::vector<Notes::Event> mNoteEvents;
+
+private:
     Notes::ConvertParams mParams;
 
     size_t mNumFrames = 0;

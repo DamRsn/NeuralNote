@@ -7,7 +7,7 @@ Audio2MidiEditor::Audio2MidiEditor(Audio2MidiAudioProcessor& p)
     mMainView = std::make_unique<Audio2MidiMainView>(p);
 
     addAndMakeVisible(*mMainView);
-    setSize(600, 500);
+    setSize(1000, 650);
 }
 
 void Audio2MidiEditor::paint(juce::Graphics& g)

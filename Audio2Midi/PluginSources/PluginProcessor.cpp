@@ -82,6 +82,8 @@ void Audio2MidiAudioProcessor::clear()
 {
     mNumSamplesAcquired = 0;
     mAudioBufferForMIDITranscription.clear();
+
+    mBasicPitch.reset();
 }
 
 AudioBuffer<float>& Audio2MidiAudioProcessor::getAudioBufferForMidi()
@@ -114,13 +116,16 @@ void Audio2MidiAudioProcessor::launchTranscribeJob()
 
 void Audio2MidiAudioProcessor::_runModel()
 {
-    mNotesEvent = mBasicPitch.transribeToMIDI(
-        mAudioBufferForMIDITranscription.getWritePointer(0), mNumSamplesAcquired);
+    mBasicPitch.transribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
+                                mNumSamplesAcquired);
     mState.store(PopulatedAudioAndMidiRegions);
-
-    std::cout << "Processing finished" << mNotesEvent.size() << std::endl;
-
+    
     // TODO: Notify UI
+}
+
+const std::vector<Notes::Event>& Audio2MidiAudioProcessor::getNoteEventVector() const
+{
+    return mBasicPitch.getNoteEvents();
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

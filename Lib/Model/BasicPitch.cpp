@@ -23,7 +23,7 @@ void BasicPitch::setParameters()
     // TODO:
 }
 
-std::vector<Notes::Event> BasicPitch::transribeToMIDI(float* inAudio, int inNumSamples)
+void BasicPitch::transribeToMIDI(float* inAudio, int inNumSamples)
 {
     const float* stacked_cqt =
         mFeaturesCalculator.computeFeatures(inAudio, inNumSamples, mNumFrames);
@@ -44,13 +44,14 @@ std::vector<Notes::Event> BasicPitch::transribeToMIDI(float* inAudio, int inNumS
                                       mOnsetsPG[frame_idx]);
     }
 
-    std::vector<Notes::Event> note_events =
-        mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams);
-
-    return note_events;
+    mNoteEvents = mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams);
 }
 
-std::vector<Notes::Event> BasicPitch::updateMIDI()
+void BasicPitch::updateMIDI()
 {
-    return std::vector<Notes::Event>();
+    mNoteEvents = mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams);
+}
+const std::vector<Notes::Event>& BasicPitch::getNoteEvents() const
+{
+    return mNoteEvents;
 }

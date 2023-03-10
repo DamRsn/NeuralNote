@@ -47,9 +47,11 @@ public:
 
     void setNumSamplesAcquired(int inNumSamplesAcquired);
 
-    UIParameters mParameters;
-
     void launchTranscribeJob();
+
+    const std::vector<Notes::Event>& getNoteEventVector() const;
+
+    UIParameters mParameters;
 
 private:
     void _runModel();
@@ -61,8 +63,6 @@ private:
     AudioBuffer<float> mAudioBufferForMIDITranscription;
 
     BasicPitch mBasicPitch;
-    std::vector<Notes::Event> mNotesEvent;
-    std::vector<Notes::Event> mNotesEventPostProcessed;
 
     juce::ThreadPool mThreadPool;
     std::function<void()> mJobLambda;
