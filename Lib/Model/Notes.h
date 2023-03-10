@@ -68,16 +68,22 @@ private:
         // number of frames in the time-frequency representations we compute
         static constexpr int ANNOT_N_FRAMES = ANNOTATIONS_FPS * AUDIO_WINDOW_LENGTH;
         // number of samples in the (clipped) audio that we use as input to the models
-        static constexpr int AUDIO_N_SAMPLES = AUDIO_SAMPLE_RATE * AUDIO_WINDOW_LENGTH - FFT_HOP;
+        static constexpr int AUDIO_N_SAMPLES =
+            AUDIO_SAMPLE_RATE * AUDIO_WINDOW_LENGTH - FFT_HOP;
         // magic from Basic Pitch
-        static constexpr double WINDOW_OFFSET = (double)FFT_HOP / AUDIO_SAMPLE_RATE * (ANNOT_N_FRAMES - AUDIO_N_SAMPLES / (double)FFT_HOP) + 0.0018;
+        static constexpr double WINDOW_OFFSET =
+            (double) FFT_HOP / AUDIO_SAMPLE_RATE
+                * (ANNOT_N_FRAMES - AUDIO_N_SAMPLES / (double) FFT_HOP)
+            + 0.0018;
 
-        return (frame * FFT_HOP) / (double)(AUDIO_SAMPLE_RATE) - WINDOW_OFFSET * (frame / ANNOT_N_FRAMES);
+        return (frame * FFT_HOP) / (double) (AUDIO_SAMPLE_RATE) -WINDOW_OFFSET
+               * (frame / ANNOT_N_FRAMES);
     }
 
     static inline int _hzToFreqIdx(float hz)
     {
-        return (int)std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0 - MIDI_OFFSET);
+        return (int) std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0
+                                - MIDI_OFFSET);
     }
 };
 

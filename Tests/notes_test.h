@@ -22,7 +22,8 @@ using json = nlohmann::json;
  *  - run:
  *      ( cd test_data && ../gen_note_events.py note_events.input.json notes.csv onsets.csv contours.csv note_events.output.json )
  */
-bool notes_test() {
+bool notes_test()
+{
     // inputs are the model's output + JSON params
     std::ifstream f_notes_pg(std::string(TEST_DATA_DIR) + "/notes.csv");
     std::ifstream f_onsets_pg(std::string(TEST_DATA_DIR) + "/onsets.csv");
@@ -34,12 +35,14 @@ bool notes_test() {
     std::ifstream f_input(std::string(TEST_DATA_DIR) + "/note_events.input.json");
     std::ifstream f_expected(std::string(TEST_DATA_DIR) + "/note_events.output.json");
     auto all_cases = json::parse(f_input).get<std::vector<Notes::ConvertParams>>();
-    auto all_expected = json::parse(f_expected).get<std::vector<std::vector<Notes::Event>>>();
+    auto all_expected =
+        json::parse(f_expected).get<std::vector<std::vector<Notes::Event>>>();
     assert(all_cases.size() == expected.size());
 
     auto notes_pg = test_utils::convert_1d_to_2d<float>(notes_pg_1d, -1, NUM_FREQ_OUT);
     auto onsets_pg = test_utils::convert_1d_to_2d<float>(onsets_pg_1d, -1, NUM_FREQ_OUT);
-    auto contours_pg = test_utils::convert_1d_to_2d<float>(contours_pg_1d, -1, NUM_FREQ_IN);
+    auto contours_pg =
+        test_utils::convert_1d_to_2d<float>(contours_pg_1d, -1, NUM_FREQ_IN);
 
     Notes n;
     bool succeeded = true;
@@ -54,16 +57,23 @@ bool notes_test() {
         std::chrono::duration<double> duration = stop_time - start_time;
         std::cout << "done in " << duration.count() << " seconds" << std::endl;
 
-        if (note_events.size() != expected.size()) {
-            std::cout << "FAIL: Got " << note_events.size() << " elements in array, expected " << expected.size() << std::endl;
+        if (note_events.size() != expected.size())
+        {
+            std::cout << "FAIL: Got " << note_events.size()
+                      << " elements in array, expected " << expected.size() << std::endl;
             succeeded = false;
         }
 
-        for(int i = 0; i < expected.size(); i++) {
-            if (!(note_events[i] == expected[i])) {
+        for (int i = 0; i < expected.size(); i++)
+        {
+            if (!(note_events[i] == expected[i]))
+            {
                 json res = note_events[i];
                 json exp = expected[i];
-                std::cout << "FAIL: Element " << i << " is:" << std::endl << "\t" << res << std::endl << "Expecting:" << std::endl << "\t" << exp << std::endl;
+                std::cout << "FAIL: Element " << i << " is:" << std::endl
+                          << "\t" << res << std::endl
+                          << "Expecting:" << std::endl
+                          << "\t" << exp << std::endl;
                 succeeded = false;
             }
         }

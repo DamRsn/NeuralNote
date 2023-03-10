@@ -101,7 +101,6 @@ void Audio2MidiMainView::timerCallback()
         mRecordButton->setToggleState(false, juce::NotificationType::sendNotification);
         mAudioRegion.stopTimer();
     }
-
 }
 
 void Audio2MidiMainView::sliderValueChanged(juce::Slider* inSliderPtr)
