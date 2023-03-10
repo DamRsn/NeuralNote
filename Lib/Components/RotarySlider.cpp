@@ -26,5 +26,5 @@ RotarySlider::RotarySlider(const std::string& inLabelText,
     mLabel.setText(inLabelText, juce::NotificationType::dontSendNotification);
     mLabel.attachToComponent(this, false);
     mLabel.setJustificationType(juce::Justification::centredBottom);
-    mLabel.setColour (juce::Label::textColourId, juce::Colours::orange);
+    mLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
 }

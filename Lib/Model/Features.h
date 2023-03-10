@@ -16,7 +16,8 @@ public:
 
     ~Features() = default;
 
-    const float* computeFeatures(float* inAudio, size_t inNumSamples, size_t& outNumFrames);
+    const float*
+        computeFeatures(float* inAudio, size_t inNumSamples, size_t& outNumFrames);
 
 private:
     // ONNX Runtime Data
@@ -26,8 +27,8 @@ private:
     std::array<int64_t, 3> mInputShape;
 
     // Input and output names of model
-    const char* mInputNames[1]  = {"input_1"};
-    const char* mOutputNames[1]  = {"harmonic_stacking"};
+    const char* mInputNames[1] = {"input_1"};
+    const char* mOutputNames[1] = {"harmonic_stacking"};
 
     // ONNX Runtime
     Ort::MemoryInfo mMemoryInfo;

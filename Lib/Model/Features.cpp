@@ -13,12 +13,14 @@ Features::Features()
     mSessionOptions.SetInterOpNumThreads(1);
     mSessionOptions.SetIntraOpNumThreads(1);
 
-    mSession = Ort::Session(mEnv, BinaryData::features_model_onnx,
-                            BinaryData::features_model_onnxSize, mSessionOptions);
-
+    mSession = Ort::Session(mEnv,
+                            BinaryData::features_model_onnx,
+                            BinaryData::features_model_onnxSize,
+                            mSessionOptions);
 }
 
-const float* Features::computeFeatures(float* inAudio, size_t inNumSamples, size_t& outNumFrames)
+const float*
+    Features::computeFeatures(float* inAudio, size_t inNumSamples, size_t& outNumFrames)
 {
     mInputShape[0] = 1;
     mInputShape[1] = static_cast<int64_t>(inNumSamples);
@@ -31,7 +33,8 @@ const float* Features::computeFeatures(float* inAudio, size_t inNumSamples, size
     mOutput = mSession.Run(mRunOptions, mInputNames, mInput.data(), 1, mOutputNames, 1);
 
     auto out_shape = mOutput[0].GetTensorTypeAndShapeInfo().GetShape();
-    jassert(out_shape[0] == 1 && out_shape[2] == NUM_FREQ_IN && out_shape[3] == NUM_HARMONICS);
+    jassert(out_shape[0] == 1 && out_shape[2] == NUM_FREQ_IN
+            && out_shape[3] == NUM_HARMONICS);
 
     outNumFrames = static_cast<size_t>(out_shape[1]);
 

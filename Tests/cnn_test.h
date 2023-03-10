@@ -25,9 +25,12 @@ bool cnn_test()
 
     size_t num_frames_python = features_python.size() / (NUM_HARMONICS * NUM_FREQ_IN);
 
-    auto contours_python = test_utils::convert_1d_to_2d<float>(contours_python_tmp, -1, NUM_FREQ_IN);
-    auto notes_python = test_utils::convert_1d_to_2d<float>(notes_python_tmp, -1, NUM_FREQ_OUT);
-    auto onsets_python = test_utils::convert_1d_to_2d<float>(onsets_python_tmp, -1, NUM_FREQ_OUT);
+    auto contours_python =
+        test_utils::convert_1d_to_2d<float>(contours_python_tmp, -1, NUM_FREQ_IN);
+    auto notes_python =
+        test_utils::convert_1d_to_2d<float>(notes_python_tmp, -1, NUM_FREQ_OUT);
+    auto onsets_python =
+        test_utils::convert_1d_to_2d<float>(onsets_python_tmp, -1, NUM_FREQ_OUT);
 
     std::vector<float> in_frame(NUM_HARMONICS * NUM_FREQ_IN, 0.0f);
     std::vector<std::vector<float>> contours(num_frames_python,
