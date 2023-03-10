@@ -13,6 +13,7 @@
 class AudioRegion
     : public Component
     , public FileDragAndDropTarget
+    , public Timer
 {
 public:
     AudioRegion(Audio2MidiAudioProcessor& processor);
@@ -20,6 +21,8 @@ public:
     void resized() override;
 
     void paint(Graphics& g) override;
+
+    void timerCallback() override;
 
     bool isInterestedInFileDrag(const StringArray& files) override;
 

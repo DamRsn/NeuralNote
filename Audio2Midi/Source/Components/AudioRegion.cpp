@@ -38,7 +38,22 @@ void AudioRegion::paint(Graphics& g)
             0.0,
             num_samples_available / BASIC_PITCH_SAMPLE_RATE,
             0,
-            0.95f / audio_buffer.getMagnitude(0, 0, num_samples_available));
+            0.95f
+                / std::max(audio_buffer.getMagnitude(0, 0, num_samples_available), 0.1f));
+    }
+}
+
+void AudioRegion::timerCallback()
+{
+    int num_samples_available = mAudioProcessor.getNumSamplesAcquired();
+
+    if (num_samples_available > 50 * mSourceSamplesPerThumbnailSample)
+    {
+        mThumbnail.reset(1, BASIC_PITCH_SAMPLE_RATE, num_samples_available);
+        mThumbnail.addBlock(
+            0, mAudioProcessor.getAudioBufferForMidi(), 0, num_samples_available);
+
+        repaint();
     }
 }
 

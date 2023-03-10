@@ -19,7 +19,14 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
 
     mRecordButton->onClick = [this]()
     {
-        mProcessor.mParameters.recordOn.store(mRecordButton->getToggleState());
+        bool is_on = mRecordButton->getToggleState();
+        mProcessor.mParameters.recordOn.store(is_on);
+
+        if (is_on)
+            mAudioRegion.startTimerHz(5);
+        else
+            mAudioRegion.stopTimer();
+
         updateEnablement();
     };
 
@@ -92,9 +99,9 @@ void Audio2MidiMainView::timerCallback()
     if (mRecordButton->getToggleState() && !mProcessor.mParameters.recordOn.load())
     {
         mRecordButton->setToggleState(false, juce::NotificationType::sendNotification);
+        mAudioRegion.stopTimer();
     }
 
-    repaint();
 }
 
 void Audio2MidiMainView::sliderValueChanged(juce::Slider* inSliderPtr)
