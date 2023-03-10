@@ -41,11 +41,16 @@ bool notes_test() {
     auto contours_pg = test_utils::convert_1d_to_2d<float>(contours_pg_1d, -1, NUM_FREQ_IN);
 
     Notes n;
+    auto start_time = std::chrono::high_resolution_clock::now();
     auto note_events = n.convert(notes_pg, onsets_pg, contours_pg, params);
+    auto stop_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = stop_time - start_time;
+    std::cout << "Done in " << duration.count() << " seconds" << std::endl;
 
+    bool succeeded = true;
     if (note_events.size() != expected.size()) {
         std::cout << "FAIL: Got " << note_events.size() << " elements in array, expected " << expected.size() << std::endl;
-        return false;
+        succeeded = false;
     }
 
     for(int i = 0; i < expected.size(); i++) {
@@ -53,12 +58,15 @@ bool notes_test() {
             json res = note_events[i];
             json exp = expected[i];
             std::cout << "FAIL: Element " << i << " is:" << std::endl << "\t" << res << std::endl << "Expecting:" << std::endl << "\t" << exp << std::endl;
-            return false;
+            succeeded = false;
         }
     }
 
-    std::cout << "Success" << std::endl;
-    return true;
+    if (succeeded)
+    {
+        std::cout << "Success" << std::endl;
+    }
+    return succeeded;
 }
 
 #endif //AUDIO2MIDIPLUGIN_NOTES_TEST_H

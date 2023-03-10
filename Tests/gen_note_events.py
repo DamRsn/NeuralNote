@@ -57,7 +57,7 @@ n_frames = int(params["numFrames"])
 
 pitch_bend = params.get("pitchBend", None)
 
-if pitch_bend == None:
+if pitch_bend == None or pitch_bend == "none":
     include_pitch_bends = False
 elif pitch_bend == "multi":
     include_pitch_bends = True
@@ -99,7 +99,6 @@ times_s = nc.model_frames_to_time(contours.shape[0])
 estimated_notes_time_seconds = [
     (times_s[note[0]], times_s[note[1]], note[2], note[3], note[4]) for note in estimated_notes_with_pitch_bend
 ]
-
 if include_pitch_bends and not multiple_pitch_bends:
     estimated_notes_time_seconds = nc.drop_overlapping_pitch_bends(estimated_notes_time_seconds)
 
@@ -111,6 +110,7 @@ result = [
     | ({} if x[4] == None else {"bends": x[4]})  # only add "bends" key if it is not null
     for x in estimated_notes_time_seconds
 ]
+
 dump = json.dumps(result, default=np_encoder, separators=(',', ':'))
 with open(sys.argv[5], "w") as outfile:
     outfile.write(dump)

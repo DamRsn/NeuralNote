@@ -1,10 +1,10 @@
 {
   "numFrames": 274,
-  "pitchBend": "single",
+  "pitchBend": "none",
   "onsetThreshold": 0.5,
   "frameThreshold": 0.3,
   "minNoteLength": 5,
-  "melodiaTrick": true,
+  "melodiaTrick": false,
   "energyThreshold": 11,
-  "inferOnsets": true
+  "inferOnsets": false
 }
