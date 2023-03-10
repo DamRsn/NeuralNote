@@ -33,35 +33,41 @@ bool notes_test() {
 
     std::ifstream f_input(std::string(TEST_DATA_DIR) + "/note_events.input.json");
     std::ifstream f_expected(std::string(TEST_DATA_DIR) + "/note_events.output.json");
-    auto params = json::parse(f_input).get<Notes::ConvertParams>();
-    auto expected = json::parse(f_expected).get<std::vector<Notes::Event>>();
+    auto all_cases = json::parse(f_input).get<std::vector<Notes::ConvertParams>>();
+    auto all_expected = json::parse(f_expected).get<std::vector<std::vector<Notes::Event>>>();
+    assert(all_cases.size() == expected.size());
 
     auto notes_pg = test_utils::convert_1d_to_2d<float>(notes_pg_1d, -1, NUM_FREQ_OUT);
     auto onsets_pg = test_utils::convert_1d_to_2d<float>(onsets_pg_1d, -1, NUM_FREQ_OUT);
     auto contours_pg = test_utils::convert_1d_to_2d<float>(contours_pg_1d, -1, NUM_FREQ_IN);
 
     Notes n;
-    auto start_time = std::chrono::high_resolution_clock::now();
-    auto note_events = n.convert(notes_pg, onsets_pg, contours_pg, params);
-    auto stop_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = stop_time - start_time;
-    std::cout << "Done in " << duration.count() << " seconds" << std::endl;
-
     bool succeeded = true;
-    if (note_events.size() != expected.size()) {
-        std::cout << "FAIL: Got " << note_events.size() << " elements in array, expected " << expected.size() << std::endl;
-        succeeded = false;
-    }
+    for (int i = 0; i < all_cases.size() && succeeded; i++)
+    {
+        auto params = all_cases[i];
+        auto expected = all_expected[i];
+        std::cout << "  Case " << i << ": ";
+        auto start_time = std::chrono::high_resolution_clock::now();
+        auto note_events = n.convert(notes_pg, onsets_pg, contours_pg, params);
+        auto stop_time = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = stop_time - start_time;
+        std::cout << "done in " << duration.count() << " seconds" << std::endl;
 
-    for(int i = 0; i < expected.size(); i++) {
-        if (!(note_events[i] == expected[i])) {
-            json res = note_events[i];
-            json exp = expected[i];
-            std::cout << "FAIL: Element " << i << " is:" << std::endl << "\t" << res << std::endl << "Expecting:" << std::endl << "\t" << exp << std::endl;
+        if (note_events.size() != expected.size()) {
+            std::cout << "FAIL: Got " << note_events.size() << " elements in array, expected " << expected.size() << std::endl;
             succeeded = false;
         }
-    }
 
+        for(int i = 0; i < expected.size(); i++) {
+            if (!(note_events[i] == expected[i])) {
+                json res = note_events[i];
+                json exp = expected[i];
+                std::cout << "FAIL: Element " << i << " is:" << std::endl << "\t" << res << std::endl << "Expecting:" << std::endl << "\t" << exp << std::endl;
+                succeeded = false;
+            }
+        }
+    }
     if (succeeded)
     {
         std::cout << "Success" << std::endl;

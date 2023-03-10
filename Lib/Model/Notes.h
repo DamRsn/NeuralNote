@@ -5,6 +5,7 @@
 #ifndef Notes_h
 #define Notes_h
 
+#include <cmath>
 #include <json.hpp>
 #include <vector>
 
@@ -38,14 +39,14 @@ public:
         bool operator==(const struct Event&) const;
     } Event;
 
-    typedef struct
+    typedef struct ConvertParams
     {
         float onsetThreshold; // Confidence threshold (0.05 to 0.95, More-Less notes)
         float frameThreshold; // Note segmentation (0.05 - 0.95, Split-Merge Notes)
         int minNoteLength;
         bool inferOnsets;
-        float maxFrequency;
-        float minFrequency;
+        float maxFrequency = -1; // in Hz, -1 means unset
+        float minFrequency = -1; // in Hz, -1 means unset
         bool melodiaTrick;
         enum PitchBend pitchBend;
         int energyThreshold;
@@ -72,6 +73,11 @@ private:
         static constexpr double WINDOW_OFFSET = (double)FFT_HOP / AUDIO_SAMPLE_RATE * (ANNOT_N_FRAMES - AUDIO_N_SAMPLES / (double)FFT_HOP) + 0.0018;
 
         return (frame * FFT_HOP) / (double)(AUDIO_SAMPLE_RATE) - WINDOW_OFFSET * (frame / ANNOT_N_FRAMES);
+    }
+
+    static inline int _hzToFreqIdx(float hz)
+    {
+        return (int)std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0 - MIDI_OFFSET);
     }
 };
 
