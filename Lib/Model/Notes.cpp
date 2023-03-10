@@ -36,7 +36,10 @@ std::vector<Notes::Event> Notes::convert(
     // deep copy
     auto remaining_energy = inNotesPG;
 
-    // TODO: constrain frequency
+    // constrain frequencies
+    auto max_freq_idx = (inParams.maxFrequency < 0) ? n_notes - 1 : _hzToFreqIdx(inParams.maxFrequency);
+    auto min_freq_idx = (inParams.minFrequency < 0) ? 0 : _hzToFreqIdx(inParams.minFrequency);
+
     // TODO: infer onsets
 
     // stop 1 frame early to prevent edge case
@@ -46,13 +49,13 @@ std::vector<Notes::Event> Notes::convert(
     // Go backwards in time
     for(int frame_idx = last_frame - 1; frame_idx >= 0; frame_idx--)
     {
-        for(int freq_idx = n_notes - 1; freq_idx >= 0; freq_idx--)
+        for(int freq_idx = max_freq_idx; freq_idx >= min_freq_idx; freq_idx--)
         {
             auto p = inOnsetsPG[frame_idx][freq_idx];
 
             // equivalent to argrelmax logic
-            auto before = (frame_idx == 0) ? p : inOnsetsPG[frame_idx-1][freq_idx];
-            auto after = inOnsetsPG[frame_idx+1][freq_idx];
+            auto before = (frame_idx <= min_freq_idx) ? p : inOnsetsPG[frame_idx-1][freq_idx];
+            auto after = (frame_idx >= max_freq_idx) ? p : inOnsetsPG[frame_idx+1][freq_idx];
             if ((p < inParams.onsetThreshold) || (p < before) || (p < after))
             {
                 continue;
