@@ -11,16 +11,18 @@
 #include "Keyboard.h"
 #include "PluginProcessor.h"
 
-class PianoRoll : public juce::Component
+class PianoRoll
+    : public juce::Component
+    , public juce::ChangeListener
 {
 public:
-    explicit PianoRoll(Audio2MidiAudioProcessor& processor);
+    explicit PianoRoll(Audio2MidiAudioProcessor& processor, Keyboard& keyboard);
 
     void resized() override;
 
     void paint(Graphics& g) override;
 
-    static constexpr int KEYBOARD_WIDTH = 50;
+    void changeListenerCallback(ChangeBroadcaster* source) override;
 
 private:
     float _timeToX(float inTime) const;
@@ -50,7 +52,7 @@ private:
 
     float _getNoteWidth(int inNote) const;
 
-    Keyboard mKeyboard;
+    Keyboard& mKeyboard;
     Audio2MidiAudioProcessor& mProcessor;
 };
 

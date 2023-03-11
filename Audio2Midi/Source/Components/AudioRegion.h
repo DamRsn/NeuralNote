@@ -10,10 +10,7 @@
 #include "AudioFileLoader.h"
 #include "PluginProcessor.h"
 
-class AudioRegion
-    : public Component
-    , public FileDragAndDropTarget
-    , public Timer
+class AudioRegion : public Component
 {
 public:
     AudioRegion(Audio2MidiAudioProcessor& processor);
@@ -22,20 +19,20 @@ public:
 
     void paint(Graphics& g) override;
 
-    void timerCallback() override;
+    void updateThumbnail();
 
-    bool isInterestedInFileDrag(const StringArray& files) override;
+    void setIsFileOver(bool inIsFileOver);
 
-    void filesDropped(const StringArray& files, int x, int y) override;
+    bool onFileDrop(const juce::File& inFile);
 
-    void fileDragEnter(const StringArray& files, int x, int y) override;
-
-    void fileDragExit(const StringArray& files) override;
+    void setThumbnailWidth(int inThumbnailWidth);
 
 private:
     Audio2MidiAudioProcessor& mAudioProcessor;
 
-    const int mSourceSamplesPerThumbnailSample = 512;
+    int mThumbnailWidth = 0;
+
+    const int mSourceSamplesPerThumbnailSample = 256;
     juce::AudioFormatManager mThumbnailFormatManager;
     juce::AudioThumbnailCache mThumbnailCache;
     juce::AudioThumbnail mThumbnail;

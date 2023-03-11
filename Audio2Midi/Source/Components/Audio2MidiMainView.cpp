@@ -6,8 +6,7 @@
 
 Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     : mProcessor(processor)
-    , mAudioRegion(processor)
-    , mPianoRoll(processor)
+    , mVisualizationPanel(processor)
 {
     mRecordButton = std::make_unique<TextButton>("Record");
     mRecordButton->setButtonText("Record");
@@ -28,15 +27,14 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
         // Recording started
         if (is_on)
         {
-            mAudioRegion.startTimerHz(5);
+            mVisualizationPanel.startTimerHzAudioThumbnail(10);
             mProcessor.setStateToRecording();
         }
         else
         {
             // Recording has ended, set processor state to processing
             mProcessor.setStateToProcessing();
-            mAudioRegion.stopTimer();
-            mRecordButton->setEnabled(false);
+            mVisualizationPanel.stopTimerAudioThumbnail();
         }
 
         updateEnablements();
@@ -72,9 +70,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
         std::make_unique<RotarySlider>("Min Note Duration", 3, 50, 1, true);
     addAndMakeVisible(*mMinNoteDuration);
 
-    addAndMakeVisible(mAudioRegion);
-
-    addAndMakeVisible(mPianoRoll);
+    addAndMakeVisible(mVisualizationPanel);
 
     startTimerHz(30);
 
@@ -86,8 +82,7 @@ void Audio2MidiMainView::resized()
     mRecordButton->setBounds(480, 20, 140, 50);
     mClearButton->setBounds(640, 20, 140, 50);
 
-    mAudioRegion.setBounds(300, 100, 680, 100);
-    mPianoRoll.setBounds(300, 220, 680, 400);
+    mVisualizationPanel.setBounds(300, 100, 680, 530);
 
     int knob_size = 100;
     mModelConfidenceThresholdSlider->setBounds(20, 20, knob_size, knob_size);
@@ -112,7 +107,7 @@ void Audio2MidiMainView::timerCallback()
     auto processor_state = mProcessor.getState();
     if (mRecordButton->getToggleState() && processor_state != Recording)
     {
-        mAudioRegion.stopTimer();
+        mVisualizationPanel.stopTimerAudioThumbnail();
         updateEnablements();
     }
 

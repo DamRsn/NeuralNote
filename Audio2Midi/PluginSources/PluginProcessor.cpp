@@ -35,7 +35,6 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         // If we reach the maximum number of sample that can be gathered
         if (mNumSamplesAcquired + num_new_down_samples >= mMaxNumSamplesToConvert)
         {
-            //            mParameters.recordOn.store(false);
             mWasRecording = false;
             launchTranscribeJob();
         }
@@ -126,8 +125,6 @@ void Audio2MidiAudioProcessor::_runModel()
     mBasicPitch.transribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
                                 mNumSamplesAcquired);
     mState.store(PopulatedAudioAndMidiRegions);
-
-    // TODO: Notify UI
 }
 
 const std::vector<Notes::Event>& Audio2MidiAudioProcessor::getNoteEventVector() const

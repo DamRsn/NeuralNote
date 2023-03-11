@@ -7,10 +7,9 @@
 
 #include <JuceHeader.h>
 
-#include "AudioRegion.h"
-#include "PianoRoll.h"
 #include "PluginProcessor.h"
 #include "RotarySlider.h"
+#include "VisualizationPanel.h"
 
 class Audio2MidiMainView
     : public juce::Component
@@ -35,8 +34,7 @@ private:
 
     State mPrevState = EmptyAudioAndMidiRegions;
 
-    AudioRegion mAudioRegion;
-    PianoRoll mPianoRoll;
+    VisualizationPanel mVisualizationPanel;
 
     std::unique_ptr<juce::Slider> mGainSlider;
     std::unique_ptr<juce::Button> mMuteButton;

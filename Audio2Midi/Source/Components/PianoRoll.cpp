@@ -4,15 +4,15 @@
 
 #include "PianoRoll.h"
 
-PianoRoll::PianoRoll(Audio2MidiAudioProcessor& processor)
+PianoRoll::PianoRoll(Audio2MidiAudioProcessor& processor, Keyboard& keyboard)
     : mProcessor(processor)
+    , mKeyboard(keyboard)
 {
-    addAndMakeVisible(mKeyboard);
+    mKeyboard.addChangeListener(this);
 }
 
 void PianoRoll::resized()
 {
-    mKeyboard.setBounds(0, 0, KEYBOARD_WIDTH, getHeight());
 }
 
 void PianoRoll::paint(Graphics& g)
@@ -20,10 +20,9 @@ void PianoRoll::paint(Graphics& g)
     Rectangle<float> local_bounds = {
         0, 0, static_cast<float>(getWidth()), static_cast<float>(getHeight())};
 
-    auto rect_left = static_cast<float>(KEYBOARD_WIDTH);
-    auto rect_width = static_cast<float>(getWidth()) - rect_left;
+    auto rect_width = static_cast<float>(getWidth());
 
-    for (int i = 21; i < 109; i++)
+    for (int i = MIN_MIDI_NOTE; i < MAX_MIDI_NOTE; i++)
     {
         if (mKeyboard.getRectangleForKey(i).intersects(local_bounds))
         {
@@ -35,8 +34,7 @@ void PianoRoll::paint(Graphics& g)
             g.setColour(fill_colour);
 
             auto y_range = _noteToYRange(i);
-            g.fillRect(
-                rect_left, y_range.second, rect_width, y_range.first - y_range.second);
+            g.fillRect(0.0f, y_range.second, rect_width, y_range.first - y_range.second);
         }
     }
 
@@ -62,10 +60,17 @@ void PianoRoll::paint(Graphics& g)
     }
 }
 
+void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
+{
+    if (source == &mKeyboard)
+    {
+        repaint();
+    }
+}
+
 float PianoRoll::_timeToX(float inTime) const
 {
-    return inTime / 10.0f * static_cast<float>(getWidth() - KEYBOARD_WIDTH)
-           + static_cast<float>(KEYBOARD_WIDTH);
+    return inTime / 10.0f * static_cast<float>(getWidth());
 }
 
 std::pair<float, float> PianoRoll::_noteToYRange(int inNote) const

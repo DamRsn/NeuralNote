@@ -24,7 +24,7 @@ void AudioRegion::paint(Graphics& g)
 
     g.drawRect(getLocalBounds());
 
-    g.setColour(juce::Colours::black);
+    g.setColour(juce::Colours::black.withAlpha(0.4f));
 
     auto num_samples_available = mAudioProcessor.getNumSamplesAcquired();
 
@@ -32,9 +32,12 @@ void AudioRegion::paint(Graphics& g)
     {
         const auto audio_buffer = mAudioProcessor.getAudioBufferForMidi();
 
+        auto thumbnail_area = getLocalBounds();
+        thumbnail_area.setWidth(mThumbnailWidth);
+
         mThumbnail.drawChannel(
             g,
-            getLocalBounds(),
+            thumbnail_area,
             0.0,
             num_samples_available / BASIC_PITCH_SAMPLE_RATE,
             0,
@@ -43,7 +46,7 @@ void AudioRegion::paint(Graphics& g)
     }
 }
 
-void AudioRegion::timerCallback()
+void AudioRegion::updateThumbnail()
 {
     int num_samples_available = mAudioProcessor.getNumSamplesAcquired();
 
@@ -57,21 +60,18 @@ void AudioRegion::timerCallback()
     }
 }
 
-bool AudioRegion::isInterestedInFileDrag(const StringArray& files)
+void AudioRegion::setIsFileOver(bool inIsFileOver)
 {
-    return mAudioProcessor.getState() == EmptyAudioAndMidiRegions
-           || mAudioProcessor.getState() == PopulatedAudioAndMidiRegions;
+    mIsFileOver = inIsFileOver;
 }
 
-void AudioRegion::filesDropped(const StringArray& files, int x, int y)
+bool AudioRegion::onFileDrop(const juce::File& inFile)
 {
-    ignoreUnused(x);
-    ignoreUnused(y);
     mIsFileOver = false;
 
     int num_loaded_samples = 0;
     auto success = mFileLoader.loadAudioFile(
-        files[0], mAudioProcessor.getAudioBufferForMidi(), num_loaded_samples);
+        inFile, mAudioProcessor.getAudioBufferForMidi(), num_loaded_samples);
 
     if (!success)
     {
@@ -80,32 +80,28 @@ void AudioRegion::filesDropped(const StringArray& files, int x, int y)
             juce::MessageBoxIconType::NoIcon,
             "Could not load the audio sample.",
             "Check your file format (Accepted formats: .wav, .aiff, .flac). The maximum accepted duration is 3 minutes.");
+
+        return false;
     }
 
     mAudioProcessor.setNumSamplesAcquired(num_loaded_samples);
-
-    mThumbnail.reset(1, BASIC_PITCH_SAMPLE_RATE, num_loaded_samples);
-    mThumbnail.addBlock(
-        0, mAudioProcessor.getAudioBufferForMidi(), 0, num_loaded_samples);
+    //    mParent.setSize((int) std::round(static_cast<float>(num_loaded_samples)
+    //                                     / static_cast<float>(AUDIO_SAMPLE_RATE)
+    //                                     * mNumPixelPerSeconds),
+    //                    mParent.getHeight());
+    //
+    //    mThumbnail.reset(1, BASIC_PITCH_SAMPLE_RATE, num_loaded_samples);
+    //    mThumbnail.addBlock(
+    //        0, mAudioProcessor.getAudioBufferForMidi(), 0, num_loaded_samples);
 
     mAudioProcessor.setStateToProcessing();
     mAudioProcessor.launchTranscribeJob();
 
     repaint();
+    return true;
 }
 
-void AudioRegion::fileDragEnter(const StringArray& files, int x, int y)
+void AudioRegion::setThumbnailWidth(int inThumbnailWidth)
 {
-    ignoreUnused(x);
-    ignoreUnused(y);
-    // Paint something to indicate you can drop here
-    mIsFileOver = true;
-    repaint();
-}
-
-void AudioRegion::fileDragExit(const StringArray& files)
-{
-    ignoreUnused(files);
-    mIsFileOver = false;
-    repaint();
+    mThumbnailWidth = inThumbnailWidth;
 }
