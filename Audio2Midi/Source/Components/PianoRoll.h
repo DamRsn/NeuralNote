@@ -20,9 +20,32 @@ public:
     void paint(Graphics& g) override;
 
 private:
-    float _timeToX(float time) const;
+    float _timeToX(float inTime) const;
 
-    float _noteToYStart(int note) const;
+    /**
+     * Returns upper and lower y coordinates to paint midi inNote rectangle.
+     * @param inNote midi note
+     * @return upper and lower limits of inNote on y axis (upper < lower)
+     */
+    std::pair<float, float> _noteToYRange(int inNote) const;
+
+    /**
+     * Top limit of note on piano.
+     * @param inNote
+     * @return
+     */
+    float _noteTopY(int inNote) const;
+
+    /** Bottom limit of note on piano
+     *
+     * @param inNote
+     * @return
+     */
+    float _noteBottomY(int inNote) const;
+
+    static bool _isWhiteKey(int inNote);
+
+    float _getNoteWidth(int inNote) const;
 
     const int mKeyboardWidth = 50;
 
