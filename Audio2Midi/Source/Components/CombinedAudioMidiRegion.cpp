@@ -8,20 +8,20 @@ CombinedAudioMidiRegion::CombinedAudioMidiRegion(Audio2MidiAudioProcessor& proce
                                                  Keyboard& keyboard)
     : mProcessor(processor)
     , mAudioRegion(processor)
-    , mPianoRoll(processor, keyboard)
+    , mPianoRoll(processor, keyboard, mNumPixelsPerSecond)
 {
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
-}
-
-void CombinedAudioMidiRegion::paint(Graphics& g)
-{
 }
 
 void CombinedAudioMidiRegion::resized()
 {
     mAudioRegion.setBounds(0, 0, getWidth(), mAudioRegionHeight);
     mPianoRoll.setBounds(0, mPianoRollY, getWidth(), getHeight() - mPianoRollY);
+}
+
+void CombinedAudioMidiRegion::paint(Graphics& g)
+{
 }
 
 void CombinedAudioMidiRegion::timerCallback()
@@ -48,6 +48,7 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     if (success)
     {
         _resizeAccordingToNumSamplesAvailable();
+        mAudioRegion.updateThumbnail();
     }
 
     repaint();
@@ -75,7 +76,7 @@ void CombinedAudioMidiRegion::_resizeAccordingToNumSamplesAvailable()
     int num_samples_available = mProcessor.getNumSamplesAcquired();
 
     int thumbnail_width = static_cast<int>(std::round(
-        (num_samples_available * mNumPixelPerSeconds) / BASIC_PITCH_SAMPLE_RATE));
+        (num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE));
 
     int new_width = std::max(mBaseWidth, thumbnail_width);
 

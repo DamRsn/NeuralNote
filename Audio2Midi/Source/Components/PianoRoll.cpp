@@ -4,11 +4,18 @@
 
 #include "PianoRoll.h"
 
-PianoRoll::PianoRoll(Audio2MidiAudioProcessor& processor, Keyboard& keyboard)
+PianoRoll::PianoRoll(Audio2MidiAudioProcessor& processor,
+                     Keyboard& keyboard,
+                     double inNumPixelsPerSecond)
     : mProcessor(processor)
     , mKeyboard(keyboard)
+    , mNumPixelsPerSecond(inNumPixelsPerSecond)
 {
     mKeyboard.addChangeListener(this);
+
+    mNoteGradient.addColour(0.0, juce::Colours::green);
+    mNoteGradient.addColour(0.5, juce::Colours::blue);
+    mNoteGradient.addColour(1.0, juce::Colours::red);
 }
 
 void PianoRoll::resized()
@@ -22,7 +29,8 @@ void PianoRoll::paint(Graphics& g)
 
     auto rect_width = static_cast<float>(getWidth());
 
-    for (int i = MIN_MIDI_NOTE; i < MAX_MIDI_NOTE; i++)
+    // Draw permanent lines
+    for (int i = MIN_MIDI_NOTE; i <= MAX_MIDI_NOTE; i++)
     {
         if (mKeyboard.getRectangleForKey(i).intersects(local_bounds))
         {
@@ -33,29 +41,40 @@ void PianoRoll::paint(Graphics& g)
 
             g.setColour(fill_colour);
 
-            auto y_range = _noteToYRange(i);
-            g.fillRect(0.0f, y_range.second, rect_width, y_range.first - y_range.second);
+            auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(i);
+            g.fillRect(0.0f,
+                       note_y_start_n_height.first,
+                       rect_width,
+                       note_y_start_n_height.second);
         }
     }
 
-    g.setColour(juce::Colours::pink);
-
+    // Draw notes
     if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
     {
         for (auto& note_event: mProcessor.getNoteEventVector())
         {
-            auto note_y_range = _noteToYRange(note_event.pitch);
+            auto note_y_start_n_height =
+                _getNoteHeightAndWidthPianoRoll(note_event.pitch);
             auto start = static_cast<float>(note_event.start);
             auto end = static_cast<float>(note_event.end);
 
-            if (note_y_range.first < 0
-                || note_y_range.second >= static_cast<float>(getHeight()))
+            if (note_y_start_n_height.first < 0
+                || note_y_start_n_height.second >= static_cast<float>(getHeight()))
                 continue;
 
+            g.setColour(mNoteGradient.getColourAtPosition(note_event.amplitude));
             g.fillRect(_timeToX(start),
-                       note_y_range.second,
+                       note_y_start_n_height.first,
                        _timeToX(end) - _timeToX(start),
-                       note_y_range.first - note_y_range.second);
+                       note_y_start_n_height.second);
+
+            g.setColour(juce::Colours::black);
+            g.drawRect(_timeToX(start),
+                       note_y_start_n_height.first,
+                       _timeToX(end) - _timeToX(start),
+                       note_y_start_n_height.second,
+                       0.5);
         }
     }
 }
@@ -70,30 +89,34 @@ void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
 
 float PianoRoll::_timeToX(float inTime) const
 {
-    return inTime / 10.0f * static_cast<float>(getWidth());
+    return inTime * static_cast<float>(mNumPixelsPerSecond);
 }
 
-std::pair<float, float> PianoRoll::_noteToYRange(int inNote) const
+std::pair<float, float> PianoRoll::_getNoteHeightAndWidthPianoRoll(int inNote) const
 {
     jassert(inNote >= MIN_MIDI_NOTE && inNote <= MAX_MIDI_NOTE);
 
     if (inNote == MIN_MIDI_NOTE)
     {
-        return {_noteBottomY(inNote), _noteBottomY(inNote + 1)};
+        return {
+            _noteBottomY(inNote + 1),
+            _noteBottomY(inNote) - _noteBottomY(inNote + 1),
+        };
     }
     else if (inNote == MAX_MIDI_NOTE)
     {
-        return {_noteTopY(inNote - 1), _noteTopY(inNote)};
+        return {_noteTopY(inNote), _noteTopY(inNote - 1) - _noteTopY(inNote)};
     }
     else
     {
         if (_isWhiteKey(inNote))
         {
-            return {_noteTopY(inNote - 1), _noteBottomY(inNote + 1)};
+            return {_noteBottomY(inNote + 1),
+                    _noteTopY(inNote - 1) - _noteBottomY(inNote + 1)};
         }
         else
         {
-            return {_noteBottomY(inNote), _noteTopY(inNote)};
+            return {_noteTopY(inNote), mKeyboard.getBlackNoteWidth()};
         }
     }
 }

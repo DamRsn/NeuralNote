@@ -85,14 +85,6 @@ bool AudioRegion::onFileDrop(const juce::File& inFile)
     }
 
     mAudioProcessor.setNumSamplesAcquired(num_loaded_samples);
-    //    mParent.setSize((int) std::round(static_cast<float>(num_loaded_samples)
-    //                                     / static_cast<float>(AUDIO_SAMPLE_RATE)
-    //                                     * mNumPixelPerSeconds),
-    //                    mParent.getHeight());
-    //
-    //    mThumbnail.reset(1, BASIC_PITCH_SAMPLE_RATE, num_loaded_samples);
-    //    mThumbnail.addBlock(
-    //        0, mAudioProcessor.getAudioBufferForMidi(), 0, num_loaded_samples);
 
     mAudioProcessor.setStateToProcessing();
     mAudioProcessor.launchTranscribeJob();

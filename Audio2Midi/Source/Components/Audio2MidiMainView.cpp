@@ -53,6 +53,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     mClearButton->onClick = [this]()
     {
         mProcessor.clear();
+        mVisualizationPanel.clear();
         updateEnablements();
     };
 

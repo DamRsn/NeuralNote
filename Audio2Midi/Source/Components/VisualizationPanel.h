@@ -22,6 +22,8 @@ public:
 
     void paint(Graphics& g) override;
 
+    void clear();
+
     void startTimerHzAudioThumbnail(int inFreqHz);
 
     void stopTimerAudioThumbnail();
@@ -30,7 +32,6 @@ public:
 
 private:
     Keyboard mKeyboard;
-
     juce::Viewport mAudioMidiViewport;
     CombinedAudioMidiRegion mCombinedAudioMidiRegion;
 };

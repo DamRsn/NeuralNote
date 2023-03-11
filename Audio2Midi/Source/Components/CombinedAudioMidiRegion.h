@@ -20,9 +20,9 @@ class CombinedAudioMidiRegion
 public:
     CombinedAudioMidiRegion(Audio2MidiAudioProcessor& processor, Keyboard& keyboard);
 
-    void paint(Graphics& g) override;
-
     void resized() override;
+
+    void paint(Graphics& g) override;
 
     void timerCallback() override;
 
@@ -36,7 +36,7 @@ public:
 
     void setBaseWidth(int inWidth);
 
-    const double mNumPixelPerSeconds = 60.0;
+    const double mNumPixelsPerSecond = 100.0;
 
     const int mAudioRegionHeight = 100;
     const int mHeightBetweenAudioMidi = 20;

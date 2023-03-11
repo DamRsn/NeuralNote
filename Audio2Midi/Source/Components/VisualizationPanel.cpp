@@ -10,7 +10,7 @@ VisualizationPanel::VisualizationPanel(Audio2MidiAudioProcessor& processor)
     addAndMakeVisible(mKeyboard);
     addAndMakeVisible(mAudioMidiViewport);
 
-//    mKeyboard.addChangeListener(mCombinedAudioMidiRegion.getPianoRollPtr());
+    mAudioMidiViewport.setScrollBarsShown(false, true, false, false);
 }
 
 void VisualizationPanel::resized()
@@ -31,6 +31,11 @@ void VisualizationPanel::resized()
 
 void VisualizationPanel::paint(Graphics& g)
 {
+}
+
+void VisualizationPanel::clear()
+{
+    mCombinedAudioMidiRegion.setSize(getWidth() - KEYBOARD_WIDTH, getHeight());
 }
 
 void VisualizationPanel::startTimerHzAudioThumbnail(int inFreqHz)
