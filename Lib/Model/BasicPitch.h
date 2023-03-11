@@ -8,6 +8,7 @@
 #include "BasicPitchCNN.h"
 #include "Constants.h"
 #include "Features.h"
+#include "MidiFileWriter.h"
 #include "Notes.h"
 
 class BasicPitch

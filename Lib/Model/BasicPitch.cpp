@@ -46,12 +46,17 @@ void BasicPitch::transribeToMIDI(float* inAudio, int inNumSamples)
     }
 
     mNoteEvents = mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams);
+
+    MidiFileWriter midi_file_writer;
+
+    midi_file_writer.writeMidiFile(mNoteEvents, 120.0);
 }
 
 void BasicPitch::updateMIDI()
 {
     mNoteEvents = mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams);
 }
+
 const std::vector<Notes::Event>& BasicPitch::getNoteEvents() const
 {
     return mNoteEvents;
