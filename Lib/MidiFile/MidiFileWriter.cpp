@@ -4,26 +4,20 @@
 
 #include "MidiFileWriter.h"
 
-MidiFileWriter::MidiFileWriter()
-{
-    if (!mOutFile.isDirectory())
-    {
-        mOutFile.createDirectory();
-    }
-
-    mOutFile = mOutFile.getChildFile("test.mid");
-}
-
 bool MidiFileWriter::writeMidiFile(const std::vector<Notes::Event>& inNoteEvents,
+                                   juce::File& fileToUse,
                                    int inTempoBPM)
 {
     juce::MidiMessageSequence message_sequence;
 
-    auto tempo = juce::MidiMessage::tempoMetaEvent(
+    auto tempo_meta_event = juce::MidiMessage::tempoMetaEvent(
         static_cast<float>(_BPMToMicrosecondsPerQuarterNote(inTempoBPM)));
-    message_sequence.addEvent(tempo);
-    auto time_signature = juce::MidiMessage::timeSignatureMetaEvent(4, 4);
-    message_sequence.addEvent(time_signature);
+    tempo_meta_event.setTimeStamp(0.0);
+    message_sequence.addEvent(tempo_meta_event);
+
+    auto time_signature_meta_event = juce::MidiMessage::timeSignatureMetaEvent(4, 4);
+    time_signature_meta_event.setTimeStamp(0.0);
+    message_sequence.addEvent(time_signature_meta_event);
 
     for (auto& note: inNoteEvents)
     {
@@ -49,7 +43,7 @@ bool MidiFileWriter::writeMidiFile(const std::vector<Notes::Event>& inNoteEvents
 
     midi_file.addTrack(message_sequence);
 
-    FileOutputStream output_stream(mOutFile);
+    FileOutputStream output_stream(fileToUse);
 
     if (!output_stream.openedOk())
         return false;

@@ -12,17 +12,12 @@
 class MidiFileWriter
 {
 public:
-    MidiFileWriter();
-
-    bool writeMidiFile(const std::vector<Notes::Event>& inNoteEvents, int inTempoBPM);
+    bool writeMidiFile(const std::vector<Notes::Event>& inNoteEvents,
+                       juce::File& fileToUse,
+                       int inTempoBPM);
 
 private:
     static double _BPMToMicrosecondsPerQuarterNote(double inTempoBPM);
-
-    juce::File mOutFile = juce::File::getSpecialLocation(juce::File::userDesktopDirectory)
-                              .getChildFile("NeuralNote");
-
-
 };
 
 #endif // MidiFileWriter_h

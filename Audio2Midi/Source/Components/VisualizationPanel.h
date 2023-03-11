@@ -9,6 +9,7 @@
 
 #include "CombinedAudioMidiRegion.h"
 #include "Keyboard.h"
+#include "MidiFileDrag.h"
 #include "PluginProcessor.h"
 #include "VisualizationPanel.h"
 
@@ -34,6 +35,7 @@ private:
     Keyboard mKeyboard;
     juce::Viewport mAudioMidiViewport;
     CombinedAudioMidiRegion mCombinedAudioMidiRegion;
+    MidiFileDrag mMidiFileDrag;
 };
 
 #endif // VisualizationPanel_h

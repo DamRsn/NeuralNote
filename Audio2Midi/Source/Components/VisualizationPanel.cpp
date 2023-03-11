@@ -5,12 +5,14 @@
 #include "VisualizationPanel.h"
 VisualizationPanel::VisualizationPanel(Audio2MidiAudioProcessor& processor)
     : mCombinedAudioMidiRegion(processor, mKeyboard)
+    , mMidiFileDrag(processor)
 {
     mAudioMidiViewport.setViewedComponent(&mCombinedAudioMidiRegion);
     addAndMakeVisible(mKeyboard);
     addAndMakeVisible(mAudioMidiViewport);
 
     mAudioMidiViewport.setScrollBarsShown(false, true, false, false);
+    addAndMakeVisible(mMidiFileDrag);
 }
 
 void VisualizationPanel::resized()
@@ -27,6 +29,8 @@ void VisualizationPanel::resized()
         KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
 
     mCombinedAudioMidiRegion.setBaseWidth(getWidth() - KEYBOARD_WIDTH);
+
+    mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 10, getWidth(), 10);
 }
 
 void VisualizationPanel::paint(Graphics& g)
