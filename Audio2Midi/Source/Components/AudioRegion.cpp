@@ -88,6 +88,7 @@ void AudioRegion::filesDropped(const StringArray& files, int x, int y)
     mThumbnail.addBlock(
         0, mAudioProcessor.getAudioBufferForMidi(), 0, num_loaded_samples);
 
+    mAudioProcessor.setStateToProcessing();
     mAudioProcessor.launchTranscribeJob();
 
     repaint();

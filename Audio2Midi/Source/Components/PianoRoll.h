@@ -7,17 +7,20 @@
 
 #include <JuceHeader.h>
 
+#include "Constants.h"
 #include "Keyboard.h"
 #include "PluginProcessor.h"
 
 class PianoRoll : public juce::Component
 {
 public:
-    PianoRoll(Audio2MidiAudioProcessor& processor);
+    explicit PianoRoll(Audio2MidiAudioProcessor& processor);
 
     void resized() override;
 
     void paint(Graphics& g) override;
+
+    static constexpr int KEYBOARD_WIDTH = 50;
 
 private:
     float _timeToX(float inTime) const;
@@ -46,8 +49,6 @@ private:
     static bool _isWhiteKey(int inNote);
 
     float _getNoteWidth(int inNote) const;
-
-    const int mKeyboardWidth = 50;
 
     Keyboard mKeyboard;
     Audio2MidiAudioProcessor& mProcessor;

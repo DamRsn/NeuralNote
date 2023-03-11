@@ -29,9 +29,11 @@ public:
 private:
     void sliderValueChanged(juce::Slider* inSliderPtr) override;
 
-    void updateEnablement();
+    void updateEnablements();
 
     Audio2MidiAudioProcessor& mProcessor;
+
+    State mPrevState = EmptyAudioAndMidiRegions;
 
     AudioRegion mAudioRegion;
     PianoRoll mPianoRoll;

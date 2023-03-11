@@ -14,6 +14,7 @@ void BasicPitch::reset()
     mContoursPG.clear();
     mNotesPG.clear();
     mOnsetsPG.clear();
+    mNoteEvents.clear();
 
     mNumFrames = 0;
 }

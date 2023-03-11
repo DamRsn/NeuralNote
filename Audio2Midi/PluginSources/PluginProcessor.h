@@ -12,7 +12,7 @@ struct UIParameters
     std::atomic<float> noteSegmentationThreshold = 0.5;
     std::atomic<float> modelConfidenceThreshold = 0.5;
     std::atomic<float> minNoteDurationMs = 11;
-    std::atomic<bool> recordOn = false;
+    //    std::atomic<bool> recordOn = false;
 };
 
 enum State
@@ -37,7 +37,11 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    State getState() const { return mState.load(); };
+    State getState() const { return mState.load(); }
+
+    void setStateToRecording() { mState.store(Recording); }
+
+    void setStateToProcessing() { mState.store(Processing); }
 
     void clear();
 
@@ -57,6 +61,8 @@ private:
     void _runModel();
 
     DownSampler mDownSampler;
+
+    bool mWasRecording = false;
 
     std::atomic<State> mState = EmptyAudioAndMidiRegions;
 

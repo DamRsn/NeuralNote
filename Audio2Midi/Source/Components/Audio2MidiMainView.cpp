@@ -21,14 +21,25 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     mRecordButton->onClick = [this]()
     {
         bool is_on = mRecordButton->getToggleState();
-        mProcessor.mParameters.recordOn.store(is_on);
 
+        jassert(mProcessor.getState() == EmptyAudioAndMidiRegions
+                || mProcessor.getState() == Recording);
+
+        // Recording started
         if (is_on)
+        {
             mAudioRegion.startTimerHz(5);
+            mProcessor.setStateToRecording();
+        }
         else
+        {
+            // Recording has ended, set processor state to processing
+            mProcessor.setStateToProcessing();
             mAudioRegion.stopTimer();
+            mRecordButton->setEnabled(false);
+        }
 
-        updateEnablement();
+        updateEnablements();
     };
 
     addAndMakeVisible(*mRecordButton);
@@ -44,7 +55,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     mClearButton->onClick = [this]()
     {
         mProcessor.clear();
-        repaint();
+        updateEnablements();
     };
 
     addAndMakeVisible(*mClearButton);
@@ -66,6 +77,8 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     addAndMakeVisible(mPianoRoll);
 
     startTimerHz(30);
+
+    updateEnablements();
 }
 
 void Audio2MidiMainView::resized()
@@ -89,41 +102,71 @@ void Audio2MidiMainView::paint(Graphics& g)
 
     g.setColour(juce::Colours::black);
 
-    g.drawText(std::to_string(static_cast<int>(mProcessor.getState())),
-               getLocalBounds(),
+    g.drawText("State: " + std::to_string(static_cast<int>(mProcessor.getState())),
+               juce::Rectangle<int>(200, 20, 100, 20),
                juce::Justification::centred);
 }
 
 void Audio2MidiMainView::timerCallback()
 {
-    if (mRecordButton->getToggleState() && !mProcessor.mParameters.recordOn.load())
+    auto processor_state = mProcessor.getState();
+    if (mRecordButton->getToggleState() && processor_state != Recording)
     {
-        mRecordButton->setToggleState(false, juce::NotificationType::sendNotification);
         mAudioRegion.stopTimer();
+        updateEnablements();
     }
 
-    repaint();
+    if (mPrevState != processor_state)
+    {
+        mPrevState = processor_state;
+        updateEnablements();
+    }
 }
 
 void Audio2MidiMainView::sliderValueChanged(juce::Slider* inSliderPtr)
 {
 }
 
-void Audio2MidiMainView::updateEnablement()
+void Audio2MidiMainView::updateEnablements()
 {
-    if (mProcessor.mParameters.recordOn.load())
+    auto current_state = mProcessor.getState();
+    mPrevState = current_state;
+
+    if (current_state == EmptyAudioAndMidiRegions)
     {
+        mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
         mNoteSegmentationSlider->setEnabled(false);
         mMinNoteDuration->setEnabled(false);
         mModelConfidenceThresholdSlider->setEnabled(false);
     }
-    else
+    else if (current_state == Recording)
     {
+        mRecordButton->setEnabled(true);
+        mClearButton->setEnabled(false);
+        mNoteSegmentationSlider->setEnabled(false);
+        mMinNoteDuration->setEnabled(false);
+        mModelConfidenceThresholdSlider->setEnabled(false);
+    }
+    else if (current_state == Processing)
+    {
+        mRecordButton->setEnabled(false);
+        mClearButton->setEnabled(false);
+        mNoteSegmentationSlider->setEnabled(false);
+        mMinNoteDuration->setEnabled(false);
+        mModelConfidenceThresholdSlider->setEnabled(false);
+    }
+    else if (current_state == PopulatedAudioAndMidiRegions)
+    {
+        mRecordButton->setEnabled(false);
         mClearButton->setEnabled(true);
         mNoteSegmentationSlider->setEnabled(true);
         mMinNoteDuration->setEnabled(true);
         mModelConfidenceThresholdSlider->setEnabled(true);
+    }
+    else
+    {
+        jassertfalse;
     }
 
     repaint();

@@ -7,6 +7,8 @@
 
 #include <JuceHeader.h>
 
+#include "Constants.h"
+
 class Keyboard : public KeyboardComponentBase
 {
 public:

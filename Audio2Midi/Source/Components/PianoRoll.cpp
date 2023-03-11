@@ -12,17 +12,38 @@ PianoRoll::PianoRoll(Audio2MidiAudioProcessor& processor)
 
 void PianoRoll::resized()
 {
-    mKeyboard.setBounds(0, 0, mKeyboardWidth, getHeight());
+    mKeyboard.setBounds(0, 0, KEYBOARD_WIDTH, getHeight());
 }
 
 void PianoRoll::paint(Graphics& g)
 {
+    Rectangle<float> local_bounds = {
+        0, 0, static_cast<float>(getWidth()), static_cast<float>(getHeight())};
+
+    auto rect_left = static_cast<float>(KEYBOARD_WIDTH);
+    auto rect_width = static_cast<float>(getWidth()) - rect_left;
+
+    for (int i = 21; i < 109; i++)
+    {
+        if (mKeyboard.getRectangleForKey(i).intersects(local_bounds))
+        {
+            juce::Colour fill_colour =
+                _isWhiteKey(i) ? juce::Colours::lightgrey : juce::Colours::darkgrey;
+
+            fill_colour = fill_colour.withAlpha(0.2f);
+
+            g.setColour(fill_colour);
+
+            auto y_range = _noteToYRange(i);
+            g.fillRect(
+                rect_left, y_range.second, rect_width, y_range.first - y_range.second);
+        }
+    }
+
     g.setColour(juce::Colours::pink);
 
     if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
     {
-        float key_width = mKeyboard.getKeyWidth();
-
         for (auto& note_event: mProcessor.getNoteEventVector())
         {
             auto note_y_range = _noteToYRange(note_event.pitch);
@@ -38,53 +59,37 @@ void PianoRoll::paint(Graphics& g)
                        _timeToX(end) - _timeToX(start),
                        note_y_range.first - note_y_range.second);
         }
-
-        Rectangle<float> local_bounds = {
-            0, 0, static_cast<float>(getWidth()), static_cast<float>(getHeight())};
-
-        auto rect_left = static_cast<float>(mKeyboardWidth);
-        auto rect_width = static_cast<float>(getWidth()) - rect_left;
-
-        for (int i = 21; i < 109; i++)
-        {
-            if (mKeyboard.getRectangleForKey(i).intersects(local_bounds))
-            {
-                juce::Colour fill_colour =
-                    _isWhiteKey(i) ? juce::Colours::lightgrey : juce::Colours::darkgrey;
-
-                fill_colour = fill_colour.withAlpha(0.5f);
-
-                g.setColour(fill_colour);
-
-                auto y_range = _noteToYRange(i);
-                g.fillRect(
-                    rect_left, y_range.second, rect_width, y_range.first - y_range.second);
-            }
-        }
     }
 }
 
 float PianoRoll::_timeToX(float inTime) const
 {
-    return inTime / 10.0f * static_cast<float>(getWidth() - mKeyboardWidth)
-           + static_cast<float>(mKeyboardWidth);
+    return inTime / 10.0f * static_cast<float>(getWidth() - KEYBOARD_WIDTH)
+           + static_cast<float>(KEYBOARD_WIDTH);
 }
 
 std::pair<float, float> PianoRoll::_noteToYRange(int inNote) const
 {
-    jassert(inNote >= 21 && inNote <= 108);
+    jassert(inNote >= MIN_MIDI_NOTE && inNote <= MAX_MIDI_NOTE);
 
-    if (inNote == 21)
+    if (inNote == MIN_MIDI_NOTE)
     {
         return {_noteBottomY(inNote), _noteBottomY(inNote + 1)};
     }
-    else if (inNote == 108)
+    else if (inNote == MAX_MIDI_NOTE)
     {
         return {_noteTopY(inNote - 1), _noteTopY(inNote)};
     }
     else
     {
-        return {_noteTopY(inNote - 1), _noteBottomY(inNote + 1)};
+        if (_isWhiteKey(inNote))
+        {
+            return {_noteTopY(inNote - 1), _noteBottomY(inNote + 1)};
+        }
+        else
+        {
+            return {_noteBottomY(inNote), _noteTopY(inNote)};
+        }
     }
 }
 

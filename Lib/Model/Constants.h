@@ -17,4 +17,7 @@ static constexpr int MAX_FREQ_IDX = 87;
 // duration in seconds of training examples - original 1
 static constexpr int AUDIO_WINDOW_LENGTH = 2;
 
+static constexpr int MIN_MIDI_NOTE = 21;
+static constexpr int MAX_MIDI_NOTE = 108;
+
 #endif //AUDIO2MIDIPLUGIN_CONSTANTS_H

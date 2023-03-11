@@ -8,10 +8,11 @@ Keyboard::Keyboard()
     : KeyboardComponentBase(
         juce::KeyboardComponentBase::Orientation::verticalKeyboardFacingRight)
 {
-    setAvailableRange(21, 108);
+    setAvailableRange(MIN_MIDI_NOTE, MAX_MIDI_NOTE);
 
-    setBlackNoteWidthProportion(0.8f);
-    setKeyWidth(14);
+    setBlackNoteWidthProportion(0.58f);
+    setBlackNoteLengthProportion(0.6f);
+    setKeyWidth(16);
 }
 
 void Keyboard::drawKeyboardBackground(Graphics& g, Rectangle<float> area)

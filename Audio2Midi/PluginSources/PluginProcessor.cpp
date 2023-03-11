@@ -20,21 +20,23 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 {
     juce::ignoreUnused(midiMessages);
 
-    if (mParameters.recordOn.load())
+    if (mState.load() == Recording)
     {
-        if (mState.load() != Recording)
+        if (!mWasRecording)
         {
-            mState.store(Recording);
             mDownSampler.reset();
+            mWasRecording = true;
         }
 
         // If we have reached maximum number of samples that can be processed: stop record and launch processing
         int num_new_down_samples =
             mDownSampler.numOutSamplesOnNextProcessBlock(buffer.getNumSamples());
 
+        // If we reach the maximum number of sample that can be gathered
         if (mNumSamplesAcquired + num_new_down_samples >= mMaxNumSamplesToConvert)
         {
-            mParameters.recordOn.store(false);
+            //            mParameters.recordOn.store(false);
+            mWasRecording = false;
             launchTranscribeJob();
         }
         else
@@ -56,9 +58,10 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     }
     else
     {
-        // If we were previously recording but recordOn is no longer true (user clicked record button to stop it).
-        if (mState.load() == Recording)
+        // If we were previously recording but not anymore (user clicked record button to stop it).
+        if (mWasRecording)
         {
+            mWasRecording = false;
             launchTranscribeJob();
         }
     }
@@ -80,10 +83,14 @@ void Audio2MidiAudioProcessor::setStateInformation(const void* data, int sizeInB
 }
 void Audio2MidiAudioProcessor::clear()
 {
+    jassert(mState.load() == PopulatedAudioAndMidiRegions);
+
     mNumSamplesAcquired = 0;
     mAudioBufferForMIDITranscription.clear();
 
     mBasicPitch.reset();
+    mWasRecording = false;
+    mState.store(EmptyAudioAndMidiRegions);
 }
 
 AudioBuffer<float>& Audio2MidiAudioProcessor::getAudioBufferForMidi()
@@ -103,10 +110,10 @@ void Audio2MidiAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
 
 void Audio2MidiAudioProcessor::launchTranscribeJob()
 {
+    jassert(mState.load() == Processing);
     if (mNumSamplesAcquired >= 1 * AUDIO_SAMPLE_RATE)
     {
         mThreadPool.addJob(mJobLambda);
-        mState.store(Processing);
     }
     else
     {
@@ -119,7 +126,7 @@ void Audio2MidiAudioProcessor::_runModel()
     mBasicPitch.transribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
                                 mNumSamplesAcquired);
     mState.store(PopulatedAudioAndMidiRegions);
-    
+
     // TODO: Notify UI
 }
 
