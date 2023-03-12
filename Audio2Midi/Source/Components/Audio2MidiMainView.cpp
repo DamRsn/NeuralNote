@@ -8,6 +8,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     : mProcessor(processor)
     , mVisualizationPanel(processor)
     , mTranscriptionOptions(processor)
+    , mNoteOptions(processor)
 {
     mRecordButton = std::make_unique<TextButton>("Record");
     mRecordButton->setButtonText("Record");
@@ -62,6 +63,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
 
     addAndMakeVisible(mVisualizationPanel);
     addAndMakeVisible(mTranscriptionOptions);
+    addAndMakeVisible(mNoteOptions);
 
     startTimerHz(30);
 
@@ -75,11 +77,12 @@ void Audio2MidiMainView::resized()
 
     mVisualizationPanel.setBounds(300, 100, 680, 530);
     mTranscriptionOptions.setBounds(22, 136, 266, 220);
+    mNoteOptions.setTopLeftPosition(22, 374);
 }
 
 void Audio2MidiMainView::paint(Graphics& g)
 {
-    g.setColour(juce::Colours::white);
+    g.setColour(juce::Colours::lightcyan);
     g.fillAll();
 
     g.setColour(juce::Colours::black);
@@ -119,24 +122,28 @@ void Audio2MidiMainView::updateEnablements()
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
+        mNoteOptions.setEnabled(false);
     }
     else if (current_state == Recording)
     {
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
+        mNoteOptions.setEnabled(false);
     }
     else if (current_state == Processing)
     {
         mRecordButton->setEnabled(false);
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
+        mNoteOptions.setEnabled(false);
     }
     else if (current_state == PopulatedAudioAndMidiRegions)
     {
         mRecordButton->setEnabled(false);
         mClearButton->setEnabled(true);
         mTranscriptionOptions.setEnabled(true);
+        mNoteOptions.setEnabled(true);
     }
     else
     {

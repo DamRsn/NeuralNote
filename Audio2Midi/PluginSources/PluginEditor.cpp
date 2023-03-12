@@ -12,7 +12,6 @@ Audio2MidiEditor::Audio2MidiEditor(Audio2MidiAudioProcessor& p)
 
 void Audio2MidiEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 }
 
 void Audio2MidiEditor::resized()

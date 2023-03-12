@@ -11,6 +11,7 @@
 #include "Knob.h"
 #include "TranscriptionOptionsView.h"
 #include "VisualizationPanel.h"
+#include "NoteOptionsView.h"
 
 class Audio2MidiMainView
     : public juce::Component
@@ -37,6 +38,7 @@ private:
 
     VisualizationPanel mVisualizationPanel;
     TranscriptionOptionsView mTranscriptionOptions;
+    NoteOptionsView mNoteOptions;
 
     std::unique_ptr<juce::Slider> mGainSlider;
     std::unique_ptr<juce::Button> mMuteButton;

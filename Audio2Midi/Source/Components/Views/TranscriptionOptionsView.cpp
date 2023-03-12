@@ -64,6 +64,13 @@ void TranscriptionOptionsView::resized()
 
 void TranscriptionOptionsView::paint(Graphics& g)
 {
+    g.setColour(juce::Colours::white.withAlpha(0.7f));
+    g.fillRoundedRectangle(0.0f,
+                           23.0f,
+                           static_cast<float>(getWidth()),
+                           static_cast<float>(getHeight() - 23),
+                           5.0f);
+
     g.setColour(juce::Colours::black);
     g.setFont(12.0f);
     g.drawText("Transcription Options",
@@ -81,11 +88,4 @@ void TranscriptionOptionsView::paint(Graphics& g)
     g.drawText("Pitch Bend",
                juce::Rectangle<int>(11, 180, 66, 12),
                juce::Justification::centred);
-
-    g.setColour(juce::Colours::white.withAlpha(0.7f));
-    g.fillRoundedRectangle(0.0f,
-                           23.0f,
-                           static_cast<float>(getWidth()),
-                           static_cast<float>(getHeight() - 23),
-                           5.0f);
 }
