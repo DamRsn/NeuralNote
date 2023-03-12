@@ -36,6 +36,8 @@ public:
 
     void setBaseWidth(int inWidth);
 
+    void repaintPianoRoll();
+
     const double mNumPixelsPerSecond = 100.0;
 
     const int mAudioRegionHeight = 100;

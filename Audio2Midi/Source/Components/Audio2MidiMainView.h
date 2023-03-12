@@ -16,7 +16,6 @@
 
 class Audio2MidiMainView
     : public juce::Component
-    , public juce::Slider::Listener
     , public juce::Timer
 {
 public:
@@ -28,9 +27,9 @@ public:
 
     void timerCallback() override;
 
-private:
-    void sliderValueChanged(juce::Slider* inSliderPtr) override;
+    void repaintPianoRoll();
 
+private:
     void updateEnablements();
 
     Audio2MidiAudioProcessor& mProcessor;

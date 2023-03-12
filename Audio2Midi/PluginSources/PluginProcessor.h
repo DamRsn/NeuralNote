@@ -21,7 +21,7 @@ public:
     struct Parameters
     {
         std::atomic<float> noteSensibility = 0.5;
-        std::atomic<float> splitSensibility = 0.5;
+        std::atomic<float> splitSensibility = 0.7;
         std::atomic<float> minNoteDurationMs = 125;
         std::atomic<int> pitchBendMode = 0;
 
@@ -65,6 +65,8 @@ public:
     void launchTranscribeJob();
 
     const std::vector<Notes::Event>& getNoteEventVector() const;
+
+    void updateTranscription();
 
     Parameters* getCustomParameters();
 

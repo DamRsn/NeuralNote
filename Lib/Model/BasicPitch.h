@@ -18,7 +18,10 @@ public:
 
     void reset();
 
-    void setParameters();
+    void setParameters(float inNoteSensibility,
+                       float inSplitSensibility,
+                       float inMinNoteDurationMs,
+                       int inPitchBendMode);
 
     void transribeToMIDI(float* inAudio, int inNumSamples);
 

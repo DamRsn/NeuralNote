@@ -29,6 +29,10 @@ public:
 
     void stopTimerAudioThumbnail();
 
+    void repaintPianoRoll();
+
+    void setMidiFileDragComponentVisible();
+
     static constexpr int KEYBOARD_WIDTH = 50;
 
 private:

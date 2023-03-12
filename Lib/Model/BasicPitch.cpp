@@ -19,9 +19,17 @@ void BasicPitch::reset()
     mNumFrames = 0;
 }
 
-void BasicPitch::setParameters()
+void BasicPitch::setParameters(float inNoteSensibility,
+                               float inSplitSensibility,
+                               float inMinNoteDurationMs,
+                               int inPitchBendMode)
 {
-    // TODO:
+    mParams.onsetThreshold = 1.0f - inNoteSensibility;
+    mParams.minNoteLength = static_cast<int>(
+        std::round(inMinNoteDurationMs * FFT_HOP / BASIC_PITCH_SAMPLE_RATE));
+
+    mParams.pitchBend = static_cast<PitchBendModes>(inPitchBendMode);
+    mParams.frameThreshold = 1.0f - inSplitSensibility;
 }
 
 void BasicPitch::transribeToMIDI(float* inAudio, int inNumSamples)

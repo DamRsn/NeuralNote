@@ -11,16 +11,22 @@
 #include "Knob.h"
 #include "UIDefines.h"
 
-class TranscriptionOptionsView : public Component
+class Audio2MidiMainView;
+
+class TranscriptionOptionsView
+    : public juce::Component
+    , juce::Slider::Listener
 {
 public:
-    TranscriptionOptionsView(Audio2MidiAudioProcessor& processor);
+    explicit TranscriptionOptionsView(Audio2MidiAudioProcessor& processor);
 
     void resized() override;
 
     void paint(Graphics& g) override;
 
 private:
+    void sliderValueChanged(Slider* slider) override;
+
     Audio2MidiAudioProcessor& mProcessor;
 
     std::unique_ptr<Knob> mNoteSensibility;

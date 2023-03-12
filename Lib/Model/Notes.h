@@ -11,14 +11,14 @@
 
 #include "Constants.h"
 
-enum PitchBend
+enum PitchBendModes
 {
-    NoPitchBend,
+    NoPitchBend = 0,
     SinglePitchBend,
     MultiPitchBend
 };
 
-NLOHMANN_JSON_SERIALIZE_ENUM(PitchBend,
+NLOHMANN_JSON_SERIALIZE_ENUM(PitchBendModes,
                              {
                                  {NoPitchBend, nullptr},
                                  {SinglePitchBend, "single"},
@@ -50,7 +50,7 @@ public:
         float maxFrequency = -1; // in Hz, -1 means unset
         float minFrequency = -1; // in Hz, -1 means unset
         bool melodiaTrick = false;
-        enum PitchBend pitchBend = NoPitchBend;
+        enum PitchBendModes pitchBend = NoPitchBend;
         int energyThreshold = 11;
     } ConvertParams;
 

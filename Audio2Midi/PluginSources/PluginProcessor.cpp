@@ -132,9 +132,29 @@ Audio2MidiAudioProcessor::Parameters* Audio2MidiAudioProcessor::getCustomParamet
 
 void Audio2MidiAudioProcessor::_runModel()
 {
+    mBasicPitch.setParameters(mParameters.noteSensibility,
+                              mParameters.splitSensibility,
+                              mParameters.minNoteDurationMs,
+                              mParameters.pitchBendMode);
+
     mBasicPitch.transribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
                                 mNumSamplesAcquired);
     mState.store(PopulatedAudioAndMidiRegions);
+}
+
+void Audio2MidiAudioProcessor::updateTranscription()
+{
+    jassert(mState == PopulatedAudioAndMidiRegions);
+
+    if (mState == PopulatedAudioAndMidiRegions)
+    {
+        mBasicPitch.setParameters(mParameters.noteSensibility,
+                                  mParameters.splitSensibility,
+                                  mParameters.minNoteDurationMs,
+                                  mParameters.pitchBendMode);
+
+        mBasicPitch.updateMIDI();
+    }
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

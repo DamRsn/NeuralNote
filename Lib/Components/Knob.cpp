@@ -37,7 +37,7 @@ Knob::Knob(const std::string& inLabelText,
     };
 
     mSlider.setDoubleClickReturnValue(true, inDefaultValue);
-    mSlider.setValue(mDefaultValue);
+    mSlider.setValue(inAttachedValue.load());
 
     addAndMakeVisible(mSlider);
 
@@ -84,4 +84,9 @@ void Knob::mouseExit(const MouseEvent& event)
         mIsMouseOver = false;
         repaint();
     }
+}
+
+void Knob::addSliderListener(juce::Slider::Listener* inListenerPtr)
+{
+    mSlider.addListener(inListenerPtr);
 }

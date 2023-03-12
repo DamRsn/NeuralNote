@@ -26,9 +26,6 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     {
         bool is_on = mRecordButton->getToggleState();
 
-        jassert(mProcessor.getState() == EmptyAudioAndMidiRegions
-                || mProcessor.getState() == Recording);
-
         // Recording started
         if (is_on)
         {
@@ -102,6 +99,7 @@ void Audio2MidiMainView::timerCallback()
     auto processor_state = mProcessor.getState();
     if (mRecordButton->getToggleState() && processor_state != Recording)
     {
+        mRecordButton->setToggleState(false, juce::sendNotification);
         mVisualizationPanel.stopTimerAudioThumbnail();
         updateEnablements();
     }
@@ -113,8 +111,9 @@ void Audio2MidiMainView::timerCallback()
     }
 }
 
-void Audio2MidiMainView::sliderValueChanged(juce::Slider* inSliderPtr)
+void Audio2MidiMainView::repaintPianoRoll()
 {
+    mVisualizationPanel.repaintPianoRoll();
 }
 
 void Audio2MidiMainView::updateEnablements()
@@ -153,10 +152,7 @@ void Audio2MidiMainView::updateEnablements()
         mTranscriptionOptions.setEnabled(true);
         mNoteOptions.setEnabled(true);
         mQuantizePanel.setEnabled(true);
-    }
-    else
-    {
-        jassertfalse;
+        mVisualizationPanel.setMidiFileDragComponentVisible();
     }
 
     repaint();

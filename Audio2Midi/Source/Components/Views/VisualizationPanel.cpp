@@ -12,7 +12,7 @@ VisualizationPanel::VisualizationPanel(Audio2MidiAudioProcessor& processor)
     addAndMakeVisible(mAudioMidiViewport);
 
     mAudioMidiViewport.setScrollBarsShown(false, true, false, false);
-    addAndMakeVisible(mMidiFileDrag);
+    addChildComponent(mMidiFileDrag);
 }
 
 void VisualizationPanel::resized()
@@ -40,6 +40,7 @@ void VisualizationPanel::paint(Graphics& g)
 void VisualizationPanel::clear()
 {
     mCombinedAudioMidiRegion.setSize(getWidth() - KEYBOARD_WIDTH, getHeight());
+    mMidiFileDrag.setVisible(false);
 }
 
 void VisualizationPanel::startTimerHzAudioThumbnail(int inFreqHz)
@@ -50,4 +51,14 @@ void VisualizationPanel::startTimerHzAudioThumbnail(int inFreqHz)
 void VisualizationPanel::stopTimerAudioThumbnail()
 {
     mCombinedAudioMidiRegion.stopTimer();
+}
+
+void VisualizationPanel::repaintPianoRoll()
+{
+    mCombinedAudioMidiRegion.repaintPianoRoll();
+}
+
+void VisualizationPanel::setMidiFileDragComponentVisible()
+{
+    mMidiFileDrag.setVisible(true);
 }

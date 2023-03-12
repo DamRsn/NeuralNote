@@ -71,6 +71,11 @@ void CombinedAudioMidiRegion::setBaseWidth(int inWidth)
     mBaseWidth = inWidth;
 }
 
+void CombinedAudioMidiRegion::repaintPianoRoll()
+{
+    mPianoRoll.repaint();
+}
+
 void CombinedAudioMidiRegion::_resizeAccordingToNumSamplesAvailable()
 {
     int num_samples_available = mProcessor.getNumSamplesAcquired();

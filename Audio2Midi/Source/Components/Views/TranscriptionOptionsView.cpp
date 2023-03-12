@@ -3,6 +3,8 @@
 //
 
 #include "TranscriptionOptionsView.h"
+#include "Audio2MidiMainView.h"
+
 TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& processor)
     : mProcessor(processor)
 {
@@ -14,6 +16,8 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
                                0.7,
                                false,
                                mProcessor.getCustomParameters()->noteSensibility);
+
+    mNoteSensibility->addSliderListener(this);
     addAndMakeVisible(*mNoteSensibility);
 
     mSplitSensibility =
@@ -24,6 +28,8 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
                                0.5,
                                false,
                                mProcessor.getCustomParameters()->splitSensibility);
+
+    mSplitSensibility->addSliderListener(this);
     addAndMakeVisible(*mSplitSensibility);
 
     mMinNoteDuration =
@@ -34,6 +40,8 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
                                125,
                                false,
                                mProcessor.getCustomParameters()->minNoteDurationMs);
+
+    mMinNoteDuration->addSliderListener(this);
     addAndMakeVisible(*mMinNoteDuration);
 
     mPitchBendDropDown = std::make_unique<juce::ComboBox>("PITCH BEND");
@@ -88,4 +96,18 @@ void TranscriptionOptionsView::paint(Graphics& g)
     g.drawText("PITCH BEND",
                juce::Rectangle<int>(11, 180, 66, 12),
                juce::Justification::centred);
+}
+
+void TranscriptionOptionsView::sliderValueChanged(Slider* slider)
+{
+    if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
+    {
+        mProcessor.updateTranscription();
+        auto* main_view = dynamic_cast<Audio2MidiMainView*>(getParentComponent());
+
+        if (main_view)
+            main_view->repaintPianoRoll();
+        else
+            jassertfalse;
+    }
 }
