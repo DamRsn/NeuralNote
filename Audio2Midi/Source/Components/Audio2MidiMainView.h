@@ -8,7 +8,8 @@
 #include <JuceHeader.h>
 
 #include "PluginProcessor.h"
-#include "RotarySlider.h"
+#include "Knob.h"
+#include "TranscriptionOptionsView.h"
 #include "VisualizationPanel.h"
 
 class Audio2MidiMainView
@@ -35,6 +36,7 @@ private:
     State mPrevState = EmptyAudioAndMidiRegions;
 
     VisualizationPanel mVisualizationPanel;
+    TranscriptionOptionsView mTranscriptionOptions;
 
     std::unique_ptr<juce::Slider> mGainSlider;
     std::unique_ptr<juce::Button> mMuteButton;
@@ -42,13 +44,8 @@ private:
     std::unique_ptr<juce::TextButton> mRecordButton;
     std::unique_ptr<juce::TextButton> mClearButton;
 
-    std::unique_ptr<RotarySlider> mNoteSegmentationSlider;
-    std::unique_ptr<RotarySlider> mModelConfidenceThresholdSlider;
-    std::unique_ptr<RotarySlider> mMinNoteDuration;
-
-    std::unique_ptr<RotarySlider> mMinNoteSlider;
-    std::unique_ptr<RotarySlider> mMaxNoteSlider;
-    std::unique_ptr<juce::ToggleButton> mPitchBendCheckbox;
+    std::unique_ptr<Knob> mMinNoteSlider;
+    std::unique_ptr<Knob> mMaxNoteSlider;
 
     std::unique_ptr<ComboBox> mKey; // C, C#, D, D# ...
     std::unique_ptr<ComboBox> mMode; // Major, Minor, Chromatic

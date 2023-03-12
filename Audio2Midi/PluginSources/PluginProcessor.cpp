@@ -120,16 +120,21 @@ void Audio2MidiAudioProcessor::launchTranscribeJob()
     }
 }
 
+const std::vector<Notes::Event>& Audio2MidiAudioProcessor::getNoteEventVector() const
+{
+    return mBasicPitch.getNoteEvents();
+}
+
+Audio2MidiAudioProcessor::Parameters* Audio2MidiAudioProcessor::getCustomParameters()
+{
+    return &mParameters;
+}
+
 void Audio2MidiAudioProcessor::_runModel()
 {
     mBasicPitch.transribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
                                 mNumSamplesAcquired);
     mState.store(PopulatedAudioAndMidiRegions);
-}
-
-const std::vector<Notes::Event>& Audio2MidiAudioProcessor::getNoteEventVector() const
-{
-    return mBasicPitch.getNoteEvents();
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

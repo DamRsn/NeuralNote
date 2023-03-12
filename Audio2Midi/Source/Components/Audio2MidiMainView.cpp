@@ -7,6 +7,7 @@
 Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     : mProcessor(processor)
     , mVisualizationPanel(processor)
+    , mTranscriptionOptions(processor)
 {
     mRecordButton = std::make_unique<TextButton>("Record");
     mRecordButton->setButtonText("Record");
@@ -59,19 +60,8 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
 
     addAndMakeVisible(*mClearButton);
 
-    mModelConfidenceThresholdSlider =
-        std::make_unique<RotarySlider>("Model Confidence", 0.05, 0.95, 0.01, true);
-    addAndMakeVisible(*mModelConfidenceThresholdSlider);
-
-    mNoteSegmentationSlider =
-        std::make_unique<RotarySlider>("Note Segmentation", 0.05, 0.95, 0.01, true);
-    addAndMakeVisible(*mNoteSegmentationSlider);
-
-    mMinNoteDuration =
-        std::make_unique<RotarySlider>("Min Note Duration", 3, 50, 1, true);
-    addAndMakeVisible(*mMinNoteDuration);
-
     addAndMakeVisible(mVisualizationPanel);
+    addAndMakeVisible(mTranscriptionOptions);
 
     startTimerHz(30);
 
@@ -84,11 +74,7 @@ void Audio2MidiMainView::resized()
     mClearButton->setBounds(640, 20, 140, 50);
 
     mVisualizationPanel.setBounds(300, 100, 680, 530);
-
-    int knob_size = 100;
-    mModelConfidenceThresholdSlider->setBounds(20, 20, knob_size, knob_size);
-    mNoteSegmentationSlider->setBounds(20, 150, knob_size, knob_size);
-    mMinNoteDuration->setBounds(20, 280, knob_size, knob_size);
+    mTranscriptionOptions.setBounds(22, 136, 266, 220);
 }
 
 void Audio2MidiMainView::paint(Graphics& g)
@@ -132,33 +118,25 @@ void Audio2MidiMainView::updateEnablements()
     {
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
-        mNoteSegmentationSlider->setEnabled(false);
-        mMinNoteDuration->setEnabled(false);
-        mModelConfidenceThresholdSlider->setEnabled(false);
+        mTranscriptionOptions.setEnabled(false);
     }
     else if (current_state == Recording)
     {
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
-        mNoteSegmentationSlider->setEnabled(false);
-        mMinNoteDuration->setEnabled(false);
-        mModelConfidenceThresholdSlider->setEnabled(false);
+        mTranscriptionOptions.setEnabled(false);
     }
     else if (current_state == Processing)
     {
         mRecordButton->setEnabled(false);
         mClearButton->setEnabled(false);
-        mNoteSegmentationSlider->setEnabled(false);
-        mMinNoteDuration->setEnabled(false);
-        mModelConfidenceThresholdSlider->setEnabled(false);
+        mTranscriptionOptions.setEnabled(false);
     }
     else if (current_state == PopulatedAudioAndMidiRegions)
     {
         mRecordButton->setEnabled(false);
         mClearButton->setEnabled(true);
-        mNoteSegmentationSlider->setEnabled(true);
-        mMinNoteDuration->setEnabled(true);
-        mModelConfidenceThresholdSlider->setEnabled(true);
+        mTranscriptionOptions.setEnabled(true);
     }
     else
     {
