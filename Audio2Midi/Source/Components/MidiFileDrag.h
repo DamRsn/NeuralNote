@@ -9,6 +9,7 @@
 
 #include "MidiFileWriter.h"
 #include "PluginProcessor.h"
+#include "UIDefines.h"
 
 class MidiFileDrag : public Component
 {

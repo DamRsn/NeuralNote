@@ -26,6 +26,7 @@ void MidiFileDrag::paint(Graphics& g)
     g.fillAll(juce::Colours::pink.withAlpha(0.4f));
 
     g.setColour(juce::Colours::black);
+    g.setFont(LABEL_FONT);
     g.drawText(mFilename, getLocalBounds(), juce::Justification::centred);
 }
 

@@ -56,7 +56,7 @@ void RhythmOptionsView::paint(Graphics& g)
                            5.0f);
 
     g.setColour(juce::Colours::black);
-    g.setFont(12.0f);
+    g.setFont(TITLE_FONT);
     g.drawText("RHYTHM OPTIONS",
                Rectangle<int>(31, 0, 167, 20),
                juce::Justification::centredLeft);
@@ -68,7 +68,7 @@ void RhythmOptionsView::paint(Graphics& g)
         g.drawRect(enable_rectangle, 1.0f);
 
     g.setColour(juce::Colours::black);
-    g.setFont(10.0f);
+    g.setFont(LABEL_FONT);
     g.drawText("TIME DIVISION",
                juce::Rectangle<int>(17, mTimeDivisionDropdown->getY(), 120, 17),
                juce::Justification::centredLeft);

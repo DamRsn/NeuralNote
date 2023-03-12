@@ -72,7 +72,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
                            5.0f);
 
     g.setColour(juce::Colours::black);
-    g.setFont(12.0f);
+    g.setFont(TITLE_FONT);
     g.drawText("TRANSCRIPTION OPTIONS",
                Rectangle<int>(31, 0, 167, 20),
                juce::Justification::centred);
@@ -84,7 +84,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
         g.drawRect(enable_rectangle, 1.0f);
 
     g.setColour(juce::Colours::black);
-    g.setFont(10.0f);
+    g.setFont(LABEL_FONT);
     g.drawText("PITCH BEND",
                juce::Rectangle<int>(11, 180, 66, 12),
                juce::Justification::centred);

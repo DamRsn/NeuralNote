@@ -9,6 +9,7 @@
 
 #include "PluginProcessor.h"
 #include "Knob.h"
+#include "UIDefines.h"
 
 class TranscriptionOptionsView : public Component
 {

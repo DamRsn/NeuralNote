@@ -74,7 +74,7 @@ void NoteOptionsView::paint(Graphics& g)
                            5.0f);
 
     g.setColour(juce::Colours::black);
-    g.setFont(12.0f);
+    g.setFont(TITLE_FONT);
     g.drawText(
         "NOTE OPTIONS", Rectangle<int>(31, 0, 167, 20), juce::Justification::centredLeft);
 
@@ -85,7 +85,7 @@ void NoteOptionsView::paint(Graphics& g)
         g.drawRect(enable_rectangle, 1.0f);
 
     g.setColour(juce::Colours::black);
-    g.setFont(10.0f);
+    g.setFont(LABEL_FONT);
     g.drawText("MIN / MAX NOTE",
                juce::Rectangle<int>(17, mNoteMinDropDown->getY(), 80, 17),
                juce::Justification::centredLeft);

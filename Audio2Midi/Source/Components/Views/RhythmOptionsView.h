@@ -8,6 +8,7 @@
 #include <JuceHeader.h>
 
 #include "PluginProcessor.h"
+#include "UIDefines.h"
 
 class RhythmOptionsView : public Component
 {

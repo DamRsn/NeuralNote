@@ -53,6 +53,7 @@ void Knob::paint(Graphics& g)
 {
     float alpha = isEnabled() ? 1.0f : 0.5f;
     g.setColour(juce::Colours::black.withAlpha(alpha));
+    g.setFont(LABEL_FONT);
 
     if (!mIsMouseOver || !isEnabled())
     {

@@ -7,6 +7,8 @@
 
 #include <JuceHeader.h>
 
+#include "UIDefines.h"
+
 class Knob : public juce::Component
 {
 public:

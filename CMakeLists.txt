@@ -69,7 +69,7 @@ foreach (dir ${source_dirs})
     ENDIF ()
 endforeach ()
 
-file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.onnx)
+file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.onnx ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.ttf)
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 
 target_include_directories(${BaseTargetName} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)

@@ -11,6 +11,8 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     , mNoteOptions(processor)
     , mQuantizePanel(processor)
 {
+    getLookAndFeel().setDefaultSansSerifTypeface(MONTSERRAT_BOLD);
+
     mRecordButton = std::make_unique<TextButton>("RecordButton");
     mRecordButton->setButtonText("RECORD");
     mRecordButton->setClickingTogglesState(true);
