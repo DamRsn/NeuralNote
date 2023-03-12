@@ -76,7 +76,7 @@ void NoteOptionsView::paint(Graphics& g)
     g.setColour(juce::Colours::black);
     g.setFont(12.0f);
     g.drawText(
-        "Note Options", Rectangle<int>(31, 0, 167, 20), juce::Justification::centred);
+        "NOTE OPTIONS", Rectangle<int>(31, 0, 167, 20), juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(10, 0, 17, 17);
     if (isEnabled())

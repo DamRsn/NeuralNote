@@ -7,7 +7,7 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
     : mProcessor(processor)
 {
     mNoteSensibility =
-        std::make_unique<Knob>("Note Sensibility",
+        std::make_unique<Knob>("NOTE SENSIBILITY",
                                0.05,
                                0.95,
                                0.01,
@@ -17,7 +17,7 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
     addAndMakeVisible(*mNoteSensibility);
 
     mSplitSensibility =
-        std::make_unique<Knob>("Split Sensibility",
+        std::make_unique<Knob>("SPLIT SENSIBILITY",
                                0.05,
                                0.95,
                                0.01,
@@ -27,7 +27,7 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
     addAndMakeVisible(*mSplitSensibility);
 
     mMinNoteDuration =
-        std::make_unique<Knob>("Min Note Duration",
+        std::make_unique<Knob>("MIN NOTE DURATION",
                                35,
                                580,
                                1,
@@ -36,7 +36,7 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
                                mProcessor.getCustomParameters()->minNoteDurationMs);
     addAndMakeVisible(*mMinNoteDuration);
 
-    mPitchBendDropDown = std::make_unique<juce::ComboBox>("Pitch Bend");
+    mPitchBendDropDown = std::make_unique<juce::ComboBox>("PITCH BEND");
     mPitchBendDropDown->setEditableText(false);
     mPitchBendDropDown->setJustificationType(juce::Justification::centredRight);
     mPitchBendDropDown->addItemList(
@@ -73,7 +73,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
 
     g.setColour(juce::Colours::black);
     g.setFont(12.0f);
-    g.drawText("Transcription Options",
+    g.drawText("TRANSCRIPTION OPTIONS",
                Rectangle<int>(31, 0, 167, 20),
                juce::Justification::centred);
 
@@ -85,7 +85,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
 
     g.setColour(juce::Colours::black);
     g.setFont(10.0f);
-    g.drawText("Pitch Bend",
+    g.drawText("PITCH BEND",
                juce::Rectangle<int>(11, 180, 66, 12),
                juce::Justification::centred);
 }

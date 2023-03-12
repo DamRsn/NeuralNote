@@ -9,9 +9,10 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     , mVisualizationPanel(processor)
     , mTranscriptionOptions(processor)
     , mNoteOptions(processor)
+    , mQuantizePanel(processor)
 {
-    mRecordButton = std::make_unique<TextButton>("Record");
-    mRecordButton->setButtonText("Record");
+    mRecordButton = std::make_unique<TextButton>("RecordButton");
+    mRecordButton->setButtonText("RECORD");
     mRecordButton->setClickingTogglesState(true);
     mRecordButton->setColour(TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
     mRecordButton->setColour(TextButton::ColourIds::buttonColourId,
@@ -44,8 +45,8 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
 
     addAndMakeVisible(*mRecordButton);
 
-    mClearButton = std::make_unique<TextButton>("Clear");
-    mClearButton->setButtonText("Clear");
+    mClearButton = std::make_unique<TextButton>("ClearButton");
+    mClearButton->setButtonText("CLEAR");
     mClearButton->setClickingTogglesState(false);
     mClearButton->setColour(TextButton::ColourIds::buttonOnColourId,
                             juce::Colours::black);
@@ -64,6 +65,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     addAndMakeVisible(mVisualizationPanel);
     addAndMakeVisible(mTranscriptionOptions);
     addAndMakeVisible(mNoteOptions);
+    addAndMakeVisible(mQuantizePanel);
 
     startTimerHz(30);
 
@@ -78,6 +80,7 @@ void Audio2MidiMainView::resized()
     mVisualizationPanel.setBounds(300, 100, 680, 530);
     mTranscriptionOptions.setBounds(22, 136, 266, 220);
     mNoteOptions.setTopLeftPosition(22, 374);
+    mQuantizePanel.setTopLeftPosition(25, 532);
 }
 
 void Audio2MidiMainView::paint(Graphics& g)
@@ -123,6 +126,7 @@ void Audio2MidiMainView::updateEnablements()
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
+        mQuantizePanel.setEnabled(false);
     }
     else if (current_state == Recording)
     {
@@ -130,6 +134,7 @@ void Audio2MidiMainView::updateEnablements()
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
+        mQuantizePanel.setEnabled(false);
     }
     else if (current_state == Processing)
     {
@@ -137,6 +142,7 @@ void Audio2MidiMainView::updateEnablements()
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
+        mQuantizePanel.setEnabled(false);
     }
     else if (current_state == PopulatedAudioAndMidiRegions)
     {
@@ -144,6 +150,7 @@ void Audio2MidiMainView::updateEnablements()
         mClearButton->setEnabled(true);
         mTranscriptionOptions.setEnabled(true);
         mNoteOptions.setEnabled(true);
+        mQuantizePanel.setEnabled(true);
     }
     else
     {
