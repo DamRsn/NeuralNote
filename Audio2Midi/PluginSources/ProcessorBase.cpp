@@ -117,6 +117,7 @@ bool ProcessorBase::isBusesLayoutSupported(
 
     return true;
 }
+
 void ProcessorBase::getStateInformation(juce::MemoryBlock& destData)
 {
     juce::ignoreUnused(destData);

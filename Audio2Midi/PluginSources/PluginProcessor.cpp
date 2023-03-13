@@ -13,12 +13,16 @@ Audio2MidiAudioProcessor::Audio2MidiAudioProcessor()
 void Audio2MidiAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     mDownSampler.prepareToPlay(sampleRate, samplesPerBlock);
+
+    mMonoBuffer.setSize(1, samplesPerBlock);
 }
 
 void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
                                             juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused(midiMessages);
+    const int num_in_channels = getTotalNumInputChannels();
+    const int num_out_channels = getTotalNumOutputChannels();
 
     if (mState.load() == Recording)
     {
@@ -40,13 +44,18 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
         else
         {
-            // Down-mix to mono
-            buffer.addFrom(0, 0, buffer, 1, 0, buffer.getNumSamples());
-            buffer.applyGain(0.5f);
+            mMonoBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples());
+
+            if (num_in_channels == 2)
+            {
+                // Down-mix to mono
+                mMonoBuffer.addFrom(0, 0, buffer, 1, 0, buffer.getNumSamples());
+                buffer.applyGain(1.0f / static_cast<float>(num_in_channels));
+            }
 
             // Fill buffer with 22050 Hz audio
             int num_samples_written = mDownSampler.processBlock(
-                buffer,
+                mMonoBuffer,
                 mAudioBufferForMIDITranscription.getWritePointer(0, mNumSamplesAcquired),
                 buffer.getNumSamples());
 
@@ -65,7 +74,7 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    buffer.clear();
+    buffer.applyGain(0.0f);
 }
 
 juce::AudioProcessorEditor* Audio2MidiAudioProcessor::createEditor()

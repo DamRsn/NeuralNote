@@ -15,6 +15,7 @@ option(UniversalBinary "Build universal binary for mac" OFF)
 
 if (UniversalBinary)
     set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
+    message(STATUS "Building Universal Binary")
 endif ()
 
 #static linking in Windows
@@ -29,7 +30,7 @@ juce_add_plugin("${BaseTargetName}"
         # VERSION ...                               # Set this if the plugin version is different to the project version
         # ICON_BIG ...                              # ICON_* arguments specify a path to an image file to use as an icon for the Standalone
         # ICON_SMALL ...
-        COMPANY_NAME "DamienRonssin"
+        COMPANY_NAME "DamR"
         IS_SYNTH FALSE
         NEEDS_MIDI_INPUT FALSE
         NEEDS_MIDI_OUTPUT FALSE
@@ -37,9 +38,9 @@ juce_add_plugin("${BaseTargetName}"
         EDITOR_WANTS_KEYBOARD_FOCUS FALSE
         COPY_PLUGIN_AFTER_BUILD TRUE
         PLUGIN_MANUFACTURER_CODE Damr
-        PLUGIN_CODE AdMd
+        PLUGIN_CODE NRNT
         FORMATS AU VST3 Standalone
-        PRODUCT_NAME "Audio To Midi")
+        PRODUCT_NAME "NeuralNote")
 
 juce_generate_juce_header(${BaseTargetName})
 

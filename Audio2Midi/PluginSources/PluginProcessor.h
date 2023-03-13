@@ -75,6 +75,8 @@ private:
 
     DownSampler mDownSampler;
 
+    AudioBuffer<float> mMonoBuffer;
+
     Parameters mParameters;
 
     bool mWasRecording = false;

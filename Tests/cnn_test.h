@@ -53,7 +53,7 @@ bool cnn_test()
     }
 
     const float threshold = 1e-6f;
-    auto lookahead = static_cast<size_t>(cnn.getNumFramesLookahead());
+    auto lookahead = static_cast<size_t>(BasicPitchCNN::getNumFramesLookahead());
 
     // Contours
     int num_err_contours = 0;
