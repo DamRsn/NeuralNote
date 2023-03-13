@@ -32,7 +32,6 @@ bool cnn_test()
     auto onsets_python =
         test_utils::convert_1d_to_2d<float>(onsets_python_tmp, -1, NUM_FREQ_OUT);
 
-    std::vector<float> in_frame(NUM_HARMONICS * NUM_FREQ_IN, 0.0f);
     std::vector<std::vector<float>> contours(num_frames_python,
                                              std::vector<float>(NUM_FREQ_IN));
     std::vector<std::vector<float>> notes(num_frames_python,
@@ -47,11 +46,10 @@ bool cnn_test()
     // Inference
     for (size_t i = 0; i < num_frames_python; i++)
     {
-        std::copy(features_python.begin() + i * NUM_HARMONICS * NUM_FREQ_IN,
-                  features_python.begin() + (i + 1) * NUM_HARMONICS * NUM_FREQ_IN,
-                  in_frame.begin());
-
-        cnn.frameInference(in_frame, contours[i], notes[i], onsets[i]);
+        cnn.frameInference(features_python.data() + i * NUM_HARMONICS * NUM_FREQ_IN,
+                           contours[i],
+                           notes[i],
+                           onsets[i]);
     }
 
     const float threshold = 1e-6f;

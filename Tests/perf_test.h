@@ -24,8 +24,6 @@ bool perf_test()
 
     BasicPitchCNN cnn;
 
-    std::vector<float> in_data(NUM_FREQ_IN * NUM_HARMONICS, 0.0);
-
     auto start_time = std::chrono::high_resolution_clock::now();
     const float* stacked_cqt_data =
         feature_calculator.computeFeatures(audio.data(), audio.size(), num_out_frames);
@@ -41,11 +39,10 @@ bool perf_test()
 
     for (size_t i = 0; i < num_out_frames; i++)
     {
-        std::copy(stacked_cqt_data + i * NUM_HARMONICS * NUM_FREQ_IN,
-                  stacked_cqt_data + (i + 1) * NUM_HARMONICS * NUM_FREQ_IN,
-                  in_data.begin());
-
-        cnn.frameInference(in_data, contours[i], notes[i], onsets[i]);
+        cnn.frameInference(stacked_cqt_data + i * NUM_HARMONICS * NUM_FREQ_IN,
+                           contours[i],
+                           notes[i],
+                           onsets[i]);
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
