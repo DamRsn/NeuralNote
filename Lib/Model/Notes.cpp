@@ -34,9 +34,9 @@ std::vector<Notes::Event>
     auto remaining_energy = inNotesPG;
 
     // constrain frequencies
-    auto max_freq_idx =
+    auto max_note_idx =
         (inParams.maxFrequency < 0) ? n_notes - 1 : _hzToFreqIdx(inParams.maxFrequency);
-    auto min_freq_idx =
+    auto min_note_idx =
         (inParams.minFrequency < 0) ? 0 : _hzToFreqIdx(inParams.minFrequency);
 
     // TODO: infer onsets
@@ -48,15 +48,15 @@ std::vector<Notes::Event>
     // Go backwards in time
     for (int frame_idx = last_frame - 1; frame_idx >= 0; frame_idx--)
     {
-        for (int freq_idx = max_freq_idx; freq_idx >= min_freq_idx; freq_idx--)
+        for (int note_idx = max_note_idx; note_idx >= min_note_idx; note_idx--)
         {
-            auto p = inOnsetsPG[frame_idx][freq_idx];
+            auto p = inOnsetsPG[frame_idx][note_idx];
 
             // equivalent to argrelmax logic
             auto before =
-                (frame_idx <= min_freq_idx) ? p : inOnsetsPG[frame_idx - 1][freq_idx];
+                (frame_idx <= min_note_idx) ? p : inOnsetsPG[frame_idx - 1][note_idx];
             auto after =
-                (frame_idx >= max_freq_idx) ? p : inOnsetsPG[frame_idx + 1][freq_idx];
+                (frame_idx >= max_note_idx) ? p : inOnsetsPG[frame_idx + 1][note_idx];
             if ((p < inParams.onsetThreshold) || (p < before) || (p < after))
             {
                 continue;
@@ -67,7 +67,7 @@ std::vector<Notes::Event>
             int k = 0; // number of frames since energy dropped below threshold
             while (i < last_frame && k < inParams.energyThreshold)
             {
-                if (remaining_energy[i][freq_idx] < inParams.frameThreshold)
+                if (remaining_energy[i][note_idx] < inParams.frameThreshold)
                 {
                     k++;
                 }
@@ -90,15 +90,15 @@ std::vector<Notes::Event>
             for (int f = frame_idx; f < i; f++)
             {
                 auto& v = remaining_energy[f];
-                amplitude += inNotesPG[f][freq_idx]; // could be replaced by v[freq_idx]
-                v[freq_idx] = 0;
-                if (freq_idx < MAX_FREQ_IDX)
+                amplitude += inNotesPG[f][note_idx]; // could be replaced by v[note_idx]
+                v[note_idx] = 0;
+                if (note_idx < MAX_NOTE_IDX)
                 {
-                    v[freq_idx + 1] = 0;
+                    v[note_idx + 1] = 0;
                 }
-                if (freq_idx > 0)
+                if (note_idx > 0)
                 {
-                    v[freq_idx - 1] = 0;
+                    v[note_idx - 1] = 0;
                 }
             }
             amplitude /= (i - frame_idx);
@@ -106,7 +106,7 @@ std::vector<Notes::Event>
             events.push_back(Notes::Event {
                 .start = _modelFrameToTime(frame_idx),
                 .end = _modelFrameToTime(i),
-                .pitch = freq_idx + MIDI_OFFSET,
+                .pitch = note_idx + MIDI_OFFSET,
                 .amplitude = amplitude,
             });
         }
