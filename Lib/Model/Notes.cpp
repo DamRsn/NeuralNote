@@ -30,6 +30,15 @@ std::vector<Notes::Event>
     assert(n_frames == inContoursPG.size());
     assert(n_notes == inOnsetsPG[0].size());
 
+    std::vector<std::vector<float>> inferred_onsets;
+    auto onsets_ptr = &inOnsetsPG;
+    if (inParams.inferOnsets)
+    {
+        inferred_onsets = _inferredOnsets<float>(inOnsetsPG, inNotesPG);
+        onsets_ptr = &inferred_onsets;
+    }
+    auto& onsets = *onsets_ptr;
+
     // deep copy
     auto remaining_energy = inNotesPG;
 
@@ -38,8 +47,6 @@ std::vector<Notes::Event>
         (inParams.maxFrequency < 0) ? n_notes - 1 : _hzToFreqIdx(inParams.maxFrequency);
     auto min_note_idx =
         (inParams.minFrequency < 0) ? 0 : _hzToFreqIdx(inParams.minFrequency);
-
-    // TODO: infer onsets
 
     // stop 1 frame early to prevent edge case
     // as per https://github.com/spotify/basic-pitch/blob/f85a8e9ade1f297b8adb39b155c483e2312e1aca/basic_pitch/note_creation.py#L399
@@ -50,12 +57,12 @@ std::vector<Notes::Event>
     {
         for (int note_idx = max_note_idx; note_idx >= min_note_idx; note_idx--)
         {
-            auto p = inOnsetsPG[frame_idx][note_idx];
+            auto p = onsets[frame_idx][note_idx];
 
             // equivalent to argrelmax logic
-            auto before = (frame_idx <= 0) ? p : inOnsetsPG[frame_idx - 1][note_idx];
-            auto after =
-                (frame_idx >= last_frame) ? p : inOnsetsPG[frame_idx + 1][note_idx];
+            auto before = (frame_idx <= 0) ? p : onsets[frame_idx - 1][note_idx];
+            auto after = (frame_idx >= last_frame) ? p : onsets[frame_idx + 1][note_idx];
+
             if ((p < inParams.onsetThreshold) || (p < before) || (p < after))
             {
                 continue;
