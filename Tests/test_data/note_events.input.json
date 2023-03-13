@@ -1,7 +1,7 @@
 [
   {
     "numFrames": 274,
-    "pitchBend": "none",
+    "pitchBend": null,
     "onsetThreshold": 0.5,
     "frameThreshold": 0.3,
     "minNoteLength": 5,
@@ -11,13 +11,35 @@
   },
   {
     "numFrames": 274,
-    "pitchBend": "none",
+    "pitchBend": null,
     "onsetThreshold": 0.5,
     "frameThreshold": 0.3,
     "minNoteLength": 5,
     "melodiaTrick": false,
     "energyThreshold": 11,
     "inferOnsets": false,
+    "maxFrequency": 1567,
+    "minFrequency": 330
+  },
+  {
+    "numFrames": 274,
+    "pitchBend": null,
+    "onsetThreshold": 0.5,
+    "frameThreshold": 0.3,
+    "minNoteLength": 5,
+    "melodiaTrick": false,
+    "energyThreshold": 11,
+    "inferOnsets": true
+  },
+  {
+    "numFrames": 274,
+    "pitchBend": null,
+    "onsetThreshold": 0.5,
+    "frameThreshold": 0.3,
+    "minNoteLength": 5,
+    "melodiaTrick": false,
+    "energyThreshold": 11,
+    "inferOnsets": true,
     "maxFrequency": 1567,
     "minFrequency": 330
   }
