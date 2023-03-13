@@ -53,10 +53,9 @@ std::vector<Notes::Event>
             auto p = inOnsetsPG[frame_idx][note_idx];
 
             // equivalent to argrelmax logic
-            auto before =
-                (frame_idx <= min_note_idx) ? p : inOnsetsPG[frame_idx - 1][note_idx];
+            auto before = (frame_idx <= 0) ? p : inOnsetsPG[frame_idx - 1][note_idx];
             auto after =
-                (frame_idx >= max_note_idx) ? p : inOnsetsPG[frame_idx + 1][note_idx];
+                (frame_idx >= last_frame) ? p : inOnsetsPG[frame_idx + 1][note_idx];
             if ((p < inParams.onsetThreshold) || (p < before) || (p < after))
             {
                 continue;
