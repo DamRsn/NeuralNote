@@ -61,6 +61,13 @@ public:
                                       ConvertParams inParams);
 
 private:
+    typedef struct
+    {
+        float* value;
+        int frameIdx;
+        int noteIdx;
+    } _pg_index;
+
     static inline double _modelFrameToTime(int frame)
     {
         // The following are compile-time computed consts only used here.
