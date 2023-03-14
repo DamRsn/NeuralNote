@@ -127,3 +127,8 @@ target_link_libraries(${BaseTargetName}
 if (BUILD_UNIT_TESTS)
     add_subdirectory(Tests)
 endif ()
+
+target_compile_definitions(${BaseTargetName}
+        PRIVATE
+        SAVE_DOWNSAMPLED_AUDIO=0
+        )

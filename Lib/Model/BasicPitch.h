@@ -23,7 +23,7 @@ public:
                        float inMinNoteDurationMs,
                        int inPitchBendMode);
 
-    void transribeToMIDI(float* inAudio, int inNumSamples);
+    void transcribeToMIDI(float* inAudio, int inNumSamples);
 
     void updateMIDI();
 
@@ -36,7 +36,6 @@ private:
 
     std::vector<Notes::Event> mNoteEvents;
 
-private:
     Notes::ConvertParams mParams;
 
     size_t mNumFrames = 0;

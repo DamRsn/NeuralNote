@@ -147,8 +147,8 @@ void Audio2MidiAudioProcessor::_runModel()
                               mParameters.minNoteDurationMs,
                               mParameters.pitchBendMode);
 
-    mBasicPitch.transribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
-                                mNumSamplesAcquired);
+    mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
+                                 mNumSamplesAcquired);
     mState.store(PopulatedAudioAndMidiRegions);
 }
 

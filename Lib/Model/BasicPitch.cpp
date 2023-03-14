@@ -32,8 +32,31 @@ void BasicPitch::setParameters(float inNoteSensibility,
     mParams.frameThreshold = 1.0f - inSplitSensibility;
 }
 
-void BasicPitch::transribeToMIDI(float* inAudio, int inNumSamples)
+void BasicPitch::transcribeToMIDI(float* inAudio, int inNumSamples)
 {
+    // TO test if downsampling works as expected
+#if SAVE_DOWNSAMPLED_AUDIO
+    auto file = juce::File::getSpecialLocation(juce::File::userDesktopDirectory)
+                    .getChildFile("Test_Downsampled.wav");
+
+    std::unique_ptr<AudioFormatWriter> format_writer;
+
+    format_writer.reset(WavAudioFormat().createWriterFor(
+        new FileOutputStream(file), 22050, 1, 16, {}, 0));
+
+    if (format_writer != nullptr)
+    {
+        AudioBuffer<float> tmp_buffer;
+        tmp_buffer.setSize(1, inNumSamples);
+        tmp_buffer.copyFrom(0, 0, inAudio, inNumSamples);
+        format_writer->writeFromAudioSampleBuffer(tmp_buffer, 0, inNumSamples);
+
+        format_writer->flush();
+
+        file.revealToUser();
+    }
+#endif
+
     const float* stacked_cqt =
         mFeaturesCalculator.computeFeatures(inAudio, inNumSamples, mNumFrames);
 
