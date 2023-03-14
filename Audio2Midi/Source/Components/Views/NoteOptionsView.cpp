@@ -3,38 +3,19 @@
 //
 
 #include "NoteOptionsView.h"
+
 NoteOptionsView::NoteOptionsView(Audio2MidiAudioProcessor& processor)
     : mProcessor(processor)
 {
-    mNoteMinDropDown = std::make_unique<juce::ComboBox>("MinNoteDropdown");
-    mNoteMinDropDown->setEditableText(false);
-    mNoteMinDropDown->setJustificationType(juce::Justification::centredRight);
-    mNoteMinDropDown->addItemList({"A0", "A#0", "B0", "C1", "C#1"}, 1);
-    mNoteMinDropDown->setSelectedId(1);
-    mNoteMinDropDown->onChange = [this]()
-    {
-        mProcessor.getCustomParameters()->minMidiNote.store(
-            mNoteMinDropDown->getSelectedItemIndex() + MIN_MIDI_NOTE);
-    };
-    addAndMakeVisible(*mNoteMinDropDown);
-
-    mNoteMaxDropDown = std::make_unique<juce::ComboBox>("MaxNoteDropDown");
-    mNoteMaxDropDown->setEditableText(false);
-    mNoteMaxDropDown->setJustificationType(juce::Justification::centredRight);
-    mNoteMaxDropDown->addItemList({"C8", "B7", "A#7", "G7", "F#7"}, 1);
-    mNoteMaxDropDown->setSelectedId(1);
-    mNoteMaxDropDown->onChange = [this]()
-    {
-        mProcessor.getCustomParameters()->maxMidiNote.store(
-            MAX_MIDI_NOTE - mNoteMinDropDown->getSelectedItemIndex());
-    };
-    addAndMakeVisible(*mNoteMaxDropDown);
+    mMinMaxNoteSlider =
+        std::make_unique<MinMaxNoteSlider>(mProcessor.getCustomParameters()->minMidiNote,
+                                           mProcessor.getCustomParameters()->maxMidiNote);
+    addAndMakeVisible(*mMinMaxNoteSlider);
 
     mKeyDropdown = std::make_unique<juce::ComboBox>("KeyRootNoteDropDown");
     mKeyDropdown->setEditableText(false);
-    mKeyDropdown->setJustificationType(juce::Justification::centredRight);
-    mKeyDropdown->addItemList(
-        {"A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"}, 1);
+    mKeyDropdown->setJustificationType(juce::Justification::centredLeft);
+    mKeyDropdown->addItemList(NoteUtils::RootNotesSharpStr, 1);
     mKeyDropdown->setSelectedId(4);
     mKeyDropdown->onChange = [this]()
     {
@@ -45,8 +26,8 @@ NoteOptionsView::NoteOptionsView(Audio2MidiAudioProcessor& processor)
 
     mKeyType = std::make_unique<juce::ComboBox>("ScaleTypeDropDown");
     mKeyType->setEditableText(false);
-    mKeyType->setJustificationType(juce::Justification::centredRight);
-    mKeyType->addItemList({"Chromatic", "Major", "Minor"}, 1);
+    mKeyType->setJustificationType(juce::Justification::centredLeft);
+    mKeyType->addItemList(NoteUtils::ScaleTypesStr, 1);
     mKeyType->setSelectedId(2);
     mKeyType->onChange = [this]() {
         mProcessor.getCustomParameters()->keyType.store(mKeyType->getSelectedItemIndex());
@@ -58,8 +39,7 @@ NoteOptionsView::NoteOptionsView(Audio2MidiAudioProcessor& processor)
 
 void NoteOptionsView::resized()
 {
-    mNoteMinDropDown->setBounds(110, mTopPad + 18, 60, 17);
-    mNoteMaxDropDown->setBounds(182, mTopPad + 18, 60, 17);
+    mMinMaxNoteSlider->setBounds(110, 22 + mTopPad, 154, 12);
     mKeyDropdown->setBounds(110, mTopPad + 42, 50, 17);
     mKeyType->setBounds(172, mTopPad + 42, 70, 17);
 }
@@ -86,8 +66,8 @@ void NoteOptionsView::paint(Graphics& g)
 
     g.setColour(juce::Colours::black);
     g.setFont(LABEL_FONT);
-    g.drawText("MIN / MAX NOTE",
-               juce::Rectangle<int>(17, mNoteMinDropDown->getY(), 80, 17),
+    g.drawText("RANGE",
+               juce::Rectangle<int>(17, mMinMaxNoteSlider->getY(), 80, 17),
                juce::Justification::centredLeft);
 
     g.drawText("KEY",

@@ -3,6 +3,7 @@
 //
 
 #include "NoteOptions.h"
+
 void NoteOptions::setParameters(NoteOptions::RootNote inRootNote,
                                 NoteOptions::ScaleType inScaleType,
                                 NoteOptions::SnapMode inSnapMode,

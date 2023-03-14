@@ -28,12 +28,6 @@ public:
         TotalNumRootNotes
     };
 
-    const juce::StringArray RootNotesSharpStr {
-        "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"};
-
-    const juce::StringArray RootNotesFlatStr {
-        "A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab"};
-
     enum ScaleType
     {
         Chromatic = 0,
@@ -42,15 +36,11 @@ public:
         TotalNumScaleTypes
     };
 
-    const juce::StringArray ScaleTypesStr {"Chromatic", "Major", "Minor"};
-
     enum SnapMode
     {
         Adjust = 0,
         Remove
     };
-
-    const juce::StringArray SnapModesStr {"Adjust", "Remove"};
 
     void setParameters(RootNote inRootNote,
                        ScaleType inScaleType,

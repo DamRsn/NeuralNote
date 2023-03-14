@@ -8,7 +8,10 @@
 #include <JuceHeader.h>
 
 #include "PluginProcessor.h"
+#include "NoteOptions.h"
 #include "UIDefines.h"
+#include "NoteUtils.h"
+#include "MinMaxNoteSlider.h"
 
 class NoteOptionsView : public Component
 {
@@ -23,8 +26,7 @@ private:
     const int mTopPad = 23;
     Audio2MidiAudioProcessor& mProcessor;
 
-    std::unique_ptr<juce::ComboBox> mNoteMinDropDown;
-    std::unique_ptr<juce::ComboBox> mNoteMaxDropDown;
+    std::unique_ptr<MinMaxNoteSlider> mMinMaxNoteSlider;
 
     std::unique_ptr<juce::ComboBox> mKeyDropdown;
     std::unique_ptr<juce::ComboBox> mKeyType;

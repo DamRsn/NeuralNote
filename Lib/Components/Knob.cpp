@@ -36,7 +36,7 @@ Knob::Knob(const std::string& inLabelText,
         repaint();
     };
 
-    mSlider.setDoubleClickReturnValue(true, inDefaultValue);
+    mSlider.setDoubleClickReturnValue(true, mDefaultValue);
     mSlider.setValue(inAttachedValue.load());
 
     addAndMakeVisible(mSlider);
