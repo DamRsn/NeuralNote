@@ -57,13 +57,14 @@ std::vector<Notes::Event>
     {
         for (int note_idx = max_note_idx; note_idx >= min_note_idx; note_idx--)
         {
-            auto p = onsets[frame_idx][note_idx];
+            auto onset = onsets[frame_idx][note_idx];
 
             // equivalent to argrelmax logic
-            auto before = (frame_idx <= 0) ? p : onsets[frame_idx - 1][note_idx];
-            auto after = (frame_idx >= last_frame) ? p : onsets[frame_idx + 1][note_idx];
+            auto prev = (frame_idx <= 0) ? onset : onsets[frame_idx - 1][note_idx];
+            auto next =
+                (frame_idx >= last_frame) ? onset : onsets[frame_idx + 1][note_idx];
 
-            if ((p < inParams.onsetThreshold) || (p < before) || (p < after))
+            if ((onset < inParams.onsetThreshold) || (onset < prev) || (onset < next))
             {
                 continue;
             }
@@ -95,16 +96,16 @@ std::vector<Notes::Event>
             double amplitude = 0.0;
             for (int f = frame_idx; f < i; f++)
             {
-                auto& v = remaining_energy[f];
-                amplitude += inNotesPG[f][note_idx]; // could be replaced by v[note_idx]
-                v[note_idx] = 0;
+                amplitude += remaining_energy[f][note_idx];
+                remaining_energy[f][note_idx] = 0;
+
                 if (note_idx < MAX_NOTE_IDX)
                 {
-                    v[note_idx + 1] = 0;
+                    remaining_energy[f][note_idx + 1] = 0;
                 }
                 if (note_idx > 0)
                 {
-                    v[note_idx - 1] = 0;
+                    remaining_energy[f][note_idx - 1] = 0;
                 }
             }
             amplitude /= (i - frame_idx);
