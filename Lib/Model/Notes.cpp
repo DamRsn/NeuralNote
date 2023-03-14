@@ -2,6 +2,8 @@
 // Created by Tibor Vass on 04.03.23.
 //
 
+#include <algorithm>
+
 #include "Notes.h"
 
 bool Notes::Event::operator==(const Notes::Event& other) const
@@ -42,6 +44,16 @@ std::vector<Notes::Event>
     // deep copy
     auto remaining_energy = inNotesPG;
 
+    // to-be-sorted index of remaining_energy
+    std::vector<_pg_index> remaining_energy_index;
+    if (inParams.melodiaTrick)
+    {
+        remaining_energy_index.reserve(n_frames * n_notes);
+    }
+
+    auto frame_threshold = inParams.frameThreshold;
+    // TODO: infer frame_threshold if < 0, can be merged with inferredOnsets.
+
     // constrain frequencies
     auto max_note_idx =
         (inParams.maxFrequency < 0) ? n_notes - 1 : _hzToFreqIdx(inParams.maxFrequency);
@@ -59,6 +71,12 @@ std::vector<Notes::Event>
         {
             auto onset = onsets[frame_idx][note_idx];
 
+            if (inParams.melodiaTrick)
+            {
+                remaining_energy_index.emplace_back(_pg_index {
+                    &remaining_energy[frame_idx][note_idx], frame_idx, note_idx});
+            }
+
             // equivalent to argrelmax logic
             auto prev = (frame_idx <= 0) ? onset : onsets[frame_idx - 1][note_idx];
             auto next =
@@ -74,7 +92,7 @@ std::vector<Notes::Event>
             int k = 0; // number of frames since energy dropped below threshold
             while (i < last_frame && k < inParams.energyThreshold)
             {
-                if (remaining_energy[i][note_idx] < inParams.frameThreshold)
+                if (remaining_energy[i][note_idx] < frame_threshold)
                 {
                     k++;
                 }
@@ -119,7 +137,106 @@ std::vector<Notes::Event>
         }
     }
 
-    // TODO: melodia trick
+    if (inParams.melodiaTrick)
+    {
+        std::sort(remaining_energy_index.begin(),
+                  remaining_energy_index.end(),
+                  [](const _pg_index& a, const _pg_index& b)
+                  { return *a.value > *b.value; });
+
+        // loop through each remaining note probability in descending order
+        // until reaching frame_threshold.
+        for (int r = 0; r < remaining_energy_index.size(); r++)
+        {
+            auto rei = remaining_energy_index[r];
+            auto& frame_idx = rei.frameIdx;
+            auto& note_idx = rei.noteIdx;
+            auto& energy = *rei.value;
+
+            // skip those that have already been zeroed
+            if (energy == 0)
+            {
+                continue;
+            }
+
+            if (energy <= frame_threshold)
+            {
+                break;
+            }
+            energy = 0;
+
+            // this inhibit function zeroes out neighbor notes and keeps track (with k)
+            // on how many consecutive frames were below frame_threshold.
+            auto inhibit = [](std::vector<std::vector<float>>& pg,
+                              int frame_idx,
+                              int note_idx,
+                              float frame_threshold,
+                              int k)
+            {
+                if (pg[frame_idx][note_idx] < frame_threshold)
+                {
+                    k++;
+                }
+                else
+                {
+                    k = 0;
+                }
+
+                pg[frame_idx][note_idx] = 0;
+                if (note_idx < MAX_NOTE_IDX)
+                {
+                    pg[frame_idx][note_idx + 1] = 0;
+                }
+                if (note_idx > 0)
+                {
+                    pg[frame_idx][note_idx - 1] = 0;
+                }
+                return k;
+            };
+
+            // forward pass
+            int i = frame_idx + 1;
+            int k = 0;
+            while (i < last_frame && k < inParams.energyThreshold)
+            {
+                k = inhibit(remaining_energy, i, note_idx, frame_threshold, k);
+                i++;
+            }
+
+            auto i_end = i - 1 - k;
+
+            // backward pass
+            i = frame_idx - 1;
+            k = 0;
+            while (i > 0 && k < inParams.energyThreshold)
+            {
+                k = inhibit(remaining_energy, i, note_idx, frame_threshold, k);
+                i--;
+            }
+
+            auto i_start = i + 1 + k;
+
+            // if the note is too short, skip it
+            if (i_end - i_start <= inParams.minNoteLength)
+            {
+                continue;
+            }
+
+            double amplitude = 0.0;
+            for (int i = i_start; i < i_end; i++)
+            {
+                amplitude += inNotesPG[i][note_idx];
+            }
+            amplitude /= (i_end - i_start);
+
+            events.push_back(Notes::Event {
+                .start = _modelFrameToTime(i_start),
+                .end = _modelFrameToTime(i_end),
+                .pitch = note_idx + MIDI_OFFSET,
+                .amplitude = amplitude,
+            });
+        }
+    }
 
     // TODO: pitchbend
 
