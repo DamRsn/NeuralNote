@@ -89,6 +89,7 @@ void Audio2MidiAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 void Audio2MidiAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
 }
+
 void Audio2MidiAudioProcessor::clear()
 {
     jassert(mState.load() == PopulatedAudioAndMidiRegions);
