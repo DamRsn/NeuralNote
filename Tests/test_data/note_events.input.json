@@ -64,5 +64,49 @@
     "inferOnsets": true,
     "maxFrequency": 1567,
     "minFrequency": 330
+  },
+  {
+    "numFrames": 274,
+    "pitchBend": "single",
+    "onsetThreshold": 0.5,
+    "frameThreshold": 0.3,
+    "minNoteLength": 5,
+    "melodiaTrick": true,
+    "energyThreshold": 11,
+    "inferOnsets": true
+  },
+  {
+    "numFrames": 274,
+    "pitchBend": "single",
+    "onsetThreshold": 0.5,
+    "frameThreshold": 0.3,
+    "minNoteLength": 5,
+    "melodiaTrick": true,
+    "energyThreshold": 11,
+    "inferOnsets": true,
+    "maxFrequency": 1567,
+    "minFrequency": 330
+  },
+  {
+    "numFrames": 274,
+    "pitchBend": "multi",
+    "onsetThreshold": 0.5,
+    "frameThreshold": 0.3,
+    "minNoteLength": 5,
+    "melodiaTrick": true,
+    "energyThreshold": 11,
+    "inferOnsets": true
+  },
+  {
+    "numFrames": 274,
+    "pitchBend": "multi",
+    "onsetThreshold": 0.5,
+    "frameThreshold": 0.3,
+    "minNoteLength": 5,
+    "melodiaTrick": true,
+    "energyThreshold": 11,
+    "inferOnsets": true,
+    "maxFrequency": 1567,
+    "minFrequency": 330
   }
 ]

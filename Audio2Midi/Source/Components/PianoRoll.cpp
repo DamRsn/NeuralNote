@@ -65,8 +65,8 @@ void PianoRoll::paint(Graphics& g)
         {
             auto note_y_start_n_height =
                 _getNoteHeightAndWidthPianoRoll(note_event.pitch);
-            auto start = static_cast<float>(note_event.start);
-            auto end = static_cast<float>(note_event.end);
+            auto start = static_cast<float>(note_event.startTime);
+            auto end = static_cast<float>(note_event.endTime);
 
             if (note_y_start_n_height.first < 0
                 || note_y_start_n_height.second >= static_cast<float>(getHeight()))

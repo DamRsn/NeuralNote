@@ -30,8 +30,10 @@ class Notes
 public:
     typedef struct Event
     {
-        double start;
-        double end;
+        double startTime;
+        double endTime;
+        int startFrame;
+        int endFrame;
         int pitch; // pitch is not in Hz, but in "MIDI note number"
         double amplitude;
         std::vector<int> bends;
@@ -61,6 +63,28 @@ public:
                                       const std::vector<std::vector<float>>& inContoursPG,
                                       ConvertParams inParams);
 
+    // dropOverlappingPitchBends sets bends to an empty array to all the note events
+    // that are overlapping in time.
+    // inOutEvents is expected to be sorted.
+    static void dropOverlappingPitchBends(std::vector<Notes::Event>& inOutEvents)
+    {
+        for (int i = 0; i < inOutEvents.size() - 1; i++)
+        {
+            auto& event = inOutEvents[i];
+            // if there is an overlap between events, remove pitch bends
+            for (int j = i + 1; j < inOutEvents.size(); j++)
+            {
+                auto& event2 = inOutEvents[j];
+                if (event2.startFrame >= event.endFrame)
+                {
+                    break;
+                }
+                event.bends = std::vector<int>();
+                event2.bends = std::vector<int>();
+            }
+        }
+    }
+
 private:
     typedef struct
     {
@@ -68,6 +92,10 @@ private:
         int frameIdx;
         int noteIdx;
     } _pg_index;
+
+    void _addPitchBends(std::vector<Notes::Event>& inOutEvents,
+                        const std::vector<std::vector<float>>& inContoursPG,
+                        int inNumBinsTolerance = 25);
 
     static inline double _modelFrameToTime(int frame)
     {
@@ -95,10 +123,9 @@ private:
 #endif
     }
 
-    static inline int _hzToFreqIdx(float hz)
+    static inline int _hzToMidi(float hz)
     {
-        return (int) std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0
-                                - MIDI_OFFSET);
+        return (int) std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0);
     }
 
     // _inferredOnsets returns outInferredOnsets a version of inOnsetsPG augmented by detecting
@@ -193,7 +220,7 @@ private:
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
-    Notes::Event, start, end, pitch, amplitude, bends)
+    Notes::Event, startTime, endTime, startFrame, endFrame, pitch, amplitude, bends)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Notes::ConvertParams,
                                                 onsetThreshold,
                                                 frameThreshold,

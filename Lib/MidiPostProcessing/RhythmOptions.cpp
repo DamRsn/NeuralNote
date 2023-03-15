@@ -79,15 +79,18 @@ std::vector<Notes::Event>
 
     for (const auto& event: inNoteEvents)
     {
-        double duration = event.end - event.start;
+        double duration = event.endTime - event.startTime;
         jassert(duration > 0);
-        double new_start_time = quantizeTime(
-            event.start, bpm, time_division, start_pos_qn, mParameters.quantizationForce);
+        double new_start_time = quantizeTime(event.startTime,
+                                             bpm,
+                                             time_division,
+                                             start_pos_qn,
+                                             mParameters.quantizationForce);
         double new_end_time = new_start_time + duration;
 
         Notes::Event quantized_event = event;
-        quantized_event.start = new_start_time;
-        quantized_event.end = new_end_time;
+        quantized_event.startTime = new_start_time;
+        quantized_event.endTime = new_end_time;
         out_events.push_back(quantized_event);
     }
 
