@@ -24,17 +24,21 @@ void BasicPitch::setParameters(float inNoteSensibility,
                                float inMinNoteDurationMs,
                                int inPitchBendMode)
 {
-    mParams.onsetThreshold = 1.0f - inNoteSensibility;
+    mParams.frameThreshold = 1.0f - inNoteSensibility;
+    mParams.onsetThreshold = 1.0f - inSplitSensibility;
+
     mParams.minNoteLength = static_cast<int>(
         std::round(inMinNoteDurationMs * FFT_HOP / BASIC_PITCH_SAMPLE_RATE));
 
-    mParams.pitchBend = static_cast<PitchBendModes>(inPitchBendMode);
-    mParams.frameThreshold = 1.0f - inSplitSensibility;
+    //    mParams.pitchBend = static_cast<PitchBendModes>(inPitchBendMode);
+    mParams.pitchBend = NoPitchBend;
+    mParams.melodiaTrick = true;
+    mParams.inferOnsets = true;
 }
 
 void BasicPitch::transcribeToMIDI(float* inAudio, int inNumSamples)
 {
-    // TO test if downsampling works as expected
+    // To test if downsampling works as expected
 #if SAVE_DOWNSAMPLED_AUDIO
     auto file = juce::File::getSpecialLocation(juce::File::userDesktopDirectory)
                     .getChildFile("Test_Downsampled.wav");

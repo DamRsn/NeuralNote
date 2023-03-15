@@ -41,15 +41,16 @@ public:
 
     typedef struct ConvertParams
     {
-        /* Confidence threshold (0.05 to 0.95, More-Less notes) */
-        float onsetThreshold = 0.3;
         /* Note segmentation (0.05 - 0.95, Split-Merge Notes) */
+        float onsetThreshold = 0.3;
+        /* Confidence threshold (0.05 to 0.95, More-Less notes) */
         float frameThreshold = 0.5;
+        /* Minimum note length in number of frames */
         int minNoteLength = 11;
-        bool inferOnsets = false;
+        bool inferOnsets = true;
         float maxFrequency = -1; // in Hz, -1 means unset
         float minFrequency = -1; // in Hz, -1 means unset
-        bool melodiaTrick = false;
+        bool melodiaTrick = true;
         enum PitchBendModes pitchBend = NoPitchBend;
         int energyThreshold = 11;
     } ConvertParams;
