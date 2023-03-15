@@ -48,7 +48,17 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
 
     auto out_file = mTempDirectory.getChildFile(mFilename + ".mid");
 
-    mMidiFileWriter.writeMidiFile(mProcessor.getNoteEventVector(), out_file, 120);
+    auto success_midi_file_creation =
+        mMidiFileWriter.writeMidiFile(mProcessor.getNoteEventVector(),
+                                      out_file,
+                                      mProcessor.getPlayheadInfoOnRecordStart(),
+                                      mProcessor.getSampleAcquisitionMode());
+
+    if (!success_midi_file_creation)
+    {
+        NativeMessageBox::showMessageBoxAsync(
+            juce::MessageBoxIconType::NoIcon, "Error", "Could not create the midi file.");
+    }
 
     StringArray out_files = {out_file.getFullPathName()};
 

@@ -7,6 +7,7 @@
 #include "ProcessorBase.h"
 #include "BasicPitch.h"
 #include "NoteOptions.h"
+#include "MidiFileWriter.h"
 
 enum State
 {
@@ -73,6 +74,12 @@ public:
 
     Parameters* getCustomParameters();
 
+    const juce::AudioPlayHead::CurrentPositionInfo& getPlayheadInfoOnRecordStart();
+
+    void setSampleAcquisitionMode(AudioSampleAcquisitionMode inSampleAcquisitionMode);
+
+    AudioSampleAcquisitionMode getSampleAcquisitionMode();
+
 private:
     void _runModel();
 
@@ -90,6 +97,10 @@ private:
     NoteOptions mNoteOptions;
 
     std::vector<Notes::Event> mPostProcessedNotes;
+
+    juce::AudioPlayHead::CurrentPositionInfo mPlayheadInfoStartRecord;
+
+    AudioSampleAcquisitionMode mSampleAcquisitionMode;
 
     // Threading for running ML in background thread.
     juce::ThreadPool mThreadPool;

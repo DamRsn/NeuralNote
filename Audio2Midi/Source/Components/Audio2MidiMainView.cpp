@@ -42,6 +42,9 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
         updateEnablements();
     };
 
+    mRecordButton->setToggleState(mProcessor.getState() == Recording,
+                                  juce::NotificationType::sendNotification);
+
     addAndMakeVisible(*mRecordButton);
 
     mClearButton = std::make_unique<TextButton>("ClearButton");

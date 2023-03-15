@@ -30,6 +30,18 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         {
             mDownSampler.reset();
             mWasRecording = true;
+            // TODO: to change as it is deprecated
+            getPlayHead()->getCurrentPosition(mPlayheadInfoStartRecord);
+
+            if (mPlayheadInfoStartRecord.isPlaying
+                || mPlayheadInfoStartRecord.isRecording)
+            {
+                mSampleAcquisitionMode = RecordedPlaying;
+            }
+            else
+            {
+                mSampleAcquisitionMode = RecordedNotPlaying;
+            }
         }
 
         // If we have reached maximum number of samples that can be processed: stop record and launch processing
@@ -98,6 +110,8 @@ void Audio2MidiAudioProcessor::clear()
     mAudioBufferForMIDITranscription.clear();
 
     mPostProcessedNotes.clear();
+    mSampleAcquisitionMode = NoSampleAcquired;
+    mPlayheadInfoStartRecord.resetToDefault();
 
     mBasicPitch.reset();
     mWasRecording = false;
@@ -142,6 +156,12 @@ Audio2MidiAudioProcessor::Parameters* Audio2MidiAudioProcessor::getCustomParamet
     return &mParameters;
 }
 
+const juce::AudioPlayHead::CurrentPositionInfo&
+    Audio2MidiAudioProcessor::getPlayheadInfoOnRecordStart()
+{
+    return mPlayheadInfoStartRecord;
+}
+
 void Audio2MidiAudioProcessor::_runModel()
 {
     mBasicPitch.setParameters(mParameters.noteSensibility,
@@ -178,6 +198,7 @@ void Audio2MidiAudioProcessor::updateTranscription()
         updatePostProcessing();
     }
 }
+
 void Audio2MidiAudioProcessor::updatePostProcessing()
 {
     jassert(mState == PopulatedAudioAndMidiRegions);
@@ -192,6 +213,17 @@ void Audio2MidiAudioProcessor::updatePostProcessing()
 
         mPostProcessedNotes = mNoteOptions.processKey(mBasicPitch.getNoteEvents());
     }
+}
+
+void Audio2MidiAudioProcessor::setSampleAcquisitionMode(
+    AudioSampleAcquisitionMode inSampleAcquisitionMode)
+{
+    mSampleAcquisitionMode = inSampleAcquisitionMode;
+}
+
+AudioSampleAcquisitionMode Audio2MidiAudioProcessor::getSampleAcquisitionMode()
+{
+    return mSampleAcquisitionMode;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

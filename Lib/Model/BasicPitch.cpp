@@ -66,14 +66,45 @@ void BasicPitch::transcribeToMIDI(float* inAudio, int inNumSamples)
 
     mBasicPitchCNN.reset();
 
-    // TODO: align everything with CNN lookahead
-    for (size_t frame_idx = 0; frame_idx < mNumFrames; frame_idx++)
+    const size_t num_lh_frames = BasicPitchCNN::getNumFramesLookahead();
+
+    std::vector<float> zero_stacked_cqt(NUM_HARMONICS * NUM_FREQ_IN, 0.0f);
+
+    // Run the CNN with 0 input and discard output (only for num_lh_frames)
+    for (int i = 0; i < num_lh_frames; i++)
+    {
+        mBasicPitchCNN.frameInference(
+            zero_stacked_cqt.data(), mContoursPG[0], mNotesPG[0], mOnsetsPG[0]);
+    }
+
+    // Run the CNN with real inputs and discard outputs (only for num_lh_frames)
+    for (size_t frame_idx = 0; frame_idx < num_lh_frames; frame_idx++)
     {
         mBasicPitchCNN.frameInference(stacked_cqt
                                           + frame_idx * NUM_HARMONICS * NUM_FREQ_IN,
-                                      mContoursPG[frame_idx],
-                                      mNotesPG[frame_idx],
-                                      mOnsetsPG[frame_idx]);
+                                      mContoursPG[0],
+                                      mNotesPG[0],
+                                      mOnsetsPG[0]);
+    }
+
+    // Run the CNN with real inputs and correct outputs
+    for (size_t frame_idx = num_lh_frames; frame_idx < mNumFrames; frame_idx++)
+    {
+        mBasicPitchCNN.frameInference(stacked_cqt
+                                          + frame_idx * NUM_HARMONICS * NUM_FREQ_IN,
+                                      mContoursPG[frame_idx - num_lh_frames],
+                                      mNotesPG[frame_idx - num_lh_frames],
+                                      mOnsetsPG[frame_idx - num_lh_frames]);
+    }
+
+    // Run end with zeroes as input and last frames as output
+    for (size_t frame_idx = mNumFrames; frame_idx < mNumFrames + num_lh_frames;
+         frame_idx++)
+    {
+        mBasicPitchCNN.frameInference(zero_stacked_cqt.data(),
+                                      mContoursPG[frame_idx - num_lh_frames],
+                                      mNotesPG[frame_idx - num_lh_frames],
+                                      mOnsetsPG[frame_idx - num_lh_frames]);
     }
 
     mNoteEvents = mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams);

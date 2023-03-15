@@ -4,7 +4,7 @@
 
 #include "AudioRegion.h"
 AudioRegion::AudioRegion(Audio2MidiAudioProcessor& processor)
-    : mAudioProcessor(processor)
+    : mProcessor(processor)
     , mThumbnailCache(1)
     , mThumbnail(
           mSourceSamplesPerThumbnailSample, mThumbnailFormatManager, mThumbnailCache)
@@ -26,11 +26,11 @@ void AudioRegion::paint(Graphics& g)
 
     g.setColour(juce::Colours::black.withAlpha(0.4f));
 
-    auto num_samples_available = mAudioProcessor.getNumSamplesAcquired();
+    auto num_samples_available = mProcessor.getNumSamplesAcquired();
 
     if (num_samples_available > 0 && mThumbnail.isFullyLoaded())
     {
-        const auto audio_buffer = mAudioProcessor.getAudioBufferForMidi();
+        const auto audio_buffer = mProcessor.getAudioBufferForMidi();
 
         auto thumbnail_area = getLocalBounds();
         thumbnail_area.setWidth(mThumbnailWidth);
@@ -48,13 +48,13 @@ void AudioRegion::paint(Graphics& g)
 
 void AudioRegion::updateThumbnail()
 {
-    int num_samples_available = mAudioProcessor.getNumSamplesAcquired();
+    int num_samples_available = mProcessor.getNumSamplesAcquired();
 
     if (num_samples_available > 50 * mSourceSamplesPerThumbnailSample)
     {
         mThumbnail.reset(1, BASIC_PITCH_SAMPLE_RATE, num_samples_available);
         mThumbnail.addBlock(
-            0, mAudioProcessor.getAudioBufferForMidi(), 0, num_samples_available);
+            0, mProcessor.getAudioBufferForMidi(), 0, num_samples_available);
 
         repaint();
     }
@@ -71,7 +71,7 @@ bool AudioRegion::onFileDrop(const juce::File& inFile)
 
     int num_loaded_samples = 0;
     auto success = mFileLoader.loadAudioFile(
-        inFile, mAudioProcessor.getAudioBufferForMidi(), num_loaded_samples);
+        inFile, mProcessor.getAudioBufferForMidi(), num_loaded_samples);
 
     if (!success)
     {
@@ -84,10 +84,11 @@ bool AudioRegion::onFileDrop(const juce::File& inFile)
         return false;
     }
 
-    mAudioProcessor.setNumSamplesAcquired(num_loaded_samples);
+    mProcessor.setNumSamplesAcquired(num_loaded_samples);
+    mProcessor.setSampleAcquisitionMode(AudioSampleAcquisitionMode::FileDrop);
 
-    mAudioProcessor.setStateToProcessing();
-    mAudioProcessor.launchTranscribeJob();
+    mProcessor.setStateToProcessing();
+    mProcessor.launchTranscribeJob();
 
     repaint();
     return true;

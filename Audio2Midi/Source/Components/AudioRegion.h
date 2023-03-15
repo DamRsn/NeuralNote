@@ -28,7 +28,7 @@ public:
     void setThumbnailWidth(int inThumbnailWidth);
 
 private:
-    Audio2MidiAudioProcessor& mAudioProcessor;
+    Audio2MidiAudioProcessor& mProcessor;
 
     int mThumbnailWidth = 0;
 
