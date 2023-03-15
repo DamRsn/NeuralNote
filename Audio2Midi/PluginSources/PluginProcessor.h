@@ -6,6 +6,7 @@
 #include "DownSampler.h"
 #include "ProcessorBase.h"
 #include "BasicPitch.h"
+#include "NoteOptions.h"
 
 enum State
 {
@@ -68,25 +69,29 @@ public:
 
     void updateTranscription();
 
+    void updatePostProcessing();
+
     Parameters* getCustomParameters();
 
 private:
     void _runModel();
 
-    DownSampler mDownSampler;
+    std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
     AudioBuffer<float> mMonoBuffer;
+    DownSampler mDownSampler;
 
     Parameters mParameters;
-
     bool mWasRecording = false;
-
-    std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
     AudioBuffer<float> mAudioBufferForMIDITranscription;
 
     BasicPitch mBasicPitch;
+    NoteOptions mNoteOptions;
 
+    std::vector<Notes::Event> mPostProcessedNotes;
+
+    // Threading for running ML in background thread.
     juce::ThreadPool mThreadPool;
     std::function<void()> mJobLambda;
 

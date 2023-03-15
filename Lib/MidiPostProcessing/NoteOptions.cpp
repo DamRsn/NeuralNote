@@ -22,12 +22,6 @@ std::vector<Notes::Event>
 {
     std::vector<Notes::Event> processed_note_events;
 
-    if (mScaleType == Chromatic)
-    {
-        processed_note_events = inNoteEvents;
-        return processed_note_events;
-    }
-
     // Set key array
     auto key_array = _createKeyArray(mRootNote, mScaleType);
 
@@ -38,20 +32,27 @@ std::vector<Notes::Event>
         if (note_event.pitch < mMinMidiNote || note_event.pitch > mMaxMidiNote)
             continue;
 
-        if (mSnapMode == Remove)
+        if (mScaleType == Chromatic)
         {
-            if (_isInKey(note_event.pitch, key_array))
-                processed_note_events.push_back(note_event);
+            processed_note_events.push_back(note_event);
         }
         else
         {
-            auto processed_note_event = note_event;
+            if (mSnapMode == Remove)
+            {
+                if (_isInKey(note_event.pitch, key_array))
+                    processed_note_events.push_back(note_event);
+            }
+            else
+            {
+                auto processed_note_event = note_event;
 
-            // TODO: determine adjust up based on pitch bends.
-            processed_note_event.pitch =
-                _getClosestMidiNoteInKey(note_event.pitch, key_array, true);
+                // TODO: determine adjust up based on pitch bends.
+                processed_note_event.pitch =
+                    _getClosestMidiNoteInKey(note_event.pitch, key_array, true);
 
-            processed_note_events.push_back(processed_note_event);
+                processed_note_events.push_back(processed_note_event);
+            }
         }
     }
 
@@ -117,7 +118,8 @@ std::array<int, 7> NoteOptions::_createKeyArray(NoteOptions::RootNote inRootNote
     }
     else
     {
-        jassertfalse;
+        // If chromatic, array should not be used.
+        return {};
     }
 
     return key_array;

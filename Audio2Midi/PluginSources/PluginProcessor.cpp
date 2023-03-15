@@ -97,6 +97,8 @@ void Audio2MidiAudioProcessor::clear()
     mNumSamplesAcquired = 0;
     mAudioBufferForMIDITranscription.clear();
 
+    mPostProcessedNotes.clear();
+
     mBasicPitch.reset();
     mWasRecording = false;
     mState.store(EmptyAudioAndMidiRegions);
@@ -132,7 +134,7 @@ void Audio2MidiAudioProcessor::launchTranscribeJob()
 
 const std::vector<Notes::Event>& Audio2MidiAudioProcessor::getNoteEventVector() const
 {
-    return mBasicPitch.getNoteEvents();
+    return mPostProcessedNotes;
 }
 
 Audio2MidiAudioProcessor::Parameters* Audio2MidiAudioProcessor::getCustomParameters()
@@ -149,7 +151,9 @@ void Audio2MidiAudioProcessor::_runModel()
 
     mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
                                  mNumSamplesAcquired);
+
     mState.store(PopulatedAudioAndMidiRegions);
+    updatePostProcessing();
 }
 
 void Audio2MidiAudioProcessor::updateTranscription()
@@ -164,6 +168,22 @@ void Audio2MidiAudioProcessor::updateTranscription()
                                   mParameters.pitchBendMode);
 
         mBasicPitch.updateMIDI();
+        updatePostProcessing();
+    }
+}
+void Audio2MidiAudioProcessor::updatePostProcessing()
+{
+    jassert(mState == PopulatedAudioAndMidiRegions);
+
+    if (mState == PopulatedAudioAndMidiRegions)
+    {
+        mNoteOptions.setParameters(NoteOptions::RootNote(mParameters.keyRootNote.load()),
+                                   NoteOptions::ScaleType(mParameters.keyType.load()),
+                                   NoteOptions::SnapMode(mParameters.keySnapMode.load()),
+                                   mParameters.minMidiNote.load(),
+                                   mParameters.maxMidiNote.load());
+
+        mPostProcessedNotes = mNoteOptions.processKey(mBasicPitch.getNoteEvents());
     }
 }
 

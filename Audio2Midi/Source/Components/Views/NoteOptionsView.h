@@ -13,7 +13,12 @@
 #include "NoteUtils.h"
 #include "MinMaxNoteSlider.h"
 
-class NoteOptionsView : public Component
+class Audio2MidiMainView;
+
+class NoteOptionsView
+    : public Component
+    , public juce::Slider::Listener
+    , public juce::ComboBox::Listener
 {
 public:
     NoteOptionsView(Audio2MidiAudioProcessor& processor);
@@ -22,7 +27,13 @@ public:
 
     void paint(Graphics& g) override;
 
+    void sliderValueChanged(Slider* slider) override;
+
+    void comboBoxChanged(ComboBox* comboBoxThatHasChanged) override;
+
 private:
+    void _valueChanged();
+
     const int mTopPad = 23;
     Audio2MidiAudioProcessor& mProcessor;
 
@@ -30,8 +41,7 @@ private:
 
     std::unique_ptr<juce::ComboBox> mKeyDropdown;
     std::unique_ptr<juce::ComboBox> mKeyType;
-
-    std::unique_ptr<juce::TextButton> mSnapMode;
+    std::unique_ptr<juce::ComboBox> mSnapMode;
 };
 
 #endif // NoteOptionsView_h
