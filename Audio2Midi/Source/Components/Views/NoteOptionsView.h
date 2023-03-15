@@ -17,8 +17,7 @@ class Audio2MidiMainView;
 
 class NoteOptionsView
     : public Component
-    , public juce::Slider::Listener
-    , public juce::ComboBox::Listener
+
 {
 public:
     NoteOptionsView(Audio2MidiAudioProcessor& processor);
@@ -26,10 +25,6 @@ public:
     void resized() override;
 
     void paint(Graphics& g) override;
-
-    void sliderValueChanged(Slider* slider) override;
-
-    void comboBoxChanged(ComboBox* comboBoxThatHasChanged) override;
 
 private:
     void _valueChanged();

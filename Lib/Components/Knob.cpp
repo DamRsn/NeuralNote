@@ -10,7 +10,8 @@ Knob::Knob(const std::string& inLabelText,
            double inInterval,
            double inDefaultValue,
            bool inSetChangeNotificationOnlyOnRelease,
-           std::atomic<float>& inAttachedValue)
+           std::atomic<float>& inAttachedValue,
+           const std::function<void()>& inOnChangeAction)
     : mAttachedValue(inAttachedValue)
     , mDefaultValue(inDefaultValue)
 {
@@ -30,9 +31,12 @@ Knob::Knob(const std::string& inLabelText,
     setSize(75, 95);
     mSlider.setSize(75, 75);
 
+    mOnChangeAction = inOnChangeAction;
+
     mSlider.onValueChange = [this]()
     {
         mAttachedValue.store(static_cast<float>(mSlider.getValue()));
+        mOnChangeAction();
         repaint();
     };
 
@@ -86,7 +90,7 @@ void Knob::mouseExit(const MouseEvent& event)
     }
 }
 
-void Knob::addSliderListener(juce::Slider::Listener* inListenerPtr)
-{
-    mSlider.addListener(inListenerPtr);
-}
+//void Knob::addSliderListener(juce::Slider::Listener* inListenerPtr)
+//{
+//    mSlider.addListener(inListenerPtr);
+//}

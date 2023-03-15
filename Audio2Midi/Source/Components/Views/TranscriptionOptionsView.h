@@ -13,9 +13,7 @@
 
 class Audio2MidiMainView;
 
-class TranscriptionOptionsView
-    : public juce::Component
-    , juce::Slider::Listener
+class TranscriptionOptionsView : public juce::Component
 {
 public:
     explicit TranscriptionOptionsView(Audio2MidiAudioProcessor& processor);
@@ -25,7 +23,7 @@ public:
     void paint(Graphics& g) override;
 
 private:
-    void sliderValueChanged(Slider* slider) override;
+    void _valueChanged();
 
     Audio2MidiAudioProcessor& mProcessor;
 

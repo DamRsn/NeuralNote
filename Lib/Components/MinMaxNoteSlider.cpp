@@ -5,10 +5,12 @@
 #include "MinMaxNoteSlider.h"
 
 MinMaxNoteSlider::MinMaxNoteSlider(std::atomic<int>& inAttachedMinValue,
-                                   std::atomic<int>& inAttachedMaxValue)
+                                   std::atomic<int>& inAttachedMaxValue,
+                                   const std::function<void()>& inOnValueChange)
     : mAttachedMinValue(inAttachedMinValue)
     , mAttachedMaxValue(inAttachedMaxValue)
 {
+    mOnValueChanged = inOnValueChange;
     mSlider.setSliderStyle(juce::Slider::TwoValueHorizontal);
     mSlider.setRange(MIN_MIDI_NOTE, MAX_MIDI_NOTE, 1);
     mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
@@ -16,6 +18,7 @@ MinMaxNoteSlider::MinMaxNoteSlider(std::atomic<int>& inAttachedMinValue,
     {
         mAttachedMinValue.store(int(mSlider.getMinValue()));
         mAttachedMaxValue.store(int(mSlider.getMaxValue()));
+        mOnValueChanged();
         repaint();
     };
 
@@ -43,7 +46,7 @@ void MinMaxNoteSlider::paint(Graphics& g)
                juce::Justification::centredRight);
 }
 
-void MinMaxNoteSlider::addListener(juce::Slider::Listener* inListener)
-{
-    mSlider.addListener(inListener);
-}
+//void MinMaxNoteSlider::addListener(juce::Slider::Listener* inListener)
+//{
+//    mSlider.addListener(inListener);
+//}

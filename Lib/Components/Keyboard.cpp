@@ -31,7 +31,7 @@ void Keyboard::drawWhiteKey(int midiNoteNumber, Graphics& g, Rectangle<float> ar
 
     if (midiNoteNumber % 12 == 0)
     {
-        int octave_number = midiNoteNumber / 12 - 2;
+        int octave_number = midiNoteNumber / 12 - 1;
         g.setFont(getKeyWidth() - 3);
         g.drawText("C" + std::to_string(octave_number),
                    area.withTrimmedLeft(getBlackNoteLength()),

@@ -14,19 +14,22 @@ class MinMaxNoteSlider : public Component
 {
 public:
     MinMaxNoteSlider(std::atomic<int>& inAttachedMinValue,
-                     std::atomic<int>& inAttachedMaxValue);
+                     std::atomic<int>& inAttachedMaxValue,
+                     const std::function<void()>& inOnValueChange);
 
     void resized() override;
 
     void paint(Graphics& g) override;
 
-    void addListener(juce::Slider::Listener* inListener);
+    //    void addListener(juce::Slider::Listener* inListener);
 
 private:
     juce::Slider mSlider;
 
     std::atomic<int>& mAttachedMinValue;
     std::atomic<int>& mAttachedMaxValue;
+
+    std::function<void()> mOnValueChanged;
 };
 
 #endif // TwoValueSlider_h

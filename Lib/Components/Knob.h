@@ -18,7 +18,8 @@ public:
          double inInterval,
          double inDefaultValue,
          bool inSetChangeNotificationOnlyOnRelease,
-         std::atomic<float>& inAttachedValue);
+         std::atomic<float>& inAttachedValue,
+         const std::function<void()>& inOnChangeAction);
 
     void resized() override;
 
@@ -28,7 +29,7 @@ public:
 
     void mouseExit(const MouseEvent& event) override;
 
-    void addSliderListener(juce::Slider::Listener* inListenerPtr);
+    //    void addSliderListener(juce::Slider::Listener* inListenerPtr);
 
 private:
     juce::Slider mSlider;
@@ -36,6 +37,7 @@ private:
 
     const double mDefaultValue;
     std::atomic<float>& mAttachedValue;
+    std::function<void()> mOnChangeAction;
 
     bool mIsMouseOver = false;
 };

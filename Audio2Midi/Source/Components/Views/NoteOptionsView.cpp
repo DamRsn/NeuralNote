@@ -10,48 +10,51 @@ NoteOptionsView::NoteOptionsView(Audio2MidiAudioProcessor& processor)
 {
     mMinMaxNoteSlider =
         std::make_unique<MinMaxNoteSlider>(mProcessor.getCustomParameters()->minMidiNote,
-                                           mProcessor.getCustomParameters()->maxMidiNote);
+                                           mProcessor.getCustomParameters()->maxMidiNote,
+                                           [this]() { _valueChanged(); });
     addAndMakeVisible(*mMinMaxNoteSlider);
-
-    mMinMaxNoteSlider->addListener(this);
 
     mKeyDropdown = std::make_unique<juce::ComboBox>("KeyRootNoteDropDown");
     mKeyDropdown->setEditableText(false);
     mKeyDropdown->setJustificationType(juce::Justification::centredLeft);
     mKeyDropdown->addItemList(NoteUtils::RootNotesSharpStr, 1);
-    mKeyDropdown->setSelectedId(4);
     mKeyDropdown->onChange = [this]()
     {
         mProcessor.getCustomParameters()->keyRootNote.store(
             mKeyDropdown->getSelectedItemIndex());
+        _valueChanged();
     };
-    addAndMakeVisible(*mKeyDropdown);
+    mKeyDropdown->setSelectedItemIndex(
+        mProcessor.getCustomParameters()->keyRootNote.load());
 
-    mKeyDropdown->addListener(this);
+    addAndMakeVisible(*mKeyDropdown);
 
     mKeyType = std::make_unique<juce::ComboBox>("ScaleTypeDropDown");
     mKeyType->setEditableText(false);
     mKeyType->setJustificationType(juce::Justification::centredLeft);
     mKeyType->addItemList(NoteUtils::ScaleTypesStr, 1);
-    mKeyType->setSelectedId(2);
-    mKeyType->onChange = [this]() {
+    mKeyType->onChange = [this]()
+    {
         mProcessor.getCustomParameters()->keyType.store(mKeyType->getSelectedItemIndex());
+        _valueChanged();
     };
+    mKeyType->setSelectedItemIndex(mProcessor.getCustomParameters()->keyType.load());
+
     addAndMakeVisible(*mKeyType);
-    mKeyType->addListener(this);
 
     mSnapMode = std::make_unique<juce::ComboBox>("SnapModeDropDown");
     mSnapMode->setEditableText(false);
     mSnapMode->setJustificationType(juce::Justification::centredLeft);
     mSnapMode->addItemList(NoteUtils::SnapModesStr, 1);
-    mSnapMode->setSelectedId(2);
     mSnapMode->onChange = [this]()
     {
         mProcessor.getCustomParameters()->keySnapMode.store(
             mSnapMode->getSelectedItemIndex());
+        _valueChanged();
     };
+    mSnapMode->setSelectedItemIndex(mProcessor.getCustomParameters()->keySnapMode.load());
+
     addAndMakeVisible(*mSnapMode);
-    mSnapMode->addListener(this);
 
     setSize(266, 139);
 }
@@ -99,22 +102,12 @@ void NoteOptionsView::paint(Graphics& g)
                juce::Justification::centredLeft);
 }
 
-void NoteOptionsView::sliderValueChanged(Slider* slider)
-{
-    _valueChanged();
-}
-
-void NoteOptionsView::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
-{
-    _valueChanged();
-}
-
 void NoteOptionsView::_valueChanged()
 {
     if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
     {
-        DBG("_valueChanged");
         mProcessor.updatePostProcessing();
+
         auto* main_view = dynamic_cast<Audio2MidiMainView*>(getParentComponent());
 
         if (main_view)

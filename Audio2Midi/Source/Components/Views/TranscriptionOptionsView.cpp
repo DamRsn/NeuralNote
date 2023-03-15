@@ -15,9 +15,9 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
                                0.01,
                                0.7,
                                false,
-                               mProcessor.getCustomParameters()->noteSensibility);
+                               mProcessor.getCustomParameters()->noteSensibility,
+                               [this]() { _valueChanged(); });
 
-    mNoteSensibility->addSliderListener(this);
     addAndMakeVisible(*mNoteSensibility);
 
     mSplitSensibility =
@@ -27,9 +27,9 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
                                0.01,
                                0.5,
                                false,
-                               mProcessor.getCustomParameters()->splitSensibility);
+                               mProcessor.getCustomParameters()->splitSensibility,
+                               [this]() { _valueChanged(); });
 
-    mSplitSensibility->addSliderListener(this);
     addAndMakeVisible(*mSplitSensibility);
 
     mMinNoteDuration =
@@ -39,9 +39,9 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
                                1,
                                125,
                                false,
-                               mProcessor.getCustomParameters()->minNoteDurationMs);
+                               mProcessor.getCustomParameters()->minNoteDurationMs,
+                               [this]() { _valueChanged(); });
 
-    mMinNoteDuration->addSliderListener(this);
     addAndMakeVisible(*mMinNoteDuration);
 
     mPitchBendDropDown = std::make_unique<juce::ComboBox>("PITCH BEND");
@@ -98,7 +98,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
                juce::Justification::centred);
 }
 
-void TranscriptionOptionsView::sliderValueChanged(Slider* slider)
+void TranscriptionOptionsView::_valueChanged()
 {
     if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
     {

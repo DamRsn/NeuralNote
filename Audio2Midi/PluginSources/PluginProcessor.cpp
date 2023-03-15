@@ -128,7 +128,7 @@ void Audio2MidiAudioProcessor::launchTranscribeJob()
     }
     else
     {
-        mState.store(EmptyAudioAndMidiRegions);
+        clear();
     }
 }
 
@@ -152,8 +152,15 @@ void Audio2MidiAudioProcessor::_runModel()
     mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
                                  mNumSamplesAcquired);
 
+    mNoteOptions.setParameters(NoteOptions::RootNote(mParameters.keyRootNote.load()),
+                               NoteOptions::ScaleType(mParameters.keyType.load()),
+                               NoteOptions::SnapMode(mParameters.keySnapMode.load()),
+                               mParameters.minMidiNote.load(),
+                               mParameters.maxMidiNote.load());
+
+    mPostProcessedNotes = mNoteOptions.processKey(mBasicPitch.getNoteEvents());
+
     mState.store(PopulatedAudioAndMidiRegions);
-    updatePostProcessing();
 }
 
 void Audio2MidiAudioProcessor::updateTranscription()

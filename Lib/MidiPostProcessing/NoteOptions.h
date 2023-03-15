@@ -7,6 +7,7 @@
 
 #include <JuceHeader.h>
 #include "Notes.h"
+#include "NoteUtils.h"
 
 class NoteOptions
 {
