@@ -20,6 +20,8 @@ class CombinedAudioMidiRegion
 public:
     CombinedAudioMidiRegion(Audio2MidiAudioProcessor& processor, Keyboard& keyboard);
 
+    void setViewportPtr(juce::Viewport* inViewportPtr);
+
     void resized() override;
 
     void paint(Graphics& g) override;
@@ -40,14 +42,16 @@ public:
 
     const double mNumPixelsPerSecond = 100.0;
 
-    const int mAudioRegionHeight = 100;
-    const int mHeightBetweenAudioMidi = 20;
+    const int mAudioRegionHeight = 85;
+    const int mHeightBetweenAudioMidi = 23;
     const int mPianoRollY = mAudioRegionHeight + mHeightBetweenAudioMidi;
 
 private:
     void _resizeAccordingToNumSamplesAvailable();
 
     Audio2MidiAudioProcessor& mProcessor;
+
+    juce::Viewport* mViewportPtr = nullptr;
 
     int mBaseWidth = 0;
 

@@ -76,25 +76,21 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
 
 void Audio2MidiMainView::resized()
 {
-    mRecordButton->setBounds(480, 20, 140, 50);
-    mClearButton->setBounds(640, 20, 140, 50);
+    mRecordButton->setBounds(588, 36, 144, 51);
+    mClearButton->setBounds(748, 36, 144, 51);
 
-    mVisualizationPanel.setBounds(300, 100, 680, 530);
-    mTranscriptionOptions.setBounds(22, 136, 266, 220);
-    mNoteOptions.setTopLeftPosition(22, 374);
-    mQuantizePanel.setTopLeftPosition(25, 532);
+    mVisualizationPanel.setBounds(328, 120, 642, 491);
+    mTranscriptionOptions.setBounds(28, 120, 274, 214);
+    mNoteOptions.setBounds(28, 355, 274, 121);
+    mQuantizePanel.setBounds(28, 498, 274, 113);
 }
 
 void Audio2MidiMainView::paint(Graphics& g)
 {
-    g.setColour(juce::Colours::lightcyan);
-    g.fillAll();
+    auto background_image = juce::ImageCache::getFromMemory(
+        BinaryData::background_png, BinaryData::background_pngSize);
 
-    g.setColour(juce::Colours::black);
-
-    g.drawText("State: " + std::to_string(static_cast<int>(mProcessor.getState())),
-               juce::Rectangle<int>(200, 20, 100, 20),
-               juce::Justification::centred);
+    g.drawImage(background_image, getLocalBounds().toFloat());
 }
 
 void Audio2MidiMainView::timerCallback()

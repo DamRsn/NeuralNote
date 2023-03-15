@@ -9,6 +9,7 @@
 
 #include "AudioFileLoader.h"
 #include "PluginProcessor.h"
+#include "UIDefines.h"
 
 class AudioRegion : public Component
 {
@@ -32,7 +33,7 @@ private:
 
     int mThumbnailWidth = 0;
 
-    const int mSourceSamplesPerThumbnailSample = 256;
+    const int mSourceSamplesPerThumbnailSample = 128;
     juce::AudioFormatManager mThumbnailFormatManager;
     juce::AudioThumbnailCache mThumbnailCache;
     juce::AudioThumbnail mThumbnail;

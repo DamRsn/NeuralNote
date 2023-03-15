@@ -28,6 +28,12 @@ void CombinedAudioMidiRegion::timerCallback()
 {
     _resizeAccordingToNumSamplesAvailable();
     mAudioRegion.updateThumbnail();
+
+    if (mViewportPtr)
+        mViewportPtr->setViewPositionProportionately(1.0f, 0.0f);
+    else
+        jassertfalse;
+
     mAudioRegion.repaint();
 }
 
@@ -88,4 +94,9 @@ void CombinedAudioMidiRegion::_resizeAccordingToNumSamplesAvailable()
     mAudioRegion.setThumbnailWidth(thumbnail_width);
 
     setSize(new_width, getHeight());
+}
+
+void CombinedAudioMidiRegion::setViewportPtr(juce::Viewport* inViewportPtr)
+{
+    mViewportPtr = inViewportPtr;
 }

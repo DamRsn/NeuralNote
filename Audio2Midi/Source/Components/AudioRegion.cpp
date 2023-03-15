@@ -3,6 +3,7 @@
 //
 
 #include "AudioRegion.h"
+
 AudioRegion::AudioRegion(Audio2MidiAudioProcessor& processor)
     : mProcessor(processor)
     , mThumbnailCache(1)
@@ -18,22 +19,24 @@ void AudioRegion::resized()
 void AudioRegion::paint(Graphics& g)
 {
     if (mIsFileOver)
-        g.setColour(juce::Colours::blue);
-    else
-        g.setColour(juce::Colours::black);
-
-    g.drawRect(getLocalBounds());
-
-    g.setColour(juce::Colours::black.withAlpha(0.4f));
+    {
+        g.setColour(juce::Colours::purple);
+        g.drawRoundedRectangle(getLocalBounds().toFloat(), 4, 2);
+    }
 
     auto num_samples_available = mProcessor.getNumSamplesAcquired();
 
     if (num_samples_available > 0 && mThumbnail.isFullyLoaded())
     {
+        g.setColour(WAVEFORM_BG_COLOR);
+        g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
+
         const auto audio_buffer = mProcessor.getAudioBufferForMidi();
 
         auto thumbnail_area = getLocalBounds();
         thumbnail_area.setWidth(mThumbnailWidth);
+
+        g.setColour(WAVEFORM_COLOR);
 
         mThumbnail.drawChannel(
             g,
@@ -43,6 +46,17 @@ void AudioRegion::paint(Graphics& g)
             0,
             0.95f
                 / std::max(audio_buffer.getMagnitude(0, 0, num_samples_available), 0.1f));
+    }
+    else
+    {
+        g.setColour(WHITE_BG);
+        g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
+
+        g.setColour(FONT_BLACK);
+        g.setFont(LARGE_FONT);
+        g.drawText("HIT RECORD OR DROP AN AUDIO FILE HERE",
+                   getLocalBounds(),
+                   juce::Justification::centred);
     }
 }
 

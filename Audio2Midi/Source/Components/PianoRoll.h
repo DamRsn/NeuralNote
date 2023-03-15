@@ -10,6 +10,7 @@
 #include "Constants.h"
 #include "Keyboard.h"
 #include "PluginProcessor.h"
+#include "UIDefines.h"
 
 class PianoRoll
     : public juce::Component

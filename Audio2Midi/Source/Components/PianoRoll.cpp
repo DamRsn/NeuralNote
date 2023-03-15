@@ -29,29 +29,33 @@ void PianoRoll::paint(Graphics& g)
 
     auto rect_width = static_cast<float>(getWidth());
 
-    // Draw permanent lines
-    for (int i = MIN_MIDI_NOTE; i <= MAX_MIDI_NOTE; i++)
-    {
-        if (mKeyboard.getRectangleForKey(i).intersects(local_bounds))
-        {
-            juce::Colour fill_colour =
-                _isWhiteKey(i) ? juce::Colours::lightgrey : juce::Colours::darkgrey;
+    g.setColour(WAVEFORM_BG_COLOR);
+    g.fillRoundedRectangle(getLocalBounds().toFloat(), 4);
 
-            fill_colour = fill_colour.withAlpha(0.2f);
 
-            g.setColour(fill_colour);
-
-            auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(i);
-            g.fillRect(0.0f,
-                       note_y_start_n_height.first,
-                       rect_width,
-                       note_y_start_n_height.second);
-        }
-    }
-
-    // Draw notes
     if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
     {
+        // Draw note lines (long rectangles
+        for (int i = MIN_MIDI_NOTE; i <= MAX_MIDI_NOTE; i++)
+        {
+            if (mKeyboard.getRectangleForKey(i).intersects(local_bounds))
+            {
+                juce::Colour fill_colour =
+                    _isWhiteKey(i) ? juce::Colours::white : juce::Colours::black;
+
+                fill_colour = fill_colour.withAlpha(0.2f);
+
+                g.setColour(fill_colour);
+
+                auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(i);
+                g.fillRect(0.0f,
+                           note_y_start_n_height.first,
+                           rect_width,
+                           note_y_start_n_height.second);
+            }
+        }
+
+        // Draw notes
         for (auto& note_event: mProcessor.getNoteEventVector())
         {
             auto note_y_start_n_height =
