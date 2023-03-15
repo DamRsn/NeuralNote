@@ -15,8 +15,7 @@
 
 class Audio2MidiMainView;
 
-class NoteOptionsView
-    : public Component
+class NoteOptionsView : public Component
 
 {
 public:

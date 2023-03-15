@@ -29,8 +29,6 @@ public:
 
     void mouseExit(const MouseEvent& event) override;
 
-    //    void addSliderListener(juce::Slider::Listener* inListenerPtr);
-
 private:
     juce::Slider mSlider;
     String mLabel;

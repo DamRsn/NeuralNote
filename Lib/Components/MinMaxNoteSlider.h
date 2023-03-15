@@ -21,8 +21,6 @@ public:
 
     void paint(Graphics& g) override;
 
-    //    void addListener(juce::Slider::Listener* inListener);
-
 private:
     juce::Slider mSlider;
 

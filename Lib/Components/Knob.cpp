@@ -89,8 +89,3 @@ void Knob::mouseExit(const MouseEvent& event)
         repaint();
     }
 }
-
-//void Knob::addSliderListener(juce::Slider::Listener* inListenerPtr)
-//{
-//    mSlider.addListener(inListenerPtr);
-//}

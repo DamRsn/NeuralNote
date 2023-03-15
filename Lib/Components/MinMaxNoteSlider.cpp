@@ -45,8 +45,3 @@ void MinMaxNoteSlider::paint(Graphics& g)
                Rectangle<int>(132, 0, 22, 12),
                juce::Justification::centredRight);
 }
-
-//void MinMaxNoteSlider::addListener(juce::Slider::Listener* inListener)
-//{
-//    mSlider.addListener(inListener);
-//}
