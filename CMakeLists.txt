@@ -28,16 +28,16 @@ set(BaseTargetName Audio2Midi)
 
 juce_add_plugin("${BaseTargetName}"
         # VERSION ...                               # Set this if the plugin version is different to the project version
-        # ICON_BIG ...                              # ICON_* arguments specify a path to an image file to use as an icon for the Standalone
-        # ICON_SMALL ...
-        COMPANY_NAME "DamR"
+        ICON_BIG "${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/logo.png"
+        ICON_SMALL "${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/logo.png"
+        COMPANY_NAME "Dr. Audio"
         IS_SYNTH FALSE
         NEEDS_MIDI_INPUT FALSE
         NEEDS_MIDI_OUTPUT FALSE
         IS_MIDI_EFFECT FALSE
         EDITOR_WANTS_KEYBOARD_FOCUS FALSE
         COPY_PLUGIN_AFTER_BUILD TRUE
-        PLUGIN_MANUFACTURER_CODE Damr
+        PLUGIN_MANUFACTURER_CODE DrAu
         PLUGIN_CODE NRNT
         FORMATS AU VST3 Standalone
         PRODUCT_NAME "NeuralNote")
@@ -70,7 +70,11 @@ foreach (dir ${source_dirs})
     ENDIF ()
 endforeach ()
 
-file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.onnx ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.ttf ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.png)
+file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json
+        ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.onnx
+        ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.ttf
+        ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.png)
+
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 
 target_include_directories(${BaseTargetName} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)

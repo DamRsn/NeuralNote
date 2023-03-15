@@ -23,7 +23,8 @@ RhythmOptionsView::RhythmOptionsView(Audio2MidiAudioProcessor& processor)
                                         "1/48",
                                         "1/64"},
                                        1);
-    mTimeDivisionDropdown->setSelectedId(4);
+    mTimeDivisionDropdown->setSelectedItemIndex(
+        mProcessor.getCustomParameters()->rhythmTimeDivision.load());
     mTimeDivisionDropdown->onChange = [this]()
     {
         mProcessor.getCustomParameters()->rhythmTimeDivision.store(
@@ -36,8 +37,6 @@ RhythmOptionsView::RhythmOptionsView(Audio2MidiAudioProcessor& processor)
     mQuantization->setRange(0, 100, 1);
     mQuantization->setDoubleClickReturnValue(true, 0);
     addAndMakeVisible(*mQuantization);
-
-    setSize(266, 83);
 }
 
 void RhythmOptionsView::resized()

@@ -76,18 +76,17 @@ void NoteOptionsView::paint(Graphics& g)
                            static_cast<float>(getHeight() - mTopPad),
                            5.0f);
 
-    g.setColour(juce::Colours::black);
+    g.setColour(FONT_BLACK);
     g.setFont(TITLE_FONT);
     g.drawText(
-        "NOTE OPTIONS", Rectangle<int>(31, 0, 167, 20), juce::Justification::centredLeft);
+        "NOTE OPTIONS", Rectangle<int>(24, 0, 274, 17), juce::Justification::centredLeft);
 
-    auto enable_rectangle = juce::Rectangle<int>(10, 0, 17, 17);
+    auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
     if (isEnabled())
         g.fillRect(enable_rectangle);
     else
         g.drawRect(enable_rectangle, 1.0f);
 
-    g.setColour(juce::Colours::black);
     g.setFont(LABEL_FONT);
     g.drawText("RANGE",
                juce::Rectangle<int>(17, mMinMaxNoteSlider->getY(), 80, 17),

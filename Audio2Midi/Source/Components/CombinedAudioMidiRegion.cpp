@@ -12,6 +12,9 @@ CombinedAudioMidiRegion::CombinedAudioMidiRegion(Audio2MidiAudioProcessor& proce
 {
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
+
+    _resizeAccordingToNumSamplesAvailable();
+    mAudioRegion.updateThumbnail();
 }
 
 void CombinedAudioMidiRegion::resized()
