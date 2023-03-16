@@ -30,13 +30,13 @@ RhythmOptionsView::RhythmOptionsView(Audio2MidiAudioProcessor& processor)
         mProcessor.getCustomParameters()->rhythmTimeDivision.store(
             mTimeDivisionDropdown->getSelectedItemIndex());
     };
-    addAndMakeVisible(*mTimeDivisionDropdown);
+    //    addAndMakeVisible(*mTimeDivisionDropdown);
 
     mQuantization = std::make_unique<juce::Slider>();
     mQuantization->setSliderStyle(juce::Slider::LinearHorizontal);
     mQuantization->setRange(0, 100, 1);
     mQuantization->setDoubleClickReturnValue(true, 0);
-    addAndMakeVisible(*mQuantization);
+    //    addAndMakeVisible(*mQuantization);
 }
 
 void RhythmOptionsView::resized()
@@ -54,25 +54,28 @@ void RhythmOptionsView::paint(Graphics& g)
                            static_cast<float>(getHeight() - mTopPad),
                            5.0f);
 
-    g.setColour(FONT_BLACK);
+    g.setColour(FONT_BLACK.withAlpha(0.5f));
     g.setFont(TITLE_FONT);
     g.drawText("RHYTHM OPTIONS",
                Rectangle<int>(24, 0, 210, 17),
                juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
-    if (isEnabled())
-        g.fillRoundedRectangle(enable_rectangle.toFloat(), 4.0f);
-    else
-        g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
+    //    if (isEnabled())
+    //        g.fillRoundedRectangle(enable_rectangle.toFloat(), 4.0f);
+    //    else
+    g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
-    g.setColour(FONT_BLACK);
+    g.setColour(FONT_BLACK.withAlpha(0.5f));
     g.setFont(LABEL_FONT);
-    g.drawText("TIME DIVISION",
-               juce::Rectangle<int>(17, mTimeDivisionDropdown->getY(), 120, 17),
-               juce::Justification::centredLeft);
-
-    g.drawText("QUANTIZATION FORCE",
-               juce::Rectangle<int>(17, mQuantization->getY(), 120, 17),
-               juce::Justification::centredLeft);
+    //    g.drawText("TIME DIVISION",
+    //               juce::Rectangle<int>(17, mTimeDivisionDropdown->getY(), 120, 17),
+    //               juce::Justification::centredLeft);
+    //
+    //    g.drawText("QUANTIZATION FORCE",
+    //               juce::Rectangle<int>(17, mQuantization->getY(), 120, 17),
+    //               juce::Justification::centredLeft);
+    g.drawText("COMING SOON ...",
+               juce::Rectangle<int>(0, mTopPad, getWidth(), getHeight() - mTopPad),
+               juce::Justification::centred);
 }
