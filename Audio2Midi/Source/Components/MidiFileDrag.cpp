@@ -23,11 +23,13 @@ void MidiFileDrag::resized()
 
 void MidiFileDrag::paint(Graphics& g)
 {
-    g.fillAll(juce::Colours::pink.withAlpha(0.4f));
+    g.setColour(WHITE_BG);
+    g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
 
-    g.setColour(juce::Colours::black);
+    g.setColour(FONT_BLACK);
     g.setFont(LABEL_FONT);
-    g.drawText(mFilename, getLocalBounds(), juce::Justification::centred);
+    g.drawText(
+        "DRAG THE MIDI FILE FROM HERE", getLocalBounds(), juce::Justification::centred);
 }
 
 void MidiFileDrag::mouseDown(const MouseEvent& event)
@@ -73,4 +75,9 @@ void MidiFileDrag::mouseEnter(const MouseEvent& event)
 void MidiFileDrag::mouseExit(const MouseEvent& event)
 {
     setMouseCursor(juce::MouseCursor::ParentCursor);
+}
+
+void MidiFileDrag::setFilename(const std::string& inFilename)
+{
+    mFilename = inFilename;
 }

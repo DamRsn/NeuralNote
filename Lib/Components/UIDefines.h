@@ -27,7 +27,7 @@ const Font BUTTON_FONT = Font(MONTSERRAT_BOLD).withPointHeight(12.0f);
 // Colors
 static const juce::Colour FONT_BLACK(juce::uint8(14), juce::uint8(14), juce::uint8(14));
 static const juce::Colour
-    WHITE_BG(juce::uint8(255), juce::uint8(253), juce::uint8(246), 0.8f);
+    WHITE_BG(juce::uint8(255), juce::uint8(253), juce::uint8(246), 0.7f);
 static const juce::Colour
     WAVEFORM_COLOR(juce::uint8(255), juce::uint8(253), juce::uint8(246), 0.8f);
 static const juce::Colour

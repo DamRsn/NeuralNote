@@ -33,7 +33,7 @@ public:
 private:
     Audio2MidiAudioProcessor& mProcessor;
 
-    std::string mFilename = "TestFilename";
+    std::string mFilename = "NeuralNoteTranscription";
 
     juce::File mTempDirectory = juce::File::getSpecialLocation(juce::File::tempDirectory);
 
