@@ -41,8 +41,8 @@ private:
     NoteOptionsView mNoteOptions;
     RhythmOptionsView mQuantizePanel;
 
-    std::unique_ptr<juce::Slider> mGainSlider;
-    std::unique_ptr<juce::Button> mMuteButton;
+    std::unique_ptr<juce::TextButton> mMuteButton;
+    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> mMuteButtonAttachment;
 
     std::unique_ptr<juce::TextButton> mRecordButton;
     std::unique_ptr<juce::TextButton> mClearButton;

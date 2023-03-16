@@ -61,8 +61,20 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
         mVisualizationPanel.clear();
         updateEnablements();
     };
-
     addAndMakeVisible(*mClearButton);
+
+    mMuteButton = std::make_unique<juce::TextButton>("MuteButton");
+    mMuteButton->setButtonText("");
+    mMuteButton->setClickingTogglesState(true);
+
+    mMuteButton->setColour(juce::TextButton::buttonColourId,
+                           juce::Colours::white.withAlpha(0.2f));
+    mMuteButton->setColour(juce::TextButton::buttonOnColourId, FONT_BLACK);
+
+    mMuteButtonAttachment =
+        std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
+            mProcessor.mTree, "MUTE", *mMuteButton);
+    addAndMakeVisible(*mMuteButton);
 
     addAndMakeVisible(mVisualizationPanel);
     addAndMakeVisible(mTranscriptionOptions);
@@ -78,6 +90,7 @@ void Audio2MidiMainView::resized()
 {
     mRecordButton->setBounds(588, 36, 144, 51);
     mClearButton->setBounds(748, 36, 144, 51);
+    mMuteButton->setBounds(943, 38, 24, 24);
 
     mVisualizationPanel.setBounds(328, 120, 642, 491);
     mTranscriptionOptions.setBounds(28, 120, 274, 214);
@@ -91,6 +104,11 @@ void Audio2MidiMainView::paint(Graphics& g)
         BinaryData::background_png, BinaryData::background_pngSize);
 
     g.drawImage(background_image, getLocalBounds().toFloat());
+    g.setFont(LABEL_FONT);
+    g.drawFittedText("MUTE OUT",
+                     juce::Rectangle<int>(939, 63, 31, 23),
+                     juce::Justification::centred,
+                     2);
 }
 
 void Audio2MidiMainView::timerCallback()

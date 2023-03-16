@@ -80,6 +80,10 @@ public:
 
     AudioSampleAcquisitionMode getSampleAcquisitionMode();
 
+    // Value tree state to pass automatable parameters from UI
+    juce::AudioProcessorValueTreeState mTree;
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
 private:
     void _runModel();
 

@@ -69,7 +69,7 @@ void NoteOptionsView::resized()
 
 void NoteOptionsView::paint(Graphics& g)
 {
-    g.setColour(juce::Colours::white.withAlpha(0.7f));
+    g.setColour(WHITE_BG);
     g.fillRoundedRectangle(0.0f,
                            static_cast<float>(mTopPad),
                            static_cast<float>(getWidth()),
@@ -83,9 +83,9 @@ void NoteOptionsView::paint(Graphics& g)
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
     if (isEnabled())
-        g.fillRect(enable_rectangle);
+        g.fillRoundedRectangle(enable_rectangle.toFloat(), 4.0f);
     else
-        g.drawRect(enable_rectangle, 1.0f);
+        g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
     g.setFont(LABEL_FONT);
     g.drawText("RANGE",

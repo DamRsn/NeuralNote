@@ -47,26 +47,26 @@ void RhythmOptionsView::resized()
 
 void RhythmOptionsView::paint(Graphics& g)
 {
-    g.setColour(juce::Colours::white.withAlpha(0.7f));
+    g.setColour(WHITE_BG);
     g.fillRoundedRectangle(0.0f,
                            static_cast<float>(mTopPad),
                            static_cast<float>(getWidth()),
                            static_cast<float>(getHeight() - mTopPad),
                            5.0f);
 
-    g.setColour(juce::Colours::black);
+    g.setColour(FONT_BLACK);
     g.setFont(TITLE_FONT);
     g.drawText("RHYTHM OPTIONS",
-               Rectangle<int>(31, 0, 167, 20),
+               Rectangle<int>(24, 0, 210, 17),
                juce::Justification::centredLeft);
 
-    auto enable_rectangle = juce::Rectangle<int>(10, 0, 17, 17);
+    auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
     if (isEnabled())
-        g.fillRect(enable_rectangle);
+        g.fillRoundedRectangle(enable_rectangle.toFloat(), 4.0f);
     else
-        g.drawRect(enable_rectangle, 1.0f);
+        g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
-    g.setColour(juce::Colours::black);
+    g.setColour(FONT_BLACK);
     g.setFont(LABEL_FONT);
     g.drawText("TIME DIVISION",
                juce::Rectangle<int>(17, mTimeDivisionDropdown->getY(), 120, 17),

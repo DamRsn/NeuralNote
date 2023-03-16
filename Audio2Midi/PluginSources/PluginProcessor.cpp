@@ -2,12 +2,25 @@
 #include "PluginEditor.h"
 
 Audio2MidiAudioProcessor::Audio2MidiAudioProcessor()
-    : mThreadPool(1)
+    : mTree(*this, nullptr, "PARAMETERS", createParameterLayout())
+    , mThreadPool(1)
 {
     mAudioBufferForMIDITranscription.setSize(1, mMaxNumSamplesToConvert);
     mAudioBufferForMIDITranscription.clear();
 
     mJobLambda = [this]() { _runModel(); };
+}
+
+AudioProcessorValueTreeState::ParameterLayout
+    Audio2MidiAudioProcessor::createParameterLayout()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    auto mute = std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID {"MUTE", 1}, "Mute", true);
+    params.push_back(std::move(mute));
+
+    return {params.begin(), params.end()};
 }
 
 void Audio2MidiAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
@@ -86,7 +99,10 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    buffer.applyGain(0.0f);
+    auto isMute = mTree.getRawParameterValue("MUTE")->load() > 0.5;
+
+    if (isMute)
+        buffer.clear();
 }
 
 juce::AudioProcessorEditor* Audio2MidiAudioProcessor::createEditor()
