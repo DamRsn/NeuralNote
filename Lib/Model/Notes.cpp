@@ -129,10 +129,10 @@ std::vector<Notes::Event>
             amplitude /= (i - frame_idx);
 
             events.push_back(Notes::Event {
-                .start = _modelFrameToTime(frame_idx),
-                .end = _modelFrameToTime(i),
-                .pitch = note_idx + MIDI_OFFSET,
-                .amplitude = amplitude,
+                _modelFrameToTime(frame_idx) /* start */,
+                _modelFrameToTime(i) /* end */,
+                note_idx + MIDI_OFFSET /* pitch */,
+                amplitude /* amplitude */,
             });
         }
     }
@@ -230,10 +230,10 @@ std::vector<Notes::Event>
             amplitude /= (i_end - i_start);
 
             events.push_back(Notes::Event {
-                .start = _modelFrameToTime(i_start),
-                .end = _modelFrameToTime(i_end),
-                .pitch = note_idx + MIDI_OFFSET,
-                .amplitude = amplitude,
+                _modelFrameToTime(i_start /* start */),
+                _modelFrameToTime(i_end) /* end */,
+                note_idx + MIDI_OFFSET /* pitch */,
+                amplitude /* amplitude */,
             });
         }
     }
