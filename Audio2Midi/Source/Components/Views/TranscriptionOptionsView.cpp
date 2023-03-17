@@ -72,7 +72,7 @@ void TranscriptionOptionsView::resized()
 
 void TranscriptionOptionsView::paint(Graphics& g)
 {
-    g.setColour(WHITE_BG);
+    g.setColour(WHITE_TRANSPARENT);
     g.fillRoundedRectangle(0.0f,
                            23.0f,
                            static_cast<float>(getWidth()),

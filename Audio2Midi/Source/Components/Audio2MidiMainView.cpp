@@ -11,7 +11,8 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     , mNoteOptions(processor)
     , mQuantizePanel(processor)
 {
-    getLookAndFeel().setDefaultSansSerifTypeface(MONTSERRAT_BOLD);
+    //    getLookAndFeel().setDefaultSansSerifTypeface(MONTSERRAT_REGULAR);
+    juce::LookAndFeel::setDefaultLookAndFeel(&mLNF);
 
     mRecordButton = std::make_unique<TextButton>("RecordButton");
     mRecordButton->setButtonText("RECORD");
@@ -84,6 +85,11 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     startTimerHz(30);
 
     updateEnablements();
+}
+
+Audio2MidiMainView::~Audio2MidiMainView()
+{
+    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
 }
 
 void Audio2MidiMainView::resized()

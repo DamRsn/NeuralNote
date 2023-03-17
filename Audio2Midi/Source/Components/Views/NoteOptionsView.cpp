@@ -61,15 +61,15 @@ NoteOptionsView::NoteOptionsView(Audio2MidiAudioProcessor& processor)
 
 void NoteOptionsView::resized()
 {
-    mMinMaxNoteSlider->setBounds(110, 22 + mTopPad, 154, 12);
-    mKeyDropdown->setBounds(110, mTopPad + 42, 50, 17);
-    mKeyType->setBounds(172, mTopPad + 42, 70, 17);
-    mSnapMode->setBounds(110, mTopPad + 62, 132, 17);
+    mMinMaxNoteSlider->setBounds(99, 22 + mTopPad, 154, 17);
+    mKeyDropdown->setBounds(99, mTopPad + 42, 55, 17);
+    mKeyType->setBounds(159, mTopPad + 42, 94, 17);
+    mSnapMode->setBounds(99, mTopPad + 62, 154, 17);
 }
 
 void NoteOptionsView::paint(Graphics& g)
 {
-    g.setColour(WHITE_BG);
+    g.setColour(WHITE_TRANSPARENT);
     g.fillRoundedRectangle(0.0f,
                            static_cast<float>(mTopPad),
                            static_cast<float>(getWidth()),

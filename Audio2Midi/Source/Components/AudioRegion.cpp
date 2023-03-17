@@ -49,7 +49,7 @@ void AudioRegion::paint(Graphics& g)
     }
     else
     {
-        g.setColour(WHITE_BG);
+        g.setColour(WHITE_TRANSPARENT);
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
 
         g.setColour(FONT_BLACK);

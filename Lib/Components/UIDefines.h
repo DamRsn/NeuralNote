@@ -27,10 +27,13 @@ const Font BUTTON_FONT = Font(MONTSERRAT_BOLD).withPointHeight(12.0f);
 // Colors
 static const juce::Colour FONT_BLACK(juce::uint8(14), juce::uint8(14), juce::uint8(14));
 static const juce::Colour
-    WHITE_BG(juce::uint8(255), juce::uint8(253), juce::uint8(246), 0.7f);
+    WHITE_TRANSPARENT(juce::uint8(255), juce::uint8(253), juce::uint8(246), 0.7f);
+static const juce::Colour
+    WHITE_SOLID(juce::uint8(255), juce::uint8(253), juce::uint8(246), 1.0f);
 static const juce::Colour
     WAVEFORM_COLOR(juce::uint8(255), juce::uint8(253), juce::uint8(246), 0.8f);
 static const juce::Colour
     WAVEFORM_BG_COLOR(juce::uint8(0), juce::uint8(0), juce::uint8(0), 0.35f);
+static const juce::Colour PINK = juce::Colours::deeppink;
 
 #endif //AUDIO2MIDIPLUGIN_UIDEFINES_H

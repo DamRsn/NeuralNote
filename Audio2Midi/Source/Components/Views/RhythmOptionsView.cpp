@@ -47,7 +47,7 @@ void RhythmOptionsView::resized()
 
 void RhythmOptionsView::paint(Graphics& g)
 {
-    g.setColour(WHITE_BG);
+    g.setColour(WHITE_TRANSPARENT);
     g.fillRoundedRectangle(0.0f,
                            static_cast<float>(mTopPad),
                            static_cast<float>(getWidth()),

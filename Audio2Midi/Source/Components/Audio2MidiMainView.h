@@ -13,6 +13,7 @@
 #include "RhythmOptionsView.h"
 #include "TranscriptionOptionsView.h"
 #include "VisualizationPanel.h"
+#include "NeuralNoteLNF.h"
 
 class Audio2MidiMainView
     : public juce::Component
@@ -20,6 +21,8 @@ class Audio2MidiMainView
 {
 public:
     explicit Audio2MidiMainView(Audio2MidiAudioProcessor& processor);
+
+    ~Audio2MidiMainView();
 
     void resized() override;
 
@@ -33,6 +36,7 @@ private:
     void updateEnablements();
 
     Audio2MidiAudioProcessor& mProcessor;
+    NeuralNoteLNF mLNF;
 
     State mPrevState = EmptyAudioAndMidiRegions;
 
