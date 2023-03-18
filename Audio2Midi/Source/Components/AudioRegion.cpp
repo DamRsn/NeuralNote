@@ -52,7 +52,7 @@ void AudioRegion::paint(Graphics& g)
         g.setColour(WHITE_TRANSPARENT);
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
 
-        g.setColour(FONT_BLACK);
+        g.setColour(BLACK);
         g.setFont(LARGE_FONT);
         g.drawText("HIT RECORD OR DROP AN AUDIO FILE HERE",
                    getLocalBounds(),

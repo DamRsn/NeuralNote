@@ -64,9 +64,9 @@ void TranscriptionOptionsView::resized()
 {
     int button_y_start = 40;
 
-    mNoteSensibility->setBounds(10, button_y_start, 75, 100);
-    mSplitSensibility->setBounds(95, button_y_start, 75, 100);
-    mMinNoteDuration->setBounds(180, button_y_start, 75, 100);
+    mNoteSensibility->setBounds(10, button_y_start, 66, 89);
+    mSplitSensibility->setBounds(95, button_y_start, 66, 89);
+    mMinNoteDuration->setBounds(180, button_y_start, 66, 89);
     mPitchBendDropDown->setBounds(110, 153 + 23, 116, 17);
 }
 
@@ -79,7 +79,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
                            static_cast<float>(getHeight() - 23),
                            5.0f);
 
-    g.setColour(FONT_BLACK);
+    g.setColour(BLACK);
     g.setFont(TITLE_FONT);
     g.drawText("TRANSCRIPTION OPTIONS",
                Rectangle<int>(24, 0, 250, 17),
@@ -91,7 +91,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
     else
         g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
-    g.setColour(FONT_BLACK);
+    g.setColour(BLACK);
     g.setFont(LABEL_FONT);
     g.drawText("PITCH BEND",
                juce::Rectangle<int>(11, 153 + 23, 67, 12),

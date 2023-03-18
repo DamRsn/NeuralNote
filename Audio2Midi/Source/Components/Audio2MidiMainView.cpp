@@ -11,8 +11,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     , mNoteOptions(processor)
     , mQuantizePanel(processor)
 {
-    //    getLookAndFeel().setDefaultSansSerifTypeface(MONTSERRAT_REGULAR);
-    juce::LookAndFeel::setDefaultLookAndFeel(&mLNF);
+    //    juce::LookAndFeel::setDefaultLookAndFeel(&mLNF);
 
     mRecordButton = std::make_unique<TextButton>("RecordButton");
     mRecordButton->setButtonText("RECORD");
@@ -70,7 +69,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
 
     mMuteButton->setColour(juce::TextButton::buttonColourId,
                            juce::Colours::white.withAlpha(0.2f));
-    mMuteButton->setColour(juce::TextButton::buttonOnColourId, FONT_BLACK);
+    mMuteButton->setColour(juce::TextButton::buttonOnColourId, BLACK);
 
     mMuteButtonAttachment =
         std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(

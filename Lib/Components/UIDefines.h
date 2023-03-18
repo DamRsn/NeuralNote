@@ -25,7 +25,7 @@ const Font DROPDOWN_FONT = Font(MONTSERRAT_REGULAR).withPointHeight(10.0f);
 const Font BUTTON_FONT = Font(MONTSERRAT_BOLD).withPointHeight(12.0f);
 
 // Colors
-static const juce::Colour FONT_BLACK(juce::uint8(14), juce::uint8(14), juce::uint8(14));
+static const juce::Colour BLACK(juce::uint8(14), juce::uint8(14), juce::uint8(14));
 static const juce::Colour
     WHITE_TRANSPARENT(juce::uint8(255), juce::uint8(253), juce::uint8(246), 0.7f);
 static const juce::Colour
@@ -35,5 +35,7 @@ static const juce::Colour
 static const juce::Colour
     WAVEFORM_BG_COLOR(juce::uint8(0), juce::uint8(0), juce::uint8(0), 0.35f);
 static const juce::Colour PINK = juce::Colours::deeppink;
+
+static const juce::Colour KNOB_GREY(218, 221, 217);
 
 #endif //AUDIO2MIDIPLUGIN_UIDEFINES_H

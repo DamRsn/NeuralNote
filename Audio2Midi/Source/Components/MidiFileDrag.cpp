@@ -26,7 +26,7 @@ void MidiFileDrag::paint(Graphics& g)
     g.setColour(WHITE_TRANSPARENT);
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
 
-    g.setColour(FONT_BLACK);
+    g.setColour(BLACK);
     g.setFont(LABEL_FONT);
     g.drawText(
         "DRAG THE MIDI FILE FROM HERE", getLocalBounds(), juce::Justification::centred);

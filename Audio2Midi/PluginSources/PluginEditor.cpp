@@ -8,6 +8,15 @@ Audio2MidiEditor::Audio2MidiEditor(Audio2MidiAudioProcessor& p)
 
     addAndMakeVisible(*mMainView);
     setSize(1000, 640);
+
+    getLookAndFeel().setDefaultSansSerifTypeface(MONTSERRAT_REGULAR);
+
+    mMainView->setLookAndFeel(&mNeuralNoteLnF);
+}
+
+Audio2MidiEditor::~Audio2MidiEditor()
+{
+    mMainView->setLookAndFeel(nullptr);
 }
 
 void Audio2MidiEditor::paint(juce::Graphics& g)

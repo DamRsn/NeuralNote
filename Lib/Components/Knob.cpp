@@ -28,9 +28,6 @@ Knob::Knob(const std::string& inLabelText,
 
     mLabel = inLabelText;
 
-    setSize(75, 95);
-    mSlider.setSize(75, 75);
-
     mOnChangeAction = inOnChangeAction;
 
     mSlider.onValueChange = [this]()
@@ -50,7 +47,7 @@ Knob::Knob(const std::string& inLabelText,
 
 void Knob::resized()
 {
-    mSlider.setBounds(0, 0, 75, 75);
+    mSlider.setBounds(2, 0, 62, 62);
 }
 
 void Knob::paint(Graphics& g)
@@ -61,13 +58,13 @@ void Knob::paint(Graphics& g)
 
     if (!mIsMouseOver || !isEnabled())
     {
-        g.drawMultiLineText(mLabel, 0, 75, 75, juce::Justification::centred, 0.0f);
+        g.drawMultiLineText(mLabel, 0, 73, 66, juce::Justification::centred, 0.0f);
     }
     else
     {
         String value = mSlider.getTextFromValue(mSlider.getValue());
         g.drawText(value,
-                   juce::Rectangle<int>(0, 75, getWidth(), getHeight() - 75),
+                   juce::Rectangle<int>(0, 73, getWidth(), getHeight() - 67),
                    juce::Justification::centredTop);
     }
 }

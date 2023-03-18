@@ -76,7 +76,7 @@ void NoteOptionsView::paint(Graphics& g)
                            static_cast<float>(getHeight() - mTopPad),
                            5.0f);
 
-    g.setColour(FONT_BLACK);
+    g.setColour(BLACK);
     g.setFont(TITLE_FONT);
     g.drawText(
         "NOTE OPTIONS", Rectangle<int>(24, 0, 274, 17), juce::Justification::centredLeft);
