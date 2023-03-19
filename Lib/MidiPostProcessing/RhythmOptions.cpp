@@ -31,10 +31,11 @@ void RhythmOptions::setInfo(
             mRhythmInfo.ppqPositionOfLastBarStart =
                 inPositionInfoPtr->getPpqPositionOfLastBarStart();
             mRhythmInfo.ppqPosition = inPositionInfoPtr->getPpqPosition();
-            // Can quantize only if recorded while playing, bpm is defined, lastBarStart is defined
+            // Can quantize only if recorded while playing, bpm is defined, lastBarStart is defined ...
             mRhythmInfo.canQuantize = mRhythmInfo.isPlaying && mRhythmInfo.bpm.hasValue()
                                       && mRhythmInfo.ppqPositionOfLastBarStart.hasValue()
-                                      && mRhythmInfo.ppqPosition;
+                                      && mRhythmInfo.ppqPosition
+                                      && mRhythmInfo.timeSignature.hasValue();
         }
         else
         {
@@ -106,7 +107,7 @@ double RhythmOptions::quantizeTime(double inEventTime,
 
     // Set previous bar start of recording start as new time origin.
     double new_time_origin = inStartTimeQN * seconds_per_qn;
-    double shifted_time = inEventTime - new_time_origin;
+    double shifted_time = inEventTime + new_time_origin;
 
     double time_since_previous_division = std::fmod(shifted_time, division_duration);
 
@@ -124,7 +125,7 @@ double RhythmOptions::quantizeTime(double inEventTime,
         jmap(double(inQuantizationForce), shifted_time, target_time);
 
     // Re-shift
-    double quantized_time = quantized_shifted_time + new_time_origin;
+    double quantized_time = quantized_shifted_time - new_time_origin;
 
     return quantized_time;
 }

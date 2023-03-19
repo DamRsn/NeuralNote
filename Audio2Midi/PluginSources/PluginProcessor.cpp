@@ -110,8 +110,6 @@ void Audio2MidiAudioProcessor::setStateInformation(const void* data, int sizeInB
 
 void Audio2MidiAudioProcessor::clear()
 {
-    jassert(mState.load() == PopulatedAudioAndMidiRegions);
-
     mNumSamplesAcquired = 0;
     mAudioBufferForMIDITranscription.clear();
 

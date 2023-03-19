@@ -3,6 +3,7 @@
 //
 
 #include "RhythmOptionsView.h"
+#include "Audio2MidiMainView.h"
 
 RhythmOptionsView::RhythmOptionsView(Audio2MidiAudioProcessor& processor)
     : mProcessor(processor)

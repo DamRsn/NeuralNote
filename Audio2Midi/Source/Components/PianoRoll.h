@@ -55,6 +55,10 @@ private:
 
     float _getNoteWidth(int inNote) const;
 
+    void _drawBeatVerticalLines(Graphics& g);
+
+    float _qnToPixel(double inQn, double inZeroQn, double inBeatsPerSecond) const;
+
     const double mNumPixelsPerSecond;
 
     juce::ColourGradient mNoteGradient;

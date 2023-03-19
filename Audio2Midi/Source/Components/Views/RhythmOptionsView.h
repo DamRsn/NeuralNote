@@ -11,6 +11,8 @@
 #include "UIDefines.h"
 #include "RhythmUtils.h"
 
+class Audio2MidiMainView;
+
 class RhythmOptionsView : public Component
 {
 public:

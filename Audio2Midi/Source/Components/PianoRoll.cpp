@@ -32,10 +32,9 @@ void PianoRoll::paint(Graphics& g)
     g.setColour(WAVEFORM_BG_COLOR);
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 4);
 
-
     if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
     {
-        // Draw note lines (long rectangles
+        // Draw horizontal note lines
         for (int i = MIN_MIDI_NOTE; i <= MAX_MIDI_NOTE; i++)
         {
             if (mKeyboard.getRectangleForKey(i).intersects(local_bounds))
@@ -53,6 +52,12 @@ void PianoRoll::paint(Graphics& g)
                            rect_width,
                            note_y_start_n_height.second);
             }
+        }
+
+        // Draw vertical lines if we have info on bpm, time signature ...
+        if (mProcessor.canQuantize())
+        {
+            _drawBeatVerticalLines(g);
         }
 
         // Draw notes
@@ -145,4 +150,47 @@ bool PianoRoll::_isWhiteKey(int inNote)
 float PianoRoll::_getNoteWidth(int inNote) const
 {
     return _isWhiteKey(inNote) ? mKeyboard.getKeyWidth() : mKeyboard.getBlackNoteWidth();
+}
+
+void PianoRoll::_drawBeatVerticalLines(Graphics& g)
+{
+    auto playhead_info = mProcessor.getPlayheadInfoOnRecordStart();
+    jassert(playhead_info.hasValue());
+    double beats_per_second = 60.0 / *playhead_info->getBpm();
+    auto time_signature = *playhead_info->getTimeSignature();
+
+    double last_bar_qn = *playhead_info->getPpqPositionOfLastBarStart();
+    double start_time_qn = *playhead_info->getPpqPosition();
+
+    double beat_increments = 4.0 / time_signature.denominator;
+    double beat_number = 0;
+    float beat_pixel =
+        _qnToPixel(beat_number, last_bar_qn - start_time_qn, beats_per_second);
+
+    auto width = static_cast<float>(getWidth());
+    auto height = static_cast<float>(getHeight());
+
+    g.setColour(WHITE_SOLID);
+
+    while (beat_pixel < width)
+    {
+        if (beat_pixel >= 0)
+        {
+            float thickness =
+                std::abs(fmod(beat_number, static_cast<double>(time_signature.numerator)))
+                        < 1e-6
+                    ? 1.0f
+                    : 0.5f;
+            g.drawLine(beat_pixel, 0, beat_pixel, height, thickness);
+        }
+
+        beat_number += beat_increments;
+        beat_pixel =
+            _qnToPixel(beat_number, last_bar_qn - start_time_qn, beats_per_second);
+    }
+}
+
+float PianoRoll::_qnToPixel(double inQn, double inZeroQn, double inBeatsPerSecond) const
+{
+    return static_cast<float>((inQn + inZeroQn) * inBeatsPerSecond * mNumPixelsPerSecond);
 }
