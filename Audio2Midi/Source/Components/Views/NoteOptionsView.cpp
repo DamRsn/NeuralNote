@@ -61,27 +61,28 @@ NoteOptionsView::NoteOptionsView(Audio2MidiAudioProcessor& processor)
 
 void NoteOptionsView::resized()
 {
-    mMinMaxNoteSlider->setBounds(99, 22 + mTopPad, 154, 17);
-    mKeyDropdown->setBounds(99, mTopPad + 42, 55, 17);
-    mKeyType->setBounds(159, mTopPad + 42, 94, 17);
-    mSnapMode->setBounds(99, mTopPad + 62, 154, 17);
+    mMinMaxNoteSlider->setBounds(99, 17 + LEFT_SECTIONS_TOP_PAD, 154, 17);
+    mKeyDropdown->setBounds(99, LEFT_SECTIONS_TOP_PAD + 46, 55, 17);
+    mKeyType->setBounds(159, LEFT_SECTIONS_TOP_PAD + 46, 94, 17);
+    mSnapMode->setBounds(99, LEFT_SECTIONS_TOP_PAD + 75, 154, 17);
 }
 
 void NoteOptionsView::paint(Graphics& g)
 {
     g.setColour(WHITE_TRANSPARENT);
     g.fillRoundedRectangle(0.0f,
-                           static_cast<float>(mTopPad),
+                           static_cast<float>(LEFT_SECTIONS_TOP_PAD),
                            static_cast<float>(getWidth()),
-                           static_cast<float>(getHeight() - mTopPad),
+                           static_cast<float>(getHeight() - LEFT_SECTIONS_TOP_PAD),
                            5.0f);
 
-    float alpha = isEnabled() ? 1.0f : 0.5f;
+    float alpha = isEnabled() ? 1.0f : DISABLED_ALPHA;
+
+    mMinMaxNoteSlider->setAlpha(alpha);
     g.setColour(BLACK.withAlpha(alpha));
 
     g.setFont(TITLE_FONT);
-    g.drawText(
-        "NOTE OPTIONS", Rectangle<int>(24, 0, 274, 17), juce::Justification::centredLeft);
+    g.drawText("KEY", Rectangle<int>(24, 0, 274, 17), juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
     if (isEnabled())
@@ -91,15 +92,15 @@ void NoteOptionsView::paint(Graphics& g)
 
     g.setFont(LABEL_FONT);
     g.drawText("RANGE",
-               juce::Rectangle<int>(17, mMinMaxNoteSlider->getY(), 80, 17),
+               juce::Rectangle<int>(19, mMinMaxNoteSlider->getY(), 80, 17),
                juce::Justification::centredLeft);
 
     g.drawText("KEY",
-               juce::Rectangle<int>(17, mKeyDropdown->getY(), 80, 17),
+               juce::Rectangle<int>(19, mKeyDropdown->getY(), 80, 17),
                juce::Justification::centredLeft);
 
     g.drawText("SNAP MODE",
-               juce::Rectangle<int>(17, mKeyDropdown->getY() + 20, 80, 12),
+               juce::Rectangle<int>(19, mSnapMode->getY(), 80, 17),
                juce::Justification::centredLeft);
 }
 

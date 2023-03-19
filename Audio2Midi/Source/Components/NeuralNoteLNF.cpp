@@ -13,9 +13,11 @@ NeuralNoteLNF::NeuralNoteLNF()
     setColour(juce::PopupMenu::textColourId, BLACK);
     setColour(juce::PopupMenu::backgroundColourId, WHITE_SOLID);
     setColour(juce::PopupMenu::highlightedTextColourId, WHITE_SOLID);
-    setColour(juce::PopupMenu::highlightedBackgroundColourId, PINK);
+    setColour(juce::PopupMenu::highlightedBackgroundColourId, BLACK);
 
-    setColour(juce::Slider::ColourIds::thumbColourId, PINK);
+    setColour(juce::Slider::ColourIds::thumbColourId, juce::Colours::white);
+    setColour(juce::Slider::ColourIds::backgroundColourId, KNOB_GREY);
+    setColour(juce::Slider::ColourIds::trackColourId, BLACK);
 }
 
 void NeuralNoteLNF::drawRotarySlider(Graphics& g,

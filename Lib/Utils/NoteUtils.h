@@ -15,9 +15,40 @@ static const juce::StringArray RootNotesSharpStr {
 static const juce::StringArray RootNotesFlatStr {
     "A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab"};
 
+enum RootNote
+{
+    A = 0,
+    A_sharp,
+    B,
+    C,
+    C_sharp,
+    D,
+    D_sharp,
+    E,
+    F_sharp,
+    F,
+    G_sharp,
+    G,
+    TotalNumRootNotes
+};
+
 static const juce::StringArray ScaleTypesStr {"Chromatic", "Major", "Minor"};
 
+enum ScaleType
+{
+    Chromatic = 0,
+    Major,
+    Minor,
+    TotalNumScaleTypes
+};
+
 static const juce::StringArray SnapModesStr {"Adjust", "Remove"};
+
+enum SnapMode
+{
+    Adjust = 0,
+    Remove
+};
 
 static String midiNoteToStr(int inNoteNumber)
 {

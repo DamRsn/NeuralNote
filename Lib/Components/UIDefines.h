@@ -34,8 +34,14 @@ static const juce::Colour
     WAVEFORM_COLOR(juce::uint8(255), juce::uint8(253), juce::uint8(246), 0.8f);
 static const juce::Colour
     WAVEFORM_BG_COLOR(juce::uint8(0), juce::uint8(0), juce::uint8(0), 0.35f);
+static const juce::Colour RECORD_RED(246, 89, 89);
 static const juce::Colour PINK = juce::Colours::deeppink;
-
 static const juce::Colour KNOB_GREY(218, 221, 217);
+
+static const float DISABLED_ALPHA = 0.5f;
+
+// Distances
+
+static const int LEFT_SECTIONS_TOP_PAD = 24;
 
 #endif //AUDIO2MIDIPLUGIN_UIDEFINES_H

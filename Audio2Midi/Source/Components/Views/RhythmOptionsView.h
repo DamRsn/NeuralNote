@@ -10,6 +10,7 @@
 #include "PluginProcessor.h"
 #include "UIDefines.h"
 #include "RhythmUtils.h"
+#include "QuantizeForceSlider.h"
 
 class Audio2MidiMainView;
 
@@ -25,12 +26,11 @@ public:
 private:
     void _valueChanged();
 
-    const int mTopPad = 23;
     Audio2MidiAudioProcessor& mProcessor;
 
     std::unique_ptr<juce::ComboBox> mTimeDivisionDropdown;
 
-    std::unique_ptr<juce::Slider> mQuantization;
+    std::unique_ptr<QuantizeForceSlider> mQuantizationForceSlider;
 
     std::unique_ptr<juce::TextButton> mSnapMode;
 };

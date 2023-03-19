@@ -28,7 +28,6 @@ public:
 private:
     void _valueChanged();
 
-    const int mTopPad = 26;
     Audio2MidiAudioProcessor& mProcessor;
 
     std::unique_ptr<MinMaxNoteSlider> mMinMaxNoteSlider;

@@ -4,9 +4,9 @@
 
 #include "NoteOptions.h"
 
-void NoteOptions::setParameters(NoteOptions::RootNote inRootNote,
-                                NoteOptions::ScaleType inScaleType,
-                                NoteOptions::SnapMode inSnapMode,
+void NoteOptions::setParameters(RootNote inRootNote,
+                                ScaleType inScaleType,
+                                SnapMode inSnapMode,
                                 int inMinMidiNote,
                                 int inMaxMidiNote)
 {
@@ -100,8 +100,8 @@ int NoteOptions::_midiToNoteIndex(int inMidiNote)
     return inMidiNote % 12;
 }
 
-std::array<int, 7> NoteOptions::_createKeyArray(NoteOptions::RootNote inRootNote,
-                                                NoteOptions::ScaleType inScaleType)
+std::array<int, 7> NoteOptions::_createKeyArray(RootNote inRootNote,
+                                                ScaleType inScaleType)
 {
     auto root_note_idx = _rootNoteToNoteIdx(inRootNote);
     std::array<int, 7> key_array {};
@@ -125,7 +125,7 @@ std::array<int, 7> NoteOptions::_createKeyArray(NoteOptions::RootNote inRootNote
     return key_array;
 }
 
-int NoteOptions::_rootNoteToNoteIdx(NoteOptions::RootNote inRootNote)
+int NoteOptions::_rootNoteToNoteIdx(RootNote inRootNote)
 {
     return (static_cast<int>(inRootNote) + 12 - 3) % 12;
 }

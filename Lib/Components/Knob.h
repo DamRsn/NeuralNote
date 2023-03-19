@@ -19,7 +19,8 @@ public:
          double inDefaultValue,
          bool inSetChangeNotificationOnlyOnRelease,
          std::atomic<float>& inAttachedValue,
-         const std::function<void()>& inOnChangeAction);
+         const std::function<void()>& inOnChangeAction,
+         const std::string& inPostValue = "");
 
     void resized() override;
 
@@ -33,6 +34,7 @@ private:
     juce::Slider mSlider;
     String mLabel;
 
+    std::string mPostValueStr;
     const double mDefaultValue;
     std::atomic<float>& mAttachedValue;
     std::function<void()> mOnChangeAction;

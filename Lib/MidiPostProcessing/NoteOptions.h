@@ -9,40 +9,11 @@
 #include "Notes.h"
 #include "NoteUtils.h"
 
+using namespace NoteUtils;
+
 class NoteOptions
 {
 public:
-    enum RootNote
-    {
-        A = 0,
-        A_sharp,
-        B,
-        C,
-        C_sharp,
-        D,
-        D_sharp,
-        E,
-        F_sharp,
-        F,
-        G_sharp,
-        G,
-        TotalNumRootNotes
-    };
-
-    enum ScaleType
-    {
-        Chromatic = 0,
-        Major,
-        Minor,
-        TotalNumScaleTypes
-    };
-
-    enum SnapMode
-    {
-        Adjust = 0,
-        Remove
-    };
-
     void setParameters(RootNote inRootNote,
                        ScaleType inScaleType,
                        SnapMode inSnapMode,

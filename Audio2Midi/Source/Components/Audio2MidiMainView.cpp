@@ -14,11 +14,10 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     mRecordButton = std::make_unique<TextButton>("RecordButton");
     mRecordButton->setButtonText("RECORD");
     mRecordButton->setClickingTogglesState(true);
-    mRecordButton->setColour(TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
-    mRecordButton->setColour(TextButton::ColourIds::buttonColourId,
-                             juce::Colours::whitesmoke);
-    mRecordButton->setColour(TextButton::ColourIds::textColourOffId,
-                             juce::Colours::black);
+    mRecordButton->setColour(TextButton::ColourIds::buttonColourId, WHITE_TRANSPARENT);
+    mRecordButton->setColour(TextButton::ColourIds::textColourOffId, BLACK);
+    mRecordButton->setColour(TextButton::ColourIds::buttonOnColourId, BLACK);
+    mRecordButton->setColour(TextButton::ColourIds::textColourOnId, RECORD_RED);
 
     mRecordButton->onClick = [this]()
     {
@@ -48,11 +47,9 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     mClearButton = std::make_unique<TextButton>("ClearButton");
     mClearButton->setButtonText("CLEAR");
     mClearButton->setClickingTogglesState(false);
-    mClearButton->setColour(TextButton::ColourIds::buttonOnColourId,
-                            juce::Colours::black);
-    mClearButton->setColour(TextButton::ColourIds::buttonColourId,
-                            juce::Colours::whitesmoke);
-    mClearButton->setColour(TextButton::ColourIds::textColourOffId, juce::Colours::black);
+    mClearButton->setColour(TextButton::ColourIds::buttonOnColourId, BLACK);
+    mClearButton->setColour(TextButton::ColourIds::buttonColourId, WHITE_TRANSPARENT);
+    mClearButton->setColour(TextButton::ColourIds::textColourOffId, BLACK);
     mClearButton->onClick = [this]()
     {
         mProcessor.clear();
@@ -96,9 +93,9 @@ void Audio2MidiMainView::resized()
     mMuteButton->setBounds(943, 38, 24, 24);
 
     mVisualizationPanel.setBounds(328, 120, 642, 491);
-    mTranscriptionOptions.setBounds(28, 120, 274, 214);
-    mNoteOptions.setBounds(28, 355, 274, 121);
-    mQuantizePanel.setBounds(28, 498, 274, 113);
+    mTranscriptionOptions.setBounds(29, 120, 274, 190);
+    mNoteOptions.setBounds(29, 334, 274, 133);
+    mQuantizePanel.setBounds(29, 491, 274, 120);
 }
 
 void Audio2MidiMainView::paint(Graphics& g)

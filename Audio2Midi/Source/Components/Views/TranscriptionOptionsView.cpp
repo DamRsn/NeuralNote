@@ -32,15 +32,16 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
 
     addAndMakeVisible(*mSplitSensibility);
 
-    mMinNoteDuration =
-        std::make_unique<Knob>("MIN NOTE DURATION",
-                               35,
-                               580,
-                               1,
-                               125,
-                               false,
-                               mProcessor.getCustomParameters()->minNoteDurationMs,
-                               [this]() { _valueChanged(); });
+    mMinNoteDuration = std::make_unique<Knob>(
+        "MIN NOTE DURATION",
+        35,
+        580,
+        1,
+        125,
+        false,
+        mProcessor.getCustomParameters()->minNoteDurationMs,
+        [this]() { _valueChanged(); },
+        " ms");
 
     addAndMakeVisible(*mMinNoteDuration);
 
@@ -61,28 +62,28 @@ void TranscriptionOptionsView::resized()
 {
     int button_y_start = 40;
 
-    mNoteSensibility->setBounds(10, button_y_start, 66, 89);
-    mSplitSensibility->setBounds(95, button_y_start, 66, 89);
-    mMinNoteDuration->setBounds(180, button_y_start, 66, 89);
-    mPitchBendDropDown->setBounds(110, 153 + 23, 116, 17);
+    mNoteSensibility->setBounds(18, button_y_start, 66, 89);
+    mSplitSensibility->setBounds(106, button_y_start, 66, 89);
+    mMinNoteDuration->setBounds(193, button_y_start, 66, 89);
+    mPitchBendDropDown->setBounds(100, 129 + LEFT_SECTIONS_TOP_PAD, 116, 17);
 }
 
 void TranscriptionOptionsView::paint(Graphics& g)
 {
     g.setColour(WHITE_TRANSPARENT);
     g.fillRoundedRectangle(0.0f,
-                           23.0f,
+                           LEFT_SECTIONS_TOP_PAD,
                            static_cast<float>(getWidth()),
-                           static_cast<float>(getHeight() - 23),
+                           static_cast<float>(getHeight() - LEFT_SECTIONS_TOP_PAD),
                            5.0f);
 
     float alpha = isEnabled() ? 1.0f : 0.5f;
 
     g.setColour(BLACK.withAlpha(alpha));
     g.setFont(TITLE_FONT);
-    g.drawText("TRANSCRIPTION OPTIONS",
+    g.drawText("TRANSCRIPTION",
                Rectangle<int>(24, 0, 250, 17),
-               juce::Justification::centred);
+               juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
     if (isEnabled())
@@ -92,8 +93,8 @@ void TranscriptionOptionsView::paint(Graphics& g)
 
     g.setFont(LABEL_FONT);
     g.drawText("PITCH BEND",
-               juce::Rectangle<int>(11, 153 + 23, 67, 12),
-               juce::Justification::centred);
+               juce::Rectangle<int>(19, mPitchBendDropDown->getY(), 67, 17),
+               juce::Justification::centredLeft);
 }
 
 void TranscriptionOptionsView::_valueChanged()

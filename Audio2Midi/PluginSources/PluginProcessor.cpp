@@ -176,9 +176,9 @@ void Audio2MidiAudioProcessor::_runModel()
     mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
                                  mNumSamplesAcquired);
 
-    mNoteOptions.setParameters(NoteOptions::RootNote(mParameters.keyRootNote.load()),
-                               NoteOptions::ScaleType(mParameters.keyType.load()),
-                               NoteOptions::SnapMode(mParameters.keySnapMode.load()),
+    mNoteOptions.setParameters(NoteUtils::RootNote(mParameters.keyRootNote.load()),
+                               NoteUtils::ScaleType(mParameters.keyType.load()),
+                               NoteUtils::SnapMode(mParameters.keySnapMode.load()),
                                mParameters.minMidiNote.load(),
                                mParameters.maxMidiNote.load());
 
@@ -216,9 +216,9 @@ void Audio2MidiAudioProcessor::updatePostProcessing()
 
     if (mState == PopulatedAudioAndMidiRegions)
     {
-        mNoteOptions.setParameters(NoteOptions::RootNote(mParameters.keyRootNote.load()),
-                                   NoteOptions::ScaleType(mParameters.keyType.load()),
-                                   NoteOptions::SnapMode(mParameters.keySnapMode.load()),
+        mNoteOptions.setParameters(NoteUtils::RootNote(mParameters.keyRootNote.load()),
+                                   NoteUtils::ScaleType(mParameters.keyType.load()),
+                                   NoteUtils::SnapMode(mParameters.keySnapMode.load()),
                                    mParameters.minMidiNote.load(),
                                    mParameters.maxMidiNote.load());
 
