@@ -9,21 +9,13 @@
 
 #include "Notes.h"
 
-enum AudioSampleAcquisitionMode
-{
-    NoSampleAcquired = 0,
-    RecordedPlaying,
-    RecordedNotPlaying,
-    FileDrop
-};
-
 class MidiFileWriter
 {
 public:
-    bool writeMidiFile(const std::vector<Notes::Event>& inNoteEvents,
-                       juce::File& fileToUse,
-                       const juce::AudioPlayHead::CurrentPositionInfo& inInfoStart,
-                       AudioSampleAcquisitionMode inSampleAcquisitionMode);
+    bool writeMidiFile(
+        const std::vector<Notes::Event>& inNoteEvents,
+        juce::File& fileToUse,
+        const juce::Optional<juce::AudioPlayHead::PositionInfo>& inInfoStart) const;
 
 private:
     static double _BPMToMicrosecondsPerQuarterNote(double inTempoBPM);

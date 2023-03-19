@@ -99,7 +99,7 @@ bool AudioRegion::onFileDrop(const juce::File& inFile)
     }
 
     mProcessor.setNumSamplesAcquired(num_loaded_samples);
-    mProcessor.setSampleAcquisitionMode(AudioSampleAcquisitionMode::FileDrop);
+    mProcessor.setFileDrop(inFile.getFileName().toStdString());
 
     mProcessor.setStateToProcessing();
     mProcessor.launchTranscribeJob();

@@ -47,17 +47,14 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
     mPitchBendDropDown = std::make_unique<juce::ComboBox>("PITCH BEND");
     mPitchBendDropDown->setEditableText(false);
     mPitchBendDropDown->setJustificationType(juce::Justification::centredRight);
-    mPitchBendDropDown->addItemList(
-        {"No Pitch Bend", "Single Pitch Bend", "Multi Pitch Bend"}, 1);
-    mPitchBendDropDown->setSelectedId(1);
+    mPitchBendDropDown->addItemList({"No Pitch Bend", "Single Pitch Bend"}, 1);
+    mPitchBendDropDown->setSelectedItemIndex(0);
     mPitchBendDropDown->onChange = [this]()
     {
         mProcessor.getCustomParameters()->pitchBendMode.store(
             mPitchBendDropDown->getSelectedItemIndex());
     };
     addAndMakeVisible(*mPitchBendDropDown);
-
-    setEnabled(false);
 }
 
 void TranscriptionOptionsView::resized()
@@ -79,7 +76,9 @@ void TranscriptionOptionsView::paint(Graphics& g)
                            static_cast<float>(getHeight() - 23),
                            5.0f);
 
-    g.setColour(BLACK);
+    float alpha = isEnabled() ? 1.0f : 0.5f;
+
+    g.setColour(BLACK.withAlpha(alpha));
     g.setFont(TITLE_FONT);
     g.drawText("TRANSCRIPTION OPTIONS",
                Rectangle<int>(24, 0, 250, 17),
@@ -91,7 +90,6 @@ void TranscriptionOptionsView::paint(Graphics& g)
     else
         g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
-    g.setColour(BLACK);
     g.setFont(LABEL_FONT);
     g.drawText("PITCH BEND",
                juce::Rectangle<int>(11, 153 + 23, 67, 12),

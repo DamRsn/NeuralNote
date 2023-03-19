@@ -11,8 +11,6 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     , mNoteOptions(processor)
     , mQuantizePanel(processor)
 {
-    //    juce::LookAndFeel::setDefaultLookAndFeel(&mLNF);
-
     mRecordButton = std::make_unique<TextButton>("RecordButton");
     mRecordButton->setButtonText("RECORD");
     mRecordButton->setClickingTogglesState(true);
@@ -173,7 +171,8 @@ void Audio2MidiMainView::updateEnablements()
         mClearButton->setEnabled(true);
         mTranscriptionOptions.setEnabled(true);
         mNoteOptions.setEnabled(true);
-        mQuantizePanel.setEnabled(true);
+        mQuantizePanel.setEnabled(mProcessor.canQuantize());
+
         mVisualizationPanel.setMidiFileDragComponentVisible();
     }
 

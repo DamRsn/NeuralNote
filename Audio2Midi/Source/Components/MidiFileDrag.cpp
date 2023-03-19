@@ -48,13 +48,19 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
 
     std::cout << mTempDirectory.getFullPathName() << std::endl;
 
-    auto out_file = mTempDirectory.getChildFile(mFilename + ".mid");
+    std::string filename = mProcessor.getDroppedFilename();
+
+    if (filename.empty())
+        filename = "NNTranscription.mid";
+    else
+        filename += "_NNTranscription.mid";
+
+    auto out_file = mTempDirectory.getChildFile(filename);
 
     auto success_midi_file_creation =
         mMidiFileWriter.writeMidiFile(mProcessor.getNoteEventVector(),
                                       out_file,
-                                      mProcessor.getPlayheadInfoOnRecordStart(),
-                                      mProcessor.getSampleAcquisitionMode());
+                                      mProcessor.getPlayheadInfoOnRecordStart());
 
     if (!success_midi_file_creation)
     {
@@ -75,9 +81,4 @@ void MidiFileDrag::mouseEnter(const MouseEvent& event)
 void MidiFileDrag::mouseExit(const MouseEvent& event)
 {
     setMouseCursor(juce::MouseCursor::ParentCursor);
-}
-
-void MidiFileDrag::setFilename(const std::string& inFilename)
-{
-    mFilename = inFilename;
 }

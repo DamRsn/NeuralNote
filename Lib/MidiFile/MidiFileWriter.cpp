@@ -7,10 +7,40 @@
 bool MidiFileWriter::writeMidiFile(
     const std::vector<Notes::Event>& inNoteEvents,
     juce::File& fileToUse,
-    const juce::AudioPlayHead::CurrentPositionInfo& inInfoStart,
-    AudioSampleAcquisitionMode inSampleAcquisitionMode)
+    const juce::Optional<juce::AudioPlayHead::PositionInfo>& inInfoStart) const
 {
-    double tempo = inInfoStart.bpm;
+    // Default values:
+    double tempo = 120;
+    std::pair<int, int> time_signature = {4, 4};
+    double start_offset = 0.0; // To start from start of previous bar.
+
+    // Put values from daw if possible
+    if (inInfoStart.hasValue())
+    {
+        auto bpm = inInfoStart->getBpm();
+        if (bpm.hasValue())
+            tempo = *bpm;
+
+        auto time_sig = inInfoStart->getTimeSignature();
+        if (time_sig.hasValue())
+        {
+            time_signature.first = (*time_sig).numerator;
+            time_signature.second = (*time_sig).denominator;
+        }
+
+        if (inInfoStart->getIsPlaying())
+        {
+            auto last_bar_start_ppq_opt = inInfoStart->getPpqPositionOfLastBarStart();
+            auto start_ppq_opt = inInfoStart->getPpqPosition();
+
+            if (last_bar_start_ppq_opt.hasValue() && start_ppq_opt.hasValue()
+                && bpm.hasValue())
+            {
+                start_offset = (*start_ppq_opt - *last_bar_start_ppq_opt) * 60.0 / *bpm;
+                jassert(start_offset >= 0);
+            }
+        }
+    }
 
     juce::MidiMessageSequence message_sequence;
 
@@ -22,7 +52,7 @@ bool MidiFileWriter::writeMidiFile(
 
     // Set time signature
     auto time_signature_meta_event = juce::MidiMessage::timeSignatureMetaEvent(
-        inInfoStart.timeSigNumerator, inInfoStart.timeSigDenominator);
+        time_signature.first, time_signature.second);
     time_signature_meta_event.setTimeStamp(0.0);
     message_sequence.addEvent(time_signature_meta_event);
 
@@ -31,10 +61,12 @@ bool MidiFileWriter::writeMidiFile(
     {
         auto note_on =
             juce::MidiMessage::noteOn(1, note.pitch, static_cast<float>(note.amplitude));
-        note_on.setTimeStamp(note.start * tempo / 60.0 * mTicksPerQuarterNote);
+        note_on.setTimeStamp((note.start + start_offset) * tempo / 60.0
+                             * mTicksPerQuarterNote);
 
         auto note_off = juce::MidiMessage::noteOff(1, note.pitch);
-        note_off.setTimeStamp(note.end * tempo / 60.0 * mTicksPerQuarterNote);
+        note_off.setTimeStamp((note.end + start_offset) * tempo / 60.0
+                              * mTicksPerQuarterNote);
 
         message_sequence.addEvent(note_on);
 

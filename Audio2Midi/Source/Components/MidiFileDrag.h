@@ -14,7 +14,7 @@
 class MidiFileDrag : public Component
 {
 public:
-    MidiFileDrag(Audio2MidiAudioProcessor& processor);
+    explicit MidiFileDrag(Audio2MidiAudioProcessor& processor);
 
     ~MidiFileDrag() override;
 
@@ -28,12 +28,8 @@ public:
 
     void mouseExit(const MouseEvent& event) override;
 
-    void setFilename(const std::string& inFilename);
-
 private:
     Audio2MidiAudioProcessor& mProcessor;
-
-    std::string mFilename = "NeuralNoteTranscription";
 
     juce::File mTempDirectory = juce::File::getSpecialLocation(juce::File::tempDirectory);
 

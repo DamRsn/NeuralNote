@@ -9,6 +9,7 @@
 
 #include "PluginProcessor.h"
 #include "UIDefines.h"
+#include "RhythmUtils.h"
 
 class RhythmOptionsView : public Component
 {
@@ -20,6 +21,8 @@ public:
     void paint(Graphics& g) override;
 
 private:
+    void _valueChanged();
+
     const int mTopPad = 23;
     Audio2MidiAudioProcessor& mProcessor;
 

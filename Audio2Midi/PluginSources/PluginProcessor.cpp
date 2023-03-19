@@ -35,7 +35,6 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 {
     juce::ignoreUnused(midiMessages);
     const int num_in_channels = getTotalNumInputChannels();
-    const int num_out_channels = getTotalNumOutputChannels();
 
     if (mState.load() == Recording)
     {
@@ -43,18 +42,9 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         {
             mDownSampler.reset();
             mWasRecording = true;
-            // TODO: to change as it is deprecated
-            getPlayHead()->getCurrentPosition(mPlayheadInfoStartRecord);
+            mPlayheadInfoStartRecord = getPlayHead()->getPosition();
 
-            if (mPlayheadInfoStartRecord.isPlaying
-                || mPlayheadInfoStartRecord.isRecording)
-            {
-                mSampleAcquisitionMode = RecordedPlaying;
-            }
-            else
-            {
-                mSampleAcquisitionMode = RecordedNotPlaying;
-            }
+            mRhythmOptions.setInfo(false, mPlayheadInfoStartRecord);
         }
 
         // If we have reached maximum number of samples that can be processed: stop record and launch processing
@@ -126,8 +116,8 @@ void Audio2MidiAudioProcessor::clear()
     mAudioBufferForMIDITranscription.clear();
 
     mPostProcessedNotes.clear();
-    mSampleAcquisitionMode = NoSampleAcquired;
-    mPlayheadInfoStartRecord.resetToDefault();
+    mPlayheadInfoStartRecord = juce::Optional<juce::AudioPlayHead::PositionInfo>();
+    mDroppedFilename = "";
 
     mBasicPitch.reset();
     mWasRecording = false;
@@ -172,7 +162,7 @@ Audio2MidiAudioProcessor::Parameters* Audio2MidiAudioProcessor::getCustomParamet
     return &mParameters;
 }
 
-const juce::AudioPlayHead::CurrentPositionInfo&
+const juce::Optional<juce::AudioPlayHead::PositionInfo>&
     Audio2MidiAudioProcessor::getPlayheadInfoOnRecordStart()
 {
     return mPlayheadInfoStartRecord;
@@ -194,7 +184,14 @@ void Audio2MidiAudioProcessor::_runModel()
                                mParameters.minMidiNote.load(),
                                mParameters.maxMidiNote.load());
 
-    mPostProcessedNotes = mNoteOptions.processKey(mBasicPitch.getNoteEvents());
+    auto post_processed_notes = mNoteOptions.processKey(mBasicPitch.getNoteEvents());
+
+    mRhythmOptions.setParameters(
+        RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
+        mParameters.rhythmQuantizationForce.load(),
+        false);
+
+    mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
     mState.store(PopulatedAudioAndMidiRegions);
 }
@@ -227,19 +224,30 @@ void Audio2MidiAudioProcessor::updatePostProcessing()
                                    mParameters.minMidiNote.load(),
                                    mParameters.maxMidiNote.load());
 
-        mPostProcessedNotes = mNoteOptions.processKey(mBasicPitch.getNoteEvents());
+        auto post_processed_notes = mNoteOptions.processKey(mBasicPitch.getNoteEvents());
+
+        mRhythmOptions.setParameters(
+            RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
+            mParameters.rhythmQuantizationForce.load(),
+            false);
+
+        mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
     }
 }
-
-void Audio2MidiAudioProcessor::setSampleAcquisitionMode(
-    AudioSampleAcquisitionMode inSampleAcquisitionMode)
+void Audio2MidiAudioProcessor::setFileDrop(const std::string& inFilename)
 {
-    mSampleAcquisitionMode = inSampleAcquisitionMode;
+    mRhythmOptions.setInfo(true);
+    mDroppedFilename = inFilename;
 }
 
-AudioSampleAcquisitionMode Audio2MidiAudioProcessor::getSampleAcquisitionMode()
+std::string Audio2MidiAudioProcessor::getDroppedFilename()
 {
-    return mSampleAcquisitionMode;
+    return mDroppedFilename;
+}
+
+bool Audio2MidiAudioProcessor::canQuantize()
+{
+    return mRhythmOptions.canPerformQuantization();
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

@@ -8,6 +8,7 @@
 #include "BasicPitch.h"
 #include "NoteOptions.h"
 #include "MidiFileWriter.h"
+#include "RhythmOptions.h"
 
 enum State
 {
@@ -74,15 +75,18 @@ public:
 
     Parameters* getCustomParameters();
 
-    const juce::AudioPlayHead::CurrentPositionInfo& getPlayheadInfoOnRecordStart();
-
-    void setSampleAcquisitionMode(AudioSampleAcquisitionMode inSampleAcquisitionMode);
-
-    AudioSampleAcquisitionMode getSampleAcquisitionMode();
+    const juce::Optional<juce::AudioPlayHead::PositionInfo>&
+        getPlayheadInfoOnRecordStart();
 
     // Value tree state to pass automatable parameters from UI
     juce::AudioProcessorValueTreeState mTree;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+    void setFileDrop(const std::string& inFilename);
+
+    std::string getDroppedFilename();
+
+    bool canQuantize();
 
 private:
     void _runModel();
@@ -99,12 +103,13 @@ private:
 
     BasicPitch mBasicPitch;
     NoteOptions mNoteOptions;
+    RhythmOptions mRhythmOptions;
+
+    std::string mDroppedFilename;
 
     std::vector<Notes::Event> mPostProcessedNotes;
 
-    juce::AudioPlayHead::CurrentPositionInfo mPlayheadInfoStartRecord;
-
-    AudioSampleAcquisitionMode mSampleAcquisitionMode;
+    juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
 
     // Threading for running ML in background thread.
     juce::ThreadPool mThreadPool;

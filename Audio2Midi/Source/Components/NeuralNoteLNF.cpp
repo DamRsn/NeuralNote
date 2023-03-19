@@ -6,8 +6,6 @@
 
 NeuralNoteLNF::NeuralNoteLNF()
 {
-    //    setDefaultSansSerifTypeface(MONTSERRAT_REGULAR);
-
     setColour(juce::ComboBox::backgroundColourId, WHITE_TRANSPARENT);
     setColour(juce::ComboBox::textColourId, BLACK);
     setColour(juce::ComboBox::arrowColourId, BLACK);
@@ -19,6 +17,7 @@ NeuralNoteLNF::NeuralNoteLNF()
 
     setColour(juce::Slider::ColourIds::thumbColourId, PINK);
 }
+
 void NeuralNoteLNF::drawRotarySlider(Graphics& g,
                                      int x,
                                      int y,
@@ -64,7 +63,7 @@ void NeuralNoteLNF::drawRotarySlider(Graphics& g,
                                toAngle,
                                true);
 
-        g.setColour(juce::Colours::black);
+        g.setColour(BLACK);
         g.strokePath(
             valueArc,
             PathStrokeType(lineW, PathStrokeType::curved, PathStrokeType::rounded));
