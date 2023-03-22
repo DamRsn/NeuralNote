@@ -63,6 +63,17 @@ public:
                                       const std::vector<std::vector<float>>& inContoursPG,
                                       ConvertParams inParams);
 
+    static inline void sortEvents(std::vector<Notes::Event>& inOutEvents)
+    {
+        std::sort(inOutEvents.begin(),
+                  inOutEvents.end(),
+                  [](const Event& a, const Event& b)
+                  {
+                      return a.startFrame < b.startFrame
+                             || (a.startFrame == b.startFrame && a.endFrame < b.endFrame);
+                  });
+    }
+
     // dropOverlappingPitchBends sets bends to an empty array to all the note events
     // that are overlapping in time.
     // inOutEvents is expected to be sorted.
@@ -81,6 +92,28 @@ public:
                 }
                 event.bends = std::vector<int>();
                 event2.bends = std::vector<int>();
+            }
+        }
+    }
+
+    // mergeOverlappingNotes merges note events that are overlapping in time.
+    // inOutEvents is expected to be sorted.
+    static void mergeOverlappingNotes(std::vector<Notes::Event>& inOutEvents)
+    {
+        sortEvents(inOutEvents);
+        for (int i = 0; i < inOutEvents.size() - 1; i++)
+        {
+            auto& event = inOutEvents[i];
+            for (auto j = i + 1; j < inOutEvents.size(); j++)
+            {
+                auto& event2 = inOutEvents[j];
+                if (event2.startFrame >= event.endFrame)
+                {
+                    break;
+                }
+                event.endTime = event2.endTime;
+                event.endFrame = event2.endTime;
+                inOutEvents.erase(inOutEvents.begin() + j);
             }
         }
     }
