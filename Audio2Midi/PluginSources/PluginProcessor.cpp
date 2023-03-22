@@ -44,6 +44,15 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
             mWasRecording = true;
             mPlayheadInfoStartRecord = getPlayHead()->getPosition();
 
+            if (mPlayheadInfoStartRecord.hasValue())
+            {
+                mIsPlayheadPlaying = mPlayheadInfoStartRecord->getIsPlaying();
+            }
+            else
+            {
+                mIsPlayheadPlaying = false;
+            }
+
             mRhythmOptions.setInfo(false, mPlayheadInfoStartRecord);
         }
 
@@ -51,10 +60,13 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         int num_new_down_samples =
             mDownSampler.numOutSamplesOnNextProcessBlock(buffer.getNumSamples());
 
-        // If we reach the maximum number of sample that can be gathered
-        if (mNumSamplesAcquired + num_new_down_samples >= mMaxNumSamplesToConvert)
+        // If we reach the maximum number of sample that can be gathered,
+        // or the playhead has stopped playing if it was at the start of the recording: stop recording.
+        if (mNumSamplesAcquired + num_new_down_samples >= mMaxNumSamplesToConvert
+            || (mIsPlayheadPlaying && !getPlayHead()->getPosition()->getIsPlaying()))
         {
             mWasRecording = false;
+            setStateToProcessing();
             launchTranscribeJob();
         }
         else
@@ -119,6 +131,7 @@ void Audio2MidiAudioProcessor::clear()
 
     mBasicPitch.reset();
     mWasRecording = false;
+    mIsPlayheadPlaying = false;
     mState.store(EmptyAudioAndMidiRegions);
 }
 

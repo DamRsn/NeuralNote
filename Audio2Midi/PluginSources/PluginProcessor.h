@@ -98,6 +98,7 @@ private:
 
     Parameters mParameters;
     bool mWasRecording = false;
+    bool mIsPlayheadPlaying = false;
 
     AudioBuffer<float> mAudioBufferForMIDITranscription;
 

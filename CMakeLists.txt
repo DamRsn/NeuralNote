@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(Audio2MidiPlugin VERSION 0.0.1)
+project(NeuralNotePlugin VERSION 0.0.1)
 
 # C++ settings
 set(CMAKE_CXX_STANDARD 17)
@@ -24,7 +24,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 add_subdirectory(ThirdParty/JUCE)
 add_subdirectory(ThirdParty/RTNeural)
 
-set(BaseTargetName Audio2Midi)
+set(BaseTargetName NeuralNote)
 
 juce_add_plugin("${BaseTargetName}"
         # VERSION ...                               # Set this if the plugin version is different to the project version
@@ -70,6 +70,7 @@ foreach (dir ${source_dirs})
     ENDIF ()
 endforeach ()
 
+#Binary data
 file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json
         ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.onnx
         ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.ttf
@@ -135,4 +136,5 @@ endif ()
 target_compile_definitions(${BaseTargetName}
         PRIVATE
         SAVE_DOWNSAMPLED_AUDIO=0
+        USE_TEST_NOTE_FRAME_TO_TIME=0
         )

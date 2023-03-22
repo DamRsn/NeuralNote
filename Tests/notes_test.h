@@ -64,13 +64,13 @@ bool notes_test()
             succeeded = false;
         }
 
-        for (int i = 0; i < expected.size(); i++)
+        for (int j = 0; j < expected.size(); j++)
         {
-            if (!(note_events[i] == expected[i]))
+            if (!(note_events[j] == expected[j]))
             {
-                json res = note_events[i];
-                json exp = expected[i];
-                std::cout << "FAIL: Element " << i << " is:" << std::endl
+                json res = note_events[j];
+                json exp = expected[j];
+                std::cout << "FAIL: Element " << j << " is:" << std::endl
                           << "\t" << res << std::endl
                           << "Expecting:" << std::endl
                           << "\t" << exp << std::endl;

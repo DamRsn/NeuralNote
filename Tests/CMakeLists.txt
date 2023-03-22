@@ -34,11 +34,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         PUBLIC
         juce_recommended_config_flags
         juce_recommended_lto_flags)
-        #juce_recommended_warning_flags
+#juce_recommended_warning_flags
 
 target_compile_definitions(${PROJECT_NAME}
         PRIVATE
         TEST_DATA_DIR="${CMAKE_CURRENT_LIST_DIR}/test_data"
+        USE_TEST_NOTE_FRAME_TO_TIME=1
         )
 
 
