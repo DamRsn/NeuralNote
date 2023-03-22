@@ -36,6 +36,19 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     juce::ignoreUnused(midiMessages);
     const int num_in_channels = getTotalNumInputChannels();
 
+    // Get tempo and time signature for UI.
+    auto playhead_info = getPlayHead()->getPosition();
+    if (playhead_info.hasValue())
+    {
+        if (playhead_info->getBpm().hasValue())
+            mCurrentTempo = *playhead_info->getBpm();
+        if (playhead_info->getTimeSignature().hasValue())
+        {
+            mCurrentTimeSignatureNum = playhead_info->getTimeSignature()->numerator;
+            mCurrentTimeSignatureDenom = playhead_info->getTimeSignature()->denominator;
+        }
+    }
+
     if (mState.load() == Recording)
     {
         if (!mWasRecording)
@@ -128,6 +141,10 @@ void Audio2MidiAudioProcessor::clear()
     mPostProcessedNotes.clear();
     mPlayheadInfoStartRecord = juce::Optional<juce::AudioPlayHead::PositionInfo>();
     mDroppedFilename = "";
+
+    mCurrentTempo = -1;
+    mCurrentTimeSignatureNum = -1;
+    mCurrentTimeSignatureDenom = -1;
 
     mBasicPitch.reset();
     mWasRecording = false;
@@ -259,6 +276,32 @@ std::string Audio2MidiAudioProcessor::getDroppedFilename()
 bool Audio2MidiAudioProcessor::canQuantize()
 {
     return mRhythmOptions.canPerformQuantization();
+}
+std::string Audio2MidiAudioProcessor::getTempoStr() const
+{
+    if (mPlayheadInfoStartRecord.hasValue()
+        && mPlayheadInfoStartRecord->getBpm().hasValue())
+        return std::to_string(
+            static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
+    else if (mCurrentTempo > 0)
+        return std::to_string(static_cast<int>(std::round(mCurrentTempo.load())));
+    else
+        return "-";
+}
+std::string Audio2MidiAudioProcessor::getTimeSignatureStr() const
+{
+    if (mPlayheadInfoStartRecord.hasValue()
+        && mPlayheadInfoStartRecord->getTimeSignature().hasValue())
+    {
+        int num = mPlayheadInfoStartRecord->getTimeSignature()->numerator;
+        int denom = mPlayheadInfoStartRecord->getTimeSignature()->denominator;
+        return std::to_string(num) + " / " + std::to_string(denom);
+    }
+    else if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0)
+        return std::to_string(mCurrentTimeSignatureNum.load()) + " / "
+               + std::to_string(mCurrentTimeSignatureDenom.load());
+    else
+        return "- / -";
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

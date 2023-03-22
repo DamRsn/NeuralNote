@@ -31,8 +31,8 @@ RhythmOptionsView::RhythmOptionsView(Audio2MidiAudioProcessor& processor)
 
 void RhythmOptionsView::resized()
 {
-    mTimeDivisionDropdown->setBounds(148, 6 + LEFT_SECTIONS_TOP_PAD, 82, 19);
-    mQuantizationForceSlider->setBounds(114, 56 + LEFT_SECTIONS_TOP_PAD, 141, 17);
+    mTimeDivisionDropdown->setBounds(125, 13 + LEFT_SECTIONS_TOP_PAD, 75, 17);
+    mQuantizationForceSlider->setBounds(94, 70 + LEFT_SECTIONS_TOP_PAD, 156, 17);
 }
 
 void RhythmOptionsView::paint(Graphics& g)
@@ -59,12 +59,21 @@ void RhythmOptionsView::paint(Graphics& g)
         g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
     g.setFont(LABEL_FONT);
+
+    g.drawText("TEMPO  " + mProcessor.getTempoStr(),
+               juce::Rectangle<int>(19, LEFT_SECTIONS_TOP_PAD + 47, 75, 10),
+               juce::Justification::centredLeft);
+
+    g.drawText("TIME SIGNATURE  " + mProcessor.getTimeSignatureStr(),
+               juce::Rectangle<int>(122, LEFT_SECTIONS_TOP_PAD + 47, 130, 10),
+               juce::Justification::centredRight);
+
     g.drawText("TIME DIVISION",
                juce::Rectangle<int>(19, mTimeDivisionDropdown->getY(), 120, 17),
                juce::Justification::centredLeft);
 
     g.drawText("FORCE",
-               juce::Rectangle<int>(19, mQuantizationForceSlider->getY(), 120, 17),
+               juce::Rectangle<int>(19, mQuantizationForceSlider->getY(), 37, 17),
                juce::Justification::centredLeft);
 }
 

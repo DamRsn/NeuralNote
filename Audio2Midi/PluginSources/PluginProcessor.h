@@ -88,6 +88,10 @@ public:
 
     bool canQuantize();
 
+    std::string getTempoStr() const;
+
+    std::string getTimeSignatureStr() const;
+
 private:
     void _runModel();
 
@@ -99,6 +103,10 @@ private:
     Parameters mParameters;
     bool mWasRecording = false;
     bool mIsPlayheadPlaying = false;
+
+    std::atomic<double> mCurrentTempo = -1.0;
+    std::atomic<int> mCurrentTimeSignatureNum = -1;
+    std::atomic<int> mCurrentTimeSignatureDenom = -1;
 
     AudioBuffer<float> mAudioBufferForMIDITranscription;
 

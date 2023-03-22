@@ -26,7 +26,7 @@ QuantizeForceSlider::QuantizeForceSlider(std::atomic<float>& inAttachedValue,
 
 void QuantizeForceSlider::resized()
 {
-    mSlider.setBounds(0, 0, 114, 17);
+    mSlider.setBounds(0, 0, 128, 17);
 }
 
 void QuantizeForceSlider::paint(Graphics& g)
@@ -35,6 +35,6 @@ void QuantizeForceSlider::paint(Graphics& g)
     g.setFont(DROPDOWN_FONT);
 
     g.drawText(std::to_string(int(mSlider.getValue())),
-               Rectangle<int>(118, 0, 23, 17),
+               Rectangle<int>(133, 0, 23, 17),
                juce::Justification::centredRight);
 }
