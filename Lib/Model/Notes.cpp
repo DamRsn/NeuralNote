@@ -2,9 +2,6 @@
 // Created by Tibor Vass on 04.03.23.
 //
 
-#include <algorithm>
-#include <stdexcept>
-
 #include "Notes.h"
 
 bool Notes::Event::operator==(const Notes::Event& other) const
@@ -247,13 +244,7 @@ std::vector<Notes::Event>
         }
     }
 
-    std::sort(events.begin(),
-              events.end(),
-              [](const Event& a, const Event& b)
-              {
-                  return a.startFrame < b.startFrame
-                         || (a.startFrame == b.startFrame && a.endFrame < b.endFrame);
-              });
+    sortEvents(events);
 
     if (inParams.pitchBend != NoPitchBend)
     {
