@@ -3,12 +3,14 @@
 //
 
 #include <algorithm>
+#include <stdexcept>
 
 #include "Notes.h"
 
 bool Notes::Event::operator==(const Notes::Event& other) const
 {
-    return this->start == other.start && this->end == other.end
+    return this->startTime == other.startTime && this->endTime == other.endTime
+           && this->startFrame == other.startFrame && this->endFrame == other.endFrame
            && this->pitch == other.pitch && this->amplitude == other.amplitude
            && this->bends == other.bends;
 }
@@ -27,6 +29,7 @@ std::vector<Notes::Event>
     {
         return events;
     }
+
     auto n_notes = inNotesPG[0].size();
     assert(n_frames == inOnsetsPG.size());
     assert(n_frames == inContoursPG.size());
@@ -55,10 +58,12 @@ std::vector<Notes::Event>
     // TODO: infer frame_threshold if < 0, can be merged with inferredOnsets.
 
     // constrain frequencies
-    auto max_note_idx =
-        (inParams.maxFrequency < 0) ? n_notes - 1 : _hzToFreqIdx(inParams.maxFrequency);
-    auto min_note_idx =
-        (inParams.minFrequency < 0) ? 0 : _hzToFreqIdx(inParams.minFrequency);
+    auto max_note_idx = (inParams.maxFrequency < 0)
+                            ? n_notes - 1
+                            : ((_hzToMidi(inParams.maxFrequency) - MIDI_OFFSET));
+    auto min_note_idx = (inParams.minFrequency < 0)
+                            ? 0
+                            : ((_hzToMidi(inParams.minFrequency) - MIDI_OFFSET));
 
     // stop 1 frame early to prevent edge case
     // as per https://github.com/spotify/basic-pitch/blob/f85a8e9ade1f297b8adb39b155c483e2312e1aca/basic_pitch/note_creation.py#L399
@@ -129,8 +134,10 @@ std::vector<Notes::Event>
             amplitude /= (i - frame_idx);
 
             events.push_back(Notes::Event {
-                _modelFrameToTime(frame_idx) /* start */,
-                _modelFrameToTime(i) /* end */,
+                _modelFrameToTime(frame_idx) /* startTime */,
+                _modelFrameToTime(i) /* endTime */,
+                frame_idx /* startFrame */,
+                i /* endFrame */,
                 note_idx + MIDI_OFFSET /* pitch */,
                 amplitude /* amplitude */,
             });
@@ -230,15 +237,78 @@ std::vector<Notes::Event>
             amplitude /= (i_end - i_start);
 
             events.push_back(Notes::Event {
-                _modelFrameToTime(i_start /* start */),
-                _modelFrameToTime(i_end) /* end */,
+                _modelFrameToTime(i_start /* startTime */),
+                _modelFrameToTime(i_end) /* endTime */,
+                i_start /* startFrame */,
+                i_end /* endFrame */,
                 note_idx + MIDI_OFFSET /* pitch */,
                 amplitude /* amplitude */,
             });
         }
     }
 
-    // TODO: pitchbend
+    std::sort(events.begin(),
+              events.end(),
+              [](const Event& a, const Event& b)
+              {
+                  return a.startFrame < b.startFrame
+                         || (a.startFrame == b.startFrame && a.endFrame < b.endFrame);
+              });
+
+    if (inParams.pitchBend != NoPitchBend)
+    {
+        _addPitchBends(events, inContoursPG);
+        if (inParams.pitchBend == SinglePitchBend)
+        {
+            dropOverlappingPitchBends(events);
+        }
+    }
 
     return events;
+}
+
+void Notes::_addPitchBends(std::vector<Notes::Event>& inOutEvents,
+                           const std::vector<std::vector<float>>& inContoursPG,
+                           int inNumBinsTolerance)
+{
+    auto window_length = inNumBinsTolerance * 2 + 1;
+    for (auto& event: inOutEvents)
+    {
+        // midi_pitch_to_contour_bin
+        int note_idx =
+            CONTOURS_BINS_PER_SEMITONE
+            * (event.pitch - 69
+               + 12 * std::round(std::log2(440.0 / ANNOTATIONS_BASE_FREQUENCY)));
+
+        static constexpr int N_FREQ_BINS_CONTOURS =
+            NUM_FREQ_OUT * CONTOURS_BINS_PER_SEMITONE;
+        int note_start_idx = std::max(note_idx - inNumBinsTolerance, 0);
+        int note_end_idx =
+            std::min(N_FREQ_BINS_CONTOURS, note_idx + inNumBinsTolerance + 1);
+
+        int gauss_start = std::max(0, inNumBinsTolerance - note_idx);
+        auto pb_shift = inNumBinsTolerance - std::max(0, inNumBinsTolerance - note_idx);
+
+        for (int i = event.startFrame; i < event.endFrame; i++)
+        {
+            int bend = 0;
+            float max = 0;
+            for (int j = note_start_idx; j < note_end_idx; j++)
+            {
+                int k = j - note_start_idx;
+                float x = gauss_start + k;
+                float n = x - inNumBinsTolerance;
+                static constexpr float std = 5.0;
+                // Gaussian
+                float w = std::exp(-(n * n) / (2.0 * std * std));
+                w *= inContoursPG[i][j];
+                if (w > max)
+                {
+                    bend = k;
+                    max = w;
+                }
+            }
+            event.bends.emplace_back(bend - pb_shift);
+        }
+    }
 }

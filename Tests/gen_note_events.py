@@ -48,7 +48,6 @@ Structure of <input.json>: [{
 }, ...]""")
     sys.exit(1)
 
-
 # Opening JSON file
 with open(sys.argv[1], 'r') as openfile:
     all_cases = json.load(openfile)
@@ -65,7 +64,6 @@ for params in all_cases:
     elif pitch_bend == "multi":
         include_pitch_bends = True
         multiple_pitch_bends = True
-        raise Exception("multi pitch not handled yet")
     elif pitch_bend == "single" or pitch_bend == "":
         include_pitch_bends = True
         multiple_pitch_bends = False
@@ -100,20 +98,16 @@ for params in all_cases:
     else:
         estimated_notes_with_pitch_bend = [(note[0], note[1], note[2], note[3], None) for note in estimated_notes]
 
-    times_s = nc.model_frames_to_time(contours.shape[0])
-    estimated_notes_time_seconds = [
-        (times_s[note[0]], times_s[note[1]], note[2], note[3], note[4]) for note in estimated_notes_with_pitch_bend
-    ]
     if include_pitch_bends and not multiple_pitch_bends:
-        estimated_notes_time_seconds = nc.drop_overlapping_pitch_bends(estimated_notes_time_seconds)
+        estimated_notes_with_pitch_bend = nc.drop_overlapping_pitch_bends(estimated_notes_with_pitch_bend)
 
-    # TODO: multi pitch bend handling
+    times_s = nc.model_frames_to_time(contours.shape[0])
 
     # transform to dictionary
     result.append([
-        {"start": x[0], "end": x[1], "pitch": x[2], "amplitude": x[3] }
+        {"startTime": times_s[x[0]], "endTime": times_s[x[1]], "startFrame": x[0], "endFrame": x[1], "pitch": x[2], "amplitude": x[3] }
         | ({} if x[4] == None else {"bends": x[4]})  # only add "bends" key if it is not null
-        for x in estimated_notes_time_seconds
+        for x in sorted(estimated_notes_with_pitch_bend) # sort in all cases, contrary to original basic pitch implementation
     ])
 
 dump = json.dumps(result, default=np_encoder, separators=(',', ':'))

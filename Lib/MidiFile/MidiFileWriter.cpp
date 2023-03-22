@@ -61,11 +61,11 @@ bool MidiFileWriter::writeMidiFile(
     {
         auto note_on =
             juce::MidiMessage::noteOn(1, note.pitch, static_cast<float>(note.amplitude));
-        note_on.setTimeStamp((note.start + start_offset) * tempo / 60.0
+        note_on.setTimeStamp((note.startTime + start_offset) * tempo / 60.0
                              * mTicksPerQuarterNote);
 
         auto note_off = juce::MidiMessage::noteOff(1, note.pitch);
-        note_off.setTimeStamp((note.end + start_offset) * tempo / 60.0
+        note_off.setTimeStamp((note.endTime + start_offset) * tempo / 60.0
                               * mTicksPerQuarterNote);
 
         message_sequence.addEvent(note_on);
