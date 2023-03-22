@@ -53,31 +53,27 @@ void NeuralNoteLNF::drawRotarySlider(Graphics& g,
     g.strokePath(backgroundArc,
                  PathStrokeType(lineW, PathStrokeType::curved, PathStrokeType::rounded));
 
-    if (slider.isEnabled())
-    {
-        Path valueArc;
-        valueArc.addCentredArc(bounds.getCentreX(),
-                               bounds.getCentreY(),
-                               arcRadius,
-                               arcRadius,
-                               0.0f,
-                               rotaryStartAngle,
-                               toAngle,
-                               true);
+    Path valueArc;
+    valueArc.addCentredArc(bounds.getCentreX(),
+                           bounds.getCentreY(),
+                           arcRadius,
+                           arcRadius,
+                           0.0f,
+                           rotaryStartAngle,
+                           toAngle,
+                           true);
 
-        g.setColour(BLACK);
-        g.strokePath(
-            valueArc,
-            PathStrokeType(lineW, PathStrokeType::curved, PathStrokeType::rounded));
+    g.setColour(BLACK);
+    g.strokePath(valueArc,
+                 PathStrokeType(lineW, PathStrokeType::curved, PathStrokeType::rounded));
 
-        auto thumbWidth = 5.0f;
-        Point<float> thumbPoint(
-            bounds.getCentreX() + 10 * std::cos(toAngle - MathConstants<float>::halfPi),
-            bounds.getCentreY() + 10 * std::sin(toAngle - MathConstants<float>::halfPi));
+    auto thumbWidth = 5.0f;
+    Point<float> thumbPoint(
+        bounds.getCentreX() + 10 * std::cos(toAngle - MathConstants<float>::halfPi),
+        bounds.getCentreY() + 10 * std::sin(toAngle - MathConstants<float>::halfPi));
 
-        g.setColour(BLACK);
-        g.fillEllipse(Rectangle<float>(thumbWidth, thumbWidth).withCentre(thumbPoint));
-    }
+    g.setColour(BLACK);
+    g.fillEllipse(Rectangle<float>(thumbWidth, thumbWidth).withCentre(thumbPoint));
 
     g.drawEllipse(bounds.getCentreX() - 16, bounds.getCentreY() - 16, 32, 32, 0.5f);
 }

@@ -55,6 +55,8 @@ void Knob::resized()
 void Knob::paint(Graphics& g)
 {
     float alpha = isEnabled() ? 1.0f : 0.5f;
+
+    mSlider.setAlpha(alpha);
     g.setColour(juce::Colours::black.withAlpha(alpha));
     g.setFont(LABEL_FONT);
 
