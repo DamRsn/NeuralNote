@@ -20,7 +20,7 @@ public:
                        int inMinMidiNote,
                        int inMaxMidiNote);
 
-    std::vector<Notes::Event> processKey(const std::vector<Notes::Event>& inNoteEvents);
+    std::vector<Notes::Event> process(const std::vector<Notes::Event>& inNoteEvents);
 
 private:
     RootNote mRootNote = C;

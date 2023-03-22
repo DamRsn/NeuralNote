@@ -18,7 +18,7 @@ void NoteOptions::setParameters(RootNote inRootNote,
 }
 
 std::vector<Notes::Event>
-    NoteOptions::processKey(const std::vector<Notes::Event>& inNoteEvents)
+    NoteOptions::process(const std::vector<Notes::Event>& inNoteEvents)
 {
     std::vector<Notes::Event> processed_note_events;
 
@@ -47,9 +47,13 @@ std::vector<Notes::Event>
             {
                 auto processed_note_event = note_event;
 
-                // TODO: determine adjust up based on pitch bends.
+                // If pitch bends are more positive: adjust up, otherwise adjust down.
+                // Nothing is done if note is in key.
+                bool adjust_up =
+                    std::accumulate(note_event.bends.begin(), note_event.bends.end(), 0)
+                    >= 0;
                 processed_note_event.pitch =
-                    _getClosestMidiNoteInKey(note_event.pitch, key_array, true);
+                    _getClosestMidiNoteInKey(note_event.pitch, key_array, adjust_up);
 
                 processed_note_events.push_back(processed_note_event);
             }

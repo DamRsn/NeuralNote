@@ -20,8 +20,7 @@ public:
 
     void setParameters(float inNoteSensibility,
                        float inSplitSensibility,
-                       float inMinNoteDurationMs,
-                       int inPitchBendMode);
+                       float inMinNoteDurationMs);
 
     void transcribeToMIDI(float* inAudio, int inNumSamples);
 

@@ -200,8 +200,7 @@ void Audio2MidiAudioProcessor::_runModel()
 {
     mBasicPitch.setParameters(mParameters.noteSensibility,
                               mParameters.splitSensibility,
-                              mParameters.minNoteDurationMs,
-                              mParameters.pitchBendMode);
+                              mParameters.minNoteDurationMs);
 
     mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
                                  mNumSamplesAcquired);
@@ -212,7 +211,7 @@ void Audio2MidiAudioProcessor::_runModel()
                                mParameters.minMidiNote.load(),
                                mParameters.maxMidiNote.load());
 
-    auto post_processed_notes = mNoteOptions.processKey(mBasicPitch.getNoteEvents());
+    auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
     mRhythmOptions.setParameters(
         RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
@@ -232,8 +231,7 @@ void Audio2MidiAudioProcessor::updateTranscription()
     {
         mBasicPitch.setParameters(mParameters.noteSensibility,
                                   mParameters.splitSensibility,
-                                  mParameters.minNoteDurationMs,
-                                  mParameters.pitchBendMode);
+                                  mParameters.minNoteDurationMs);
 
         mBasicPitch.updateMIDI();
         updatePostProcessing();
@@ -252,7 +250,7 @@ void Audio2MidiAudioProcessor::updatePostProcessing()
                                    mParameters.minMidiNote.load(),
                                    mParameters.maxMidiNote.load());
 
-        auto post_processed_notes = mNoteOptions.processKey(mBasicPitch.getNoteEvents());
+        auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
         mRhythmOptions.setParameters(
             RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
@@ -262,6 +260,7 @@ void Audio2MidiAudioProcessor::updatePostProcessing()
         mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
     }
 }
+
 void Audio2MidiAudioProcessor::setFileDrop(const std::string& inFilename)
 {
     mRhythmOptions.setInfo(true);
@@ -277,6 +276,7 @@ bool Audio2MidiAudioProcessor::canQuantize()
 {
     return mRhythmOptions.canPerformQuantization();
 }
+
 std::string Audio2MidiAudioProcessor::getTempoStr() const
 {
     if (mPlayheadInfoStartRecord.hasValue()
@@ -288,6 +288,7 @@ std::string Audio2MidiAudioProcessor::getTempoStr() const
     else
         return "-";
 }
+
 std::string Audio2MidiAudioProcessor::getTimeSignatureStr() const
 {
     if (mPlayheadInfoStartRecord.hasValue()

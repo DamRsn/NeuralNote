@@ -26,16 +26,14 @@ public:
         std::atomic<float> noteSensibility = 0.7;
         std::atomic<float> splitSensibility = 0.5;
         std::atomic<float> minNoteDurationMs = 125;
-        std::atomic<int> pitchBendMode = 0;
+        std::atomic<int> pitchBendMode = NoPitchBend;
 
-        std::atomic<bool> useNoteOptions = true;
         std::atomic<int> minMidiNote = MIN_MIDI_NOTE;
         std::atomic<int> maxMidiNote = MAX_MIDI_NOTE;
         std::atomic<int> keyRootNote = NoteUtils::C;
         std::atomic<int> keyType = NoteUtils::Chromatic;
         std::atomic<int> keySnapMode = 1;
 
-        std::atomic<bool> useRhythmOptions = true;
         std::atomic<int> rhythmTimeDivision = RhythmUtils::_1_8;
         std::atomic<float> rhythmQuantizationForce = 0.0f;
     };
