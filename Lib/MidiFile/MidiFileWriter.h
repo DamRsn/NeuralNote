@@ -17,6 +17,7 @@ public:
         const std::vector<Notes::Event>& inNoteEvents,
         juce::File& fileToUse,
         const juce::Optional<juce::AudioPlayHead::PositionInfo>& inInfoStart,
+        double inBPM,
         PitchBendModes inPitchBendMode) const;
 
 private:

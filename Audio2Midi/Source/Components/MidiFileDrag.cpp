@@ -61,6 +61,7 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
         mProcessor.getNoteEventVector(),
         out_file,
         mProcessor.getPlayheadInfoOnRecordStart(),
+        mProcessor.getMidiFileTempo(),
         static_cast<PitchBendModes>(
             mProcessor.getCustomParameters()->pitchBendMode.load()));
 

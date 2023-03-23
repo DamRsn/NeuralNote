@@ -82,7 +82,9 @@ void NoteOptionsView::paint(Graphics& g)
     g.setColour(BLACK.withAlpha(alpha));
 
     g.setFont(TITLE_FONT);
-    g.drawText("KEY", Rectangle<int>(24, 0, 274, 17), juce::Justification::centredLeft);
+    g.drawText("SCALE QUANTIZE",
+               Rectangle<int>(24, 0, 274, 17),
+               juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
     if (isEnabled())

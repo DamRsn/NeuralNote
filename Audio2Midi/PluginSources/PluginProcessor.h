@@ -90,6 +90,10 @@ public:
 
     std::string getTimeSignatureStr() const;
 
+    void setMidiFileTempo(double inMidiFileTempo);
+
+    double getMidiFileTempo() const;
+
 private:
     void _runModel();
 
@@ -107,6 +111,8 @@ private:
     std::atomic<int> mCurrentTimeSignatureDenom = -1;
 
     AudioBuffer<float> mAudioBufferForMIDITranscription;
+
+    double mMidiFileTempo = 120.0;
 
     BasicPitch mBasicPitch;
     NoteOptions mNoteOptions;

@@ -8,19 +8,22 @@ bool MidiFileWriter::writeMidiFile(
     const std::vector<Notes::Event>& inNoteEvents,
     juce::File& fileToUse,
     const juce::Optional<juce::AudioPlayHead::PositionInfo>& inInfoStart,
+    double inBPM,
     PitchBendModes inPitchBendMode) const
 {
     // Default values:
-    double tempo = 120;
+    double tempo = inBPM;
     std::pair<int, int> time_signature = {4, 4};
     double start_offset = 0.0; // To start from start of previous bar.
+
+    double daw_tempo = -1.0;
 
     // Put values from daw if possible
     if (inInfoStart.hasValue())
     {
         auto bpm = inInfoStart->getBpm();
         if (bpm.hasValue())
-            tempo = *bpm;
+            daw_tempo = *bpm;
 
         auto time_sig = inInfoStart->getTimeSignature();
         if (time_sig.hasValue())
@@ -35,7 +38,7 @@ bool MidiFileWriter::writeMidiFile(
             auto start_ppq_opt = inInfoStart->getPpqPosition();
 
             if (last_bar_start_ppq_opt.hasValue() && start_ppq_opt.hasValue()
-                && bpm.hasValue())
+                && bpm.hasValue() && juce::approximatelyEqual(daw_tempo, tempo))
             {
                 start_offset = (*start_ppq_opt - *last_bar_start_ppq_opt) * 60.0 / *bpm;
                 jassert(start_offset >= 0);

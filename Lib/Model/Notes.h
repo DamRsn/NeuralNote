@@ -98,22 +98,29 @@ public:
 
     // mergeOverlappingNotes merges note events that are overlapping in time.
     // inOutEvents is expected to be sorted.
-    static void mergeOverlappingNotes(std::vector<Notes::Event>& inOutEvents)
+    static void mergeOverlappingNotesWithSamePitch(std::vector<Notes::Event>& inOutEvents)
     {
         sortEvents(inOutEvents);
-        for (int i = 0; i < inOutEvents.size() - 1; i++)
+        for (int i = 0; i < int(inOutEvents.size()) - 1; i++)
         {
             auto& event = inOutEvents[i];
             for (auto j = i + 1; j < inOutEvents.size(); j++)
             {
                 auto& event2 = inOutEvents[j];
+
+                // If notes don't overlap, break
                 if (event2.startFrame >= event.endFrame)
                 {
                     break;
                 }
-                event.endTime = event2.endTime;
-                event.endFrame = event2.endTime;
-                inOutEvents.erase(inOutEvents.begin() + j);
+
+                // If notes overlap and have the same pitch: merge them
+                if (event.pitch == event2.pitch)
+                {
+                    event.endTime = event2.endTime;
+                    event.endFrame = event2.endFrame;
+                    inOutEvents.erase(inOutEvents.begin() + j);
+                }
             }
         }
     }

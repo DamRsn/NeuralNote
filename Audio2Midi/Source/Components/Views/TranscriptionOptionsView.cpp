@@ -54,6 +54,7 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
     {
         mProcessor.getCustomParameters()->pitchBendMode.store(
             mPitchBendDropDown->getSelectedItemIndex());
+        _valueChanged();
     };
     addAndMakeVisible(*mPitchBendDropDown);
 }

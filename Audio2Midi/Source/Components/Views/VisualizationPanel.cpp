@@ -5,7 +5,8 @@
 #include "VisualizationPanel.h"
 
 VisualizationPanel::VisualizationPanel(Audio2MidiAudioProcessor& processor)
-    : mCombinedAudioMidiRegion(processor, mKeyboard)
+    : mProcessor(processor)
+    , mCombinedAudioMidiRegion(processor, mKeyboard)
     , mMidiFileDrag(processor)
 {
     mAudioMidiViewport.setViewedComponent(&mCombinedAudioMidiRegion);
@@ -16,6 +17,33 @@ VisualizationPanel::VisualizationPanel(Audio2MidiAudioProcessor& processor)
 
     mAudioMidiViewport.setScrollBarsShown(false, true, false, false);
     addChildComponent(mMidiFileDrag);
+
+    mFileTempo = std::make_unique<juce::TextEditor>();
+    mFileTempo->setInputRestrictions(6, "0123456789.");
+    mFileTempo->setMultiLine(false, false);
+    mFileTempo->setJustification(juce::Justification::centred);
+    mFileTempo->setReadOnly(false);
+
+    mFileTempo->setFont(LABEL_FONT);
+    mFileTempo->setColour(TextEditor::backgroundColourId,
+                          juce::Colours::transparentWhite);
+    mFileTempo->setColour(TextEditor::textColourId, BLACK);
+    mFileTempo->setColour(TextEditor::outlineColourId, juce::Colours::lightgrey);
+    mFileTempo->setColour(TextEditor::focusedOutlineColourId, juce::Colours::grey);
+    mFileTempo->onReturnKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
+    mFileTempo->onEscapeKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
+    mFileTempo->onFocusLost = [this]()
+    {
+        double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
+        String correct_tempo_str = String(tempo);
+        correct_tempo_str =
+            correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
+        mFileTempo->setText(correct_tempo_str);
+        mProcessor.setMidiFileTempo(tempo);
+    };
+
+    mFileTempo->setText(String(mProcessor.getMidiFileTempo()));
+    addChildComponent(*mFileTempo);
 }
 
 void VisualizationPanel::resized()
@@ -34,16 +62,34 @@ void VisualizationPanel::resized()
     mCombinedAudioMidiRegion.setBaseWidth(getWidth() - KEYBOARD_WIDTH);
 
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
+    mFileTempo->setBounds(6, 55, 40, 17);
 }
 
 void VisualizationPanel::paint(Graphics& g)
 {
+    if (mMidiFileDrag.isVisible())
+    {
+        g.setColour(WHITE_TRANSPARENT);
+        g.fillRoundedRectangle(
+            Rectangle<int>(
+                0, 0, KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight)
+                .toFloat(),
+            4);
+
+        g.setColour(BLACK);
+        g.setFont(LABEL_FONT);
+        g.drawFittedText("MIDI\nFILE\nTEMPO",
+                         Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55),
+                         juce::Justification::centred,
+                         3);
+    }
 }
 
 void VisualizationPanel::clear()
 {
     mCombinedAudioMidiRegion.setSize(getWidth() - KEYBOARD_WIDTH, getHeight());
     mMidiFileDrag.setVisible(false);
+    mFileTempo->setVisible(false);
 }
 
 void VisualizationPanel::startTimerHzAudioThumbnail(int inFreqHz)
@@ -64,4 +110,13 @@ void VisualizationPanel::repaintPianoRoll()
 void VisualizationPanel::setMidiFileDragComponentVisible()
 {
     mMidiFileDrag.setVisible(true);
+    mFileTempo->setVisible(true);
+
+    // Set tempo
+    std::string tempo_str = mProcessor.getTempoStr();
+
+    if (tempo_str == "-")
+        tempo_str = "120";
+
+    mFileTempo->setText(tempo_str);
 }

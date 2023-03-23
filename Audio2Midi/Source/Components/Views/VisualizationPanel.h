@@ -36,10 +36,13 @@ public:
     static constexpr int KEYBOARD_WIDTH = 50;
 
 private:
+    Audio2MidiAudioProcessor& mProcessor;
     Keyboard mKeyboard;
     juce::Viewport mAudioMidiViewport;
     CombinedAudioMidiRegion mCombinedAudioMidiRegion;
     MidiFileDrag mMidiFileDrag;
+
+    std::unique_ptr<juce::TextEditor> mFileTempo;
 };
 
 #endif // VisualizationPanel_h

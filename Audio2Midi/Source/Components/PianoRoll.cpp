@@ -65,25 +65,58 @@ void PianoRoll::paint(Graphics& g)
         {
             auto note_y_start_n_height =
                 _getNoteHeightAndWidthPianoRoll(note_event.pitch);
+            auto note_y_start = note_y_start_n_height.first;
+            auto note_height = note_y_start_n_height.second;
             auto start = static_cast<float>(note_event.startTime);
             auto end = static_cast<float>(note_event.endTime);
 
-            if (note_y_start_n_height.first < 0
-                || note_y_start_n_height.second >= static_cast<float>(getHeight()))
+            if (note_y_start < 0 || note_height >= static_cast<float>(getHeight()))
                 continue;
 
             g.setColour(mNoteGradient.getColourAtPosition(note_event.amplitude));
             g.fillRect(_timeToX(start),
-                       note_y_start_n_height.first,
+                       note_y_start,
                        _timeToX(end) - _timeToX(start),
-                       note_y_start_n_height.second);
+                       note_height);
 
             g.setColour(juce::Colours::black);
             g.drawRect(_timeToX(start),
-                       note_y_start_n_height.first,
+                       note_y_start,
                        _timeToX(end) - _timeToX(start),
-                       note_y_start_n_height.second,
+                       note_height,
                        0.5);
+
+            // Draw pitch bend
+            if (mProcessor.getCustomParameters()->pitchBendMode == SinglePitchBend)
+            {
+                const auto& bends = note_event.bends;
+                if (!note_event.bends.empty())
+                {
+                    auto path_stroke_type = PathStrokeType(
+                        1, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
+                    Path p;
+                    float y_ref_pb = note_y_start + note_height / 2.0f;
+
+                    p.startNewSubPath(_timeToX(start), y_ref_pb);
+
+                    for (size_t i = 0; i < bends.size(); i++)
+                    {
+                        p.lineTo(
+                            _timeToX(float(
+                                start + double(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
+                            y_ref_pb - float(bends[i]) * note_height / 3.0f);
+                    }
+                    p.lineTo(_timeToX(float(note_event.endTime)), y_ref_pb);
+
+                    g.setColour(WHITE_SOLID);
+                    g.strokePath(p, path_stroke_type);
+
+                    p.closeSubPath();
+
+                    g.setColour(WHITE_TRANSPARENT.withAlpha(0.6f));
+                    g.fillPath(p);
+                }
+            }
         }
     }
 }

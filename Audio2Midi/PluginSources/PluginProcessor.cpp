@@ -146,6 +146,8 @@ void Audio2MidiAudioProcessor::clear()
     mCurrentTimeSignatureNum = -1;
     mCurrentTimeSignatureDenom = -1;
 
+    mMidiFileTempo = 120.0;
+
     mBasicPitch.reset();
     mWasRecording = false;
     mIsPlayheadPlaying = false;
@@ -221,7 +223,7 @@ void Audio2MidiAudioProcessor::_runModel()
     mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
     Notes::dropOverlappingPitchBends(mPostProcessedNotes);
-    Notes::mergeOverlappingNotes(mPostProcessedNotes);
+    Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
 
     mState.store(PopulatedAudioAndMidiRegions);
 }
@@ -263,7 +265,7 @@ void Audio2MidiAudioProcessor::updatePostProcessing()
         mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
         Notes::dropOverlappingPitchBends(mPostProcessedNotes);
-        Notes::mergeOverlappingNotes(mPostProcessedNotes);
+        Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
     }
 }
 
@@ -309,6 +311,16 @@ std::string Audio2MidiAudioProcessor::getTimeSignatureStr() const
                + std::to_string(mCurrentTimeSignatureDenom.load());
     else
         return "- / -";
+}
+
+void Audio2MidiAudioProcessor::setMidiFileTempo(double inMidiFileTempo)
+{
+    mMidiFileTempo = inMidiFileTempo;
+}
+
+double Audio2MidiAudioProcessor::getMidiFileTempo() const
+{
+    return mMidiFileTempo;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
