@@ -7,6 +7,7 @@
 
 #include <JuceHeader.h>
 
+#include "Constants.h"
 #include "Notes.h"
 
 class MidiFileWriter
@@ -15,7 +16,8 @@ public:
     bool writeMidiFile(
         const std::vector<Notes::Event>& inNoteEvents,
         juce::File& fileToUse,
-        const juce::Optional<juce::AudioPlayHead::PositionInfo>& inInfoStart) const;
+        const juce::Optional<juce::AudioPlayHead::PositionInfo>& inInfoStart,
+        PitchBendModes inPitchBendMode) const;
 
 private:
     static double _BPMToMicrosecondsPerQuarterNote(double inTempoBPM);

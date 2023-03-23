@@ -7,7 +7,8 @@
 bool MidiFileWriter::writeMidiFile(
     const std::vector<Notes::Event>& inNoteEvents,
     juce::File& fileToUse,
-    const juce::Optional<juce::AudioPlayHead::PositionInfo>& inInfoStart) const
+    const juce::Optional<juce::AudioPlayHead::PositionInfo>& inInfoStart,
+    PitchBendModes inPitchBendMode) const
 {
     // Default values:
     double tempo = 120;
@@ -56,6 +57,8 @@ bool MidiFileWriter::writeMidiFile(
     time_signature_meta_event.setTimeStamp(0.0);
     message_sequence.addEvent(time_signature_meta_event);
 
+    float prev_pitch_bend_semitone = 0.0f;
+
     // Add note events
     for (auto& note: inNoteEvents)
     {
@@ -69,6 +72,32 @@ bool MidiFileWriter::writeMidiFile(
                               * mTicksPerQuarterNote);
 
         message_sequence.addEvent(note_on);
+
+        // Add pitch bend event
+        if (inPitchBendMode == SinglePitchBend)
+        {
+            for (size_t i = 0; i < note.bends.size(); i++)
+            {
+                prev_pitch_bend_semitone = float(note.bends[i]) / 3.0f;
+                auto pitch_wheel_pos =
+                    MidiMessage::pitchbendToPitchwheelPos(prev_pitch_bend_semitone, 4.0f);
+                auto pitch_wheel_event = MidiMessage::pitchWheel(1, pitch_wheel_pos);
+                pitch_wheel_event.setTimeStamp((note.startTime + start_offset
+                                                + i * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)
+                                               * tempo / 60.0 * mTicksPerQuarterNote);
+                message_sequence.addEvent(pitch_wheel_event);
+            }
+
+            if (note.bends.empty() && prev_pitch_bend_semitone != 0)
+            {
+                prev_pitch_bend_semitone = 0.0f;
+                auto pitch_wheel_pos = MidiMessage::pitchbendToPitchwheelPos(0.0f, 4.0f);
+                auto pitch_wheel_event = MidiMessage::pitchWheel(1, pitch_wheel_pos);
+                pitch_wheel_event.setTimeStamp((note.startTime + start_offset) * tempo
+                                               / 60.0 * mTicksPerQuarterNote);
+                message_sequence.addEvent(pitch_wheel_event);
+            }
+        }
 
         message_sequence.addEvent(note_off);
         message_sequence.updateMatchedPairs();

@@ -79,7 +79,7 @@ public:
     // inOutEvents is expected to be sorted.
     static void dropOverlappingPitchBends(std::vector<Notes::Event>& inOutEvents)
     {
-        for (int i = 0; i < inOutEvents.size() - 1; i++)
+        for (int i = 0; i < int(inOutEvents.size()) - 1; i++)
         {
             auto& event = inOutEvents[i];
             // if there is an overlap between events, remove pitch bends

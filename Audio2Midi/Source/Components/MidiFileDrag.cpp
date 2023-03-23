@@ -57,10 +57,12 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
 
     auto out_file = mTempDirectory.getChildFile(filename);
 
-    auto success_midi_file_creation =
-        mMidiFileWriter.writeMidiFile(mProcessor.getNoteEventVector(),
-                                      out_file,
-                                      mProcessor.getPlayheadInfoOnRecordStart());
+    auto success_midi_file_creation = mMidiFileWriter.writeMidiFile(
+        mProcessor.getNoteEventVector(),
+        out_file,
+        mProcessor.getPlayheadInfoOnRecordStart(),
+        static_cast<PitchBendModes>(
+            mProcessor.getCustomParameters()->pitchBendMode.load()));
 
     if (!success_midi_file_creation)
     {

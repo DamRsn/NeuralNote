@@ -220,6 +220,9 @@ void Audio2MidiAudioProcessor::_runModel()
 
     mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
+    Notes::dropOverlappingPitchBends(mPostProcessedNotes);
+    Notes::mergeOverlappingNotes(mPostProcessedNotes);
+
     mState.store(PopulatedAudioAndMidiRegions);
 }
 
@@ -258,6 +261,9 @@ void Audio2MidiAudioProcessor::updatePostProcessing()
             false);
 
         mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
+
+        Notes::dropOverlappingPitchBends(mPostProcessedNotes);
+        Notes::mergeOverlappingNotes(mPostProcessedNotes);
     }
 }
 
