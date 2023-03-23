@@ -32,7 +32,7 @@ VisualizationPanel::VisualizationPanel(Audio2MidiAudioProcessor& processor)
     mFileTempo->setColour(TextEditor::focusedOutlineColourId, juce::Colours::grey);
     mFileTempo->onReturnKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
     mFileTempo->onEscapeKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
-    mFileTempo->onFocusLost = [this]()
+    mFileTempo->onTextChange = [this]()
     {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         String correct_tempo_str = String(tempo);

@@ -32,6 +32,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
         else
         {
             // Recording has ended, set processor state to processing
+            // TODO: can cause problem if processBlock is not called after this
             mProcessor.setStateToProcessing();
             mVisualizationPanel.stopTimerAudioThumbnail();
         }
@@ -40,7 +41,7 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     };
 
     mRecordButton->setToggleState(mProcessor.getState() == Recording,
-                                  juce::NotificationType::sendNotification);
+                                  juce::NotificationType::dontSendNotification);
 
     addAndMakeVisible(*mRecordButton);
 
@@ -126,6 +127,17 @@ void Audio2MidiMainView::timerCallback()
         mPrevState = processor_state;
         updateEnablements();
     }
+
+    if (mProcessor.getState() == Processing && !mProcessor.isJobRunningOrQueued())
+    {
+        // Wait for 200ms
+        Time::waitForMillisecondCounter(Time::getMillisecondCounter() + 200);
+        // If still in processing mode and job is not running: launch job
+        if (mProcessor.getState() == Processing && !mProcessor.isJobRunningOrQueued())
+        {
+            mProcessor.launchTranscribeJob();
+        }
+    }
 }
 
 void Audio2MidiMainView::repaintPianoRoll()
@@ -153,6 +165,7 @@ void Audio2MidiMainView::updateEnablements()
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
         mQuantizePanel.setEnabled(false);
+        mVisualizationPanel.startTimerHzAudioThumbnail(10);
     }
     else if (current_state == Processing)
     {
@@ -169,6 +182,7 @@ void Audio2MidiMainView::updateEnablements()
         mTranscriptionOptions.setEnabled(true);
         mNoteOptions.setEnabled(true);
         mQuantizePanel.setEnabled(mProcessor.canQuantize());
+        mVisualizationPanel.stopTimerAudioThumbnail();
 
         mVisualizationPanel.setMidiFileDragComponentVisible();
     }

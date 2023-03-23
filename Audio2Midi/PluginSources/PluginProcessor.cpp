@@ -275,12 +275,12 @@ void Audio2MidiAudioProcessor::setFileDrop(const std::string& inFilename)
     mDroppedFilename = inFilename;
 }
 
-std::string Audio2MidiAudioProcessor::getDroppedFilename()
+std::string Audio2MidiAudioProcessor::getDroppedFilename() const
 {
     return mDroppedFilename;
 }
 
-bool Audio2MidiAudioProcessor::canQuantize()
+bool Audio2MidiAudioProcessor::canQuantize() const
 {
     return mRhythmOptions.canPerformQuantization();
 }
@@ -321,6 +321,11 @@ void Audio2MidiAudioProcessor::setMidiFileTempo(double inMidiFileTempo)
 double Audio2MidiAudioProcessor::getMidiFileTempo() const
 {
     return mMidiFileTempo;
+}
+
+bool Audio2MidiAudioProcessor::isJobRunningOrQueued() const
+{
+    return mThreadPool.getNumJobs() > 0;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

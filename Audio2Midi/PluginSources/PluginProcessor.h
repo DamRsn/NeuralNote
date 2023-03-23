@@ -82,9 +82,9 @@ public:
 
     void setFileDrop(const std::string& inFilename);
 
-    std::string getDroppedFilename();
+    std::string getDroppedFilename() const;
 
-    bool canQuantize();
+    bool canQuantize() const;
 
     std::string getTempoStr() const;
 
@@ -93,6 +93,8 @@ public:
     void setMidiFileTempo(double inMidiFileTempo);
 
     double getMidiFileTempo() const;
+
+    bool isJobRunningOrQueued() const;
 
 private:
     void _runModel();
@@ -124,7 +126,7 @@ private:
 
     juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
 
-    // Threading for running ML in background thread.
+    // Thread pool to run ML in background thread.
     juce::ThreadPool mThreadPool;
     std::function<void()> mJobLambda;
 
