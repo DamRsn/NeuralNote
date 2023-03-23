@@ -32,13 +32,18 @@ VisualizationPanel::VisualizationPanel(Audio2MidiAudioProcessor& processor)
     mFileTempo->setColour(TextEditor::focusedOutlineColourId, juce::Colours::grey);
     mFileTempo->onReturnKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
     mFileTempo->onEscapeKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
-    mFileTempo->onTextChange = [this]()
+    mFileTempo->onFocusLost = [this]()
     {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         String correct_tempo_str = String(tempo);
         correct_tempo_str =
             correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
         mFileTempo->setText(correct_tempo_str);
+        mProcessor.setMidiFileTempo(tempo);
+    };
+    mFileTempo->onTextChange = [this]()
+    {
+        double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         mProcessor.setMidiFileTempo(tempo);
     };
 
@@ -56,10 +61,10 @@ void VisualizationPanel::resized()
     mAudioMidiViewport.setBounds(
         KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
 
+    mCombinedAudioMidiRegion.setBaseWidth(getWidth() - KEYBOARD_WIDTH);
     mCombinedAudioMidiRegion.setBounds(
         KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
-
-    mCombinedAudioMidiRegion.setBaseWidth(getWidth() - KEYBOARD_WIDTH);
+    mCombinedAudioMidiRegion.timerCallback();
 
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
     mFileTempo->setBounds(6, 55, 40, 17);

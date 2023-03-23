@@ -40,6 +40,8 @@ public:
 
     void repaintPianoRoll();
 
+    void resizeAccordingToNumSamplesAvailable();
+
     const double mNumPixelsPerSecond = 100.0;
 
     const int mAudioRegionHeight = 85;
@@ -47,8 +49,6 @@ public:
     const int mPianoRollY = mAudioRegionHeight + mHeightBetweenAudioMidi;
 
 private:
-    void _resizeAccordingToNumSamplesAvailable();
-
     Audio2MidiAudioProcessor& mProcessor;
 
     juce::Viewport* mViewportPtr = nullptr;

@@ -32,7 +32,6 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
         else
         {
             // Recording has ended, set processor state to processing
-            // TODO: can cause problem if processBlock is not called after this
             mProcessor.setStateToProcessing();
             mVisualizationPanel.stopTimerAudioThumbnail();
         }
@@ -128,15 +127,18 @@ void Audio2MidiMainView::timerCallback()
         updateEnablements();
     }
 
+    // To avoid getting stuck in processing mode if processBlock is not called anymore and recording is over (can happen in some DAWs).
     if (mProcessor.getState() == Processing && !mProcessor.isJobRunningOrQueued())
     {
-        // Wait for 200ms
-        Time::waitForMillisecondCounter(Time::getMillisecondCounter() + 200);
-        // If still in processing mode and job is not running: launch job
-        if (mProcessor.getState() == Processing && !mProcessor.isJobRunningOrQueued())
+        mNumCallbacksStuckInProcessingState += 1;
+        if (mNumCallbacksStuckInProcessingState >= 10)
         {
             mProcessor.launchTranscribeJob();
         }
+    }
+    else
+    {
+        mNumCallbacksStuckInProcessingState = 0;
     }
 }
 

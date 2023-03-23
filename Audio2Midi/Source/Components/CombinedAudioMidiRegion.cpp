@@ -12,9 +12,6 @@ CombinedAudioMidiRegion::CombinedAudioMidiRegion(Audio2MidiAudioProcessor& proce
 {
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
-
-    _resizeAccordingToNumSamplesAvailable();
-    mAudioRegion.updateThumbnail();
 }
 
 void CombinedAudioMidiRegion::resized()
@@ -29,7 +26,7 @@ void CombinedAudioMidiRegion::paint(Graphics& g)
 
 void CombinedAudioMidiRegion::timerCallback()
 {
-    _resizeAccordingToNumSamplesAvailable();
+    resizeAccordingToNumSamplesAvailable();
     mAudioRegion.updateThumbnail();
 
     if (mViewportPtr)
@@ -56,7 +53,7 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
 
     if (success)
     {
-        _resizeAccordingToNumSamplesAvailable();
+        resizeAccordingToNumSamplesAvailable();
         mAudioRegion.updateThumbnail();
     }
 
@@ -85,7 +82,7 @@ void CombinedAudioMidiRegion::repaintPianoRoll()
     mPianoRoll.repaint();
 }
 
-void CombinedAudioMidiRegion::_resizeAccordingToNumSamplesAvailable()
+void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
 {
     int num_samples_available = mProcessor.getNumSamplesAcquired();
 

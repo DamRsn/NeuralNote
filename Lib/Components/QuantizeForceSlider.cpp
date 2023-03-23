@@ -19,7 +19,7 @@ QuantizeForceSlider::QuantizeForceSlider(std::atomic<float>& inAttachedValue,
         repaint();
     };
 
-    mSlider.setValue(mAttachedValue.load());
+    mSlider.setValue(mAttachedValue.load() * 100.0f);
 
     addAndMakeVisible(mSlider);
 }
