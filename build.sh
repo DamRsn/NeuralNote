@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euf -o pipefail
+set -x
+os=windows
+arch="$(uname -m)"
+file=onnxruntime.lib
+if test "$(uname -s)" = "Darwin"; then
+	os=macOS
+	arch=universal
+	file=libonnxruntime.a
+fi
+dir=onnxruntime-v1.14.1-neuralnote.1-${os}-${arch}
+archive="$dir.tar.gz"
+
+# If either the library or the ort model is missing or if an archive was found
+# then fetch ort model and library again.
+if test ! -f "Lib/ModelData/features_model.ort" -o ! -f "ThirdParty/onnxruntime/lib/$file" -o -f "$archive"; then
+	if ! test -f "$archive"; then
+		echo TODO: please download.
+		exit 1
+	fi
+	rm -rf ThirdParty/$dir ThirdParty/onnxruntime
+	tar -C ThirdParty/ -xvf "$archive"
+	mv "ThirdParty/$dir" ThirdParty/onnxruntime
+	mv ThirdParty/onnxruntime/model.with_runtime_opt.ort Lib/ModelData/features_model.ort
+	rm "$archive"
+fi
+
+ncpus="$(getconf _NPROCESSORS_ONLN || echo 1)"
+
+config=Release
+cmake -S . -B build -DCMAKE_BUILD_TYPE="${config}" -DBUILD_UNIT_TESTS=ON && cmake --build build -j "${ncpus}"
+
+./build/Tests/UnitTests_artefacts/Release/UnitTests
+echo
+echo "Run: ./build/NeuralNote_artefacts/Release/Standalone/NeuralNote.app/Contents/MacOS/NeuralNote"

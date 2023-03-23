@@ -26,6 +26,13 @@ add_subdirectory(ThirdParty/RTNeural)
 
 set(BaseTargetName NeuralNote)
 
+# Set COPY_PLUGIN_AFTER_BUILD to TRUE on Mac and to FALSE on Windows due to permission issues
+if (APPLE)
+	set(COPY_PLUGIN_AFTER_BUILD TRUE)
+else()
+	set(COPY_PLUGIN_AFTER_BUILD FALSE)
+endif()
+
 juce_add_plugin("${BaseTargetName}"
         # VERSION ...                               # Set this if the plugin version is different to the project version
         ICON_BIG "${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/logo.png"
@@ -36,7 +43,7 @@ juce_add_plugin("${BaseTargetName}"
         NEEDS_MIDI_OUTPUT FALSE
         IS_MIDI_EFFECT FALSE
         EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-        COPY_PLUGIN_AFTER_BUILD TRUE
+        COPY_PLUGIN_AFTER_BUILD ${COPY_PLUGIN_AFTER_BUILD}
         PLUGIN_MANUFACTURER_CODE DrAu
         PLUGIN_CODE NRNT
         FORMATS AU VST3 Standalone
@@ -72,7 +79,7 @@ endforeach ()
 
 #Binary data
 file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json
-        ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.onnx
+        ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.ort
         ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.ttf
         ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.png)
 
@@ -86,26 +93,17 @@ target_compile_definitions(${BaseTargetName}
         JUCE_USE_CURL=0
         JUCE_VST3_CAN_REPLACE_VST2=0)
 
-# Import ONNXRuntime dynamic library
-# Directory containing onnxruntime
-if (APPLE)
-    set(ONNXRUNTIME_DIRNAME onnxruntime-osx-universal2-1.14.1)
-elseif (WIN32)
-    set(ONNXRUNTIME_DIRNAME onnxruntime-win-x64-1.14.1)
-endif ()
-
-add_library(onnxruntime SHARED IMPORTED)
+add_library(onnxruntime STATIC IMPORTED)
 
 if (APPLE)
-    set_property(TARGET onnxruntime PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/lib/libonnxruntime.dylib)
+    set_property(TARGET onnxruntime PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/lib/libonnxruntime.a)
 
 elseif (WIN32)
     set_property(TARGET onnxruntime APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 
     set_target_properties(onnxruntime PROPERTIES
             IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-            IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_LIST_DIR}/ThirdParty/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/lib/onnxruntime.dll"
-            IMPORTED_IMPLIB_RELEASE "${CMAKE_CURRENT_LIST_DIR}/ThirdParty/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/lib/onnxruntime.lib"
+            IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/lib/onnxruntime.lib"
             )
     set_target_properties(onnxruntime PROPERTIES
             MAP_IMPORTED_CONFIG_DEBUG Release
@@ -115,7 +113,7 @@ elseif (WIN32)
 endif ()
 
 
-target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
+target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/include)
 
 target_link_libraries(${BaseTargetName}
         PRIVATE
