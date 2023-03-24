@@ -3,9 +3,11 @@
 NeuralNote is the audio plugin that brings **state-of-the-art Audio to MIDI conversion** into
 your favorite Digital Audio Workstation.
 
-It works with any tonal instrument (voice included), supports polyphonic transcription and pitch bends, and is
-**lightweight and very fast**. Also, the generated MIDI notes can be Scale and Time quantized directly in the plugin as
-a post-processing step.
+- Works with any tonal instrument (voice included)
+- Supports polyphonic transcription
+- Supports pitch bends
+- Lightweight and very fast transcription
+- Can scale and time quantize transcribed MIDI directly in the plugin
 
 NeuralNote comes as a simple AudioFX plugin (VST3/AU/Standalone app) to be applied on the track to transcribe.
 
@@ -45,27 +47,26 @@ Use this when cloning:
 git clone --recurse-submodules --shallow-submodules https://github.com/DamRsn/NeuralNote
  ```
 
-### Mac
+#### Mac
 
 ```
 $ ./build.sh
 ```
 
-### Windows
+#### Windows
 
 ```
 > build.bat
 ```
 
-### IDEs
+The build script has to be executed at least once before being able to use the project as a normal CMake project.
+The script downloads onnxruntime static library (that we created
+with [ort-builder](https://github.com/olilarkin/ort-builder)) before calling CMake.
 
-The build script has to be run at least once before being able to use the project as a normal CMake project in an IDE,
-as the onnxruntime static library (that we created with [ort-builder](https://github.com/olilarkin/ort-builder)) needs
-to be downloaded.
+#### IDEs
 
-Once this is done, all you have to do is load this project in your favorite IDE
-(CLion/Visual Studio/VSCode/etc)
-and click 'build' for one of the targets.
+Once the build script corresponding as been executed at least once, you can load this project in your favorite IDE
+(CLion/Visual Studio/VSCode/etc) and click 'build' for one of the targets.
 
 ## Roadmap
 
@@ -77,7 +78,7 @@ and click 'build' for one of the targets.
 - Allow pitch bends on non-overlapping parts of overlapping notes.
 - Support transcription of mp3 files
 
-## Bug report and feature requests
+## Bug reports and feature requests
 
 If you have any request/suggestion concerning the plugin or encounter a bug, please fill a Github issue, we'll
 do our best to address it.
@@ -89,14 +90,20 @@ please open a PR!
 
 ## License
 
-NeuralNote software and code is published under the Apache-2.0 license. See the [license file](LICENSE.md).
+NeuralNote software and code is published under the Apache-2.0 license. See the [license file](LICENSE).
 
-### Third Party libraries used and license
+#### Third Party libraries used and license
 
 Here's a list of all the third party libraries used in NeuralNote and the license under which they are used.
+
 - [JUCE](https://juce.com/) (JUCE Personal)
 - [RTNeural](https://github.com/jatinchowdhury18/RTNeural) (BSD-3-Clause license)
 - [ONNXRuntime](https://github.com/microsoft/onnxruntime) (MIT License)
 - [ort-builder](https://github.com/olilarkin/ort-builder) (MIT License)
 - [basic-pitch](https://github.com/spotify/basic-pitch) (Apache-2.0 license)
 - [basic-pitch-ts](https://github.com/spotify/basic-pitch-ts) (Apache-2.0 license)
+
+## Credits
+
+NeuralNote was developed by [Damien Ronssin](https://github.com/DamRsn) and [Tibor Vass](https://github.com/tiborvass).
+The plugin was designed by Perrine Morel.
