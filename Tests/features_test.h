@@ -2,8 +2,8 @@
 // Created by Damien Ronssin on 05.03.23.
 //
 
-#ifndef AUDIO2MIDIPLUGIN_FEATURES_TEST_H
-#define AUDIO2MIDIPLUGIN_FEATURES_TEST_H
+#ifndef NN_FEATURES_TEST_H
+#define NN_FEATURES_TEST_H
 
 #include "Features.h"
 #include "test_utils.h"
@@ -54,4 +54,4 @@ bool feature_test()
     return num_err == 0;
 }
 
-#endif //AUDIO2MIDIPLUGIN_FEATURES_TEST_H
+#endif //NN_FEATURES_TEST_H

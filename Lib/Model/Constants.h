@@ -2,8 +2,8 @@
 // Created by Damien Ronssin on 04.03.23.
 //
 
-#ifndef AUDIO2MIDIPLUGIN_CONSTANTS_H
-#define AUDIO2MIDIPLUGIN_CONSTANTS_H
+#ifndef NN_CONSTANTS_H
+#define NN_CONSTANTS_H
 
 static constexpr int NUM_HARMONICS = 8;
 static constexpr int NUM_FREQ_IN = 264;
@@ -24,4 +24,4 @@ static constexpr int CONTOURS_BINS_PER_SEMITONE = 3;
 static constexpr int MIN_MIDI_NOTE = 21;
 static constexpr int MAX_MIDI_NOTE = 108;
 
-#endif //AUDIO2MIDIPLUGIN_CONSTANTS_H
+#endif //NN_CONSTANTS_H

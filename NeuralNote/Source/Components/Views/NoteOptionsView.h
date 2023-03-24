@@ -13,13 +13,13 @@
 #include "NoteUtils.h"
 #include "MinMaxNoteSlider.h"
 
-class Audio2MidiMainView;
+class NeuralNoteMainView;
 
 class NoteOptionsView : public Component
 
 {
 public:
-    NoteOptionsView(Audio2MidiAudioProcessor& processor);
+    NoteOptionsView(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 
@@ -28,7 +28,7 @@ public:
 private:
     void _valueChanged();
 
-    Audio2MidiAudioProcessor& mProcessor;
+    NeuralNoteAudioProcessor& mProcessor;
 
     std::unique_ptr<MinMaxNoteSlider> mMinMaxNoteSlider;
 

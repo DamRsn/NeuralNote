@@ -2,8 +2,8 @@
 // Created by Damien Ronssin on 19.03.23.
 //
 
-#ifndef AUDIO2MIDIPLUGIN_RHYTHMUTILS_H
-#define AUDIO2MIDIPLUGIN_RHYTHMUTILS_H
+#ifndef NN_RHYTHMUTILS_H
+#define NN_RHYTHMUTILS_H
 
 #include <JuceHeader.h>
 
@@ -54,4 +54,4 @@ const static std::array<double, TotalNumTimeDivision> TimeDivisionsDouble = {1.0
 
 } // namespace RhythmUtils
 
-#endif //AUDIO2MIDIPLUGIN_RHYTHMUTILS_H
+#endif //NN_RHYTHMUTILS_H

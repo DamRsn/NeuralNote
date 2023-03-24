@@ -2,9 +2,9 @@
 // Created by Damien Ronssin on 06.03.23.
 //
 
-#include "Audio2MidiMainView.h"
+#include "NeuralNoteMainView.h"
 
-Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
+NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
     , mVisualizationPanel(processor)
     , mTranscriptionOptions(processor)
@@ -81,12 +81,12 @@ Audio2MidiMainView::Audio2MidiMainView(Audio2MidiAudioProcessor& processor)
     updateEnablements();
 }
 
-Audio2MidiMainView::~Audio2MidiMainView()
+NeuralNoteMainView::~NeuralNoteMainView()
 {
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
 }
 
-void Audio2MidiMainView::resized()
+void NeuralNoteMainView::resized()
 {
     mRecordButton->setBounds(588, 36, 144, 51);
     mClearButton->setBounds(748, 36, 144, 51);
@@ -98,7 +98,7 @@ void Audio2MidiMainView::resized()
     mQuantizePanel.setBounds(29, 491, 274, 120);
 }
 
-void Audio2MidiMainView::paint(Graphics& g)
+void NeuralNoteMainView::paint(Graphics& g)
 {
     auto background_image = juce::ImageCache::getFromMemory(
         BinaryData::background_png, BinaryData::background_pngSize);
@@ -111,7 +111,7 @@ void Audio2MidiMainView::paint(Graphics& g)
                      2);
 }
 
-void Audio2MidiMainView::timerCallback()
+void NeuralNoteMainView::timerCallback()
 {
     auto processor_state = mProcessor.getState();
     if (mRecordButton->getToggleState() && processor_state != Recording)
@@ -142,12 +142,12 @@ void Audio2MidiMainView::timerCallback()
     }
 }
 
-void Audio2MidiMainView::repaintPianoRoll()
+void NeuralNoteMainView::repaintPianoRoll()
 {
     mVisualizationPanel.repaintPianoRoll();
 }
 
-void Audio2MidiMainView::updateEnablements()
+void NeuralNoteMainView::updateEnablements()
 {
     auto current_state = mProcessor.getState();
     mPrevState = current_state;

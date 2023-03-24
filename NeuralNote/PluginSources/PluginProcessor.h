@@ -18,7 +18,7 @@ enum State
     PopulatedAudioAndMidiRegions
 };
 
-class Audio2MidiAudioProcessor : public PluginHelpers::ProcessorBase
+class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
 {
 public:
     struct Parameters
@@ -38,7 +38,7 @@ public:
         std::atomic<float> rhythmQuantizationForce = 0.0f;
     };
 
-    Audio2MidiAudioProcessor();
+    NeuralNoteAudioProcessor();
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
 

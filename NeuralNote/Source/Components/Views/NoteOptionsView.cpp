@@ -3,9 +3,9 @@
 //
 
 #include "NoteOptionsView.h"
-#include "Audio2MidiMainView.h"
+#include "NeuralNoteMainView.h"
 
-NoteOptionsView::NoteOptionsView(Audio2MidiAudioProcessor& processor)
+NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
 {
     mMinMaxNoteSlider =
@@ -112,7 +112,7 @@ void NoteOptionsView::_valueChanged()
     {
         mProcessor.updatePostProcessing();
 
-        auto* main_view = dynamic_cast<Audio2MidiMainView*>(getParentComponent());
+        auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
 
         if (main_view)
             main_view->repaintPianoRoll();

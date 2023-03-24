@@ -1,7 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-Audio2MidiAudioProcessor::Audio2MidiAudioProcessor()
+NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     : mTree(*this, nullptr, "PARAMETERS", createParameterLayout())
     , mThreadPool(1)
 {
@@ -12,7 +12,7 @@ Audio2MidiAudioProcessor::Audio2MidiAudioProcessor()
 }
 
 AudioProcessorValueTreeState::ParameterLayout
-    Audio2MidiAudioProcessor::createParameterLayout()
+    NeuralNoteAudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
@@ -23,14 +23,14 @@ AudioProcessorValueTreeState::ParameterLayout
     return {params.begin(), params.end()};
 }
 
-void Audio2MidiAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     mDownSampler.prepareToPlay(sampleRate, samplesPerBlock);
 
     mMonoBuffer.setSize(1, samplesPerBlock);
 }
 
-void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
+void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
                                             juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused(midiMessages);
@@ -120,20 +120,20 @@ void Audio2MidiAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         buffer.clear();
 }
 
-juce::AudioProcessorEditor* Audio2MidiAudioProcessor::createEditor()
+juce::AudioProcessorEditor* NeuralNoteAudioProcessor::createEditor()
 {
-    return new Audio2MidiEditor(*this);
+    return new NeuralNoteEditor(*this);
 }
 
-void Audio2MidiAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
-{
-}
-
-void Audio2MidiAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
+void NeuralNoteAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
 }
 
-void Audio2MidiAudioProcessor::clear()
+void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
+{
+}
+
+void NeuralNoteAudioProcessor::clear()
 {
     mNumSamplesAcquired = 0;
     mAudioBufferForMIDITranscription.clear();
@@ -154,22 +154,22 @@ void Audio2MidiAudioProcessor::clear()
     mState.store(EmptyAudioAndMidiRegions);
 }
 
-AudioBuffer<float>& Audio2MidiAudioProcessor::getAudioBufferForMidi()
+AudioBuffer<float>& NeuralNoteAudioProcessor::getAudioBufferForMidi()
 {
     return mAudioBufferForMIDITranscription;
 }
 
-int Audio2MidiAudioProcessor::getNumSamplesAcquired() const
+int NeuralNoteAudioProcessor::getNumSamplesAcquired() const
 {
     return mNumSamplesAcquired;
 }
 
-void Audio2MidiAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
+void NeuralNoteAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
 {
     mNumSamplesAcquired = inNumSamplesAcquired;
 }
 
-void Audio2MidiAudioProcessor::launchTranscribeJob()
+void NeuralNoteAudioProcessor::launchTranscribeJob()
 {
     jassert(mState.load() == Processing);
     if (mNumSamplesAcquired >= 1 * AUDIO_SAMPLE_RATE)
@@ -182,23 +182,23 @@ void Audio2MidiAudioProcessor::launchTranscribeJob()
     }
 }
 
-const std::vector<Notes::Event>& Audio2MidiAudioProcessor::getNoteEventVector() const
+const std::vector<Notes::Event>& NeuralNoteAudioProcessor::getNoteEventVector() const
 {
     return mPostProcessedNotes;
 }
 
-Audio2MidiAudioProcessor::Parameters* Audio2MidiAudioProcessor::getCustomParameters()
+NeuralNoteAudioProcessor::Parameters* NeuralNoteAudioProcessor::getCustomParameters()
 {
     return &mParameters;
 }
 
 const juce::Optional<juce::AudioPlayHead::PositionInfo>&
-    Audio2MidiAudioProcessor::getPlayheadInfoOnRecordStart()
+    NeuralNoteAudioProcessor::getPlayheadInfoOnRecordStart()
 {
     return mPlayheadInfoStartRecord;
 }
 
-void Audio2MidiAudioProcessor::_runModel()
+void NeuralNoteAudioProcessor::_runModel()
 {
     mBasicPitch.setParameters(mParameters.noteSensibility,
                               mParameters.splitSensibility,
@@ -229,7 +229,7 @@ void Audio2MidiAudioProcessor::_runModel()
     mState.store(PopulatedAudioAndMidiRegions);
 }
 
-void Audio2MidiAudioProcessor::updateTranscription()
+void NeuralNoteAudioProcessor::updateTranscription()
 {
     jassert(mState == PopulatedAudioAndMidiRegions);
 
@@ -244,7 +244,7 @@ void Audio2MidiAudioProcessor::updateTranscription()
     }
 }
 
-void Audio2MidiAudioProcessor::updatePostProcessing()
+void NeuralNoteAudioProcessor::updatePostProcessing()
 {
     jassert(mState == PopulatedAudioAndMidiRegions);
 
@@ -269,23 +269,23 @@ void Audio2MidiAudioProcessor::updatePostProcessing()
     }
 }
 
-void Audio2MidiAudioProcessor::setFileDrop(const std::string& inFilename)
+void NeuralNoteAudioProcessor::setFileDrop(const std::string& inFilename)
 {
     mRhythmOptions.setInfo(true);
     mDroppedFilename = inFilename;
 }
 
-std::string Audio2MidiAudioProcessor::getDroppedFilename() const
+std::string NeuralNoteAudioProcessor::getDroppedFilename() const
 {
     return mDroppedFilename;
 }
 
-bool Audio2MidiAudioProcessor::canQuantize() const
+bool NeuralNoteAudioProcessor::canQuantize() const
 {
     return mRhythmOptions.canPerformQuantization();
 }
 
-std::string Audio2MidiAudioProcessor::getTempoStr() const
+std::string NeuralNoteAudioProcessor::getTempoStr() const
 {
     if (mPlayheadInfoStartRecord.hasValue()
         && mPlayheadInfoStartRecord->getBpm().hasValue())
@@ -297,7 +297,7 @@ std::string Audio2MidiAudioProcessor::getTempoStr() const
         return "-";
 }
 
-std::string Audio2MidiAudioProcessor::getTimeSignatureStr() const
+std::string NeuralNoteAudioProcessor::getTimeSignatureStr() const
 {
     if (mPlayheadInfoStartRecord.hasValue()
         && mPlayheadInfoStartRecord->getTimeSignature().hasValue())
@@ -313,22 +313,22 @@ std::string Audio2MidiAudioProcessor::getTimeSignatureStr() const
         return "- / -";
 }
 
-void Audio2MidiAudioProcessor::setMidiFileTempo(double inMidiFileTempo)
+void NeuralNoteAudioProcessor::setMidiFileTempo(double inMidiFileTempo)
 {
     mMidiFileTempo = inMidiFileTempo;
 }
 
-double Audio2MidiAudioProcessor::getMidiFileTempo() const
+double NeuralNoteAudioProcessor::getMidiFileTempo() const
 {
     return mMidiFileTempo;
 }
 
-bool Audio2MidiAudioProcessor::isJobRunningOrQueued() const
+bool NeuralNoteAudioProcessor::isJobRunningOrQueued() const
 {
     return mThreadPool.getNumJobs() > 0;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new Audio2MidiAudioProcessor();
+    return new NeuralNoteAudioProcessor();
 }

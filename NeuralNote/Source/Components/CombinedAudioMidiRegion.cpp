@@ -4,7 +4,7 @@
 
 #include "CombinedAudioMidiRegion.h"
 
-CombinedAudioMidiRegion::CombinedAudioMidiRegion(Audio2MidiAudioProcessor& processor,
+CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor,
                                                  Keyboard& keyboard)
     : mProcessor(processor)
     , mAudioRegion(processor)

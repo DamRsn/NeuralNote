@@ -4,7 +4,7 @@
 
 #include "AudioRegion.h"
 
-AudioRegion::AudioRegion(Audio2MidiAudioProcessor& processor)
+AudioRegion::AudioRegion(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
     , mThumbnailCache(1)
     , mThumbnail(

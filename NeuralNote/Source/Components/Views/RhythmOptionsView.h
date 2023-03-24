@@ -12,12 +12,12 @@
 #include "RhythmUtils.h"
 #include "QuantizeForceSlider.h"
 
-class Audio2MidiMainView;
+class NeuralNoteMainView;
 
 class RhythmOptionsView : public Component
 {
 public:
-    RhythmOptionsView(Audio2MidiAudioProcessor& processor);
+    RhythmOptionsView(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 
@@ -26,7 +26,7 @@ public:
 private:
     void _valueChanged();
 
-    Audio2MidiAudioProcessor& mProcessor;
+    NeuralNoteAudioProcessor& mProcessor;
 
     std::unique_ptr<juce::ComboBox> mTimeDivisionDropdown;
 

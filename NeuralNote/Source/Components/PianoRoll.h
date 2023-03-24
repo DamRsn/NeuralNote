@@ -17,7 +17,7 @@ class PianoRoll
     , public juce::ChangeListener
 {
 public:
-    explicit PianoRoll(Audio2MidiAudioProcessor& processor,
+    explicit PianoRoll(NeuralNoteAudioProcessor& processor,
                        Keyboard& keyboard,
                        double inNumPixelsPerSecond);
 
@@ -64,7 +64,7 @@ private:
     juce::ColourGradient mNoteGradient;
 
     Keyboard& mKeyboard;
-    Audio2MidiAudioProcessor& mProcessor;
+    NeuralNoteAudioProcessor& mProcessor;
 };
 
 #endif // PianoRoll_h

@@ -35,8 +35,8 @@ endif()
 
 juce_add_plugin("${BaseTargetName}"
         # VERSION ...                               # Set this if the plugin version is different to the project version
-        ICON_BIG "${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/logo.png"
-        ICON_SMALL "${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/logo.png"
+        ICON_BIG "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/logo.png"
+        ICON_SMALL "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/logo.png"
         COMPANY_NAME "Dr. Audio"
         IS_SYNTH FALSE
         NEEDS_MIDI_INPUT FALSE
@@ -52,8 +52,8 @@ juce_add_plugin("${BaseTargetName}"
 juce_generate_juce_header(${BaseTargetName})
 
 # Source files
-file(GLOB_RECURSE SOURCES_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*.cpp ${CMAKE_CURRENT_LIST_DIR}/Lib/*.cpp)
-file(GLOB_RECURSE HEADERS_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*.h ${CMAKE_CURRENT_LIST_DIR}/Lib/*.h)
+file(GLOB_RECURSE SOURCES_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/*.cpp ${CMAKE_CURRENT_LIST_DIR}/Lib/*.cpp)
+file(GLOB_RECURSE HEADERS_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/*.h ${CMAKE_CURRENT_LIST_DIR}/Lib/*.h)
 
 target_sources(${BaseTargetName} PRIVATE ${SOURCES_PLUGIN} ${HEADERS_PLUGIN})
 
@@ -67,7 +67,7 @@ foreach (dir ${lib_dirs})
     ENDIF ()
 endforeach ()
 
-file(GLOB_RECURSE source_dirs LIST_DIRECTORIES true ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/*)
+file(GLOB_RECURSE source_dirs LIST_DIRECTORIES true ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/*)
 
 foreach (dir ${source_dirs})
     IF (IS_DIRECTORY ${dir})
@@ -80,8 +80,8 @@ endforeach ()
 #Binary data
 file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json
         ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.ort
-        ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.ttf
-        ${CMAKE_CURRENT_LIST_DIR}/Audio2Midi/Assets/*.png)
+        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.ttf
+        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.png)
 
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 

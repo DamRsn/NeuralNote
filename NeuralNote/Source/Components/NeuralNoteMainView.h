@@ -15,14 +15,14 @@
 #include "VisualizationPanel.h"
 #include "NeuralNoteLNF.h"
 
-class Audio2MidiMainView
+class NeuralNoteMainView
     : public juce::Component
     , public juce::Timer
 {
 public:
-    explicit Audio2MidiMainView(Audio2MidiAudioProcessor& processor);
+    explicit NeuralNoteMainView(NeuralNoteAudioProcessor& processor);
 
-    ~Audio2MidiMainView();
+    ~NeuralNoteMainView();
 
     void resized() override;
 
@@ -35,7 +35,7 @@ public:
 private:
     void updateEnablements();
 
-    Audio2MidiAudioProcessor& mProcessor;
+    NeuralNoteAudioProcessor& mProcessor;
     NeuralNoteLNF mLNF;
 
     State mPrevState = EmptyAudioAndMidiRegions;

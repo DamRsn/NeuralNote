@@ -3,9 +3,9 @@
 //
 
 #include "RhythmOptionsView.h"
-#include "Audio2MidiMainView.h"
+#include "NeuralNoteMainView.h"
 
-RhythmOptionsView::RhythmOptionsView(Audio2MidiAudioProcessor& processor)
+RhythmOptionsView::RhythmOptionsView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
 {
     mTimeDivisionDropdown = std::make_unique<juce::ComboBox>("TimeDivisionDropDown");
@@ -82,7 +82,7 @@ void RhythmOptionsView::_valueChanged()
     if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
     {
         mProcessor.updateTranscription();
-        auto* main_view = dynamic_cast<Audio2MidiMainView*>(getParentComponent());
+        auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
 
         if (main_view)
             main_view->repaintPianoRoll();

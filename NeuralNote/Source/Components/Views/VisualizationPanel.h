@@ -17,7 +17,7 @@ class VisualizationPanel : public juce::Component
 
 {
 public:
-    explicit VisualizationPanel(Audio2MidiAudioProcessor& processor);
+    explicit VisualizationPanel(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 
@@ -36,7 +36,7 @@ public:
     static constexpr int KEYBOARD_WIDTH = 50;
 
 private:
-    Audio2MidiAudioProcessor& mProcessor;
+    NeuralNoteAudioProcessor& mProcessor;
     Keyboard mKeyboard;
     juce::Viewport mAudioMidiViewport;
     CombinedAudioMidiRegion mCombinedAudioMidiRegion;

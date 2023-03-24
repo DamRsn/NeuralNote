@@ -2,8 +2,8 @@
 // Created by Damien Ronssin on 12.03.23.
 //
 
-#ifndef AUDIO2MIDIPLUGIN_UIDEFINES_H
-#define AUDIO2MIDIPLUGIN_UIDEFINES_H
+#ifndef NN_UIDEFINES_H
+#define NN_UIDEFINES_H
 
 #include <JuceHeader.h>
 #include "BinaryData.h"
@@ -44,4 +44,4 @@ static const float DISABLED_ALPHA = 0.5f;
 
 static const int LEFT_SECTIONS_TOP_PAD = 24;
 
-#endif //AUDIO2MIDIPLUGIN_UIDEFINES_H
+#endif //NN_UIDEFINES_H

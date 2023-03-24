@@ -2,8 +2,8 @@
 // Created by Damien Ronssin on 05.03.23.
 //
 
-#ifndef AUDIO2MIDIPLUGIN_PERF_TEST_H
-#define AUDIO2MIDIPLUGIN_PERF_TEST_H
+#ifndef NN_PERF_TEST_H
+#define NN_PERF_TEST_H
 
 #include "Constants.h"
 #include "Features.h"
@@ -63,4 +63,4 @@ bool perf_test()
     return true;
 }
 
-#endif //AUDIO2MIDIPLUGIN_PERF_TEST_H
+#endif //NN_PERF_TEST_H

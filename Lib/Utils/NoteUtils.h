@@ -2,8 +2,8 @@
 // Created by Damien Ronssin on 14.03.23.
 //
 
-#ifndef AUDIO2MIDIPLUGIN_NOTEUTILS_H
-#define AUDIO2MIDIPLUGIN_NOTEUTILS_H
+#ifndef NN_NOTEUTILS_H
+#define NN_NOTEUTILS_H
 
 #include <JuceHeader.h>
 
@@ -61,4 +61,4 @@ static String midiNoteToStr(int inNoteNumber)
 
 } // namespace NoteUtils
 
-#endif //AUDIO2MIDIPLUGIN_NOTEUTILS_H
+#endif //NN_NOTEUTILS_H

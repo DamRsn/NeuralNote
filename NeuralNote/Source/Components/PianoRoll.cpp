@@ -4,7 +4,7 @@
 
 #include "PianoRoll.h"
 
-PianoRoll::PianoRoll(Audio2MidiAudioProcessor& processor,
+PianoRoll::PianoRoll(NeuralNoteAudioProcessor& processor,
                      Keyboard& keyboard,
                      double inNumPixelsPerSecond)
     : mProcessor(processor)
