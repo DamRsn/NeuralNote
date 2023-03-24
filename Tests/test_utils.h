@@ -2,8 +2,8 @@
 // Created by Damien Ronssin on 05.03.23.
 //
 
-#ifndef AUDIO2MIDIPLUGIN_TEST_UTILS_H
-#define AUDIO2MIDIPLUGIN_TEST_UTILS_H
+#ifndef NN_TEST_UTILS_H
+#define NN_TEST_UTILS_H
 
 #include <assert.h>
 #include <cstdlib>
@@ -67,4 +67,4 @@ static std::vector<std::vector<T>>
 }
 } // namespace test_utils
 
-#endif //AUDIO2MIDIPLUGIN_TEST_UTILS_H
+#endif //NN_TEST_UTILS_H

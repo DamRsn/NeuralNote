@@ -14,7 +14,7 @@
 class AudioRegion : public Component
 {
 public:
-    AudioRegion(Audio2MidiAudioProcessor& processor);
+    AudioRegion(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 
@@ -29,7 +29,7 @@ public:
     void setThumbnailWidth(int inThumbnailWidth);
 
 private:
-    Audio2MidiAudioProcessor& mProcessor;
+    NeuralNoteAudioProcessor& mProcessor;
 
     int mThumbnailWidth = 0;
 

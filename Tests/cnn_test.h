@@ -2,8 +2,8 @@
 // Created by Damien Ronssin on 05.03.23.
 //
 
-#ifndef AUDIO2MIDIPLUGIN_CNN_TEST_H
-#define AUDIO2MIDIPLUGIN_CNN_TEST_H
+#ifndef NN_CNN_TEST_H
+#define NN_CNN_TEST_H
 
 #include "BasicPitchCNN.h"
 #include "test_utils.h"
@@ -128,4 +128,4 @@ bool cnn_test()
     return (num_err_contours + num_err_notes + num_err_onsets) == 0;
 }
 
-#endif //AUDIO2MIDIPLUGIN_CNN_TEST_H
+#endif //NN_CNN_TEST_H

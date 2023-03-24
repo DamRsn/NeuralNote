@@ -1,10 +1,10 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-Audio2MidiEditor::Audio2MidiEditor(Audio2MidiAudioProcessor& p)
+NeuralNoteEditor::NeuralNoteEditor(NeuralNoteAudioProcessor& p)
     : AudioProcessorEditor(&p)
 {
-    mMainView = std::make_unique<Audio2MidiMainView>(p);
+    mMainView = std::make_unique<NeuralNoteMainView>(p);
 
     addAndMakeVisible(*mMainView);
     setSize(1000, 640);
@@ -14,16 +14,16 @@ Audio2MidiEditor::Audio2MidiEditor(Audio2MidiAudioProcessor& p)
     mMainView->setLookAndFeel(&mNeuralNoteLnF);
 }
 
-Audio2MidiEditor::~Audio2MidiEditor()
+NeuralNoteEditor::~NeuralNoteEditor()
 {
     mMainView->setLookAndFeel(nullptr);
 }
 
-void Audio2MidiEditor::paint(juce::Graphics& g)
+void NeuralNoteEditor::paint(juce::Graphics& g)
 {
 }
 
-void Audio2MidiEditor::resized()
+void NeuralNoteEditor::resized()
 {
     mMainView->setBounds(getLocalBounds());
 }

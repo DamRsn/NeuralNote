@@ -2,8 +2,8 @@
 // Created by Tibor Vass on 05.03.23.
 //
 
-#ifndef AUDIO2MIDIPLUGIN_NOTES_TEST_H
-#define AUDIO2MIDIPLUGIN_NOTES_TEST_H
+#ifndef NN_NOTES_TEST_H
+#define NN_NOTES_TEST_H
 
 #include <fstream>
 #include <json.hpp>
@@ -85,4 +85,4 @@ bool notes_test()
     return succeeded;
 }
 
-#endif //AUDIO2MIDIPLUGIN_NOTES_TEST_H
+#endif //NN_NOTES_TEST_H

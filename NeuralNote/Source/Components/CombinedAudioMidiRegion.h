@@ -18,7 +18,7 @@ class CombinedAudioMidiRegion
     , public Timer
 {
 public:
-    CombinedAudioMidiRegion(Audio2MidiAudioProcessor& processor, Keyboard& keyboard);
+    CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor, Keyboard& keyboard);
 
     void setViewportPtr(juce::Viewport* inViewportPtr);
 
@@ -49,7 +49,7 @@ public:
     const int mPianoRollY = mAudioRegionHeight + mHeightBetweenAudioMidi;
 
 private:
-    Audio2MidiAudioProcessor& mProcessor;
+    NeuralNoteAudioProcessor& mProcessor;
 
     juce::Viewport* mViewportPtr = nullptr;
 

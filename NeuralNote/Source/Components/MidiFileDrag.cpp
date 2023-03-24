@@ -4,7 +4,7 @@
 
 #include "MidiFileDrag.h"
 
-MidiFileDrag::MidiFileDrag(Audio2MidiAudioProcessor& processor)
+MidiFileDrag::MidiFileDrag(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
 {
 }

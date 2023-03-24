@@ -4,7 +4,7 @@
 
 #include "VisualizationPanel.h"
 
-VisualizationPanel::VisualizationPanel(Audio2MidiAudioProcessor& processor)
+VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
     , mCombinedAudioMidiRegion(processor, mKeyboard)
     , mMidiFileDrag(processor)
@@ -117,7 +117,6 @@ void VisualizationPanel::setMidiFileDragComponentVisible()
 {
     mMidiFileDrag.setVisible(true);
 
-    mFileTempo->setText(std::to_string(mProcessor.getMidiFileTempo()),
-                        dontSendNotification);
+    mFileTempo->setText(String(mProcessor.getMidiFileTempo()), sendNotification);
     mFileTempo->setVisible(true);
 }

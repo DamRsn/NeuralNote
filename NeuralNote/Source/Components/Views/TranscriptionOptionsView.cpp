@@ -3,9 +3,9 @@
 //
 
 #include "TranscriptionOptionsView.h"
-#include "Audio2MidiMainView.h"
+#include "NeuralNoteMainView.h"
 
-TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& processor)
+TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
 {
     mNoteSensibility =
@@ -104,7 +104,7 @@ void TranscriptionOptionsView::_valueChanged()
     if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
     {
         mProcessor.updateTranscription();
-        auto* main_view = dynamic_cast<Audio2MidiMainView*>(getParentComponent());
+        auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
 
         if (main_view)
             main_view->repaintPianoRoll();

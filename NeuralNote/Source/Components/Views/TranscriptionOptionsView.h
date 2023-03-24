@@ -11,12 +11,12 @@
 #include "Knob.h"
 #include "UIDefines.h"
 
-class Audio2MidiMainView;
+class NeuralNoteMainView;
 
 class TranscriptionOptionsView : public juce::Component
 {
 public:
-    explicit TranscriptionOptionsView(Audio2MidiAudioProcessor& processor);
+    explicit TranscriptionOptionsView(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 
@@ -25,7 +25,7 @@ public:
 private:
     void _valueChanged();
 
-    Audio2MidiAudioProcessor& mProcessor;
+    NeuralNoteAudioProcessor& mProcessor;
 
     std::unique_ptr<Knob> mNoteSensibility;
     std::unique_ptr<Knob> mSplitSensibility;
