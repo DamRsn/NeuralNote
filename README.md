@@ -71,7 +71,7 @@ with [ort-builder](https://github.com/olilarkin/ort-builder)) before calling CMa
 
 #### IDEs
 
-Once the build script as been executed at least once, you can load this project in your favorite IDE
+Once the build script has been executed at least once, you can load this project in your favorite IDE
 (CLion/Visual Studio/VSCode/etc) and click 'build' for one of the targets.
 
 ## Reuse code from NeuralNote’s transcription engine
