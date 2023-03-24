@@ -9,6 +9,10 @@ your favorite Digital Audio Workstation.
 - Lightweight and very fast transcription
 - Can scale and time quantize transcribed MIDI directly in the plugin
 
+## Usage
+
+![UI](NeuralNote_UI.png)
+
 NeuralNote comes as a simple AudioFX plugin (VST3/AU/Standalone app) to be applied on the track to transcribe.
 
 The workflow is very simple:
@@ -19,11 +23,12 @@ The workflow is very simple:
 - The midi transcription instantly appears in the piano roll section. Play with the different settings to adjust it.
 - Export the MIDI transcription with a simple drag and drop from the plugin to a MIDI track.
 
+Watch our presentation video for the Neural Audio Plugin
+competition [here](https://www.youtube.com/watch?v=6_MC0_aG_DQ).
+
 NeuralNote uses internally the model from Spotify's [basic-pitch](https://github.com/spotify/basic-pitch). See
 their [blogpost](https://engineering.atspotify.com/2022/06/meet-basic-pitch/)
-and [paper](https://arxiv.org/abs/2203.09893) for more information.
-
-In NeuralNote, basic-pitch is run
+and [paper](https://arxiv.org/abs/2203.09893) for more information. In NeuralNote, basic-pitch is run
 using [RTNeural](https://github.com/jatinchowdhury18/RTNeural) for the CNN part
 and [ONNXRuntime](https://github.com/microsoft/onnxruntime) for the feature part (Constant-Q transform calculation +
 Harmonic Stacking).
@@ -32,10 +37,11 @@ convolution support.
 
 ## Install and use the plugin
 
-To simply install and start to use the plugin right away, download the latest release for your platform! (Windows and
-Mac (Universal) supported)
+To simply install and start to use the plugin right away, download the latest release for your platform (Windows and
+Mac (Universal) supported)!
 
 Currently, only the .vst3, .component (Audio Unit), .app and .exe files are provided. Installers will be created soon.
+In the meantime, you can manually copy the plugin/app file in the appropriate directory.
 Also, the code is not yet signed (will be soon), so you might have to authorize the plugin in your security settings, as
 it currently comes from an unidentified developer.
 
