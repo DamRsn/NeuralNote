@@ -17,7 +17,6 @@ public:
     {
         RhythmUtils::TimeDivisions division = RhythmUtils::_1_4;
         float quantizationForce = 0.f;
-        bool quantizeNoteEnd = false;
     };
 
     RhythmOptions();
@@ -28,9 +27,7 @@ public:
 
     bool canPerformQuantization() const;
 
-    void setParameters(RhythmUtils::TimeDivisions inDivision,
-                       float inQuantizationForce,
-                       bool inQuantizeNoteEnd);
+    void setParameters(RhythmUtils::TimeDivisions inDivision, float inQuantizationForce);
 
     std::vector<Notes::Event> quantize(const std::vector<Notes::Event>& inNoteEvents);
 

@@ -50,12 +50,10 @@ bool RhythmOptions::canPerformQuantization() const
 }
 
 void RhythmOptions::setParameters(RhythmUtils::TimeDivisions inDivision,
-                                  float inQuantizationForce,
-                                  bool inQuantizeNoteEnd)
+                                  float inQuantizationForce)
 {
     mParameters.division = inDivision;
     mParameters.quantizationForce = inQuantizationForce;
-    mParameters.quantizeNoteEnd = inQuantizeNoteEnd;
 }
 
 std::vector<Notes::Event>

@@ -217,13 +217,14 @@ void Audio2MidiAudioProcessor::_runModel()
 
     mRhythmOptions.setParameters(
         RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
-        mParameters.rhythmQuantizationForce.load(),
-        false);
+        mParameters.rhythmQuantizationForce.load());
 
     mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
     Notes::dropOverlappingPitchBends(mPostProcessedNotes);
     Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
+
+    mMidiFileTempo = mCurrentTempo.load() > 0 ? mCurrentTempo.load() : 120;
 
     mState.store(PopulatedAudioAndMidiRegions);
 }
@@ -259,8 +260,7 @@ void Audio2MidiAudioProcessor::updatePostProcessing()
 
         mRhythmOptions.setParameters(
             RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
-            mParameters.rhythmQuantizationForce.load(),
-            false);
+            mParameters.rhythmQuantizationForce.load());
 
         mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 

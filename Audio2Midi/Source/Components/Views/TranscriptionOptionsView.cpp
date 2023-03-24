@@ -49,7 +49,8 @@ TranscriptionOptionsView::TranscriptionOptionsView(Audio2MidiAudioProcessor& pro
     mPitchBendDropDown->setEditableText(false);
     mPitchBendDropDown->setJustificationType(juce::Justification::centredRight);
     mPitchBendDropDown->addItemList({"No Pitch Bend", "Single Pitch Bend"}, 1);
-    mPitchBendDropDown->setSelectedItemIndex(0);
+    mPitchBendDropDown->setSelectedItemIndex(
+        mProcessor.getCustomParameters()->pitchBendMode.load());
     mPitchBendDropDown->onChange = [this]()
     {
         mProcessor.getCustomParameters()->pitchBendMode.store(
@@ -66,7 +67,7 @@ void TranscriptionOptionsView::resized()
     mNoteSensibility->setBounds(18, button_y_start, 66, 89);
     mSplitSensibility->setBounds(106, button_y_start, 66, 89);
     mMinNoteDuration->setBounds(193, button_y_start, 66, 89);
-    mPitchBendDropDown->setBounds(100, 129 + LEFT_SECTIONS_TOP_PAD, 116, 17);
+    mPitchBendDropDown->setBounds(100, 129 + LEFT_SECTIONS_TOP_PAD, 126, 17);
 }
 
 void TranscriptionOptionsView::paint(Graphics& g)

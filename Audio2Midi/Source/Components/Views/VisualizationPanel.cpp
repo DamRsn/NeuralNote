@@ -21,10 +21,11 @@ VisualizationPanel::VisualizationPanel(Audio2MidiAudioProcessor& processor)
     mFileTempo = std::make_unique<juce::TextEditor>();
     mFileTempo->setInputRestrictions(6, "0123456789.");
     mFileTempo->setMultiLine(false, false);
-    mFileTempo->setJustification(juce::Justification::centred);
     mFileTempo->setReadOnly(false);
 
     mFileTempo->setFont(LABEL_FONT);
+    mFileTempo->setJustification(juce::Justification::centred);
+
     mFileTempo->setColour(TextEditor::backgroundColourId,
                           juce::Colours::transparentWhite);
     mFileTempo->setColour(TextEditor::textColourId, BLACK);
@@ -115,13 +116,8 @@ void VisualizationPanel::repaintPianoRoll()
 void VisualizationPanel::setMidiFileDragComponentVisible()
 {
     mMidiFileDrag.setVisible(true);
+
+    mFileTempo->setText(std::to_string(mProcessor.getMidiFileTempo()),
+                        dontSendNotification);
     mFileTempo->setVisible(true);
-
-    // Set tempo
-    std::string tempo_str = mProcessor.getTempoStr();
-
-    if (tempo_str == "-")
-        tempo_str = "120";
-
-    mFileTempo->setText(tempo_str);
 }
