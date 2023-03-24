@@ -4,12 +4,14 @@ set -x
 os=windows
 arch="$(uname -m)"
 file=onnxruntime.lib
+version=v1.14.1-neuralnote.1
 if test "$(uname -s)" = "Darwin"; then
 	os=macOS
 	arch=universal
 	file=libonnxruntime.a
+	# To remove warnings about minimum macOS target versions
+	version=v1.14.1-neuralnote.2
 fi
-version=v1.14.1-neuralnote.1
 dir="onnxruntime-${version}-${os}-${arch}"
 archive="$dir.tar.gz"
 
