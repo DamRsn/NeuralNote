@@ -3,7 +3,8 @@ setlocal
 set os=windows
 set arch=x86_64
 set file=onnxruntime.lib
-set dir=onnxruntime-v1.14.1-neuralnote.1-%os%-%arch%
+set version=v1.14.1-neuralnote.1
+set dir=onnxruntime-%version%-%os%-%arch%
 set archive=%dir%.tar.gz
 
 :: logical OR is missing in batch o_O!
@@ -14,8 +15,7 @@ set archive=%dir%.tar.gz
 
 if "%fetch%" == "true" (
 	if not exist "%archive%" (
-		echo TODO: please download.
-		exit /b 1
+		curl -fSLO "https://github.com/tiborvass/libonnxruntime-neuralnote/releases/download/%version%/%archive%" || exit /b
 	)
 	del /s /f /q ThirdParty\%dir% ThirdParty\onnxruntime
 	rmdir /s /q ThirdParty\%dir% ThirdParty\onnxruntime

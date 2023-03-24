@@ -9,15 +9,15 @@ if test "$(uname -s)" = "Darwin"; then
 	arch=universal
 	file=libonnxruntime.a
 fi
-dir=onnxruntime-v1.14.1-neuralnote.1-${os}-${arch}
+version=v1.14.1-neuralnote.1
+dir="onnxruntime-${version}-${os}-${arch}"
 archive="$dir.tar.gz"
 
 # If either the library or the ort model is missing or if an archive was found
 # then fetch ort model and library again.
 if test ! -f "Lib/ModelData/features_model.ort" -o ! -f "ThirdParty/onnxruntime/lib/$file" -o -f "$archive"; then
 	if ! test -f "$archive"; then
-		echo TODO: please download.
-		exit 1
+		curl -fsSLO "https://github.com/tiborvass/libonnxruntime-neuralnote/releases/download/${version}/${archive}"
 	fi
 	rm -rf ThirdParty/$dir ThirdParty/onnxruntime
 	tar -C ThirdParty/ -xvf "$archive"
