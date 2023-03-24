@@ -106,4 +106,4 @@ Here's a list of all the third party libraries used in NeuralNote and the licens
 ## Credits
 
 NeuralNote was developed by [Damien Ronssin](https://github.com/DamRsn) and [Tibor Vass](https://github.com/tiborvass).
-The plugin was designed by Perrine Morel.
+The plugin user interface was designed by Perrine Morel.
