@@ -33,7 +33,7 @@ set config=Release
 cmake -S . -B build -DBUILD_UNIT_TESTS=ON || exit /b
 cmake --build build -j %ncpus% --config %config% --target NeuralNote_Standalone --target UnitTests --target NeuralNote_VST3 --target NeuralNote_AU
 
-.\build\Tests\UnitTests_artefacts\Release\UnitTests.exe
+.\build\Tests\UnitTests_artefacts\Release\UnitTests.exe || exit /b
 
 echo
 echo "Run .\build\NeuralNote_artefacts\Release\Standalone\NeuralNote.exe"
