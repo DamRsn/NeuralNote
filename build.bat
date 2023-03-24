@@ -8,14 +8,14 @@ set dir=onnxruntime-%version%-%os%-%arch%
 set archive=%dir%.tar.gz
 
 :: logical OR is missing in batch o_O!
-@set fetch=false
-@if not exist "Lib/ModelData/features_model.ort" set fetch=true
-@if not exist "%file%" set fetch=true
-@if exist "%archive%" set fetch=true
+@set extract=false
+@if not exist "Lib\ModelData\features_model.ort" set extract=true
+@if not exist "ThirdParty\onnxruntime\%file%" set extract=true
+@if exist "%archive%" set extract=true
 
-if "%fetch%" == "true" (
+if "%extract%" == "true" (
 	if not exist "%archive%" (
-		curl -fSLO "https://github.com/tiborvass/libonnxruntime-neuralnote/releases/download/%version%/%archive%" || exit /b
+		curl -fSLO --ssl-no-revoke "https://github.com/tiborvass/libonnxruntime-neuralnote/releases/download/%version%/%archive%" || exit /b
 	)
 	del /s /f /q ThirdParty\%dir% ThirdParty\onnxruntime
 	rmdir /s /q ThirdParty\%dir% ThirdParty\onnxruntime
