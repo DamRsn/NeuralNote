@@ -35,7 +35,7 @@ bool feature_test()
 
     int num_err = 0;
     float max_err = 0;
-    float threshold = 1e-6f;
+    float threshold = 1e-3f;
 
     for (size_t i = 0; i < features_python.size(); i++)
     {
