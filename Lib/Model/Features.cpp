@@ -14,8 +14,8 @@ Features::Features()
     mSessionOptions.SetIntraOpNumThreads(1);
 
     mSession = Ort::Session(mEnv,
-                            BinaryData::features_model_onnx,
-                            BinaryData::features_model_onnxSize,
+                            BinaryData::features_model_ort,
+                            BinaryData::features_model_ortSize,
                             mSessionOptions);
 }
 

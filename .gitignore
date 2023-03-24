@@ -23,5 +23,6 @@ xcschememanagement.plist
 *.entitlements
 *.cpb
 Makefile
-
-ThirdParty/ONNXRuntime
+*.ort
+onnxruntime*.tar.gz
+ThirdParty/onnxruntime
