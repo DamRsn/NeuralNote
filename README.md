@@ -94,18 +94,17 @@ The original basic-pitch CNN was split in 4 sequential models wired together, so
 
 ## Roadmap
 
-- Improve stability.
-- Save plugin internal state properly, so it can be loaded back when reentering a session.
+- Improve stability
+- Save plugin internal state properly, so it can be loaded back when reentering a session
 - Add tooltips
 - Build a simple synth in the plugin so that one can listen to the transcription while playing with the settings, before
-  export.
-- Allow pitch bends on non-overlapping parts of overlapping notes.
+  export
+- Allow pitch bends on non-overlapping parts of overlapping notes
 - Support transcription of mp3 files
 
 ## Bug reports and feature requests
 
-If you have any request/suggestion concerning the plugin or encounter a bug, please fill a Github issue, we'll
-do our best to address it.
+If you have any request/suggestion concerning the plugin or encounter a bug, please file a GitHub issue.
 
 ## Contributing
 
