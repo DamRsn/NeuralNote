@@ -28,10 +28,10 @@ set(BaseTargetName NeuralNote)
 
 # Set COPY_PLUGIN_AFTER_BUILD to TRUE on Mac and to FALSE on Windows due to permission issues
 if (APPLE)
-	set(COPY_PLUGIN_AFTER_BUILD TRUE)
-else()
-	set(COPY_PLUGIN_AFTER_BUILD FALSE)
-endif()
+    set(COPY_PLUGIN_AFTER_BUILD TRUE)
+else ()
+    set(COPY_PLUGIN_AFTER_BUILD FALSE)
+endif ()
 
 juce_add_plugin("${BaseTargetName}"
         # VERSION ...                               # Set this if the plugin version is different to the project version
@@ -44,6 +44,8 @@ juce_add_plugin("${BaseTargetName}"
         IS_MIDI_EFFECT FALSE
         EDITOR_WANTS_KEYBOARD_FOCUS FALSE
         COPY_PLUGIN_AFTER_BUILD ${COPY_PLUGIN_AFTER_BUILD}
+        MICROPHONE_PERMISSION_ENABLED TRUE
+        MICROPHONE_PERMISSION_TEXT "Need access to Microphone"
         PLUGIN_MANUFACTURER_CODE DrAu
         PLUGIN_CODE NRNT
         FORMATS AU VST3 Standalone
