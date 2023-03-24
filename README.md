@@ -11,14 +11,13 @@ your favorite Digital Audio Workstation.
 
 ## Install NeuralNote
 
-To simply install and start to use the plugin right away, download the latest release for your platform (Windows and
-Mac (Universal) supported)!
+Download the latest release for your platform [here](https://github.com/DamRsn/NeuralNote/releases) (Windows and Mac (
+Universal) supported)!
 
 Currently, only the raw `.vst3`, `.component` (Audio Unit), `.app` and `.exe` (Standalone) files are provided.
-Installers will be created soon.
-In the meantime, you can manually copy the plugin/app file in the appropriate directory.
-Also, the code is not yet signed (will be soon), so you might have to authorize the plugin in your security settings, as
-it currently comes from an unidentified developer.
+Installers will be created soon. In the meantime, you can manually copy the plugin/app file in the appropriate
+directory. Also, the code is not yet signed (will be soon), so you might have to authorize the plugin in your security
+settings, as it currently comes from an unidentified developer.
 
 ## Usage
 
