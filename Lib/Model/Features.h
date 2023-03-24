@@ -11,6 +11,9 @@
 #include "BinaryData.h"
 #include "Constants.h"
 
+/**
+ * Class to compute the CQT and harmonically stack those. Output of this can be given as input to Basic Pitch cnn.
+ */
 class Features
 {
 public:
@@ -18,6 +21,13 @@ public:
 
     ~Features() = default;
 
+    /**
+     * Compute features for full audio signal
+     * @param inAudio Input audio. Should contain inNumSamples
+     * @param inNumSamples Number of samples in inAudio
+     * @param outNumFrames Number of frames that have been computed.
+     * @return Pointer to features.
+     */
     const float*
         computeFeatures(float* inAudio, size_t inNumSamples, size_t& outNumFrames);
 

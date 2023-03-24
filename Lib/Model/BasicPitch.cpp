@@ -4,10 +4,6 @@
 
 #include "BasicPitch.h"
 
-BasicPitch::BasicPitch()
-{
-}
-
 void BasicPitch::reset()
 {
     mBasicPitchCNN.reset();

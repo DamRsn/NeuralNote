@@ -25,6 +25,9 @@ NLOHMANN_JSON_SERIALIZE_ENUM(PitchBendModes,
                                  {MultiPitchBend, "multi"},
                              })
 
+/**
+ * Class to extract note events from posteriorgrams (outputs of basic pitch cnn).
+ */
 class Notes
 {
 public:
@@ -36,7 +39,8 @@ public:
         int endFrame;
         int pitch; // pitch is not in Hz, but in "MIDI note number"
         double amplitude;
-        std::vector<int> bends;
+        std::vector<int>
+            bends; // One vale of pitch bend per frame. Units is 1/3 of semitones.
 
         bool operator==(const struct Event&) const;
     } Event;
@@ -57,12 +61,23 @@ public:
         int energyThreshold = 11;
     } ConvertParams;
 
-    // PG stands for posteriorgrams
+    /**
+     * Create note events based on postegriorgram inputs
+     * @param inNotesPG Note posteriorgrams
+     * @param inOnsetsPG Onset posteriorgrams
+     * @param inContoursPG Contour posteriorgrams
+     * @param inParams input parameters
+     * @return
+     */
     std::vector<Notes::Event> convert(const std::vector<std::vector<float>>& inNotesPG,
                                       const std::vector<std::vector<float>>& inOnsetsPG,
                                       const std::vector<std::vector<float>>& inContoursPG,
                                       ConvertParams inParams);
 
+    /**
+     * Inplace sort of note events.
+     * @param inOutEvents
+     */
     static inline void sortEvents(std::vector<Notes::Event>& inOutEvents)
     {
         std::sort(inOutEvents.begin(),
@@ -74,9 +89,11 @@ public:
                   });
     }
 
-    // dropOverlappingPitchBends sets bends to an empty array to all the note events
-    // that are overlapping in time.
-    // inOutEvents is expected to be sorted.
+    /**
+     * dropOverlappingPitchBends sets bends to an empty array to all the note events that are overlapping in time.
+     * inOutEvents is expected to be sorted.
+     * @param inOutEvents
+     */
     static void dropOverlappingPitchBends(std::vector<Notes::Event>& inOutEvents)
     {
         for (int i = 0; i < int(inOutEvents.size()) - 1; i++)
@@ -96,8 +113,11 @@ public:
         }
     }
 
-    // mergeOverlappingNotes merges note events that are overlapping in time.
-    // inOutEvents is expected to be sorted.
+    /**
+     * mergeOverlappingNotes merges note events of same pitch that are overlapping in time.
+     * inOutEvents is expected to be sorted.
+     * @param inOutEvents
+     */
     static void mergeOverlappingNotesWithSamePitch(std::vector<Notes::Event>& inOutEvents)
     {
         sortEvents(inOutEvents);
@@ -133,10 +153,22 @@ private:
         int noteIdx;
     } _pg_index;
 
+    /**
+     * Add pitch bend vector to note events.
+     * @param inOutEvents event vector (input and output)
+     * @param inContoursPG Contour posteriorgram matrix
+     * @param inNumBinsTolerance
+     */
     void _addPitchBends(std::vector<Notes::Event>& inOutEvents,
                         const std::vector<std::vector<float>>& inContoursPG,
                         int inNumBinsTolerance = 25);
 
+    /**
+     * Get time in seconds given frame index.
+     * Different behaviour in test because of weirdness in basic-pitch code
+     * @param frame Index of frame.
+     * @return Corresponding time in seconds.
+     */
     static inline double _modelFrameToTime(int frame)
     {
         // The following are compile-time computed consts only used here.
@@ -163,13 +195,26 @@ private:
 #endif
     }
 
+    /**
+     * Return closest midi note number to frequency
+     * @param hz Input frequency
+     * @return Closest midi note number
+     */
     static inline int _hzToMidi(float hz)
     {
         return (int) std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0);
     }
 
-    // _inferredOnsets returns outInferredOnsets a version of inOnsetsPG augmented by detecting
-    // differences in note posteriorgrams across frames separated by varying offsets (up to inNumDiffs).
+    /**
+     * Returns a version of inOnsetsPG augmented by detecting differences in note posteriorgrams
+     * across frames separated by varying offsets (up to inNumDiffs).
+     * @tparam T
+     * @param inOnsetsPG Onset posteriorgrams
+     * @param inNotesPG Note posteriorgrams
+     * @param inNumDiffs max varying offset.
+     * @return
+     */
+     // TODO: change to float
     template <typename T>
     static std::vector<std::vector<T>>
         _inferredOnsets(const std::vector<std::vector<T>>& inOnsetsPG,

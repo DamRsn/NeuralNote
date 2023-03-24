@@ -33,10 +33,6 @@ BasicPitchCNN::BasicPitchCNN()
     mCNNOnsetOutput.parseJson(json_cnn_onset_output);
 }
 
-BasicPitchCNN::~BasicPitchCNN()
-{
-}
-
 void BasicPitchCNN::reset()
 {
     for (auto& array: mContoursCircularBuffer)

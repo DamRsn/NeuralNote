@@ -11,27 +11,57 @@
 #include "BinaryData.h"
 #include "Constants.h"
 
+/**
+ * Class to run basic pitch CNN with RTNeural
+ */
 class BasicPitchCNN
 {
 public:
     BasicPitchCNN();
 
-    ~BasicPitchCNN();
+    ~BasicPitchCNN() = default;
 
+    /**
+     * Resets the internal state of the CNN.
+     */
     void reset();
 
+    /**
+     * @return The number of future lookahead of basic pitch cnn.
+     * It corresponds to the number of padded frames done left and right (in tensorflow for example)
+     * in order to have aligned input and output when running with valid padding.
+     */
     static int getNumFramesLookahead();
 
+    /**
+     * Run inference for a single frame. inData should have 8 * 264 elements
+     * @param inData input features (CQT harmonically stacked).
+     * @param outContours output vector for contour posteriorgrams. Size should be 264
+     * @param outNotes output vector for note posteriorgrams. Size should be 88
+     * @param outOnsets output vector for onset posteriorgrams. Size should be 88
+     */
     void frameInference(const float* inData,
                         std::vector<float>& outContours,
                         std::vector<float>& outNotes,
                         std::vector<float>& outOnsets);
 
 private:
+    /**
+     * Run different sequential models with correct time offset ...
+     */
     void _runModels();
 
+    /**
+     * Perform concat operation with correct time offset
+     */
     void _concat();
 
+    /**
+     * Return in-range index for given size as if periodic.
+     * @param inIndex maybe out of range index
+     * @param inSize Size of container
+     * @return Wrapped index (in-range)
+     */
     static constexpr int _wrapIndex(int inIndex, int inSize);
 
     alignas(RTNEURAL_DEFAULT_ALIGNMENT)
