@@ -10,7 +10,7 @@ set archive=%dir%.tar.gz
 :: logical OR is missing in batch o_O!
 @set extract=false
 @if not exist "Lib\ModelData\features_model.ort" set extract=true
-@if not exist "ThirdParty\onnxruntime\%file%" set extract=true
+@if not exist "ThirdParty\onnxruntime\lib\%file%" set extract=true
 @if exist "%archive%" set extract=true
 
 if "%extract%" == "true" (
@@ -25,7 +25,7 @@ if "%extract%" == "true" (
 	del %archive%
 )
 
-wmic get cpu NumberOfLogicalProcessors | findstr /V NumberOfLogicalProcessors > ncpus
+wmic cpu get NumberOfLogicalProcessors | findstr /V NumberOfLogicalProcessors > ncpus
 set /p ncpus=<ncpus
 del ncpus
 
