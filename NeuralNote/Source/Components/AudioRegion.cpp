@@ -53,10 +53,9 @@ void AudioRegion::paint(Graphics& g)
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
 
         g.setColour(BLACK);
-        g.setFont(LABEL_FONT);
-        g.drawText("HIT RECORD, DROP AN AUDIO FILE HERE, OR CLICK TO OPEN A FILE",
-                   getLocalBounds(),
-                   juce::Justification::centred);
+        g.setFont(LARGE_FONT);
+        g.drawText(
+            "LOAD OR DROP AN AUDIO FILE", getLocalBounds(), juce::Justification::centred);
     }
 }
 
@@ -116,5 +115,5 @@ void AudioRegion::setThumbnailWidth(int inThumbnailWidth)
 void AudioRegion::mouseDown(const juce::MouseEvent& e)
 {
     if (auto* parent = getParentComponent())
-        parent->mouseDown (e);
+        parent->mouseDown(e);
 }
