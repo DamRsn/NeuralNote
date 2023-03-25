@@ -100,3 +100,30 @@ void CombinedAudioMidiRegion::setViewportPtr(juce::Viewport* inViewportPtr)
 {
     mViewportPtr = inViewportPtr;
 }
+
+void CombinedAudioMidiRegion::mouseDown(const juce::MouseEvent& e)
+{
+    if (!(isInterestedInFileDrag({})
+          && e.originalComponent == &mAudioRegion))
+        return;
+
+    mFileChooser = std::make_shared<juce::FileChooser>(
+        "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
+    mFileChooser->launchAsync(juce::FileBrowserComponent::openMode
+                                  | juce::FileBrowserComponent::canSelectFiles,
+                              [this](const juce::FileChooser& fc)
+                              {
+                                  if (fc.getResults().isEmpty())
+                                      return;
+
+                                  bool success = mAudioRegion.onFileDrop(fc.getResult());
+
+                                  if (success)
+                                  {
+                                      resizeAccordingToNumSamplesAvailable();
+                                      mAudioRegion.updateThumbnail();
+                                  }
+
+                                  repaint();
+                              });
+}
