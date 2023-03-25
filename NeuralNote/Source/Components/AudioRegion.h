@@ -28,6 +28,8 @@ public:
 
     void setThumbnailWidth(int inThumbnailWidth);
 
+    void mouseDown(const juce::MouseEvent& e) override;
+
 private:
     NeuralNoteAudioProcessor& mProcessor;
 
@@ -37,7 +39,7 @@ private:
     juce::AudioFormatManager mThumbnailFormatManager;
     juce::AudioThumbnailCache mThumbnailCache;
     juce::AudioThumbnail mThumbnail;
-
+    
     AudioFileLoader mFileLoader;
 
     bool mIsFileOver = false;
