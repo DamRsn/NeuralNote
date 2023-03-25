@@ -18,12 +18,6 @@ void AudioRegion::resized()
 
 void AudioRegion::paint(Graphics& g)
 {
-    if (mIsFileOver)
-    {
-        g.setColour(juce::Colours::purple);
-        g.drawRoundedRectangle(getLocalBounds().toFloat(), 4, 2);
-    }
-
     auto num_samples_available = mProcessor.getNumSamplesAcquired();
 
     if (num_samples_available > 0 && mThumbnail.isFullyLoaded())
@@ -49,13 +43,22 @@ void AudioRegion::paint(Graphics& g)
     }
     else
     {
-        g.setColour(WHITE_TRANSPARENT);
+        if (mIsFileOver)
+            g.setColour(WAVEFORM_BG_COLOR);
+        else
+            g.setColour(WHITE_TRANSPARENT);
+
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
 
         g.setColour(BLACK);
         g.setFont(LARGE_FONT);
-        g.drawText(
-            "LOAD OR DROP AN AUDIO FILE", getLocalBounds(), juce::Justification::centred);
+
+        if (mIsFileOver)
+            g.drawText("YUMMY!", getLocalBounds(), juce::Justification::centred);
+        else
+            g.drawText("LOAD OR DROP AN AUDIO FILE",
+                       getLocalBounds(),
+                       juce::Justification::centred);
     }
 }
 
