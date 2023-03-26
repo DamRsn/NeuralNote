@@ -11,13 +11,13 @@ your favorite Digital Audio Workstation.
 
 ## Install NeuralNote
 
-Download the latest release for your platform [here](https://github.com/DamRsn/NeuralNote/releases) (Windows and Mac (
+Download the latest release for your platform [here](https://github.com/DamRsn/NeuralNote/releases) (Windows and macOS (
 Universal) supported)!
 
 Currently, only the raw `.vst3`, `.component` (Audio Unit), `.app` and `.exe` (Standalone) files are provided.
 Installers will be created soon. In the meantime, you can manually copy the plugin/app file in the appropriate
-directory. Also, the code is not yet signed (will be soon), so you might have to authorize the plugin in your security
-settings, as it currently comes from an unidentified developer.
+directory. The code is signed on macOS, but not on Windows, so you might have to perform few extra steps in order to be
+able to use NeuralNote on Windows (to be documented soon).
 
 ## Usage
 
@@ -55,10 +55,11 @@ Use this when cloning:
 git clone --recurse-submodules --shallow-submodules https://github.com/DamRsn/NeuralNote
  ```
 
-The following OS-specific build scripts have to be executed at least once before being able to use the project as a normal CMake project. The script downloads onnxruntime static library (that we created
+The following OS-specific build scripts have to be executed at least once before being able to use the project as a
+normal CMake project. The script downloads onnxruntime static library (that we created
 with [ort-builder](https://github.com/olilarkin/ort-builder)) before calling CMake.
 
-#### Mac
+#### macOS
 
 ```
 $ ./build.sh
@@ -66,7 +67,8 @@ $ ./build.sh
 
 #### Windows
 
-Due to [a known issue](https://github.com/DamRsn/NeuralNote/issues/21), if you're not using Visual Studio 2022 (MSVC version: 19.35.x, check `cl` output), then you'll need to manually build onnxruntime.lib like so:
+Due to [a known issue](https://github.com/DamRsn/NeuralNote/issues/21), if you're not using Visual Studio 2022 (MSVC
+version: 19.35.x, check `cl` output), then you'll need to manually build onnxruntime.lib like so:
 
 1. Ensure you have Python installed; if not, download at https://www.python.org/downloads/windows/
 
