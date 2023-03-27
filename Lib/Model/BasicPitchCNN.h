@@ -5,7 +5,6 @@
 #ifndef BasicPitchCNN_h
 #define BasicPitchCNN_h
 
-#include "json.hpp"
 #include "RTNeural/RTNeural.h"
 
 #include "BinaryData.h"

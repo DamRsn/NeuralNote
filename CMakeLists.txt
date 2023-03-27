@@ -12,6 +12,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version" FORCE)
 
 option(UniversalBinary "Build universal binary for mac" OFF)
+option(RTNeural_Release "When CMAKE_BUILD_TYPE=Debug, overwrite it to Release for RTNeural only" OFF)
 
 if (UniversalBinary)
     set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
@@ -55,7 +56,9 @@ juce_generate_juce_header(${BaseTargetName})
 
 # Source files
 file(GLOB_RECURSE SOURCES_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/*.cpp ${CMAKE_CURRENT_LIST_DIR}/Lib/*.cpp)
+list(REMOVE_ITEM SOURCES_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Lib/Model/BasicPitchCNN.cpp)
 file(GLOB_RECURSE HEADERS_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/*.h ${CMAKE_CURRENT_LIST_DIR}/Lib/*.h)
+list(REMOVE_ITEM HEADERS_PLUGIN ${CMAKE_CURRENT_LIST_DIR}/Lib/Model/BasicPitchCNN.h)
 
 target_sources(${BaseTargetName} PRIVATE ${SOURCES_PLUGIN} ${HEADERS_PLUGIN})
 
@@ -86,6 +89,17 @@ file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json
         ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.png)
 
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
+
+add_library(BasicPitchCNN STATIC ${CMAKE_CURRENT_LIST_DIR}/Lib/Model/BasicPitchCNN.cpp)
+target_include_directories(BasicPitchCNN PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/RTNeural)
+if ((CMAKE_BUILD_TYPE STREQUAL "Debug") AND RTNeural_Release)
+	if (MSVC)
+	    target_compile_options(BasicPitchCNN PUBLIC /O2) # or maybe /Ox
+	else () # clang or gcc
+	    target_compile_options(BasicPitchCNN PUBLIC -O3) # or maybe -Ofast
+	endif ()
+endif ()
+target_link_libraries(BasicPitchCNN PUBLIC RTNeural bin_data)
 
 target_include_directories(${BaseTargetName} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
 
@@ -121,7 +135,7 @@ target_link_libraries(${BaseTargetName}
         PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp
-        RTNeural
+        BasicPitchCNN
         onnxruntime
         bin_data
         PUBLIC
