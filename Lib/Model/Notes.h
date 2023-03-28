@@ -6,7 +6,6 @@
 #define Notes_h
 
 #include <cmath>
-#include <json.hpp>
 #include <vector>
 
 #include "Constants.h"
@@ -17,13 +16,6 @@ enum PitchBendModes
     SinglePitchBend,
     MultiPitchBend
 };
-
-NLOHMANN_JSON_SERIALIZE_ENUM(PitchBendModes,
-                             {
-                                 {NoPitchBend, nullptr},
-                                 {SinglePitchBend, "single"},
-                                 {MultiPitchBend, "multi"},
-                             })
 
 /**
  * Class to extract note events from posteriorgrams (outputs of basic pitch cnn).
@@ -303,18 +295,5 @@ private:
         return notes_diff;
     }
 };
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
-    Notes::Event, startTime, endTime, startFrame, endFrame, pitch, amplitude, bends)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Notes::ConvertParams,
-                                                onsetThreshold,
-                                                frameThreshold,
-                                                minNoteLength,
-                                                inferOnsets,
-                                                maxFrequency,
-                                                minFrequency,
-                                                melodiaTrick,
-                                                pitchBend,
-                                                energyThreshold)
 
 #endif // Notes_h
