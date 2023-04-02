@@ -29,7 +29,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp
         onnxruntime
-        RTNeural
+        BasicPitchCNN
         bin_data
         PUBLIC
         juce_recommended_config_flags
