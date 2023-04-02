@@ -14,6 +14,26 @@
 
 using json = nlohmann::json;
 
+NLOHMANN_JSON_SERIALIZE_ENUM(PitchBendModes,
+                             {
+                                 {NoPitchBend, nullptr},
+                                 {SinglePitchBend, "single"},
+                                 {MultiPitchBend, "multi"},
+                             })
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+    Notes::Event, startTime, endTime, startFrame, endFrame, pitch, amplitude, bends)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Notes::ConvertParams,
+                                                onsetThreshold,
+                                                frameThreshold,
+                                                minNoteLength,
+                                                inferOnsets,
+                                                maxFrequency,
+                                                minFrequency,
+                                                melodiaTrick,
+                                                pitchBend,
+                                                energyThreshold)
+
 /*
  * Expected output was computed with basic-pitch's python implementation.
  *
