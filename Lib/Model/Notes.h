@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Constants.h"
+#include "NoteUtils.h"
 
 enum PitchBendModes
 {
@@ -188,16 +189,6 @@ private:
     }
 
     /**
-     * Return closest midi note number to frequency
-     * @param hz Input frequency
-     * @return Closest midi note number
-     */
-    static inline int _hzToMidi(float hz)
-    {
-        return (int) std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0);
-    }
-
-    /**
      * Returns a version of inOnsetsPG augmented by detecting differences in note posteriorgrams
      * across frames separated by varying offsets (up to inNumDiffs).
      * @tparam T
@@ -206,7 +197,7 @@ private:
      * @param inNumDiffs max varying offset.
      * @return
      */
-     // TODO: change to float
+    // TODO: change to float
     template <typename T>
     static std::vector<std::vector<T>>
         _inferredOnsets(const std::vector<std::vector<T>>& inOnsetsPG,
