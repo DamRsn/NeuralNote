@@ -9,30 +9,28 @@
 
 #include "NoteUtils.h"
 
-class SynthVoice
+class SynthVoice : public MPESynthesiserVoice
 {
 public:
     SynthVoice() = default;
 
-    ~SynthVoice() = default;
+    void setCurrentSampleRate(double newRate) override;
 
-    void prepareToPlay(float inSampleRate);
+    bool isActive() const override;
 
-    float getNextSample();
+    void noteStarted() override;
 
-    void adjustFrequency(float inMidiNote, bool inForce);
+    void noteStopped(bool allowTailOff) override;
 
-    void reset();
+    void notePressureChanged() override;
 
-    void noteOn(int inMidiNote, float inInitBend, float inAmplitude);
+    void notePitchbendChanged() override;
 
-    void noteOff();
+    void noteTimbreChanged() override;
 
-    bool isActive() const;
+    void noteKeyStateChanged() override;
 
-    float getFrequency() const;
-
-    int getCurrentNote() const;
+    void renderNextBlock(AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override;
 
 private:
     juce::ADSR mADSR;
