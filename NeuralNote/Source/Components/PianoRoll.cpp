@@ -4,9 +4,7 @@
 
 #include "PianoRoll.h"
 
-PianoRoll::PianoRoll(NeuralNoteAudioProcessor& processor,
-                     Keyboard& keyboard,
-                     double inNumPixelsPerSecond)
+PianoRoll::PianoRoll(NeuralNoteAudioProcessor& processor, Keyboard& keyboard, double inNumPixelsPerSecond)
     : mProcessor(processor)
     , mKeyboard(keyboard)
     , mNumPixelsPerSecond(inNumPixelsPerSecond)
@@ -16,6 +14,8 @@ PianoRoll::PianoRoll(NeuralNoteAudioProcessor& processor,
     mNoteGradient.addColour(0.0, juce::Colours::green);
     mNoteGradient.addColour(0.5, juce::Colours::blue);
     mNoteGradient.addColour(1.0, juce::Colours::red);
+
+    startTimerHz(60);
 }
 
 void PianoRoll::resized()
@@ -24,8 +24,7 @@ void PianoRoll::resized()
 
 void PianoRoll::paint(Graphics& g)
 {
-    Rectangle<float> local_bounds = {
-        0, 0, static_cast<float>(getWidth()), static_cast<float>(getHeight())};
+    Rectangle<float> local_bounds = {0, 0, static_cast<float>(getWidth()), static_cast<float>(getHeight())};
 
     auto rect_width = static_cast<float>(getWidth());
 
@@ -39,18 +38,14 @@ void PianoRoll::paint(Graphics& g)
         {
             if (mKeyboard.getRectangleForKey(i).intersects(local_bounds))
             {
-                juce::Colour fill_colour =
-                    _isWhiteKey(i) ? juce::Colours::white : juce::Colours::black;
+                juce::Colour fill_colour = _isWhiteKey(i) ? juce::Colours::white : juce::Colours::black;
 
                 fill_colour = fill_colour.withAlpha(0.2f);
 
                 g.setColour(fill_colour);
 
                 auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(i);
-                g.fillRect(0.0f,
-                           note_y_start_n_height.first,
-                           rect_width,
-                           note_y_start_n_height.second);
+                g.fillRect(0.0f, note_y_start_n_height.first, rect_width, note_y_start_n_height.second);
             }
         }
 
@@ -63,8 +58,7 @@ void PianoRoll::paint(Graphics& g)
         // Draw notes
         for (auto& note_event: mProcessor.getNoteEventVector())
         {
-            auto note_y_start_n_height =
-                _getNoteHeightAndWidthPianoRoll(note_event.pitch);
+            auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(note_event.pitch);
             auto note_y_start = note_y_start_n_height.first;
             auto note_height = note_y_start_n_height.second;
             auto start = static_cast<float>(note_event.startTime);
@@ -74,17 +68,10 @@ void PianoRoll::paint(Graphics& g)
                 continue;
 
             g.setColour(mNoteGradient.getColourAtPosition(note_event.amplitude));
-            g.fillRect(_timeToX(start),
-                       note_y_start,
-                       _timeToX(end) - _timeToX(start),
-                       note_height);
+            g.fillRect(_timeToX(start), note_y_start, _timeToX(end) - _timeToX(start), note_height);
 
             g.setColour(juce::Colours::black);
-            g.drawRect(_timeToX(start),
-                       note_y_start,
-                       _timeToX(end) - _timeToX(start),
-                       note_height,
-                       0.5);
+            g.drawRect(_timeToX(start), note_y_start, _timeToX(end) - _timeToX(start), note_height, 0.5);
 
             // Draw pitch bend
             if (mProcessor.getCustomParameters()->pitchBendMode == SinglePitchBend)
@@ -92,8 +79,8 @@ void PianoRoll::paint(Graphics& g)
                 const auto& bends = note_event.bends;
                 if (!note_event.bends.empty())
                 {
-                    auto path_stroke_type = PathStrokeType(
-                        1, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
+                    auto path_stroke_type =
+                        PathStrokeType(1, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
                     Path p;
                     float y_ref_pb = note_y_start + note_height / 2.0f;
 
@@ -101,10 +88,8 @@ void PianoRoll::paint(Graphics& g)
 
                     for (size_t i = 0; i < bends.size(); i++)
                     {
-                        p.lineTo(
-                            _timeToX(float(
-                                start + double(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
-                            y_ref_pb - float(bends[i]) * note_height / 3.0f);
+                        p.lineTo(_timeToX(float(start + double(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
+                                 y_ref_pb - float(bends[i]) * note_height / 3.0f);
                     }
                     p.lineTo(_timeToX(float(note_event.endTime)), y_ref_pb);
 
@@ -117,6 +102,8 @@ void PianoRoll::paint(Graphics& g)
                     g.fillPath(p);
                 }
             }
+
+            _drawPlayerPlayhead(g);
         }
     }
 }
@@ -127,6 +114,20 @@ void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
     {
         repaint();
     }
+}
+
+void PianoRoll::timerCallback()
+{
+    if (mCurrentPlayerPlayheadTime != mProcessor.getPlayer()->getPlayheadPositionSeconds())
+    {
+        // TODO: avoid repainting everything here, just playhead. Make it a component
+        repaint();
+    }
+}
+
+void PianoRoll::mouseDown(const MouseEvent& event)
+{
+    Component::mouseDown(event);
 }
 
 float PianoRoll::_timeToX(float inTime) const
@@ -153,8 +154,7 @@ std::pair<float, float> PianoRoll::_getNoteHeightAndWidthPianoRoll(int inNote) c
     {
         if (_isWhiteKey(inNote))
         {
-            return {_noteBottomY(inNote + 1),
-                    _noteTopY(inNote - 1) - _noteBottomY(inNote + 1)};
+            return {_noteBottomY(inNote + 1), _noteTopY(inNote - 1) - _noteBottomY(inNote + 1)};
         }
         else
         {
@@ -176,8 +176,7 @@ float PianoRoll::_noteBottomY(int inNote) const
 bool PianoRoll::_isWhiteKey(int inNote)
 {
     int note = inNote % 12;
-    return (note == 0 || note == 2 || note == 4 || note == 5 || note == 7 || note == 9
-            || note == 11);
+    return (note == 0 || note == 2 || note == 4 || note == 5 || note == 7 || note == 9 || note == 11);
 }
 
 float PianoRoll::_getNoteWidth(int inNote) const
@@ -197,8 +196,7 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g)
 
     double beat_increments = 4.0 / time_signature.denominator;
     double beat_number = 0;
-    float beat_pixel =
-        _qnToPixel(beat_number, last_bar_qn - start_time_qn, beats_per_second);
+    float beat_pixel = _qnToPixel(beat_number, last_bar_qn - start_time_qn, beats_per_second);
 
     auto width = static_cast<float>(getWidth());
     auto height = static_cast<float>(getHeight());
@@ -210,20 +208,25 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g)
         if (beat_pixel >= 0)
         {
             float thickness =
-                std::abs(fmod(beat_number, static_cast<double>(time_signature.numerator)))
-                        < 1e-6
-                    ? 1.0f
-                    : 0.5f;
+                std::abs(fmod(beat_number, static_cast<double>(time_signature.numerator))) < 1e-6 ? 1.0f : 0.5f;
             g.drawLine(beat_pixel, 0, beat_pixel, height, thickness);
         }
 
         beat_number += beat_increments;
-        beat_pixel =
-            _qnToPixel(beat_number, last_bar_qn - start_time_qn, beats_per_second);
+        beat_pixel = _qnToPixel(beat_number, last_bar_qn - start_time_qn, beats_per_second);
     }
 }
 
 float PianoRoll::_qnToPixel(double inQn, double inZeroQn, double inBeatsPerSecond) const
 {
     return static_cast<float>((inQn + inZeroQn) * inBeatsPerSecond * mNumPixelsPerSecond);
+}
+
+void PianoRoll::_drawPlayerPlayhead(Graphics& g)
+{
+    mCurrentPlayerPlayheadTime = mProcessor.getPlayer()->getPlayheadPositionSeconds();
+
+    auto playhead_x = _timeToX((float) mCurrentPlayerPlayheadTime);
+
+    g.drawLine(playhead_x, 0, playhead_x, (float) getHeight(), 2);
 }

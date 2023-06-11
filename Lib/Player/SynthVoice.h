@@ -14,9 +14,11 @@ class SynthVoice : public MPESynthesiserVoice
 public:
     SynthVoice() = default;
 
-    void setCurrentSampleRate(double newRate) override;
+    void setCurrentSampleRate(double inSampleRate) override;
 
     bool isActive() const override;
+
+    int getCurrentMidiNote() const;
 
     void noteStarted() override;
 
@@ -40,7 +42,7 @@ private:
 
     int mCurrentMidiNote = 0;
     float mAmplitude = 1.0f;
-    float mSampleRate = 44100.0f;
+    double mSampleRate = 44100.0;
 };
 
 #endif // SynthVoice_h

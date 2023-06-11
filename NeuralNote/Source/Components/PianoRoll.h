@@ -15,17 +15,20 @@
 class PianoRoll
     : public juce::Component
     , public juce::ChangeListener
+    , public juce::Timer
 {
 public:
-    explicit PianoRoll(NeuralNoteAudioProcessor& processor,
-                       Keyboard& keyboard,
-                       double inNumPixelsPerSecond);
+    explicit PianoRoll(NeuralNoteAudioProcessor& processor, Keyboard& keyboard, double inNumPixelsPerSecond);
 
     void resized() override;
 
     void paint(Graphics& g) override;
 
     void changeListenerCallback(ChangeBroadcaster* source) override;
+
+    void timerCallback() override;
+
+    void mouseDown(const MouseEvent& event) override;
 
 private:
     float _timeToX(float inTime) const;
@@ -58,6 +61,10 @@ private:
     void _drawBeatVerticalLines(Graphics& g);
 
     float _qnToPixel(double inQn, double inZeroQn, double inBeatsPerSecond) const;
+
+    void _drawPlayerPlayhead(Graphics& g);
+
+    double mCurrentPlayerPlayheadTime = 0.0;
 
     const double mNumPixelsPerSecond;
 

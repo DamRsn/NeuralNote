@@ -9,15 +9,15 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     mAudioBufferForMIDITranscription.clear();
 
     mJobLambda = [this]() { _runModel(); };
+
+    mPlayer = std::make_unique<Player>(this);
 }
 
-AudioProcessorValueTreeState::ParameterLayout
-    NeuralNoteAudioProcessor::createParameterLayout()
+AudioProcessorValueTreeState::ParameterLayout NeuralNoteAudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
-    auto mute = std::make_unique<juce::AudioParameterBool>(
-        juce::ParameterID {"MUTE", 1}, "Mute", true);
+    auto mute = std::make_unique<juce::AudioParameterBool>(juce::ParameterID {"MUTE", 1}, "Mute", true);
     params.push_back(std::move(mute));
 
     return {params.begin(), params.end()};
@@ -28,10 +28,11 @@ void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     mDownSampler.prepareToPlay(sampleRate, samplesPerBlock);
 
     mMonoBuffer.setSize(1, samplesPerBlock);
+
+    mPlayer->prepareToPlay(sampleRate, samplesPerBlock);
 }
 
-void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
-                                            juce::MidiBuffer& midiMessages)
+void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused(midiMessages);
     const int num_in_channels = getTotalNumInputChannels();
@@ -70,8 +71,7 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
 
         // If we have reached maximum number of samples that can be processed: stop record and launch processing
-        int num_new_down_samples =
-            mDownSampler.numOutSamplesOnNextProcessBlock(buffer.getNumSamples());
+        int num_new_down_samples = mDownSampler.numOutSamplesOnNextProcessBlock(buffer.getNumSamples());
 
         // If we reach the maximum number of sample that can be gathered,
         // or the playhead has stopped playing if it was at the start of the recording: stop recording.
@@ -94,10 +94,10 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
             }
 
             // Fill buffer with 22050 Hz audio
-            int num_samples_written = mDownSampler.processBlock(
-                mMonoBuffer,
-                mAudioBufferForMIDITranscription.getWritePointer(0, mNumSamplesAcquired),
-                buffer.getNumSamples());
+            int num_samples_written =
+                mDownSampler.processBlock(mMonoBuffer,
+                                          mAudioBufferForMIDITranscription.getWritePointer(0, mNumSamplesAcquired),
+                                          buffer.getNumSamples());
 
             jassert(num_samples_written <= num_new_down_samples);
 
@@ -118,6 +118,8 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     if (isMute)
         buffer.clear();
+
+    mPlayer->processBlock(buffer);
 }
 
 juce::AudioProcessorEditor* NeuralNoteAudioProcessor::createEditor()
@@ -192,20 +194,16 @@ NeuralNoteAudioProcessor::Parameters* NeuralNoteAudioProcessor::getCustomParamet
     return &mParameters;
 }
 
-const juce::Optional<juce::AudioPlayHead::PositionInfo>&
-    NeuralNoteAudioProcessor::getPlayheadInfoOnRecordStart()
+const juce::Optional<juce::AudioPlayHead::PositionInfo>& NeuralNoteAudioProcessor::getPlayheadInfoOnRecordStart()
 {
     return mPlayheadInfoStartRecord;
 }
 
 void NeuralNoteAudioProcessor::_runModel()
 {
-    mBasicPitch.setParameters(mParameters.noteSensibility,
-                              mParameters.splitSensibility,
-                              mParameters.minNoteDurationMs);
+    mBasicPitch.setParameters(mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
 
-    mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
-                                 mNumSamplesAcquired);
+    mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0), mNumSamplesAcquired);
 
     mNoteOptions.setParameters(NoteUtils::RootNote(mParameters.keyRootNote.load()),
                                NoteUtils::ScaleType(mParameters.keyType.load()),
@@ -215,14 +213,17 @@ void NeuralNoteAudioProcessor::_runModel()
 
     auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
-    mRhythmOptions.setParameters(
-        RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
-        mParameters.rhythmQuantizationForce.load());
+    mRhythmOptions.setParameters(RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
+                                 mParameters.rhythmQuantizationForce.load());
 
     mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
     Notes::dropOverlappingPitchBends(mPostProcessedNotes);
     Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
+
+    // For the synth
+    auto single_events = SynthController::buildSingleEventVector(mPostProcessedNotes);
+    mPlayer->getSynthController()->setNewEventVectorToUse(single_events);
 
     mMidiFileTempo = mCurrentTempo.load() > 0 ? mCurrentTempo.load() : 120;
 
@@ -235,9 +236,8 @@ void NeuralNoteAudioProcessor::updateTranscription()
 
     if (mState == PopulatedAudioAndMidiRegions)
     {
-        mBasicPitch.setParameters(mParameters.noteSensibility,
-                                  mParameters.splitSensibility,
-                                  mParameters.minNoteDurationMs);
+        mBasicPitch.setParameters(
+            mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
 
         mBasicPitch.updateMIDI();
         updatePostProcessing();
@@ -258,14 +258,17 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
 
         auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
-        mRhythmOptions.setParameters(
-            RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
-            mParameters.rhythmQuantizationForce.load());
+        mRhythmOptions.setParameters(RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
+                                     mParameters.rhythmQuantizationForce.load());
 
         mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
         Notes::dropOverlappingPitchBends(mPostProcessedNotes);
         Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
+
+        // For the synth
+        auto single_events = SynthController::buildSingleEventVector(mPostProcessedNotes);
+        mPlayer->getSynthController()->setNewEventVectorToUse(single_events);
     }
 }
 
@@ -287,10 +290,8 @@ bool NeuralNoteAudioProcessor::canQuantize() const
 
 std::string NeuralNoteAudioProcessor::getTempoStr() const
 {
-    if (mPlayheadInfoStartRecord.hasValue()
-        && mPlayheadInfoStartRecord->getBpm().hasValue())
-        return std::to_string(
-            static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
+    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getBpm().hasValue())
+        return std::to_string(static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
     else if (mCurrentTempo > 0)
         return std::to_string(static_cast<int>(std::round(mCurrentTempo.load())));
     else
@@ -299,8 +300,7 @@ std::string NeuralNoteAudioProcessor::getTempoStr() const
 
 std::string NeuralNoteAudioProcessor::getTimeSignatureStr() const
 {
-    if (mPlayheadInfoStartRecord.hasValue()
-        && mPlayheadInfoStartRecord->getTimeSignature().hasValue())
+    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getTimeSignature().hasValue())
     {
         int num = mPlayheadInfoStartRecord->getTimeSignature()->numerator;
         int denom = mPlayheadInfoStartRecord->getTimeSignature()->denominator;
@@ -326,6 +326,11 @@ double NeuralNoteAudioProcessor::getMidiFileTempo() const
 bool NeuralNoteAudioProcessor::isJobRunningOrQueued() const
 {
     return mThreadPool.getNumJobs() > 0;
+}
+
+Player* NeuralNoteAudioProcessor::getPlayer()
+{
+    return mPlayer.get();
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

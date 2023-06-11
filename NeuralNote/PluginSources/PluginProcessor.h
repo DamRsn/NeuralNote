@@ -9,6 +9,7 @@
 #include "NoteOptions.h"
 #include "MidiFileWriter.h"
 #include "RhythmOptions.h"
+#include "Player.h"
 
 enum State
 {
@@ -73,8 +74,7 @@ public:
 
     Parameters* getCustomParameters();
 
-    const juce::Optional<juce::AudioPlayHead::PositionInfo>&
-        getPlayheadInfoOnRecordStart();
+    const juce::Optional<juce::AudioPlayHead::PositionInfo>& getPlayheadInfoOnRecordStart();
 
     // Value tree state to pass automatable parameters from UI
     juce::AudioProcessorValueTreeState mTree;
@@ -95,6 +95,8 @@ public:
     double getMidiFileTempo() const;
 
     bool isJobRunningOrQueued() const;
+
+    Player* getPlayer();
 
 private:
     void _runModel();
@@ -124,6 +126,8 @@ private:
 
     std::vector<Notes::Event> mPostProcessedNotes;
 
+    std::unique_ptr<Player> mPlayer;
+
     juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
 
     // Thread pool to run ML in background thread.
@@ -133,6 +137,5 @@ private:
     int mNumSamplesAcquired = 0;
     const double mBasicPitchSampleRate = 22050.0;
     const double mMaxDuration = 3 * 60;
-    const int mMaxNumSamplesToConvert =
-        static_cast<int>(mBasicPitchSampleRate * mMaxDuration);
+    const int mMaxNumSamplesToConvert = static_cast<int>(mBasicPitchSampleRate * mMaxDuration);
 };

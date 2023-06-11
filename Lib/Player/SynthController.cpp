@@ -4,11 +4,12 @@
 
 #include "SynthController.h"
 
-SynthController::SynthController(AudioProcessor* inProcessor)
+SynthController::SynthController(AudioProcessor* inProcessor, MPESynthesiser* inMPESynth)
     : mProcessor(inProcessor)
+    , mSynth(inMPESynth)
 {
-    // Set midi buffer size to 100 elements to avoid allocating memory on audio thread.
-    mMidiBuffer.ensureSize(3 * 100);
+    // Set midi buffer size to 200 elements to avoid allocating memory on audio thread.
+    mMidiBuffer.ensureSize(3 * 200);
 }
 
 std::vector<MidiMessage> SynthController::buildSingleEventVector(const std::vector<Notes::Event>& inNoteEvents)
@@ -39,7 +40,7 @@ std::vector<MidiMessage> SynthController::buildSingleEventVector(const std::vect
 
         // TODO: Use different channels if there's a pitch bend
         out[i++] =
-            MidiMessage::noteOn(0, note_event.pitch, (float) note_event.amplitude).withTimeStamp(note_event.startTime);
+            MidiMessage::noteOn(1, note_event.pitch, (float) note_event.amplitude).withTimeStamp(note_event.startTime);
 
         if (include_bends)
         {
@@ -47,12 +48,12 @@ std::vector<MidiMessage> SynthController::buildSingleEventVector(const std::vect
             {
                 out[i++] =
                     MidiMessage::pitchWheel(
-                        0, MidiMessage::pitchbendToPitchwheelPos(static_cast<float>(note_event.bends[j]) / 3.0f, 2))
+                        1, MidiMessage::pitchbendToPitchwheelPos(static_cast<float>(note_event.bends[j]) / 3.0f, 2))
                         .withTimeStamp(note_event.startTime + double(j) * 0.011);
             }
         }
 
-        out[i++] = MidiMessage::noteOff(0, note_event.pitch).withTimeStamp(note_event.startTime);
+        out[i++] = MidiMessage::noteOff(1, note_event.pitch).withTimeStamp(note_event.endTime);
 
         jassert(i <= num_midi_messages);
     }
@@ -67,7 +68,6 @@ std::vector<MidiMessage> SynthController::buildSingleEventVector(const std::vect
 void SynthController::setNewEventVectorToUse(std::vector<MidiMessage>& inEvents)
 {
     const ScopedLock sl(mProcessor->getCallbackLock());
-
     std::swap(inEvents, mEvents);
     _updateCurrentEventIndex();
     _sanitizeVoices();
@@ -107,29 +107,36 @@ void SynthController::reset()
     mMidiBuffer.clear();
 }
 
-void SynthController::setNewPhase(double inNewTime)
+void SynthController::setNewTimeSeconds(double inNewTime)
 {
     jassert(inNewTime >= 0);
     mCurrentTime = inNewTime;
-    mCurrentEventIndex = static_cast<int>(std::round(inNewTime * mSampleRate));
+    mCurrentSampleIndex = static_cast<int>(std::round(inNewTime * mSampleRate));
+    _updateCurrentEventIndex();
+    _sanitizeVoices();
+}
+
+double SynthController::getCurrentTimeSeconds() const
+{
+    return mCurrentTime;
 }
 
 void SynthController::_sanitizeVoices()
 {
-    // TODO:
     // Insert note off event to avoid hanging notes
-    //    for (auto& voice: mVoices)
-    //    {
-    //        if (voice.isActive())
-    //        {
-    //            auto midi_note = voice.getCurrentNote();
-    //
-    //            if (!_isNextOnOffEventNoteOff(midi_note))
-    //            {
-    //                voice.noteOff();
-    //            }
-    //        }
-    //    }
+    for (int i = 0; i < mSynth->getNumVoices(); i++)
+    {
+        auto* voice = dynamic_cast<SynthVoice*>(mSynth->getVoice(i));
+        if (voice->isActive())
+        {
+            auto midi_note = voice->getCurrentMidiNote();
+
+            if (!_isNextOnOffEventNoteOff(midi_note))
+            {
+                voice->noteStopped(true);
+            }
+        }
+    }
 }
 
 void SynthController::_updateCurrentEventIndex()

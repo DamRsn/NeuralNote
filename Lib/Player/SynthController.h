@@ -5,28 +5,15 @@
 #ifndef SynthController_h
 #define SynthController_h
 
-#include <SynthVoice.h>
+#include <JuceHeader.h>
+
+#include "SynthVoice.h"
 #include "Notes.h"
-
-enum EventType
-{
-    NoteOn,
-    NoteOff,
-    PitchBend
-};
-
-struct SingleEvent
-{
-    double time = 0.0;
-    int midiNote = 0;
-    EventType eventType = NoteOff;
-    float bend = 0.0f;
-};
 
 class SynthController
 {
 public:
-    explicit SynthController(AudioProcessor* inProcessor);
+    SynthController(AudioProcessor* inProcessor, MPESynthesiser* inMPESynth);
 
     void setSampleRate(double inSampleRate);
 
@@ -38,7 +25,9 @@ public:
 
     void reset();
 
-    void setNewPhase(double inNewTime);
+    void setNewTimeSeconds(double inNewTime);
+
+    double getCurrentTimeSeconds() const;
 
 private:
     void _sanitizeVoices();
@@ -48,6 +37,7 @@ private:
     bool _isNextOnOffEventNoteOff(int inMidiNote);
 
     AudioProcessor* mProcessor;
+    MPESynthesiser* mSynth;
 
     MidiBuffer mMidiBuffer;
 
@@ -55,8 +45,8 @@ private:
     size_t mCurrentEventIndex = 0;
 
     unsigned long long mCurrentSampleIndex = 0;
-    double mCurrentTime = 0.0;
-    double mSampleRate;
+    std::atomic<double> mCurrentTime = 0.0;
+    double mSampleRate = 44100;
 };
 
 #endif // SynthController_h
