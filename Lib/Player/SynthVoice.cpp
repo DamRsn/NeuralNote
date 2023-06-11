@@ -65,7 +65,7 @@ void SynthVoice::renderNextBlock(AudioBuffer<float>& outputBuffer, int startSamp
 {
     for (int i = startSample; i < numSamples; i++)
     {
-        float value = mAmplitude * mADSR.getNextSample() * mOsc.processSample(0);
+        float value = 0.25f * mAmplitude * mADSR.getNextSample() * mOsc.processSample(0);
         outputBuffer.addSample(0, i, value);
 
         if (!mADSR.isActive())

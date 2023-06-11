@@ -26,8 +26,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mFileTempo->setFont(LABEL_FONT);
     mFileTempo->setJustification(juce::Justification::centred);
 
-    mFileTempo->setColour(TextEditor::backgroundColourId,
-                          juce::Colours::transparentWhite);
+    mFileTempo->setColour(TextEditor::backgroundColourId, juce::Colours::transparentWhite);
     mFileTempo->setColour(TextEditor::textColourId, BLACK);
     mFileTempo->setColour(TextEditor::outlineColourId, juce::Colours::lightgrey);
     mFileTempo->setColour(TextEditor::focusedOutlineColourId, juce::Colours::grey);
@@ -37,8 +36,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         String correct_tempo_str = String(tempo);
-        correct_tempo_str =
-            correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
+        correct_tempo_str = correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
         mFileTempo->setText(correct_tempo_str);
         mProcessor.setMidiFileTempo(tempo);
     };
@@ -50,25 +48,45 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
 
     mFileTempo->setText(String(mProcessor.getMidiFileTempo()));
     addChildComponent(*mFileTempo);
+
+    mPlayPauseButton.setButtonText("Play");
+    mPlayPauseButton.setClickingTogglesState(true);
+    mPlayPauseButton.setToggleState(false, NotificationType::dontSendNotification);
+    mPlayPauseButton.onClick = [this]()
+    {
+        mProcessor.getPlayer()->setPlayingState(mPlayPauseButton.getToggleState());
+        repaint();
+    };
+    addAndMakeVisible(mPlayPauseButton);
+
+    mResetButton.setButtonText("Reset");
+    mResetButton.setClickingTogglesState(false);
+    mResetButton.onClick = [this]()
+    {
+        mProcessor.getPlayer()->reset();
+        mPlayPauseButton.setToggleState(false, juce::sendNotification);
+        repaint();
+    };
+
+    addAndMakeVisible(mResetButton);
 }
 
 void VisualizationPanel::resized()
 {
-    mKeyboard.setBounds(0,
-                        mCombinedAudioMidiRegion.mPianoRollY,
-                        KEYBOARD_WIDTH,
-                        getHeight() - mCombinedAudioMidiRegion.mPianoRollY);
+    mKeyboard.setBounds(
+        0, mCombinedAudioMidiRegion.mPianoRollY, KEYBOARD_WIDTH, getHeight() - mCombinedAudioMidiRegion.mPianoRollY);
 
-    mAudioMidiViewport.setBounds(
-        KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
+    mAudioMidiViewport.setBounds(KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
 
     mCombinedAudioMidiRegion.setBaseWidth(getWidth() - KEYBOARD_WIDTH);
-    mCombinedAudioMidiRegion.setBounds(
-        KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
+    mCombinedAudioMidiRegion.setBounds(KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
     mCombinedAudioMidiRegion.timerCallback();
 
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
     mFileTempo->setBounds(6, 55, 40, 17);
+
+    mPlayPauseButton.setBounds(getWidth() - 60, mCombinedAudioMidiRegion.mPianoRollY + 20, 40, 20);
+    mResetButton.setBounds(getWidth() - 110, mCombinedAudioMidiRegion.mPianoRollY + 20, 40, 20);
 }
 
 void VisualizationPanel::paint(Graphics& g)
@@ -77,17 +95,12 @@ void VisualizationPanel::paint(Graphics& g)
     {
         g.setColour(WHITE_TRANSPARENT);
         g.fillRoundedRectangle(
-            Rectangle<int>(
-                0, 0, KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight)
-                .toFloat(),
-            4);
+            Rectangle<int>(0, 0, KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight).toFloat(), 4);
 
         g.setColour(BLACK);
         g.setFont(LABEL_FONT);
-        g.drawFittedText("MIDI\nFILE\nTEMPO",
-                         Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55),
-                         juce::Justification::centred,
-                         3);
+        g.drawFittedText(
+            "MIDI\nFILE\nTEMPO", Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55), juce::Justification::centred, 3);
     }
 }
 

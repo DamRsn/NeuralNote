@@ -23,9 +23,13 @@ public:
 
     void reset();
 
+    void setPlayheadPositionSeconds(double inNewPosition);
+
     double getPlayheadPositionSeconds() const;
 
     SynthController* getSynthController();
+
+    static constexpr int NUM_VOICES_SYNTH = 16;
 
 private:
     std::atomic<bool> mIsPlaying = false;

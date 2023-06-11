@@ -11,36 +11,12 @@ CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& proce
 {
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
-
-    mPlayPauseButton.setButtonText("Play");
-    mPlayPauseButton.setClickingTogglesState(true);
-    mPlayPauseButton.setToggleState(false, NotificationType::dontSendNotification);
-    mPlayPauseButton.onClick = [this]()
-    {
-        mProcessor.getPlayer()->setPlayingState(mPlayPauseButton.getToggleState());
-        repaint();
-    };
-    addAndMakeVisible(mPlayPauseButton);
-
-    mResetButton.setButtonText("Reset");
-    mResetButton.setClickingTogglesState(false);
-    mResetButton.onClick = [this]()
-    {
-        mProcessor.getPlayer()->reset();
-        mPlayPauseButton.setToggleState(false, juce::sendNotification);
-        repaint();
-    };
-
-    addAndMakeVisible(mResetButton);
 }
 
 void CombinedAudioMidiRegion::resized()
 {
     mAudioRegion.setBounds(0, 0, getWidth(), mAudioRegionHeight);
     mPianoRoll.setBounds(0, mPianoRollY, getWidth(), getHeight() - mPianoRollY);
-
-    mPlayPauseButton.setBounds(getWidth() - 60, mPianoRollY + 20, 40, 20);
-    mResetButton.setBounds(getWidth() - 110, mPianoRollY + 20, 40, 20);
 }
 
 void CombinedAudioMidiRegion::paint(Graphics& g)

@@ -68,10 +68,10 @@ void PianoRoll::paint(Graphics& g)
                 continue;
 
             g.setColour(mNoteGradient.getColourAtPosition(note_event.amplitude));
-            g.fillRect(_timeToX(start), note_y_start, _timeToX(end) - _timeToX(start), note_height);
+            g.fillRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height);
 
             g.setColour(juce::Colours::black);
-            g.drawRect(_timeToX(start), note_y_start, _timeToX(end) - _timeToX(start), note_height, 0.5);
+            g.drawRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height, 0.5);
 
             // Draw pitch bend
             if (mProcessor.getCustomParameters()->pitchBendMode == SinglePitchBend)
@@ -84,14 +84,14 @@ void PianoRoll::paint(Graphics& g)
                     Path p;
                     float y_ref_pb = note_y_start + note_height / 2.0f;
 
-                    p.startNewSubPath(_timeToX(start), y_ref_pb);
+                    p.startNewSubPath(_timeToPixel(start), y_ref_pb);
 
                     for (size_t i = 0; i < bends.size(); i++)
                     {
-                        p.lineTo(_timeToX(float(start + double(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
+                        p.lineTo(_timeToPixel(float(start + double(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
                                  y_ref_pb - float(bends[i]) * note_height / 3.0f);
                     }
-                    p.lineTo(_timeToX(float(note_event.endTime)), y_ref_pb);
+                    p.lineTo(_timeToPixel(float(note_event.endTime)), y_ref_pb);
 
                     g.setColour(WHITE_SOLID);
                     g.strokePath(p, path_stroke_type);
@@ -128,11 +128,18 @@ void PianoRoll::timerCallback()
 void PianoRoll::mouseDown(const MouseEvent& event)
 {
     Component::mouseDown(event);
+
+    mProcessor.getPlayer()->setPlayheadPositionSeconds(_pixelToTime((float) event.x));
 }
 
-float PianoRoll::_timeToX(float inTime) const
+float PianoRoll::_timeToPixel(float inTime) const
 {
     return inTime * static_cast<float>(mNumPixelsPerSecond);
+}
+
+float PianoRoll::_pixelToTime(float inPixel) const
+{
+    return inPixel / static_cast<float>(mNumPixelsPerSecond);
 }
 
 std::pair<float, float> PianoRoll::_getNoteHeightAndWidthPianoRoll(int inNote) const
@@ -226,7 +233,8 @@ void PianoRoll::_drawPlayerPlayhead(Graphics& g)
 {
     mCurrentPlayerPlayheadTime = mProcessor.getPlayer()->getPlayheadPositionSeconds();
 
-    auto playhead_x = _timeToX((float) mCurrentPlayerPlayheadTime);
+    auto playhead_x = _timeToPixel((float) mCurrentPlayerPlayheadTime);
 
-    g.drawLine(playhead_x, 0, playhead_x, (float) getHeight(), 2);
+    g.setColour(juce::Colours::white);
+    g.drawLine(playhead_x, 0, playhead_x, (float) getHeight(), 1);
 }

@@ -42,6 +42,9 @@ private:
     CombinedAudioMidiRegion mCombinedAudioMidiRegion;
     MidiFileDrag mMidiFileDrag;
 
+    juce::TextButton mPlayPauseButton;
+    juce::TextButton mResetButton;
+
     std::unique_ptr<juce::TextEditor> mFileTempo;
 };
 

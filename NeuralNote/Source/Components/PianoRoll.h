@@ -31,7 +31,9 @@ public:
     void mouseDown(const MouseEvent& event) override;
 
 private:
-    float _timeToX(float inTime) const;
+    float _timeToPixel(float inTime) const;
+
+    float _pixelToTime(float inPixel) const;
 
     /**
      * Compute rectangle y start and height to draw inNote on piano roll

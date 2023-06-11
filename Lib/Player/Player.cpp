@@ -9,7 +9,7 @@ Player::Player(AudioProcessor* inProcessor)
     mSynth = std::make_unique<MPESynthesiser>();
     mSynth->setCurrentPlaybackSampleRate(44100);
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < NUM_VOICES_SYNTH; i++)
     {
         mSynth->addVoice(new SynthVoice());
     }
@@ -33,8 +33,12 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
     }
     else
     {
-        MidiBuffer empty_midi_buffer;
-        mSynth->renderNextBlock(inAudioBuffer, empty_midi_buffer, 0, inAudioBuffer.getNumSamples());
+        mSynth->renderNextBlock(inAudioBuffer, {}, 0, inAudioBuffer.getNumSamples());
+    }
+
+    for (int ch = 1; ch < inAudioBuffer.getNumChannels(); ch++)
+    {
+        inAudioBuffer.copyFrom(ch, 0, inAudioBuffer, 0, 0, inAudioBuffer.getNumSamples());
     }
 }
 
@@ -55,6 +59,11 @@ void Player::reset()
 double Player::getPlayheadPositionSeconds() const
 {
     return mSynthController->getCurrentTimeSeconds();
+}
+
+void Player::setPlayheadPositionSeconds(double inNewPosition)
+{
+    mSynthController->setNewTimeSeconds(inNewPosition);
 }
 
 SynthController* Player::getSynthController()

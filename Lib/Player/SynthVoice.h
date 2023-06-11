@@ -37,8 +37,8 @@ public:
 private:
     juce::ADSR mADSR;
     juce::ADSR::Parameters mADSRParameters = {0.01f, 0.1f, 0.9f, 0.1};
-    juce::dsp::Oscillator<float> mOsc =
-        juce::dsp::Oscillator<float>([](float inPhase) { return std::sin(inPhase); }, 0);
+    juce::dsp::Oscillator<float> mOsc = juce::dsp::Oscillator<float>(
+        [](float inPhase) { return std::sin(inPhase) + 0.6 * std::sin(2 * inPhase) - 0.4 * std::sin(3 * inPhase); }, 0);
 
     int mCurrentMidiNote = 0;
     float mAmplitude = 1.0f;

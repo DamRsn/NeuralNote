@@ -53,9 +53,6 @@ public:
 private:
     NeuralNoteAudioProcessor& mProcessor;
 
-    juce::TextButton mPlayPauseButton;
-    juce::TextButton mResetButton;
-
     juce::Viewport* mViewportPtr = nullptr;
 
     int mBaseWidth = 0;
