@@ -9,44 +9,39 @@ using json = nlohmann::json;
 BasicPitchCNN::BasicPitchCNN()
 {
     json json_cnn_contour = json::parse(BinaryData::cnn_contour_model_json,
-                                        BinaryData::cnn_contour_model_json
-                                            + BinaryData::cnn_contour_model_jsonSize);
+                                        BinaryData::cnn_contour_model_json + BinaryData::cnn_contour_model_jsonSize);
 
     mCNNContour.parseJson(json_cnn_contour);
 
     json json_cnn_note = json::parse(BinaryData::cnn_note_model_json,
-                                     BinaryData::cnn_note_model_json
-                                         + BinaryData::cnn_note_model_jsonSize);
+                                     BinaryData::cnn_note_model_json + BinaryData::cnn_note_model_jsonSize);
 
     mCNNNote.parseJson(json_cnn_note);
 
-    json json_cnn_onset_input = json::parse(BinaryData::cnn_onset_1_model_json,
-                                            BinaryData::cnn_onset_1_model_json
-                                                + BinaryData::cnn_onset_1_model_jsonSize);
+    json json_cnn_onset_input =
+        json::parse(BinaryData::cnn_onset_1_model_json,
+                    BinaryData::cnn_onset_1_model_json + BinaryData::cnn_onset_1_model_jsonSize);
 
     mCNNOnsetInput.parseJson(json_cnn_onset_input);
 
-    json json_cnn_onset_output = json::parse(
-        BinaryData::cnn_onset_2_model_json,
-        BinaryData::cnn_onset_2_model_json + BinaryData::cnn_onset_2_model_jsonSize);
+    json json_cnn_onset_output =
+        json::parse(BinaryData::cnn_onset_2_model_json,
+                    BinaryData::cnn_onset_2_model_json + BinaryData::cnn_onset_2_model_jsonSize);
 
     mCNNOnsetOutput.parseJson(json_cnn_onset_output);
 }
 
 void BasicPitchCNN::reset()
 {
-    for (auto& array: mContoursCircularBuffer)
-    {
+    for (auto& array: mContoursCircularBuffer) {
         array.fill(0.0f);
     }
 
-    for (auto& array: mNotesCircularBuffer)
-    {
+    for (auto& array: mNotesCircularBuffer) {
         array.fill(0.0f);
     }
 
-    for (auto& array: mConcat2CircularBuffer)
-    {
+    for (auto& array: mConcat2CircularBuffer) {
         array.fill(0.0f);
     }
 
@@ -83,21 +78,15 @@ void BasicPitchCNN::frameInference(const float* inData,
     _runModels();
 
     // Fill output vectors
-    std::copy(mCNNOnsetOutput.getOutputs(),
-              mCNNOnsetOutput.getOutputs() + NUM_FREQ_OUT,
-              outOnsets.begin());
+    std::copy(mCNNOnsetOutput.getOutputs(), mCNNOnsetOutput.getOutputs() + NUM_FREQ_OUT, outOnsets.begin());
 
-    std::copy(
-        mNotesCircularBuffer[(size_t) _wrapIndex(mNoteIdx + 1, mNumNoteStored)].begin(),
-        mNotesCircularBuffer[(size_t) _wrapIndex(mNoteIdx + 1, mNumNoteStored)].end(),
-        outNotes.begin());
+    std::copy(mNotesCircularBuffer[(size_t) _wrapIndex(mNoteIdx + 1, mNumNoteStored)].begin(),
+              mNotesCircularBuffer[(size_t) _wrapIndex(mNoteIdx + 1, mNumNoteStored)].end(),
+              outNotes.begin());
 
-    std::copy(
-        mContoursCircularBuffer[(size_t) _wrapIndex(mContourIdx + 1, mNumContourStored)]
-            .begin(),
-        mContoursCircularBuffer[(size_t) _wrapIndex(mContourIdx + 1, mNumContourStored)]
-            .end(),
-        outContours.begin());
+    std::copy(mContoursCircularBuffer[(size_t) _wrapIndex(mContourIdx + 1, mNumContourStored)].begin(),
+              mContoursCircularBuffer[(size_t) _wrapIndex(mContourIdx + 1, mNumContourStored)].end(),
+              outContours.begin());
 
     // Increment index for different circular buffers
     mContourIdx = (mContourIdx == mNumContourStored - 1) ? 0 : mContourIdx + 1;
@@ -119,9 +108,8 @@ void BasicPitchCNN::_runModels()
               mContoursCircularBuffer[(size_t) mContourIdx].begin());
 
     mCNNNote.forward(mCNNContour.getOutputs());
-    std::copy(mCNNNote.getOutputs(),
-              mCNNNote.getOutputs() + NUM_FREQ_OUT,
-              mNotesCircularBuffer[(size_t) mNoteIdx].begin());
+    std::copy(
+        mCNNNote.getOutputs(), mCNNNote.getOutputs() + NUM_FREQ_OUT, mNotesCircularBuffer[(size_t) mNoteIdx].begin());
 
     // Concat operation with correct frame shift
     _concat();
@@ -133,8 +121,7 @@ constexpr int BasicPitchCNN::_wrapIndex(int inIndex, int inSize)
 {
     int wrapped_index = inIndex % inSize;
 
-    if (wrapped_index < 0)
-    {
+    if (wrapped_index < 0) {
         wrapped_index += inSize;
     }
 
@@ -145,8 +132,7 @@ void BasicPitchCNN::_concat()
 {
     auto concat2_index = (size_t) _wrapIndex(mConcat2Idx + 1, mNumConcat2Stored);
 
-    for (size_t i = 0; i < NUM_FREQ_OUT; i++)
-    {
+    for (size_t i = 0; i < NUM_FREQ_OUT; i++) {
         mConcatArray[i * 33] = mCNNNote.getOutputs()[i];
         std::copy(mConcat2CircularBuffer[concat2_index].begin() + i * 32,
                   mConcat2CircularBuffer[concat2_index].begin() + (i + 1) * 32,

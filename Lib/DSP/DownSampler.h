@@ -18,9 +18,7 @@ public:
 
     void reset();
 
-    int processBlock(const juce::AudioBuffer<float>& inBuffer,
-                     float* outBuffer,
-                     int inNumSamples);
+    int processBlock(const juce::AudioBuffer<float>& inBuffer, float* outBuffer, int inNumSamples);
 
     int numOutSamplesOnNextProcessBlock(int inNumSamples);
 

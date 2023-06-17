@@ -93,11 +93,11 @@ juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 add_library(BasicPitchCNN STATIC ${CMAKE_CURRENT_LIST_DIR}/Lib/Model/BasicPitchCNN.cpp)
 target_include_directories(BasicPitchCNN PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/RTNeural)
 if ((CMAKE_BUILD_TYPE STREQUAL "Debug") AND RTNeural_Release)
-	if (MSVC)
-	    target_compile_options(BasicPitchCNN PUBLIC /O2) # or maybe /Ox
-	else () # clang or gcc
-	    target_compile_options(BasicPitchCNN PUBLIC -O3) # or maybe -Ofast
-	endif ()
+    if (MSVC)
+        target_compile_options(BasicPitchCNN PUBLIC /O2) # or maybe /Ox
+    else () # clang or gcc
+        target_compile_options(BasicPitchCNN PUBLIC -O3) # or maybe -Ofast
+    endif ()
 endif ()
 target_link_libraries(BasicPitchCNN PUBLIC RTNeural bin_data)
 

@@ -11,13 +11,11 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     mJobLambda = [this]() { _runModel(); };
 }
 
-AudioProcessorValueTreeState::ParameterLayout
-    NeuralNoteAudioProcessor::createParameterLayout()
+AudioProcessorValueTreeState::ParameterLayout NeuralNoteAudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
-    auto mute = std::make_unique<juce::AudioParameterBool>(
-        juce::ParameterID {"MUTE", 1}, "Mute", true);
+    auto mute = std::make_unique<juce::AudioParameterBool>(juce::ParameterID {"MUTE", 1}, "Mute", true);
     params.push_back(std::move(mute));
 
     return {params.begin(), params.end()};
@@ -30,39 +28,31 @@ void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     mMonoBuffer.setSize(1, samplesPerBlock);
 }
 
-void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
-                                            juce::MidiBuffer& midiMessages)
+void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused(midiMessages);
     const int num_in_channels = getTotalNumInputChannels();
 
     // Get tempo and time signature for UI.
     auto playhead_info = getPlayHead()->getPosition();
-    if (playhead_info.hasValue())
-    {
+    if (playhead_info.hasValue()) {
         if (playhead_info->getBpm().hasValue())
             mCurrentTempo = *playhead_info->getBpm();
-        if (playhead_info->getTimeSignature().hasValue())
-        {
+        if (playhead_info->getTimeSignature().hasValue()) {
             mCurrentTimeSignatureNum = playhead_info->getTimeSignature()->numerator;
             mCurrentTimeSignatureDenom = playhead_info->getTimeSignature()->denominator;
         }
     }
 
-    if (mState.load() == Recording)
-    {
-        if (!mWasRecording)
-        {
+    if (mState.load() == Recording) {
+        if (!mWasRecording) {
             mDownSampler.reset();
             mWasRecording = true;
             mPlayheadInfoStartRecord = getPlayHead()->getPosition();
 
-            if (mPlayheadInfoStartRecord.hasValue())
-            {
+            if (mPlayheadInfoStartRecord.hasValue()) {
                 mIsPlayheadPlaying = mPlayheadInfoStartRecord->getIsPlaying();
-            }
-            else
-            {
+            } else {
                 mIsPlayheadPlaying = false;
             }
 
@@ -70,45 +60,37 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
 
         // If we have reached maximum number of samples that can be processed: stop record and launch processing
-        int num_new_down_samples =
-            mDownSampler.numOutSamplesOnNextProcessBlock(buffer.getNumSamples());
+        int num_new_down_samples = mDownSampler.numOutSamplesOnNextProcessBlock(buffer.getNumSamples());
 
         // If we reach the maximum number of sample that can be gathered,
         // or the playhead has stopped playing if it was at the start of the recording: stop recording.
         if (mNumSamplesAcquired + num_new_down_samples >= mMaxNumSamplesToConvert
-            || (mIsPlayheadPlaying && !getPlayHead()->getPosition()->getIsPlaying()))
-        {
+            || (mIsPlayheadPlaying && !getPlayHead()->getPosition()->getIsPlaying())) {
             mWasRecording = false;
             setStateToProcessing();
             launchTranscribeJob();
-        }
-        else
-        {
+        } else {
             mMonoBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples());
 
-            if (num_in_channels == 2)
-            {
+            if (num_in_channels == 2) {
                 // Down-mix to mono
                 mMonoBuffer.addFrom(0, 0, buffer, 1, 0, buffer.getNumSamples());
                 buffer.applyGain(1.0f / static_cast<float>(num_in_channels));
             }
 
             // Fill buffer with 22050 Hz audio
-            int num_samples_written = mDownSampler.processBlock(
-                mMonoBuffer,
-                mAudioBufferForMIDITranscription.getWritePointer(0, mNumSamplesAcquired),
-                buffer.getNumSamples());
+            int num_samples_written =
+                mDownSampler.processBlock(mMonoBuffer,
+                                          mAudioBufferForMIDITranscription.getWritePointer(0, mNumSamplesAcquired),
+                                          buffer.getNumSamples());
 
             jassert(num_samples_written <= num_new_down_samples);
 
             mNumSamplesAcquired += num_samples_written;
         }
-    }
-    else
-    {
+    } else {
         // If we were previously recording but not anymore (user clicked record button to stop it).
-        if (mWasRecording)
-        {
+        if (mWasRecording) {
             mWasRecording = false;
             launchTranscribeJob();
         }
@@ -172,12 +154,9 @@ void NeuralNoteAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
 void NeuralNoteAudioProcessor::launchTranscribeJob()
 {
     jassert(mState.load() == Processing);
-    if (mNumSamplesAcquired >= 1 * AUDIO_SAMPLE_RATE)
-    {
+    if (mNumSamplesAcquired >= 1 * AUDIO_SAMPLE_RATE) {
         mThreadPool.addJob(mJobLambda);
-    }
-    else
-    {
+    } else {
         clear();
     }
 }
@@ -192,20 +171,16 @@ NeuralNoteAudioProcessor::Parameters* NeuralNoteAudioProcessor::getCustomParamet
     return &mParameters;
 }
 
-const juce::Optional<juce::AudioPlayHead::PositionInfo>&
-    NeuralNoteAudioProcessor::getPlayheadInfoOnRecordStart()
+const juce::Optional<juce::AudioPlayHead::PositionInfo>& NeuralNoteAudioProcessor::getPlayheadInfoOnRecordStart()
 {
     return mPlayheadInfoStartRecord;
 }
 
 void NeuralNoteAudioProcessor::_runModel()
 {
-    mBasicPitch.setParameters(mParameters.noteSensibility,
-                              mParameters.splitSensibility,
-                              mParameters.minNoteDurationMs);
+    mBasicPitch.setParameters(mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
 
-    mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0),
-                                 mNumSamplesAcquired);
+    mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0), mNumSamplesAcquired);
 
     mNoteOptions.setParameters(NoteUtils::RootNote(mParameters.keyRootNote.load()),
                                NoteUtils::ScaleType(mParameters.keyType.load()),
@@ -215,9 +190,8 @@ void NeuralNoteAudioProcessor::_runModel()
 
     auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
-    mRhythmOptions.setParameters(
-        RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
-        mParameters.rhythmQuantizationForce.load());
+    mRhythmOptions.setParameters(RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
+                                 mParameters.rhythmQuantizationForce.load());
 
     mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
@@ -233,11 +207,9 @@ void NeuralNoteAudioProcessor::updateTranscription()
 {
     jassert(mState == PopulatedAudioAndMidiRegions);
 
-    if (mState == PopulatedAudioAndMidiRegions)
-    {
-        mBasicPitch.setParameters(mParameters.noteSensibility,
-                                  mParameters.splitSensibility,
-                                  mParameters.minNoteDurationMs);
+    if (mState == PopulatedAudioAndMidiRegions) {
+        mBasicPitch.setParameters(
+            mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
 
         mBasicPitch.updateMIDI();
         updatePostProcessing();
@@ -248,8 +220,7 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
 {
     jassert(mState == PopulatedAudioAndMidiRegions);
 
-    if (mState == PopulatedAudioAndMidiRegions)
-    {
+    if (mState == PopulatedAudioAndMidiRegions) {
         mNoteOptions.setParameters(NoteUtils::RootNote(mParameters.keyRootNote.load()),
                                    NoteUtils::ScaleType(mParameters.keyType.load()),
                                    NoteUtils::SnapMode(mParameters.keySnapMode.load()),
@@ -258,9 +229,8 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
 
         auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
-        mRhythmOptions.setParameters(
-            RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
-            mParameters.rhythmQuantizationForce.load());
+        mRhythmOptions.setParameters(RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
+                                     mParameters.rhythmQuantizationForce.load());
 
         mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
@@ -287,10 +257,8 @@ bool NeuralNoteAudioProcessor::canQuantize() const
 
 std::string NeuralNoteAudioProcessor::getTempoStr() const
 {
-    if (mPlayheadInfoStartRecord.hasValue()
-        && mPlayheadInfoStartRecord->getBpm().hasValue())
-        return std::to_string(
-            static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
+    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getBpm().hasValue())
+        return std::to_string(static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
     else if (mCurrentTempo > 0)
         return std::to_string(static_cast<int>(std::round(mCurrentTempo.load())));
     else
@@ -299,14 +267,11 @@ std::string NeuralNoteAudioProcessor::getTempoStr() const
 
 std::string NeuralNoteAudioProcessor::getTimeSignatureStr() const
 {
-    if (mPlayheadInfoStartRecord.hasValue()
-        && mPlayheadInfoStartRecord->getTimeSignature().hasValue())
-    {
+    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getTimeSignature().hasValue()) {
         int num = mPlayheadInfoStartRecord->getTimeSignature()->numerator;
         int denom = mPlayheadInfoStartRecord->getTimeSignature()->denominator;
         return std::to_string(num) + " / " + std::to_string(denom);
-    }
-    else if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0)
+    } else if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0)
         return std::to_string(mCurrentTimeSignatureNum.load()) + " / "
                + std::to_string(mCurrentTimeSignatureDenom.load());
     else

@@ -4,8 +4,7 @@
 
 #include "CombinedAudioMidiRegion.h"
 
-CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor,
-                                                 Keyboard& keyboard)
+CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor, Keyboard& keyboard)
     : mProcessor(processor)
     , mAudioRegion(processor)
     , mPianoRoll(processor, keyboard, mNumPixelsPerSecond)
@@ -39,8 +38,7 @@ void CombinedAudioMidiRegion::timerCallback()
 
 bool CombinedAudioMidiRegion::isInterestedInFileDrag(const StringArray& files)
 {
-    return mProcessor.getState() == EmptyAudioAndMidiRegions
-           || mProcessor.getState() == PopulatedAudioAndMidiRegions;
+    return mProcessor.getState() == EmptyAudioAndMidiRegions || mProcessor.getState() == PopulatedAudioAndMidiRegions;
 }
 
 void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int y)
@@ -51,8 +49,7 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
 
     bool success = mAudioRegion.onFileDrop(files[0]);
 
-    if (success)
-    {
+    if (success) {
         resizeAccordingToNumSamplesAvailable();
         mAudioRegion.updateThumbnail();
     }
@@ -86,8 +83,8 @@ void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
 {
     int num_samples_available = mProcessor.getNumSamplesAcquired();
 
-    int thumbnail_width = static_cast<int>(std::round(
-        (num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE));
+    int thumbnail_width =
+        static_cast<int>(std::round((num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE));
 
     int new_width = std::max(mBaseWidth, thumbnail_width);
 
@@ -103,23 +100,19 @@ void CombinedAudioMidiRegion::setViewportPtr(juce::Viewport* inViewportPtr)
 
 void CombinedAudioMidiRegion::mouseDown(const juce::MouseEvent& e)
 {
-    if (!(isInterestedInFileDrag({})
-          && e.originalComponent == &mAudioRegion))
+    if (!(isInterestedInFileDrag({}) && e.originalComponent == &mAudioRegion))
         return;
 
     mFileChooser = std::make_shared<juce::FileChooser>(
         "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
-    mFileChooser->launchAsync(juce::FileBrowserComponent::openMode
-                                  | juce::FileBrowserComponent::canSelectFiles,
-                              [this](const juce::FileChooser& fc)
-                              {
+    mFileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                              [this](const juce::FileChooser& fc) {
                                   if (fc.getResults().isEmpty())
                                       return;
 
                                   bool success = mAudioRegion.onFileDrop(fc.getResult());
 
-                                  if (success)
-                                  {
+                                  if (success) {
                                       resizeAccordingToNumSamplesAvailable();
                                       mAudioRegion.updateThumbnail();
                                   }

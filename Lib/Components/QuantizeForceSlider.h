@@ -13,8 +13,7 @@
 class QuantizeForceSlider : public Component
 {
 public:
-    QuantizeForceSlider(std::atomic<float>& inAttachedMaxValue,
-                        const std::function<void()>& inOnValueChange);
+    QuantizeForceSlider(std::atomic<float>& inAttachedMaxValue, const std::function<void()>& inOnValueChange);
 
     void resized() override;
 

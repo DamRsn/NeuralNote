@@ -10,19 +10,12 @@
 #include "MidiFileWriter.h"
 #include "RhythmOptions.h"
 
-enum State
-{
-    EmptyAudioAndMidiRegions = 0,
-    Recording,
-    Processing,
-    PopulatedAudioAndMidiRegions
-};
+enum State { EmptyAudioAndMidiRegions = 0, Recording, Processing, PopulatedAudioAndMidiRegions };
 
 class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
 {
 public:
-    struct Parameters
-    {
+    struct Parameters {
         std::atomic<float> noteSensibility = 0.7;
         std::atomic<float> splitSensibility = 0.5;
         std::atomic<float> minNoteDurationMs = 125;
@@ -73,8 +66,7 @@ public:
 
     Parameters* getCustomParameters();
 
-    const juce::Optional<juce::AudioPlayHead::PositionInfo>&
-        getPlayheadInfoOnRecordStart();
+    const juce::Optional<juce::AudioPlayHead::PositionInfo>& getPlayheadInfoOnRecordStart();
 
     // Value tree state to pass automatable parameters from UI
     juce::AudioProcessorValueTreeState mTree;
@@ -133,6 +125,5 @@ private:
     int mNumSamplesAcquired = 0;
     const double mBasicPitchSampleRate = 22050.0;
     const double mMaxDuration = 3 * 60;
-    const int mMaxNumSamplesToConvert =
-        static_cast<int>(mBasicPitchSampleRate * mMaxDuration);
+    const int mMaxNumSamplesToConvert = static_cast<int>(mBasicPitchSampleRate * mMaxDuration);
 };

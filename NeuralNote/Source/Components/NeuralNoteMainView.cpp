@@ -19,18 +19,14 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mRecordButton->setColour(TextButton::ColourIds::buttonOnColourId, BLACK);
     mRecordButton->setColour(TextButton::ColourIds::textColourOnId, RECORD_RED);
 
-    mRecordButton->onClick = [this]()
-    {
+    mRecordButton->onClick = [this]() {
         bool is_on = mRecordButton->getToggleState();
 
         // Recording started
-        if (is_on)
-        {
+        if (is_on) {
             mVisualizationPanel.startTimerHzAudioThumbnail(10);
             mProcessor.setStateToRecording();
-        }
-        else
-        {
+        } else {
             // Recording has ended, set processor state to processing
             mProcessor.setStateToProcessing();
             mVisualizationPanel.stopTimerAudioThumbnail();
@@ -39,8 +35,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
         updateEnablements();
     };
 
-    mRecordButton->setToggleState(mProcessor.getState() == Recording,
-                                  juce::NotificationType::dontSendNotification);
+    mRecordButton->setToggleState(mProcessor.getState() == Recording, juce::NotificationType::dontSendNotification);
 
     addAndMakeVisible(*mRecordButton);
 
@@ -50,8 +45,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mClearButton->setColour(TextButton::ColourIds::buttonOnColourId, BLACK);
     mClearButton->setColour(TextButton::ColourIds::buttonColourId, WHITE_TRANSPARENT);
     mClearButton->setColour(TextButton::ColourIds::textColourOffId, BLACK);
-    mClearButton->onClick = [this]()
-    {
+    mClearButton->onClick = [this]() {
         mProcessor.clear();
         mVisualizationPanel.clear();
         updateEnablements();
@@ -62,13 +56,11 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mMuteButton->setButtonText("");
     mMuteButton->setClickingTogglesState(true);
 
-    mMuteButton->setColour(juce::TextButton::buttonColourId,
-                           juce::Colours::white.withAlpha(0.2f));
+    mMuteButton->setColour(juce::TextButton::buttonColourId, juce::Colours::white.withAlpha(0.2f));
     mMuteButton->setColour(juce::TextButton::buttonOnColourId, BLACK);
 
     mMuteButtonAttachment =
-        std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
-            mProcessor.mTree, "MUTE", *mMuteButton);
+        std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(mProcessor.mTree, "MUTE", *mMuteButton);
     addAndMakeVisible(*mMuteButton);
 
     addAndMakeVisible(mVisualizationPanel);
@@ -100,44 +92,34 @@ void NeuralNoteMainView::resized()
 
 void NeuralNoteMainView::paint(Graphics& g)
 {
-    auto background_image = juce::ImageCache::getFromMemory(
-        BinaryData::background_png, BinaryData::background_pngSize);
+    auto background_image = juce::ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
 
     g.drawImage(background_image, getLocalBounds().toFloat());
     g.setFont(LABEL_FONT);
-    g.drawFittedText("MUTE OUT",
-                     juce::Rectangle<int>(939, 63, 31, 23),
-                     juce::Justification::centred,
-                     2);
+    g.drawFittedText("MUTE OUT", juce::Rectangle<int>(939, 63, 31, 23), juce::Justification::centred, 2);
 }
 
 void NeuralNoteMainView::timerCallback()
 {
     auto processor_state = mProcessor.getState();
-    if (mRecordButton->getToggleState() && processor_state != Recording)
-    {
+    if (mRecordButton->getToggleState() && processor_state != Recording) {
         mRecordButton->setToggleState(false, juce::sendNotification);
         mVisualizationPanel.stopTimerAudioThumbnail();
         updateEnablements();
     }
 
-    if (mPrevState != processor_state)
-    {
+    if (mPrevState != processor_state) {
         mPrevState = processor_state;
         updateEnablements();
     }
 
     // To avoid getting stuck in processing mode if processBlock is not called anymore and recording is over (can happen in some DAWs).
-    if (mProcessor.getState() == Processing && !mProcessor.isJobRunningOrQueued())
-    {
+    if (mProcessor.getState() == Processing && !mProcessor.isJobRunningOrQueued()) {
         mNumCallbacksStuckInProcessingState += 1;
-        if (mNumCallbacksStuckInProcessingState >= 10)
-        {
+        if (mNumCallbacksStuckInProcessingState >= 10) {
             mProcessor.launchTranscribeJob();
         }
-    }
-    else
-    {
+    } else {
         mNumCallbacksStuckInProcessingState = 0;
     }
 }
@@ -152,33 +134,26 @@ void NeuralNoteMainView::updateEnablements()
     auto current_state = mProcessor.getState();
     mPrevState = current_state;
 
-    if (current_state == EmptyAudioAndMidiRegions)
-    {
+    if (current_state == EmptyAudioAndMidiRegions) {
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
         mQuantizePanel.setEnabled(false);
-    }
-    else if (current_state == Recording)
-    {
+    } else if (current_state == Recording) {
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
         mQuantizePanel.setEnabled(false);
         mVisualizationPanel.startTimerHzAudioThumbnail(10);
-    }
-    else if (current_state == Processing)
-    {
+    } else if (current_state == Processing) {
         mRecordButton->setEnabled(false);
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
         mQuantizePanel.setEnabled(false);
-    }
-    else if (current_state == PopulatedAudioAndMidiRegions)
-    {
+    } else if (current_state == PopulatedAudioAndMidiRegions) {
         mRecordButton->setEnabled(false);
         mClearButton->setEnabled(true);
         mTranscriptionOptions.setEnabled(true);

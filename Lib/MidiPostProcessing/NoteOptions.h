@@ -14,11 +14,8 @@ using namespace NoteUtils;
 class NoteOptions
 {
 public:
-    void setParameters(RootNote inRootNote,
-                       ScaleType inScaleType,
-                       SnapMode inSnapMode,
-                       int inMinMidiNote,
-                       int inMaxMidiNote);
+    void setParameters(
+        RootNote inRootNote, ScaleType inScaleType, SnapMode inSnapMode, int inMinMidiNote, int inMaxMidiNote);
 
     std::vector<Notes::Event> process(const std::vector<Notes::Event>& inNoteEvents);
 
@@ -33,9 +30,7 @@ private:
 
     static bool _isInKey(int inMidiNote, const std::array<int, 7>& inKeyArray);
 
-    static int _getClosestMidiNoteInKey(int inMidiNote,
-                                        const std::array<int, 7>& inKeyArray,
-                                        bool inAdjustUp);
+    static int _getClosestMidiNoteInKey(int inMidiNote, const std::array<int, 7>& inKeyArray, bool inAdjustUp);
 
     static int _rootNoteToNoteIdx(RootNote inRootNote);
 

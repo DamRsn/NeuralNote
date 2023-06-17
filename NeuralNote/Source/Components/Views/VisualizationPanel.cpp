@@ -26,24 +26,20 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mFileTempo->setFont(LABEL_FONT);
     mFileTempo->setJustification(juce::Justification::centred);
 
-    mFileTempo->setColour(TextEditor::backgroundColourId,
-                          juce::Colours::transparentWhite);
+    mFileTempo->setColour(TextEditor::backgroundColourId, juce::Colours::transparentWhite);
     mFileTempo->setColour(TextEditor::textColourId, BLACK);
     mFileTempo->setColour(TextEditor::outlineColourId, juce::Colours::lightgrey);
     mFileTempo->setColour(TextEditor::focusedOutlineColourId, juce::Colours::grey);
     mFileTempo->onReturnKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
     mFileTempo->onEscapeKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
-    mFileTempo->onFocusLost = [this]()
-    {
+    mFileTempo->onFocusLost = [this]() {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         String correct_tempo_str = String(tempo);
-        correct_tempo_str =
-            correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
+        correct_tempo_str = correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
         mFileTempo->setText(correct_tempo_str);
         mProcessor.setMidiFileTempo(tempo);
     };
-    mFileTempo->onTextChange = [this]()
-    {
+    mFileTempo->onTextChange = [this]() {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         mProcessor.setMidiFileTempo(tempo);
     };
@@ -54,17 +50,13 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
 
 void VisualizationPanel::resized()
 {
-    mKeyboard.setBounds(0,
-                        mCombinedAudioMidiRegion.mPianoRollY,
-                        KEYBOARD_WIDTH,
-                        getHeight() - mCombinedAudioMidiRegion.mPianoRollY);
+    mKeyboard.setBounds(
+        0, mCombinedAudioMidiRegion.mPianoRollY, KEYBOARD_WIDTH, getHeight() - mCombinedAudioMidiRegion.mPianoRollY);
 
-    mAudioMidiViewport.setBounds(
-        KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
+    mAudioMidiViewport.setBounds(KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
 
     mCombinedAudioMidiRegion.setBaseWidth(getWidth() - KEYBOARD_WIDTH);
-    mCombinedAudioMidiRegion.setBounds(
-        KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
+    mCombinedAudioMidiRegion.setBounds(KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
     mCombinedAudioMidiRegion.timerCallback();
 
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
@@ -73,21 +65,15 @@ void VisualizationPanel::resized()
 
 void VisualizationPanel::paint(Graphics& g)
 {
-    if (mMidiFileDrag.isVisible())
-    {
+    if (mMidiFileDrag.isVisible()) {
         g.setColour(WHITE_TRANSPARENT);
         g.fillRoundedRectangle(
-            Rectangle<int>(
-                0, 0, KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight)
-                .toFloat(),
-            4);
+            Rectangle<int>(0, 0, KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight).toFloat(), 4);
 
         g.setColour(BLACK);
         g.setFont(LABEL_FONT);
-        g.drawFittedText("MIDI\nFILE\nTEMPO",
-                         Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55),
-                         juce::Justification::centred,
-                         3);
+        g.drawFittedText(
+            "MIDI\nFILE\nTEMPO", Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55), juce::Justification::centred, 3);
     }
 }
 
