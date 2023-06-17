@@ -3,8 +3,9 @@
 //
 
 #include "SynthController.h"
+#include "PluginProcessor.h"
 
-SynthController::SynthController(AudioProcessor* inProcessor, MPESynthesiser* inMPESynth)
+SynthController::SynthController(NeuralNoteAudioProcessor* inProcessor, MPESynthesiser* inMPESynth)
     : mProcessor(inProcessor)
     , mSynth(inMPESynth)
 {
@@ -12,7 +13,7 @@ SynthController::SynthController(AudioProcessor* inProcessor, MPESynthesiser* in
     mMidiBuffer.ensureSize(3 * 200);
 }
 
-std::vector<MidiMessage> SynthController::buildSingleEventVector(const std::vector<Notes::Event>& inNoteEvents)
+std::vector<MidiMessage> SynthController::buildMidiEventsVector(const std::vector<Notes::Event>& inNoteEvents)
 {
     bool INCLUDE_PITCH_BENDS = false;
     // Compute size of single event vector
@@ -65,7 +66,7 @@ std::vector<MidiMessage> SynthController::buildSingleEventVector(const std::vect
     return out;
 }
 
-void SynthController::setNewEventVectorToUse(std::vector<MidiMessage>& inEvents)
+void SynthController::setNewMidiEventsVectorToUse(std::vector<MidiMessage>& inEvents)
 {
     const ScopedLock sl(mProcessor->getCallbackLock());
     std::swap(inEvents, mEvents);
@@ -96,6 +97,14 @@ const MidiBuffer& SynthController::generateNextMidiBuffer(int inNumSamples)
 
     mCurrentTime = end_time;
     mCurrentSampleIndex += inNumSamples;
+
+    if (mCurrentTime >= mProcessor->getAudioSampleDuration())
+    {
+        mProcessor->getPlayer()->setPlayingState(false);
+        mCurrentTime = mProcessor->getAudioSampleDuration();
+        mCurrentSampleIndex = mProcessor->getNumSamplesAcquired();
+    }
+
     return mMidiBuffer;
 }
 

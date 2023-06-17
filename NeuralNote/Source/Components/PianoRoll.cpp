@@ -4,10 +4,11 @@
 
 #include "PianoRoll.h"
 
-PianoRoll::PianoRoll(NeuralNoteAudioProcessor& processor, Keyboard& keyboard, double inNumPixelsPerSecond)
-    : mProcessor(processor)
+PianoRoll::PianoRoll(NeuralNoteAudioProcessor& inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond)
+    : mProcessor(inProcessor)
     , mKeyboard(keyboard)
     , mNumPixelsPerSecond(inNumPixelsPerSecond)
+    , mPlayhead(&inProcessor)
 {
     mKeyboard.addChangeListener(this);
 
@@ -15,11 +16,12 @@ PianoRoll::PianoRoll(NeuralNoteAudioProcessor& processor, Keyboard& keyboard, do
     mNoteGradient.addColour(0.5, juce::Colours::blue);
     mNoteGradient.addColour(1.0, juce::Colours::red);
 
-    startTimerHz(60);
+    addAndMakeVisible(mPlayhead);
 }
 
 void PianoRoll::resized()
 {
+    mPlayhead.setSize(getWidth(), getHeight());
 }
 
 void PianoRoll::paint(Graphics& g)
@@ -102,8 +104,6 @@ void PianoRoll::paint(Graphics& g)
                     g.fillPath(p);
                 }
             }
-
-            _drawPlayerPlayhead(g);
         }
     }
 }
@@ -116,20 +116,9 @@ void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
     }
 }
 
-void PianoRoll::timerCallback()
-{
-    if (mCurrentPlayerPlayheadTime != mProcessor.getPlayer()->getPlayheadPositionSeconds())
-    {
-        // TODO: avoid repainting everything here, just playhead. Make it a component
-        repaint();
-    }
-}
-
 void PianoRoll::mouseDown(const MouseEvent& event)
 {
-    Component::mouseDown(event);
-
-    mProcessor.getPlayer()->setPlayheadPositionSeconds(_pixelToTime((float) event.x));
+    mPlayhead.setPlayheadTime(_pixelToTime((float) event.x));
 }
 
 float PianoRoll::_timeToPixel(float inTime) const
@@ -227,14 +216,4 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g)
 float PianoRoll::_qnToPixel(double inQn, double inZeroQn, double inBeatsPerSecond) const
 {
     return static_cast<float>((inQn + inZeroQn) * inBeatsPerSecond * mNumPixelsPerSecond);
-}
-
-void PianoRoll::_drawPlayerPlayhead(Graphics& g)
-{
-    mCurrentPlayerPlayheadTime = mProcessor.getPlayer()->getPlayheadPositionSeconds();
-
-    auto playhead_x = _timeToPixel((float) mCurrentPlayerPlayheadTime);
-
-    g.setColour(juce::Colours::white);
-    g.drawLine(playhead_x, 0, playhead_x, (float) getHeight(), 1);
 }

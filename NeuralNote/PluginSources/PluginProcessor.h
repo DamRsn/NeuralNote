@@ -62,6 +62,9 @@ public:
 
     int getNumSamplesAcquired() const;
 
+    /* Returns the duration in seconds of the audio acquired for transcription */
+    double getAudioSampleDuration() const;
+
     void setNumSamplesAcquired(int inNumSamplesAcquired);
 
     void launchTranscribeJob();

@@ -10,14 +10,18 @@
 #include "SynthController.h"
 #include "SynthVoice.h"
 
+class NeuralNoteAudioProcessor;
+
 class Player
 {
 public:
-    explicit Player(AudioProcessor* inProcessor);
+    explicit Player(NeuralNoteAudioProcessor* inProcessor);
 
     void prepareToPlay(double inSampleRate, int inSamplesPerBlock);
 
     void processBlock(AudioBuffer<float>& inAudioBuffer);
+
+    bool isPlaying() const;
 
     void setPlayingState(bool inIsPlaying);
 

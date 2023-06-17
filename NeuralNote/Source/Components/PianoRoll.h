@@ -11,22 +11,20 @@
 #include "Keyboard.h"
 #include "PluginProcessor.h"
 #include "UIDefines.h"
+#include "Playhead.h"
 
 class PianoRoll
     : public juce::Component
     , public juce::ChangeListener
-    , public juce::Timer
 {
 public:
-    explicit PianoRoll(NeuralNoteAudioProcessor& processor, Keyboard& keyboard, double inNumPixelsPerSecond);
+    explicit PianoRoll(NeuralNoteAudioProcessor& inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond);
 
     void resized() override;
 
     void paint(Graphics& g) override;
 
     void changeListenerCallback(ChangeBroadcaster* source) override;
-
-    void timerCallback() override;
 
     void mouseDown(const MouseEvent& event) override;
 
@@ -64,16 +62,14 @@ private:
 
     float _qnToPixel(double inQn, double inZeroQn, double inBeatsPerSecond) const;
 
-    void _drawPlayerPlayhead(Graphics& g);
-
-    double mCurrentPlayerPlayheadTime = 0.0;
-
     const double mNumPixelsPerSecond;
 
     juce::ColourGradient mNoteGradient;
 
     Keyboard& mKeyboard;
     NeuralNoteAudioProcessor& mProcessor;
+
+    Playhead mPlayhead;
 };
 
 #endif // PianoRoll_h

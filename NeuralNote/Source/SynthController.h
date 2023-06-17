@@ -10,16 +10,18 @@
 #include "SynthVoice.h"
 #include "Notes.h"
 
+class NeuralNoteAudioProcessor;
+
 class SynthController
 {
 public:
-    SynthController(AudioProcessor* inProcessor, MPESynthesiser* inMPESynth);
+    SynthController(NeuralNoteAudioProcessor* inProcessor, MPESynthesiser* inMPESynth);
 
     void setSampleRate(double inSampleRate);
 
-    static std::vector<MidiMessage> buildSingleEventVector(const std::vector<Notes::Event>& inNoteEvents);
+    static std::vector<MidiMessage> buildMidiEventsVector(const std::vector<Notes::Event>& inNoteEvents);
 
-    void setNewEventVectorToUse(std::vector<MidiMessage>& inEvents);
+    void setNewMidiEventsVectorToUse(std::vector<MidiMessage>& inEvents);
 
     const MidiBuffer& generateNextMidiBuffer(int inNumSamples);
 
@@ -36,7 +38,7 @@ private:
 
     bool _isNextOnOffEventNoteOff(int inMidiNote);
 
-    AudioProcessor* mProcessor;
+    NeuralNoteAudioProcessor* mProcessor;
     MPESynthesiser* mSynth;
 
     MidiBuffer mMidiBuffer;

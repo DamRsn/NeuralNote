@@ -3,8 +3,9 @@
 //
 
 #include "Player.h"
+#include "PluginProcessor.h"
 
-Player::Player(AudioProcessor* inProcessor)
+Player::Player(NeuralNoteAudioProcessor* inProcessor)
 {
     mSynth = std::make_unique<MPESynthesiser>();
     mSynth->setCurrentPlaybackSampleRate(44100);
@@ -40,6 +41,11 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
     {
         inAudioBuffer.copyFrom(ch, 0, inAudioBuffer, 0, 0, inAudioBuffer.getNumSamples());
     }
+}
+
+bool Player::isPlaying() const
+{
+    return mIsPlaying.load();
 }
 
 void Player::setPlayingState(bool inIsPlaying)

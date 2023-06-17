@@ -54,9 +54,28 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mPlayPauseButton.setToggleState(false, NotificationType::dontSendNotification);
     mPlayPauseButton.onClick = [this]()
     {
-        mProcessor.getPlayer()->setPlayingState(mPlayPauseButton.getToggleState());
-        repaint();
+        if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
+        {
+            mProcessor.getPlayer()->setPlayingState(mPlayPauseButton.getToggleState());
+        }
+        else
+        {
+            mPlayPauseButton.setToggleState(false, sendNotification);
+        }
     };
+
+    mPlayPauseButton.onStateChange = [this]()
+    {
+        if (mPlayPauseButton.getToggleState())
+        {
+            mPlayPauseButton.setButtonText("Pause");
+        }
+        else
+        {
+            mPlayPauseButton.setButtonText("Play");
+        }
+    };
+
     addAndMakeVisible(mPlayPauseButton);
 
     mResetButton.setButtonText("Reset");
@@ -65,7 +84,6 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     {
         mProcessor.getPlayer()->reset();
         mPlayPauseButton.setToggleState(false, juce::sendNotification);
-        repaint();
     };
 
     addAndMakeVisible(mResetButton);
@@ -85,8 +103,10 @@ void VisualizationPanel::resized()
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
     mFileTempo->setBounds(6, 55, 40, 17);
 
-    mPlayPauseButton.setBounds(getWidth() - 60, mCombinedAudioMidiRegion.mPianoRollY + 20, 40, 20);
-    mResetButton.setBounds(getWidth() - 110, mCombinedAudioMidiRegion.mPianoRollY + 20, 40, 20);
+    mPlayPauseButton.setBounds(getWidth() - 100, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
+    mResetButton.setBounds(getWidth() - 200, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
+
+    startTimerHz(15);
 }
 
 void VisualizationPanel::paint(Graphics& g)
@@ -101,6 +121,14 @@ void VisualizationPanel::paint(Graphics& g)
         g.setFont(LABEL_FONT);
         g.drawFittedText(
             "MIDI\nFILE\nTEMPO", Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55), juce::Justification::centred, 3);
+    }
+}
+
+void VisualizationPanel::timerCallback()
+{
+    if (mPlayPauseButton.getToggleState() != mProcessor.getPlayer()->isPlaying())
+    {
+        mPlayPauseButton.setToggleState(mProcessor.getPlayer()->isPlaying(), sendNotification);
     }
 }
 

@@ -166,6 +166,11 @@ int NeuralNoteAudioProcessor::getNumSamplesAcquired() const
     return mNumSamplesAcquired;
 }
 
+double NeuralNoteAudioProcessor::getAudioSampleDuration() const
+{
+    return (double) mNumSamplesAcquired / mBasicPitchSampleRate;
+}
+
 void NeuralNoteAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
 {
     mNumSamplesAcquired = inNumSamplesAcquired;
@@ -222,8 +227,8 @@ void NeuralNoteAudioProcessor::_runModel()
     Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
 
     // For the synth
-    auto single_events = SynthController::buildSingleEventVector(mPostProcessedNotes);
-    mPlayer->getSynthController()->setNewEventVectorToUse(single_events);
+    auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
+    mPlayer->getSynthController()->setNewMidiEventsVectorToUse(single_events);
 
     mMidiFileTempo = mCurrentTempo.load() > 0 ? mCurrentTempo.load() : 120;
 
@@ -267,8 +272,8 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
         Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
 
         // For the synth
-        auto single_events = SynthController::buildSingleEventVector(mPostProcessedNotes);
-        mPlayer->getSynthController()->setNewEventVectorToUse(single_events);
+        auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
+        mPlayer->getSynthController()->setNewMidiEventsVectorToUse(single_events);
     }
 }
 
