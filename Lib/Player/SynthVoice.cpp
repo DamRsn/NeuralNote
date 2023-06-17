@@ -63,13 +63,11 @@ void SynthVoice::noteKeyStateChanged()
 
 void SynthVoice::renderNextBlock(AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
 {
-    for (int i = startSample; i < numSamples; i++)
-    {
+    for (int i = startSample; i < numSamples; i++) {
         float value = 0.25f * mAmplitude * mADSR.getNextSample() * mOsc.processSample(0);
         outputBuffer.addSample(0, i, value);
 
-        if (!mADSR.isActive())
-        {
+        if (!mADSR.isActive()) {
             clearCurrentNote();
             return;
         }

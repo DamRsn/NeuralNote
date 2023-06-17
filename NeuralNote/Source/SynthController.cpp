@@ -15,16 +15,15 @@ SynthController::SynthController(NeuralNoteAudioProcessor* inProcessor, MPESynth
 
 std::vector<MidiMessage> SynthController::buildMidiEventsVector(const std::vector<Notes::Event>& inNoteEvents)
 {
+    // TODO: Deal with pitch bends
     bool INCLUDE_PITCH_BENDS = false;
     // Compute size of single event vector
     size_t num_midi_messages = 0;
 
-    for (const auto& note_event: inNoteEvents)
-    {
+    for (const auto& note_event: inNoteEvents) {
         num_midi_messages += 2;
 
-        if (INCLUDE_PITCH_BENDS)
-        {
+        if (INCLUDE_PITCH_BENDS) {
             if (!note_event.bends.empty())
                 num_midi_messages += note_event.bends.size();
         }
@@ -34,8 +33,7 @@ std::vector<MidiMessage> SynthController::buildMidiEventsVector(const std::vecto
 
     size_t i = 0;
 
-    for (const auto& note_event: inNoteEvents)
-    {
+    for (const auto& note_event: inNoteEvents) {
         bool include_bends = INCLUDE_PITCH_BENDS && !note_event.bends.empty();
         float first_bend = include_bends ? float(note_event.bends[0]) / 3.0f : 0.0f;
 
@@ -43,10 +41,8 @@ std::vector<MidiMessage> SynthController::buildMidiEventsVector(const std::vecto
         out[i++] =
             MidiMessage::noteOn(1, note_event.pitch, (float) note_event.amplitude).withTimeStamp(note_event.startTime);
 
-        if (include_bends)
-        {
-            for (size_t j = 0; j < note_event.bends.size(); j++)
-            {
+        if (include_bends) {
+            for (size_t j = 0; j < note_event.bends.size(); j++) {
                 out[i++] =
                     MidiMessage::pitchWheel(
                         1, MidiMessage::pitchbendToPitchwheelPos(static_cast<float>(note_event.bends[j]) / 3.0f, 2))
@@ -59,9 +55,9 @@ std::vector<MidiMessage> SynthController::buildMidiEventsVector(const std::vecto
         jassert(i <= num_midi_messages);
     }
 
-    std::sort(out.begin(),
-              out.end(),
-              [](const MidiMessage& a, const MidiMessage& b) { return a.getTimeStamp() < b.getTimeStamp(); });
+    std::sort(out.begin(), out.end(), [](const MidiMessage& a, const MidiMessage& b) {
+        return a.getTimeStamp() < b.getTimeStamp();
+    });
 
     return out;
 }
@@ -85,8 +81,7 @@ const MidiBuffer& SynthController::generateNextMidiBuffer(int inNumSamples)
 
     double end_time = mCurrentTime + inNumSamples / mSampleRate;
 
-    while (mCurrentEventIndex < mEvents.size() && mEvents[mCurrentEventIndex].getTimeStamp() < end_time)
-    {
+    while (mCurrentEventIndex < mEvents.size() && mEvents[mCurrentEventIndex].getTimeStamp() < end_time) {
         int index = std::clamp(static_cast<int>(std::round(mEvents[mCurrentEventIndex].getTimeStamp() - mCurrentTime)),
                                0,
                                inNumSamples - 1);
@@ -98,8 +93,7 @@ const MidiBuffer& SynthController::generateNextMidiBuffer(int inNumSamples)
     mCurrentTime = end_time;
     mCurrentSampleIndex += inNumSamples;
 
-    if (mCurrentTime >= mProcessor->getAudioSampleDuration())
-    {
+    if (mCurrentTime >= mProcessor->getAudioSampleDuration()) {
         mProcessor->getPlayer()->setPlayingState(false);
         mCurrentTime = mProcessor->getAudioSampleDuration();
         mCurrentSampleIndex = mProcessor->getNumSamplesAcquired();
@@ -133,15 +127,12 @@ double SynthController::getCurrentTimeSeconds() const
 void SynthController::_sanitizeVoices()
 {
     // Insert note off event to avoid hanging notes
-    for (int i = 0; i < mSynth->getNumVoices(); i++)
-    {
+    for (int i = 0; i < mSynth->getNumVoices(); i++) {
         auto* voice = dynamic_cast<SynthVoice*>(mSynth->getVoice(i));
-        if (voice->isActive())
-        {
+        if (voice->isActive()) {
             auto midi_note = voice->getCurrentMidiNote();
 
-            if (!_isNextOnOffEventNoteOff(midi_note))
-            {
+            if (!_isNextOnOffEventNoteOff(midi_note)) {
                 voice->noteStopped(true);
             }
         }
@@ -159,13 +150,12 @@ void SynthController::_updateCurrentEventIndex()
 
 bool SynthController::_isNextOnOffEventNoteOff(int inMidiNote)
 {
-    auto iter = std::find_if(mEvents.begin() + static_cast<long>(mCurrentEventIndex),
-                             mEvents.end(),
-                             [inMidiNote](const MidiMessage& a)
-                             { return !a.isPitchWheel() && a.getNoteNumber() == inMidiNote; });
+    auto iter = std::find_if(
+        mEvents.begin() + static_cast<long>(mCurrentEventIndex), mEvents.end(), [inMidiNote](const MidiMessage& a) {
+            return !a.isPitchWheel() && a.getNoteNumber() == inMidiNote;
+        });
 
-    if (iter == mEvents.end())
-    {
+    if (iter == mEvents.end()) {
         return false;
     }
 

@@ -10,8 +10,7 @@ Player::Player(NeuralNoteAudioProcessor* inProcessor)
     mSynth = std::make_unique<MPESynthesiser>();
     mSynth->setCurrentPlaybackSampleRate(44100);
 
-    for (int i = 0; i < NUM_VOICES_SYNTH; i++)
-    {
+    for (int i = 0; i < NUM_VOICES_SYNTH; i++) {
         mSynth->addVoice(new SynthVoice());
     }
 
@@ -27,18 +26,14 @@ void Player::prepareToPlay(double inSampleRate, int inSamplesPerBlock)
 
 void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
 {
-    if (mIsPlaying.load())
-    {
+    if (mIsPlaying.load()) {
         auto& midi_buffer = mSynthController->generateNextMidiBuffer(inAudioBuffer.getNumSamples());
         mSynth->renderNextBlock(inAudioBuffer, midi_buffer, 0, inAudioBuffer.getNumSamples());
-    }
-    else
-    {
+    } else {
         mSynth->renderNextBlock(inAudioBuffer, {}, 0, inAudioBuffer.getNumSamples());
     }
 
-    for (int ch = 1; ch < inAudioBuffer.getNumChannels(); ch++)
-    {
+    for (int ch = 1; ch < inAudioBuffer.getNumChannels(); ch++) {
         inAudioBuffer.copyFrom(ch, 0, inAudioBuffer, 0, 0, inAudioBuffer.getNumSamples());
     }
 }

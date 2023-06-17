@@ -17,8 +17,7 @@ void Playhead::resized()
 
 void Playhead::paint(Graphics& g)
 {
-    if (mAudioSampleDuration > 0)
-    {
+    if (mAudioSampleDuration > 0) {
         auto playhead_x = jlimit(0.0f,
                                  (float) getWidth(),
                                  static_cast<float>(mCurrentPlayerPlayheadTime / mAudioSampleDuration * getWidth()));
@@ -42,8 +41,7 @@ void Playhead::timerCallback()
     auto playhead_time = mProcessor->getPlayer()->getPlayheadPositionSeconds();
     auto sample_duration = mProcessor->getAudioSampleDuration();
 
-    if (mCurrentPlayerPlayheadTime != playhead_time || sample_duration != mAudioSampleDuration)
-    {
+    if (mCurrentPlayerPlayheadTime != playhead_time || sample_duration != mAudioSampleDuration) {
         mCurrentPlayerPlayheadTime = playhead_time;
         mAudioSampleDuration = sample_duration;
         repaint();

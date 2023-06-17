@@ -52,8 +52,6 @@ static inline float midiToHz(float inMidiNote)
     return 440.0f * std::pow(2.0f, (inMidiNote - 69.0f) / 12.0f);
 }
 
-
-
 } // namespace NoteUtils
 
 #endif //NN_NOTEUTILS_H
