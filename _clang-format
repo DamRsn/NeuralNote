@@ -18,7 +18,7 @@ BinPackArguments: false
 BinPackParameters: false
 BreakAfterJavaFieldAnnotations: false
 BreakBeforeBinaryOperators: NonAssignment
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Linux
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
 BreakStringLiterals: false

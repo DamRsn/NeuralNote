@@ -13,8 +13,7 @@
 class RhythmOptions
 {
 public:
-    struct Parameters
-    {
+    struct Parameters {
         RhythmUtils::TimeDivisions division = RhythmUtils::_1_4;
         float quantizationForce = 0.f;
     };
@@ -22,8 +21,7 @@ public:
     RhythmOptions();
 
     void setInfo(bool inDroppedFile,
-                 const juce::Optional<juce::AudioPlayHead::PositionInfo>&
-                     inPositionInfoPtr = nullopt);
+                 const juce::Optional<juce::AudioPlayHead::PositionInfo>& inPositionInfoPtr = nullopt);
 
     bool canPerformQuantization() const;
 
@@ -32,14 +30,10 @@ public:
     std::vector<Notes::Event> quantize(const std::vector<Notes::Event>& inNoteEvents);
 
 private:
-    static double quantizeTime(double inEventTime,
-                               double inBPM,
-                               double inTimeDivision,
-                               double inStartTimeQN,
-                               float inQuantizationForce);
+    static double quantizeTime(
+        double inEventTime, double inBPM, double inTimeDivision, double inStartTimeQN, float inQuantizationForce);
 
-    struct RhythmInfo
-    {
+    struct RhythmInfo {
         bool droppedFile = false;
         juce::Optional<double> bpm;
         juce::Optional<juce::AudioPlayHead::TimeSignature> timeSignature;

@@ -32,16 +32,14 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mFileTempo->setColour(TextEditor::focusedOutlineColourId, juce::Colours::grey);
     mFileTempo->onReturnKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
     mFileTempo->onEscapeKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
-    mFileTempo->onFocusLost = [this]()
-    {
+    mFileTempo->onFocusLost = [this]() {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         String correct_tempo_str = String(tempo);
         correct_tempo_str = correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
         mFileTempo->setText(correct_tempo_str);
         mProcessor.setMidiFileTempo(tempo);
     };
-    mFileTempo->onTextChange = [this]()
-    {
+    mFileTempo->onTextChange = [this]() {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         mProcessor.setMidiFileTempo(tempo);
     };
@@ -52,26 +50,18 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mPlayPauseButton.setButtonText("Play");
     mPlayPauseButton.setClickingTogglesState(true);
     mPlayPauseButton.setToggleState(false, NotificationType::dontSendNotification);
-    mPlayPauseButton.onClick = [this]()
-    {
-        if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
-        {
+    mPlayPauseButton.onClick = [this]() {
+        if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
             mProcessor.getPlayer()->setPlayingState(mPlayPauseButton.getToggleState());
-        }
-        else
-        {
+        } else {
             mPlayPauseButton.setToggleState(false, sendNotification);
         }
     };
 
-    mPlayPauseButton.onStateChange = [this]()
-    {
-        if (mPlayPauseButton.getToggleState())
-        {
+    mPlayPauseButton.onStateChange = [this]() {
+        if (mPlayPauseButton.getToggleState()) {
             mPlayPauseButton.setButtonText("Pause");
-        }
-        else
-        {
+        } else {
             mPlayPauseButton.setButtonText("Play");
         }
     };
@@ -80,8 +70,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
 
     mResetButton.setButtonText("Reset");
     mResetButton.setClickingTogglesState(false);
-    mResetButton.onClick = [this]()
-    {
+    mResetButton.onClick = [this]() {
         mProcessor.getPlayer()->reset();
         mPlayPauseButton.setToggleState(false, juce::sendNotification);
     };
@@ -111,8 +100,7 @@ void VisualizationPanel::resized()
 
 void VisualizationPanel::paint(Graphics& g)
 {
-    if (mMidiFileDrag.isVisible())
-    {
+    if (mMidiFileDrag.isVisible()) {
         g.setColour(WHITE_TRANSPARENT);
         g.fillRoundedRectangle(
             Rectangle<int>(0, 0, KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight).toFloat(), 4);
@@ -126,8 +114,7 @@ void VisualizationPanel::paint(Graphics& g)
 
 void VisualizationPanel::timerCallback()
 {
-    if (mPlayPauseButton.getToggleState() != mProcessor.getPlayer()->isPlaying())
-    {
+    if (mPlayPauseButton.getToggleState() != mProcessor.getPlayer()->isPlaying()) {
         mPlayPauseButton.setToggleState(mProcessor.getPlayer()->isPlaying(), sendNotification);
     }
 }

@@ -7,8 +7,7 @@
 AudioRegion::AudioRegion(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
     , mThumbnailCache(1)
-    , mThumbnail(
-          mSourceSamplesPerThumbnailSample, mThumbnailFormatManager, mThumbnailCache)
+    , mThumbnail(mSourceSamplesPerThumbnailSample, mThumbnailFormatManager, mThumbnailCache)
 {
 }
 
@@ -20,8 +19,7 @@ void AudioRegion::paint(Graphics& g)
 {
     auto num_samples_available = mProcessor.getNumSamplesAcquired();
 
-    if (num_samples_available > 0 && mThumbnail.isFullyLoaded())
-    {
+    if (num_samples_available > 0 && mThumbnail.isFullyLoaded()) {
         g.setColour(WAVEFORM_BG_COLOR);
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
 
@@ -32,17 +30,13 @@ void AudioRegion::paint(Graphics& g)
 
         g.setColour(WAVEFORM_COLOR);
 
-        mThumbnail.drawChannel(
-            g,
-            thumbnail_area,
-            0.0,
-            num_samples_available / BASIC_PITCH_SAMPLE_RATE,
-            0,
-            0.95f
-                / std::max(audio_buffer.getMagnitude(0, 0, num_samples_available), 0.1f));
-    }
-    else
-    {
+        mThumbnail.drawChannel(g,
+                               thumbnail_area,
+                               0.0,
+                               num_samples_available / BASIC_PITCH_SAMPLE_RATE,
+                               0,
+                               0.95f / std::max(audio_buffer.getMagnitude(0, 0, num_samples_available), 0.1f));
+    } else {
         if (mIsFileOver)
             g.setColour(WAVEFORM_BG_COLOR);
         else
@@ -56,9 +50,7 @@ void AudioRegion::paint(Graphics& g)
         if (mIsFileOver)
             g.drawText("YUMMY!", getLocalBounds(), juce::Justification::centred);
         else
-            g.drawText("LOAD OR DROP AN AUDIO FILE",
-                       getLocalBounds(),
-                       juce::Justification::centred);
+            g.drawText("LOAD OR DROP AN AUDIO FILE", getLocalBounds(), juce::Justification::centred);
     }
 }
 
@@ -66,11 +58,9 @@ void AudioRegion::updateThumbnail()
 {
     int num_samples_available = mProcessor.getNumSamplesAcquired();
 
-    if (num_samples_available > 50 * mSourceSamplesPerThumbnailSample)
-    {
+    if (num_samples_available > 50 * mSourceSamplesPerThumbnailSample) {
         mThumbnail.reset(1, BASIC_PITCH_SAMPLE_RATE, num_samples_available);
-        mThumbnail.addBlock(
-            0, mProcessor.getAudioBufferForMidi(), 0, num_samples_available);
+        mThumbnail.addBlock(0, mProcessor.getAudioBufferForMidi(), 0, num_samples_available);
 
         repaint();
     }
@@ -86,11 +76,9 @@ bool AudioRegion::onFileDrop(const juce::File& inFile)
     mIsFileOver = false;
 
     int num_loaded_samples = 0;
-    auto success = mFileLoader.loadAudioFile(
-        inFile, mProcessor.getAudioBufferForMidi(), num_loaded_samples);
+    auto success = mFileLoader.loadAudioFile(inFile, mProcessor.getAudioBufferForMidi(), num_loaded_samples);
 
-    if (!success)
-    {
+    if (!success) {
         num_loaded_samples = 0;
         juce::NativeMessageBox::showMessageBoxAsync(
             juce::MessageBoxIconType::NoIcon,

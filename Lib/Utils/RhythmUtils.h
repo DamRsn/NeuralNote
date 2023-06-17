@@ -9,21 +9,10 @@
 
 namespace RhythmUtils
 {
-static const juce::StringArray TimeDivisionsStr {"1/1",
-                                                 "1/2",
-                                                 "1/3",
-                                                 "1/4",
-                                                 "1/6",
-                                                 "1/8",
-                                                 "1/12",
-                                                 "1/16",
-                                                 "1/24",
-                                                 "1/32",
-                                                 "1/48",
-                                                 "1/64"};
+static const juce::StringArray TimeDivisionsStr {
+    "1/1", "1/2", "1/3", "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32", "1/48", "1/64"};
 
-enum TimeDivisions
-{
+enum TimeDivisions {
     _1_1 = 0,
     _1_2,
     _1_3,

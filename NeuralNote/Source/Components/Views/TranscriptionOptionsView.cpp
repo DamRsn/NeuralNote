@@ -8,27 +8,21 @@
 TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
 {
-    mNoteSensibility =
-        std::make_unique<Knob>("NOTE SENSIBILITY",
-                               0.05,
-                               0.95,
-                               0.01,
-                               0.7,
-                               false,
-                               mProcessor.getCustomParameters()->noteSensibility,
-                               [this]() { _valueChanged(); });
+    mNoteSensibility = std::make_unique<Knob>(
+        "NOTE SENSIBILITY", 0.05, 0.95, 0.01, 0.7, false, mProcessor.getCustomParameters()->noteSensibility, [this]() {
+            _valueChanged();
+        });
 
     addAndMakeVisible(*mNoteSensibility);
 
-    mSplitSensibility =
-        std::make_unique<Knob>("SPLIT SENSIBILITY",
-                               0.05,
-                               0.95,
-                               0.01,
-                               0.5,
-                               false,
-                               mProcessor.getCustomParameters()->splitSensibility,
-                               [this]() { _valueChanged(); });
+    mSplitSensibility = std::make_unique<Knob>("SPLIT SENSIBILITY",
+                                               0.05,
+                                               0.95,
+                                               0.01,
+                                               0.5,
+                                               false,
+                                               mProcessor.getCustomParameters()->splitSensibility,
+                                               [this]() { _valueChanged(); });
 
     addAndMakeVisible(*mSplitSensibility);
 
@@ -49,12 +43,9 @@ TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& pro
     mPitchBendDropDown->setEditableText(false);
     mPitchBendDropDown->setJustificationType(juce::Justification::centredRight);
     mPitchBendDropDown->addItemList({"No Pitch Bend", "Single Pitch Bend"}, 1);
-    mPitchBendDropDown->setSelectedItemIndex(
-        mProcessor.getCustomParameters()->pitchBendMode.load());
-    mPitchBendDropDown->onChange = [this]()
-    {
-        mProcessor.getCustomParameters()->pitchBendMode.store(
-            mPitchBendDropDown->getSelectedItemIndex());
+    mPitchBendDropDown->setSelectedItemIndex(mProcessor.getCustomParameters()->pitchBendMode.load());
+    mPitchBendDropDown->onChange = [this]() {
+        mProcessor.getCustomParameters()->pitchBendMode.store(mPitchBendDropDown->getSelectedItemIndex());
         _valueChanged();
     };
     addAndMakeVisible(*mPitchBendDropDown);
@@ -83,9 +74,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
 
     g.setColour(BLACK.withAlpha(alpha));
     g.setFont(TITLE_FONT);
-    g.drawText("TRANSCRIPTION",
-               Rectangle<int>(24, 0, 250, 17),
-               juce::Justification::centredLeft);
+    g.drawText("TRANSCRIPTION", Rectangle<int>(24, 0, 250, 17), juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
     if (isEnabled())
@@ -94,15 +83,13 @@ void TranscriptionOptionsView::paint(Graphics& g)
         g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
     g.setFont(LABEL_FONT);
-    g.drawText("PITCH BEND",
-               juce::Rectangle<int>(19, mPitchBendDropDown->getY(), 67, 17),
-               juce::Justification::centredLeft);
+    g.drawText(
+        "PITCH BEND", juce::Rectangle<int>(19, mPitchBendDropDown->getY(), 67, 17), juce::Justification::centredLeft);
 }
 
 void TranscriptionOptionsView::_valueChanged()
 {
-    if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
-    {
+    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
         mProcessor.updateTranscription();
         auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
 

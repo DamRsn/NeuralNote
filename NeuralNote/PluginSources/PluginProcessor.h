@@ -11,19 +11,12 @@
 #include "RhythmOptions.h"
 #include "Player.h"
 
-enum State
-{
-    EmptyAudioAndMidiRegions = 0,
-    Recording,
-    Processing,
-    PopulatedAudioAndMidiRegions
-};
+enum State { EmptyAudioAndMidiRegions = 0, Recording, Processing, PopulatedAudioAndMidiRegions };
 
 class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
 {
 public:
-    struct Parameters
-    {
+    struct Parameters {
         std::atomic<float> noteSensibility = 0.7;
         std::atomic<float> splitSensibility = 0.5;
         std::atomic<float> minNoteDurationMs = 125;

@@ -17,9 +17,7 @@ Knob::Knob(const std::string& inLabelText,
     , mDefaultValue(inDefaultValue)
 {
     mSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    mSlider.setRotaryParameters(5.0f * MathConstants<float>::pi / 4.0f,
-                                11.0f * MathConstants<float>::pi / 4.0f,
-                                true);
+    mSlider.setRotaryParameters(5.0f * MathConstants<float>::pi / 4.0f, 11.0f * MathConstants<float>::pi / 4.0f, true);
 
     mSlider.setRange(inMinRange, inMaxRange, inInterval);
 
@@ -32,8 +30,7 @@ Knob::Knob(const std::string& inLabelText,
 
     mOnChangeAction = inOnChangeAction;
 
-    mSlider.onValueChange = [this]()
-    {
+    mSlider.onValueChange = [this]() {
         mAttachedValue.store(static_cast<float>(mSlider.getValue()));
         mOnChangeAction();
         repaint();
@@ -60,12 +57,9 @@ void Knob::paint(Graphics& g)
     g.setColour(juce::Colours::black.withAlpha(alpha));
     g.setFont(LABEL_FONT);
 
-    if (!mIsMouseOver || !isEnabled())
-    {
+    if (!mIsMouseOver || !isEnabled()) {
         g.drawMultiLineText(mLabel, 0, 73, 66, juce::Justification::centred, 0.0f);
-    }
-    else
-    {
+    } else {
         String value = mSlider.getTextFromValue(mSlider.getValue());
         g.drawText(value + mPostValueStr,
                    juce::Rectangle<int>(0, 73, getWidth(), getHeight() - 67),
@@ -75,8 +69,7 @@ void Knob::paint(Graphics& g)
 
 void Knob::mouseEnter(const MouseEvent& event)
 {
-    if (event.originalComponent == &mSlider)
-    {
+    if (event.originalComponent == &mSlider) {
         mIsMouseOver = true;
         repaint();
     }
@@ -84,8 +77,7 @@ void Knob::mouseEnter(const MouseEvent& event)
 
 void Knob::mouseExit(const MouseEvent& event)
 {
-    if (event.originalComponent == &mSlider)
-    {
+    if (event.originalComponent == &mSlider) {
         mIsMouseOver = false;
         repaint();
     }

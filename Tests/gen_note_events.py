@@ -23,13 +23,16 @@ import json
 import numpy as np
 import sys
 
+
 def np_encoder(object):
     if isinstance(object, np.generic):
         return object.item()
 
+
 def safe_divide(a, b):
-    assert(a % b == 0)
+    assert (a % b == 0)
     return a // b
+
 
 if len(sys.argv) != 6:
     print("Usage: %s <input.json> <notes.csv> <onsets.csv> <contours.csv> <output.json>" % sys.argv[0])
@@ -74,9 +77,9 @@ for params in all_cases:
     onsets = np.genfromtxt(sys.argv[3], dtype=float)
     contours = np.genfromtxt(sys.argv[4], dtype=float)
 
-    frames = frames.reshape(n_frames, safe_divide(frames.shape[0],n_frames))
-    onsets = onsets.reshape(n_frames, safe_divide(onsets.shape[0],n_frames))
-    contours = contours.reshape(n_frames, safe_divide(contours.shape[0],n_frames))
+    frames = frames.reshape(n_frames, safe_divide(frames.shape[0], n_frames))
+    onsets = onsets.reshape(n_frames, safe_divide(onsets.shape[0], n_frames))
+    contours = contours.reshape(n_frames, safe_divide(contours.shape[0], n_frames))
     min_freq = params.get("minFrequency", None)
     max_freq = params.get("maxFrequency", None)
 
@@ -105,9 +108,11 @@ for params in all_cases:
 
     # transform to dictionary
     result.append([
-        {"startTime": times_s[x[0]], "endTime": times_s[x[1]], "startFrame": x[0], "endFrame": x[1], "pitch": x[2], "amplitude": x[3] }
+        {"startTime": times_s[x[0]], "endTime": times_s[x[1]], "startFrame": x[0], "endFrame": x[1], "pitch": x[2],
+         "amplitude": x[3]}
         | ({} if x[4] == None else {"bends": x[4]})  # only add "bends" key if it is not null
-        for x in sorted(estimated_notes_with_pitch_bend) # sort in all cases, contrary to original basic pitch implementation
+        for x in sorted(estimated_notes_with_pitch_bend)
+        # sort in all cases, contrary to original basic pitch implementation
     ])
 
 dump = json.dumps(result, default=np_encoder, separators=(',', ':'))

@@ -33,13 +33,10 @@ void PianoRoll::paint(Graphics& g)
     g.setColour(WAVEFORM_BG_COLOR);
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 4);
 
-    if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
-    {
+    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
         // Draw horizontal note lines
-        for (int i = MIN_MIDI_NOTE; i <= MAX_MIDI_NOTE; i++)
-        {
-            if (mKeyboard.getRectangleForKey(i).intersects(local_bounds))
-            {
+        for (int i = MIN_MIDI_NOTE; i <= MAX_MIDI_NOTE; i++) {
+            if (mKeyboard.getRectangleForKey(i).intersects(local_bounds)) {
                 juce::Colour fill_colour = _isWhiteKey(i) ? juce::Colours::white : juce::Colours::black;
 
                 fill_colour = fill_colour.withAlpha(0.2f);
@@ -52,14 +49,12 @@ void PianoRoll::paint(Graphics& g)
         }
 
         // Draw vertical lines if we have info on bpm, time signature ...
-        if (mProcessor.canQuantize())
-        {
+        if (mProcessor.canQuantize()) {
             _drawBeatVerticalLines(g);
         }
 
         // Draw notes
-        for (auto& note_event: mProcessor.getNoteEventVector())
-        {
+        for (auto& note_event: mProcessor.getNoteEventVector()) {
             auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(note_event.pitch);
             auto note_y_start = note_y_start_n_height.first;
             auto note_height = note_y_start_n_height.second;
@@ -76,11 +71,10 @@ void PianoRoll::paint(Graphics& g)
             g.drawRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height, 0.5);
 
             // Draw pitch bend
-            if (mProcessor.getCustomParameters()->pitchBendMode == SinglePitchBend)
-            {
+            if (mProcessor.getCustomParameters()->pitchBendMode == SinglePitchBend) {
                 const auto& bends = note_event.bends;
-                if (!note_event.bends.empty())
-                {
+
+                if (!note_event.bends.empty()) {
                     auto path_stroke_type =
                         PathStrokeType(1, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
                     Path p;
@@ -88,8 +82,7 @@ void PianoRoll::paint(Graphics& g)
 
                     p.startNewSubPath(_timeToPixel(start), y_ref_pb);
 
-                    for (size_t i = 0; i < bends.size(); i++)
-                    {
+                    for (size_t i = 0; i < bends.size(); i++) {
                         p.lineTo(_timeToPixel(float(start + double(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
                                  y_ref_pb - float(bends[i]) * note_height / 3.0f);
                     }
@@ -110,8 +103,7 @@ void PianoRoll::paint(Graphics& g)
 
 void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
 {
-    if (source == &mKeyboard)
-    {
+    if (source == &mKeyboard) {
         repaint();
     }
 }
@@ -135,25 +127,17 @@ std::pair<float, float> PianoRoll::_getNoteHeightAndWidthPianoRoll(int inNote) c
 {
     jassert(inNote >= MIN_MIDI_NOTE && inNote <= MAX_MIDI_NOTE);
 
-    if (inNote == MIN_MIDI_NOTE)
-    {
+    if (inNote == MIN_MIDI_NOTE) {
         return {
             _noteBottomY(inNote + 1),
             _noteBottomY(inNote) - _noteBottomY(inNote + 1),
         };
-    }
-    else if (inNote == MAX_MIDI_NOTE)
-    {
+    } else if (inNote == MAX_MIDI_NOTE) {
         return {_noteTopY(inNote), _noteTopY(inNote - 1) - _noteTopY(inNote)};
-    }
-    else
-    {
-        if (_isWhiteKey(inNote))
-        {
+    } else {
+        if (_isWhiteKey(inNote)) {
             return {_noteBottomY(inNote + 1), _noteTopY(inNote - 1) - _noteBottomY(inNote + 1)};
-        }
-        else
-        {
+        } else {
             return {_noteTopY(inNote), mKeyboard.getBlackNoteWidth()};
         }
     }
@@ -199,10 +183,8 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g)
 
     g.setColour(WHITE_SOLID);
 
-    while (beat_pixel < width)
-    {
-        if (beat_pixel >= 0)
-        {
+    while (beat_pixel < width) {
+        if (beat_pixel >= 0) {
             float thickness =
                 std::abs(fmod(beat_number, static_cast<double>(time_signature.numerator))) < 1e-6 ? 1.0f : 0.5f;
             g.drawLine(beat_pixel, 0, beat_pixel, height, thickness);

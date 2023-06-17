@@ -39,7 +39,7 @@ private:
     juce::AudioFormatManager mThumbnailFormatManager;
     juce::AudioThumbnailCache mThumbnailCache;
     juce::AudioThumbnail mThumbnail;
-    
+
     AudioFileLoader mFileLoader;
 
     bool mIsFileOver = false;

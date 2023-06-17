@@ -6,8 +6,7 @@ namespace PluginHelpers
 {
 //A helper base class, reducing a lot of the AudioProcessor boiler plate:
 
-struct ProcessorBase : juce::AudioProcessor
-{
+struct ProcessorBase : juce::AudioProcessor {
     ProcessorBase();
     explicit ProcessorBase(const BusesProperties& ioLayouts);
 

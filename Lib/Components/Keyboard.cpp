@@ -5,8 +5,7 @@
 #include "Keyboard.h"
 
 Keyboard::Keyboard()
-    : KeyboardComponentBase(
-        juce::KeyboardComponentBase::Orientation::verticalKeyboardFacingRight)
+    : KeyboardComponentBase(juce::KeyboardComponentBase::Orientation::verticalKeyboardFacingRight)
 {
     setAvailableRange(MIN_MIDI_NOTE, MAX_MIDI_NOTE);
 
@@ -29,8 +28,7 @@ void Keyboard::drawWhiteKey(int midiNoteNumber, Graphics& g, Rectangle<float> ar
     g.setColour(juce::Colours::darkgrey);
     g.drawRect(area, 0.5);
 
-    if (midiNoteNumber % 12 == 0)
-    {
+    if (midiNoteNumber % 12 == 0) {
         int octave_number = midiNoteNumber / 12 - 1;
         g.setFont(getKeyWidth() - 3);
         g.drawText("C" + std::to_string(octave_number),

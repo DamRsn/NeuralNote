@@ -17,9 +17,7 @@ AudioFileLoader::~AudioFileLoader()
 {
 }
 
-bool AudioFileLoader::loadAudioFile(const juce::File& inFile,
-                                    AudioBuffer<float>& outBuffer,
-                                    int& outNumOutSamples)
+bool AudioFileLoader::loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, int& outNumOutSamples)
 {
     std::unique_ptr<juce::AudioFormatReader> format_reader;
     format_reader.reset(mAudioFormatManager.createReaderFor(inFile));
@@ -34,8 +32,7 @@ bool AudioFileLoader::loadAudioFile(const juce::File& inFile,
 
     // Prepare downsampler and check if number of samples is not to high.
     mDownSampler.prepareToPlay(source_sample_rate, num_source_samples);
-    auto num_expected_down_samples =
-        mDownSampler.numOutSamplesOnNextProcessBlock(num_source_samples);
+    auto num_expected_down_samples = mDownSampler.numOutSamplesOnNextProcessBlock(num_source_samples);
 
     if (num_expected_down_samples > outBuffer.getNumSamples())
         return false;
@@ -48,8 +45,7 @@ bool AudioFileLoader::loadAudioFile(const juce::File& inFile,
         return false;
 
     // Downsample and put result in provided buffer
-    outNumOutSamples = mDownSampler.processBlock(
-        audio_buffer_source, outBuffer.getWritePointer(0), num_source_samples);
+    outNumOutSamples = mDownSampler.processBlock(audio_buffer_source, outBuffer.getWritePointer(0), num_source_samples);
 
     jassert(outNumOutSamples <= num_expected_down_samples);
 

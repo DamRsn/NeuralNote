@@ -39,31 +39,24 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 
     // Get tempo and time signature for UI.
     auto playhead_info = getPlayHead()->getPosition();
-    if (playhead_info.hasValue())
-    {
+    if (playhead_info.hasValue()) {
         if (playhead_info->getBpm().hasValue())
             mCurrentTempo = *playhead_info->getBpm();
-        if (playhead_info->getTimeSignature().hasValue())
-        {
+        if (playhead_info->getTimeSignature().hasValue()) {
             mCurrentTimeSignatureNum = playhead_info->getTimeSignature()->numerator;
             mCurrentTimeSignatureDenom = playhead_info->getTimeSignature()->denominator;
         }
     }
 
-    if (mState.load() == Recording)
-    {
-        if (!mWasRecording)
-        {
+    if (mState.load() == Recording) {
+        if (!mWasRecording) {
             mDownSampler.reset();
             mWasRecording = true;
             mPlayheadInfoStartRecord = getPlayHead()->getPosition();
 
-            if (mPlayheadInfoStartRecord.hasValue())
-            {
+            if (mPlayheadInfoStartRecord.hasValue()) {
                 mIsPlayheadPlaying = mPlayheadInfoStartRecord->getIsPlaying();
-            }
-            else
-            {
+            } else {
                 mIsPlayheadPlaying = false;
             }
 
@@ -76,18 +69,14 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         // If we reach the maximum number of sample that can be gathered,
         // or the playhead has stopped playing if it was at the start of the recording: stop recording.
         if (mNumSamplesAcquired + num_new_down_samples >= mMaxNumSamplesToConvert
-            || (mIsPlayheadPlaying && !getPlayHead()->getPosition()->getIsPlaying()))
-        {
+            || (mIsPlayheadPlaying && !getPlayHead()->getPosition()->getIsPlaying())) {
             mWasRecording = false;
             setStateToProcessing();
             launchTranscribeJob();
-        }
-        else
-        {
+        } else {
             mMonoBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples());
 
-            if (num_in_channels == 2)
-            {
+            if (num_in_channels == 2) {
                 // Down-mix to mono
                 mMonoBuffer.addFrom(0, 0, buffer, 1, 0, buffer.getNumSamples());
                 buffer.applyGain(1.0f / static_cast<float>(num_in_channels));
@@ -103,12 +92,9 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 
             mNumSamplesAcquired += num_samples_written;
         }
-    }
-    else
-    {
+    } else {
         // If we were previously recording but not anymore (user clicked record button to stop it).
-        if (mWasRecording)
-        {
+        if (mWasRecording) {
             mWasRecording = false;
             launchTranscribeJob();
         }
@@ -179,12 +165,9 @@ void NeuralNoteAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
 void NeuralNoteAudioProcessor::launchTranscribeJob()
 {
     jassert(mState.load() == Processing);
-    if (mNumSamplesAcquired >= 1 * AUDIO_SAMPLE_RATE)
-    {
+    if (mNumSamplesAcquired >= 1 * AUDIO_SAMPLE_RATE) {
         mThreadPool.addJob(mJobLambda);
-    }
-    else
-    {
+    } else {
         clear();
     }
 }
@@ -239,8 +222,7 @@ void NeuralNoteAudioProcessor::updateTranscription()
 {
     jassert(mState == PopulatedAudioAndMidiRegions);
 
-    if (mState == PopulatedAudioAndMidiRegions)
-    {
+    if (mState == PopulatedAudioAndMidiRegions) {
         mBasicPitch.setParameters(
             mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
 
@@ -253,8 +235,7 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
 {
     jassert(mState == PopulatedAudioAndMidiRegions);
 
-    if (mState == PopulatedAudioAndMidiRegions)
-    {
+    if (mState == PopulatedAudioAndMidiRegions) {
         mNoteOptions.setParameters(NoteUtils::RootNote(mParameters.keyRootNote.load()),
                                    NoteUtils::ScaleType(mParameters.keyType.load()),
                                    NoteUtils::SnapMode(mParameters.keySnapMode.load()),
@@ -305,13 +286,11 @@ std::string NeuralNoteAudioProcessor::getTempoStr() const
 
 std::string NeuralNoteAudioProcessor::getTimeSignatureStr() const
 {
-    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getTimeSignature().hasValue())
-    {
+    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getTimeSignature().hasValue()) {
         int num = mPlayheadInfoStartRecord->getTimeSignature()->numerator;
         int denom = mPlayheadInfoStartRecord->getTimeSignature()->denominator;
         return std::to_string(num) + " / " + std::to_string(denom);
-    }
-    else if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0)
+    } else if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0)
         return std::to_string(mCurrentTimeSignatureNum.load()) + " / "
                + std::to_string(mCurrentTimeSignatureDenom.load());
     else
