@@ -17,9 +17,7 @@ class PianoRoll
     , public juce::ChangeListener
 {
 public:
-    explicit PianoRoll(NeuralNoteAudioProcessor& processor,
-                       Keyboard& keyboard,
-                       double inNumPixelsPerSecond);
+    explicit PianoRoll(NeuralNoteAudioProcessor& processor, Keyboard& keyboard, double inNumPixelsPerSecond);
 
     void resized() override;
 

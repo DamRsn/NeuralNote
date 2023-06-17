@@ -14,8 +14,7 @@ MinMaxNoteSlider::MinMaxNoteSlider(std::atomic<int>& inAttachedMinValue,
     mSlider.setSliderStyle(juce::Slider::TwoValueHorizontal);
     mSlider.setRange(MIN_MIDI_NOTE, MAX_MIDI_NOTE, 1);
     mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-    mSlider.onValueChange = [this]()
-    {
+    mSlider.onValueChange = [this]() {
         mAttachedMinValue.store(int(mSlider.getMinValue()));
         mAttachedMaxValue.store(int(mSlider.getMaxValue()));
         mOnValueChanged();

@@ -12,8 +12,7 @@ QuantizeForceSlider::QuantizeForceSlider(std::atomic<float>& inAttachedValue,
     mSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     mSlider.setRange(0, 100, 1);
     mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-    mSlider.onValueChange = [this]()
-    {
+    mSlider.onValueChange = [this]() {
         mAttachedValue.store(static_cast<float>(mSlider.getValue()) / 100.f);
         mOnValueChanged();
         repaint();
@@ -34,7 +33,6 @@ void QuantizeForceSlider::paint(Graphics& g)
     g.setColour(juce::Colours::black);
     g.setFont(DROPDOWN_FONT);
 
-    g.drawText(std::to_string(int(mSlider.getValue())),
-               Rectangle<int>(133, 0, 23, 17),
-               juce::Justification::centredRight);
+    g.drawText(
+        std::to_string(int(mSlider.getValue())), Rectangle<int>(133, 0, 23, 17), juce::Justification::centredRight);
 }

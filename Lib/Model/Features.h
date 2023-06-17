@@ -28,8 +28,7 @@ public:
      * @param outNumFrames Number of frames that have been computed.
      * @return Pointer to features.
      */
-    const float*
-        computeFeatures(float* inAudio, size_t inNumSamples, size_t& outNumFrames);
+    const float* computeFeatures(float* inAudio, size_t inNumSamples, size_t& outNumFrames);
 
 private:
     // ONNX Runtime Data

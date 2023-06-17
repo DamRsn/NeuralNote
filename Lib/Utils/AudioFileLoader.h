@@ -17,9 +17,7 @@ public:
 
     ~AudioFileLoader();
 
-    bool loadAudioFile(const juce::File& inFile,
-                       AudioBuffer<float>& outBuffer,
-                       int& outNumOutSamples);
+    bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, int& outNumOutSamples);
 
 private:
     DownSampler mDownSampler;

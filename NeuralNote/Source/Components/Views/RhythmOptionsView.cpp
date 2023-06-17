@@ -12,19 +12,15 @@ RhythmOptionsView::RhythmOptionsView(NeuralNoteAudioProcessor& processor)
     mTimeDivisionDropdown->setEditableText(false);
     mTimeDivisionDropdown->setJustificationType(juce::Justification::centredRight);
     mTimeDivisionDropdown->addItemList(RhythmUtils::TimeDivisionsStr, 1);
-    mTimeDivisionDropdown->setSelectedItemIndex(
-        mProcessor.getCustomParameters()->rhythmTimeDivision.load());
-    mTimeDivisionDropdown->onChange = [this]()
-    {
-        mProcessor.getCustomParameters()->rhythmTimeDivision.store(
-            mTimeDivisionDropdown->getSelectedItemIndex());
+    mTimeDivisionDropdown->setSelectedItemIndex(mProcessor.getCustomParameters()->rhythmTimeDivision.load());
+    mTimeDivisionDropdown->onChange = [this]() {
+        mProcessor.getCustomParameters()->rhythmTimeDivision.store(mTimeDivisionDropdown->getSelectedItemIndex());
         _valueChanged();
     };
     addAndMakeVisible(*mTimeDivisionDropdown);
 
     mQuantizationForceSlider = std::make_unique<QuantizeForceSlider>(
-        mProcessor.getCustomParameters()->rhythmQuantizationForce,
-        [this]() { _valueChanged(); });
+        mProcessor.getCustomParameters()->rhythmQuantizationForce, [this]() { _valueChanged(); });
 
     addAndMakeVisible(*mQuantizationForceSlider);
 }
@@ -49,8 +45,7 @@ void RhythmOptionsView::paint(Graphics& g)
     mQuantizationForceSlider->setAlpha(alpha);
     g.setColour(BLACK.withAlpha(alpha));
     g.setFont(TITLE_FONT);
-    g.drawText(
-        "TIME QUANTIZE", Rectangle<int>(24, 0, 210, 17), juce::Justification::centredLeft);
+    g.drawText("TIME QUANTIZE", Rectangle<int>(24, 0, 210, 17), juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
     if (isEnabled())
@@ -72,15 +67,13 @@ void RhythmOptionsView::paint(Graphics& g)
                juce::Rectangle<int>(19, mTimeDivisionDropdown->getY(), 120, 17),
                juce::Justification::centredLeft);
 
-    g.drawText("FORCE",
-               juce::Rectangle<int>(19, mQuantizationForceSlider->getY(), 37, 17),
-               juce::Justification::centredLeft);
+    g.drawText(
+        "FORCE", juce::Rectangle<int>(19, mQuantizationForceSlider->getY(), 37, 17), juce::Justification::centredLeft);
 }
 
 void RhythmOptionsView::_valueChanged()
 {
-    if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
-    {
+    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
         mProcessor.updateTranscription();
         auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
 

@@ -97,13 +97,11 @@ juce::AudioProcessorEditor* ProcessorBase::createEditor()
     return new juce::GenericAudioProcessorEditor(*this);
 }
 
-bool ProcessorBase::isBusesLayoutSupported(
-    const juce::AudioProcessor::BusesLayout& layouts) const
+bool ProcessorBase::isBusesLayoutSupported(const juce::AudioProcessor::BusesLayout& layouts) const
 {
     if (isMidiEffect())
         return true;
-    else
-    {
+    else {
         if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
             && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
             return false;
