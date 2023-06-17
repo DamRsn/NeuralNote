@@ -9,6 +9,7 @@
 #include "NoteOptions.h"
 #include "MidiFileWriter.h"
 #include "RhythmOptions.h"
+#include "Player.h"
 
 enum State { EmptyAudioAndMidiRegions = 0, Recording, Processing, PopulatedAudioAndMidiRegions };
 
@@ -54,6 +55,9 @@ public:
 
     int getNumSamplesAcquired() const;
 
+    /* Returns the duration in seconds of the audio acquired for transcription */
+    double getAudioSampleDuration() const;
+
     void setNumSamplesAcquired(int inNumSamplesAcquired);
 
     void launchTranscribeJob();
@@ -88,6 +92,8 @@ public:
 
     bool isJobRunningOrQueued() const;
 
+    Player* getPlayer();
+
 private:
     void _runModel();
 
@@ -115,6 +121,8 @@ private:
     std::string mDroppedFilename;
 
     std::vector<Notes::Event> mPostProcessedNotes;
+
+    std::unique_ptr<Player> mPlayer;
 
     juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
 

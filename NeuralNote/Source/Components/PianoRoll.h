@@ -11,13 +11,14 @@
 #include "Keyboard.h"
 #include "PluginProcessor.h"
 #include "UIDefines.h"
+#include "Playhead.h"
 
 class PianoRoll
     : public juce::Component
     , public juce::ChangeListener
 {
 public:
-    explicit PianoRoll(NeuralNoteAudioProcessor& processor, Keyboard& keyboard, double inNumPixelsPerSecond);
+    explicit PianoRoll(NeuralNoteAudioProcessor& inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond);
 
     void resized() override;
 
@@ -25,8 +26,12 @@ public:
 
     void changeListenerCallback(ChangeBroadcaster* source) override;
 
+    void mouseDown(const MouseEvent& event) override;
+
 private:
-    float _timeToX(float inTime) const;
+    float _timeToPixel(float inTime) const;
+
+    float _pixelToTime(float inPixel) const;
 
     /**
      * Compute rectangle y start and height to draw inNote on piano roll
@@ -63,6 +68,8 @@ private:
 
     Keyboard& mKeyboard;
     NeuralNoteAudioProcessor& mProcessor;
+
+    Playhead mPlayhead;
 };
 
 #endif // PianoRoll_h

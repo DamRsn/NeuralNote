@@ -9,6 +9,8 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     mAudioBufferForMIDITranscription.clear();
 
     mJobLambda = [this]() { _runModel(); };
+
+    mPlayer = std::make_unique<Player>(this);
 }
 
 AudioProcessorValueTreeState::ParameterLayout NeuralNoteAudioProcessor::createParameterLayout()
@@ -26,6 +28,8 @@ void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     mDownSampler.prepareToPlay(sampleRate, samplesPerBlock);
 
     mMonoBuffer.setSize(1, samplesPerBlock);
+
+    mPlayer->prepareToPlay(sampleRate, samplesPerBlock);
 }
 
 void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -100,6 +104,8 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 
     if (isMute)
         buffer.clear();
+
+    mPlayer->processBlock(buffer);
 }
 
 juce::AudioProcessorEditor* NeuralNoteAudioProcessor::createEditor()
@@ -144,6 +150,11 @@ AudioBuffer<float>& NeuralNoteAudioProcessor::getAudioBufferForMidi()
 int NeuralNoteAudioProcessor::getNumSamplesAcquired() const
 {
     return mNumSamplesAcquired;
+}
+
+double NeuralNoteAudioProcessor::getAudioSampleDuration() const
+{
+    return (double) mNumSamplesAcquired / mBasicPitchSampleRate;
 }
 
 void NeuralNoteAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
@@ -198,6 +209,10 @@ void NeuralNoteAudioProcessor::_runModel()
     Notes::dropOverlappingPitchBends(mPostProcessedNotes);
     Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
 
+    // For the synth
+    auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
+    mPlayer->getSynthController()->setNewMidiEventsVectorToUse(single_events);
+
     mMidiFileTempo = mCurrentTempo.load() > 0 ? mCurrentTempo.load() : 120;
 
     mState.store(PopulatedAudioAndMidiRegions);
@@ -236,6 +251,10 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
 
         Notes::dropOverlappingPitchBends(mPostProcessedNotes);
         Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
+
+        // For the synth
+        auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
+        mPlayer->getSynthController()->setNewMidiEventsVectorToUse(single_events);
     }
 }
 
@@ -291,6 +310,11 @@ double NeuralNoteAudioProcessor::getMidiFileTempo() const
 bool NeuralNoteAudioProcessor::isJobRunningOrQueued() const
 {
     return mThreadPool.getNumJobs() > 0;
+}
+
+Player* NeuralNoteAudioProcessor::getPlayer()
+{
+    return mPlayer.get();
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

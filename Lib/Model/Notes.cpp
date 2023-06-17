@@ -50,8 +50,9 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
     // TODO: infer frame_threshold if < 0, can be merged with inferredOnsets.
 
     // constrain frequencies
-    auto max_note_idx = (inParams.maxFrequency < 0) ? n_notes - 1 : ((_hzToMidi(inParams.maxFrequency) - MIDI_OFFSET));
-    auto min_note_idx = (inParams.minFrequency < 0) ? 0 : ((_hzToMidi(inParams.minFrequency) - MIDI_OFFSET));
+    auto max_note_idx =
+        (inParams.maxFrequency < 0) ? n_notes - 1 : ((NoteUtils::hzToMidi(inParams.maxFrequency) - MIDI_OFFSET));
+    auto min_note_idx = (inParams.minFrequency < 0) ? 0 : ((NoteUtils::hzToMidi(inParams.minFrequency) - MIDI_OFFSET));
 
     // stop 1 frame early to prevent edge case
     // as per https://github.com/spotify/basic-pitch/blob/f85a8e9ade1f297b8adb39b155c483e2312e1aca/basic_pitch/note_creation.py#L399

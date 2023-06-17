@@ -4,20 +4,24 @@
 
 #include "PianoRoll.h"
 
-PianoRoll::PianoRoll(NeuralNoteAudioProcessor& processor, Keyboard& keyboard, double inNumPixelsPerSecond)
-    : mProcessor(processor)
+PianoRoll::PianoRoll(NeuralNoteAudioProcessor& inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond)
+    : mProcessor(inProcessor)
     , mKeyboard(keyboard)
     , mNumPixelsPerSecond(inNumPixelsPerSecond)
+    , mPlayhead(&inProcessor)
 {
     mKeyboard.addChangeListener(this);
 
     mNoteGradient.addColour(0.0, juce::Colours::green);
     mNoteGradient.addColour(0.5, juce::Colours::blue);
     mNoteGradient.addColour(1.0, juce::Colours::red);
+
+    addAndMakeVisible(mPlayhead);
 }
 
 void PianoRoll::resized()
 {
+    mPlayhead.setSize(getWidth(), getHeight());
 }
 
 void PianoRoll::paint(Graphics& g)
@@ -61,27 +65,28 @@ void PianoRoll::paint(Graphics& g)
                 continue;
 
             g.setColour(mNoteGradient.getColourAtPosition(note_event.amplitude));
-            g.fillRect(_timeToX(start), note_y_start, _timeToX(end) - _timeToX(start), note_height);
+            g.fillRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height);
 
             g.setColour(juce::Colours::black);
-            g.drawRect(_timeToX(start), note_y_start, _timeToX(end) - _timeToX(start), note_height, 0.5);
+            g.drawRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height, 0.5);
 
             // Draw pitch bend
             if (mProcessor.getCustomParameters()->pitchBendMode == SinglePitchBend) {
                 const auto& bends = note_event.bends;
+
                 if (!note_event.bends.empty()) {
                     auto path_stroke_type =
                         PathStrokeType(1, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
                     Path p;
                     float y_ref_pb = note_y_start + note_height / 2.0f;
 
-                    p.startNewSubPath(_timeToX(start), y_ref_pb);
+                    p.startNewSubPath(_timeToPixel(start), y_ref_pb);
 
                     for (size_t i = 0; i < bends.size(); i++) {
-                        p.lineTo(_timeToX(float(start + double(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
+                        p.lineTo(_timeToPixel(float(start + double(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
                                  y_ref_pb - float(bends[i]) * note_height / 3.0f);
                     }
-                    p.lineTo(_timeToX(float(note_event.endTime)), y_ref_pb);
+                    p.lineTo(_timeToPixel(float(note_event.endTime)), y_ref_pb);
 
                     g.setColour(WHITE_SOLID);
                     g.strokePath(p, path_stroke_type);
@@ -103,9 +108,19 @@ void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
     }
 }
 
-float PianoRoll::_timeToX(float inTime) const
+void PianoRoll::mouseDown(const MouseEvent& event)
+{
+    mPlayhead.setPlayheadTime(_pixelToTime((float) event.x));
+}
+
+float PianoRoll::_timeToPixel(float inTime) const
 {
     return inTime * static_cast<float>(mNumPixelsPerSecond);
+}
+
+float PianoRoll::_pixelToTime(float inPixel) const
+{
+    return inPixel / static_cast<float>(mNumPixelsPerSecond);
 }
 
 std::pair<float, float> PianoRoll::_getNoteHeightAndWidthPianoRoll(int inNote) const

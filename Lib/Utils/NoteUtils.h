@@ -32,6 +32,26 @@ static String midiNoteToStr(int inNoteNumber)
     return noteName;
 }
 
+/**
+ * Return closest midi note number to frequency
+ * @param hz Input frequency
+ * @return Closest midi note number
+ */
+static inline int hzToMidi(float hz)
+{
+    return (int) std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0);
+}
+
+/**
+ * Compute frequency in Hz corresponding to given midi note
+ * @param inMidiNote Midi note number
+ * @return Frequency in Hz
+ */
+static inline float midiToHz(float inMidiNote)
+{
+    return 440.0f * std::pow(2.0f, (inMidiNote - 69.0f) / 12.0f);
+}
+
 } // namespace NoteUtils
 
 #endif //NN_NOTEUTILS_H

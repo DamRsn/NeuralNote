@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Constants.h"
+#include "NoteUtils.h"
 
 enum PitchBendModes { NoPitchBend = 0, SinglePitchBend, MultiPitchBend };
 
@@ -162,13 +163,6 @@ private:
         return (frame * FFT_HOP) / (double) (AUDIO_SAMPLE_RATE);
 #endif
     }
-
-    /**
-     * Return closest midi note number to frequency
-     * @param hz Input frequency
-     * @return Closest midi note number
-     */
-    static inline int _hzToMidi(float hz) { return (int) std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0); }
 
     /**
      * Returns a version of inOnsetsPG augmented by detecting differences in note posteriorgrams
