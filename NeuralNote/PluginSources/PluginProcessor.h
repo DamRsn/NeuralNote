@@ -3,13 +3,14 @@
 #include "atomic"
 #include <JuceHeader.h>
 
-#include "DownSampler.h"
+#include "Resampler.h"
 #include "ProcessorBase.h"
 #include "BasicPitch.h"
 #include "NoteOptions.h"
 #include "MidiFileWriter.h"
 #include "RhythmOptions.h"
 #include "Player.h"
+#include "SourceAudioManager.h"
 
 enum State { EmptyAudioAndMidiRegions = 0, Recording, Processing, PopulatedAudioAndMidiRegions };
 
@@ -56,7 +57,7 @@ public:
 
     bool isJobRunningOrQueued() const;
 
-    AudioBuffer<float>& getAudioBufferForMidi();
+    //    AudioBuffer<float>& getAudioBufferForMidi();
 
     const std::vector<Notes::Event>& getNoteEventVector() const;
 
@@ -73,18 +74,6 @@ public:
     juce::AudioProcessorValueTreeState mTree;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    // TODO: Create an SourceAudioManager for recorded and dropped files
-    void setFileDrop(const std::string& inFilename);
-
-    std::string getDroppedFilename() const;
-
-    int getNumSamplesAcquired() const;
-
-    /* Returns the duration in seconds of the audio acquired for transcription */
-    double getAudioSampleDuration() const;
-
-    void setNumSamplesAcquired(int inNumSamplesAcquired);
-
     // TODO: TimeQuantizeManager
     bool canQuantize() const;
 
@@ -96,6 +85,8 @@ public:
 
     double getMidiFileTempo() const;
 
+    SourceAudioManager* getSourceAudioManager();
+
     Player* getPlayer();
 
 private:
@@ -103,8 +94,11 @@ private:
 
     std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
-    AudioBuffer<float> mMonoBuffer;
-    DownSampler mDownSampler;
+    std::unique_ptr<SourceAudioManager> mSourceAudioManager;
+    std::unique_ptr<Player> mPlayer;
+
+    //    AudioBuffer<float> mMonoBuffer;
+    //    Resampler mDownSampler;
 
     Parameters mParameters;
     bool mWasRecording = false;
@@ -126,8 +120,6 @@ private:
 
     std::vector<Notes::Event> mPostProcessedNotes;
 
-    std::unique_ptr<Player> mPlayer;
-
     juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
 
     // Thread pool to run ML in background thread.
@@ -135,7 +127,7 @@ private:
     std::function<void()> mJobLambda;
 
     int mNumSamplesAcquired = 0;
-    const double mBasicPitchSampleRate = 22050.0;
-    const double mMaxDuration = 3 * 60;
-    const int mMaxNumSamplesToConvert = static_cast<int>(mBasicPitchSampleRate * mMaxDuration);
+    //    const double mBasicPitchSampleRate = 22050.0;
+    //    const double mMaxDuration = 3 * 60;
+    //    const int mMaxNumSamplesToConvert = static_cast<int>(mBasicPitchSampleRate * mMaxDuration);
 };

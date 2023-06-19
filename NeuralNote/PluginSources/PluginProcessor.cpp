@@ -5,11 +5,12 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     : mTree(*this, nullptr, "PARAMETERS", createParameterLayout())
     , mThreadPool(1)
 {
-    mAudioBufferForMIDITranscription.setSize(1, mMaxNumSamplesToConvert);
-    mAudioBufferForMIDITranscription.clear();
+    //    mAudioBufferForMIDITranscription.setSize(1, mMaxNumSamplesToConvert);
+    //    mAudioBufferForMIDITranscription.clear();
 
     mJobLambda = [this]() { _runModel(); };
 
+    mSourceAudioManager = std::make_unique<SourceAudioManager>(this);
     mPlayer = std::make_unique<Player>(this);
 }
 
@@ -25,10 +26,7 @@ AudioProcessorValueTreeState::ParameterLayout NeuralNoteAudioProcessor::createPa
 
 void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    mDownSampler.prepareToPlay(sampleRate, samplesPerBlock);
-
-    mMonoBuffer.setSize(1, samplesPerBlock);
-
+    mSourceAudioManager->prepareToPlay(sampleRate, samplesPerBlock);
     mPlayer->prepareToPlay(sampleRate, samplesPerBlock);
 }
 
@@ -36,6 +34,7 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 {
     juce::ignoreUnused(midiMessages);
     const int num_in_channels = getTotalNumInputChannels();
+    const int num_out_channels = getTotalNumOutputChannels();
 
     // Get tempo and time signature for UI.
     auto playhead_info = getPlayHead()->getPosition();
@@ -48,9 +47,10 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         }
     }
 
+    mSourceAudioManager->processBlock(buffer);
+
     if (mState.load() == Recording) {
         if (!mWasRecording) {
-            mDownSampler.reset();
             mWasRecording = true;
             mPlayheadInfoStartRecord = getPlayHead()->getPosition();
 
@@ -61,36 +61,6 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
             }
 
             mRhythmOptions.setInfo(false, mPlayheadInfoStartRecord);
-        }
-
-        // If we have reached maximum number of samples that can be processed: stop record and launch processing
-        int num_new_down_samples = mDownSampler.numOutSamplesOnNextProcessBlock(buffer.getNumSamples());
-
-        // If we reach the maximum number of sample that can be gathered,
-        // or the playhead has stopped playing if it was at the start of the recording: stop recording.
-        if (mNumSamplesAcquired + num_new_down_samples >= mMaxNumSamplesToConvert
-            || (mIsPlayheadPlaying && !getPlayHead()->getPosition()->getIsPlaying())) {
-            mWasRecording = false;
-            setStateToProcessing();
-            launchTranscribeJob();
-        } else {
-            mMonoBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples());
-
-            if (num_in_channels == 2) {
-                // Down-mix to mono
-                mMonoBuffer.addFrom(0, 0, buffer, 1, 0, buffer.getNumSamples());
-                buffer.applyGain(1.0f / static_cast<float>(num_in_channels));
-            }
-
-            // Fill buffer with 22050 Hz audio
-            int num_samples_written =
-                mDownSampler.processBlock(mMonoBuffer,
-                                          mAudioBufferForMIDITranscription.getWritePointer(0, mNumSamplesAcquired),
-                                          buffer.getNumSamples());
-
-            jassert(num_samples_written <= num_new_down_samples);
-
-            mNumSamplesAcquired += num_samples_written;
         }
     } else {
         // If we were previously recording but not anymore (user clicked record button to stop it).
@@ -142,25 +112,25 @@ void NeuralNoteAudioProcessor::clear()
     mState.store(EmptyAudioAndMidiRegions);
 }
 
-AudioBuffer<float>& NeuralNoteAudioProcessor::getAudioBufferForMidi()
-{
-    return mAudioBufferForMIDITranscription;
-}
+//AudioBuffer<float>& NeuralNoteAudioProcessor::getAudioBufferForMidi()
+//{
+//    return mAudioBufferForMIDITranscription;
+//}
 
-int NeuralNoteAudioProcessor::getNumSamplesAcquired() const
-{
-    return mNumSamplesAcquired;
-}
-
-double NeuralNoteAudioProcessor::getAudioSampleDuration() const
-{
-    return (double) mNumSamplesAcquired / mBasicPitchSampleRate;
-}
-
-void NeuralNoteAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
-{
-    mNumSamplesAcquired = inNumSamplesAcquired;
-}
+//int NeuralNoteAudioProcessor::getNumSamplesAcquired() const
+//{
+//    return mNumSamplesAcquired;
+//}
+//
+//double NeuralNoteAudioProcessor::getAudioSampleDuration() const
+//{
+//    return (double) mNumSamplesAcquired / BASIC_PITCH_SAMPLE_RATE;
+//}
+//
+//void NeuralNoteAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
+//{
+//    mNumSamplesAcquired = inNumSamplesAcquired;
+//}
 
 void NeuralNoteAudioProcessor::launchTranscribeJob()
 {
@@ -258,16 +228,16 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
     }
 }
 
-void NeuralNoteAudioProcessor::setFileDrop(const std::string& inFilename)
-{
-    mRhythmOptions.setInfo(true);
-    mDroppedFilename = inFilename;
-}
-
-std::string NeuralNoteAudioProcessor::getDroppedFilename() const
-{
-    return mDroppedFilename;
-}
+//void NeuralNoteAudioProcessor::setFileDrop(const std::string& inFilename)
+//{
+//    mRhythmOptions.setInfo(true);
+//    mDroppedFilename = inFilename;
+//}
+//
+//std::string NeuralNoteAudioProcessor::getDroppedFilename() const
+//{
+//    return mDroppedFilename;
+//}
 
 bool NeuralNoteAudioProcessor::canQuantize() const
 {
@@ -315,6 +285,11 @@ bool NeuralNoteAudioProcessor::isJobRunningOrQueued() const
 Player* NeuralNoteAudioProcessor::getPlayer()
 {
     return mPlayer.get();
+}
+
+SourceAudioManager* NeuralNoteAudioProcessor::getSourceAudioManager()
+{
+    return mSourceAudioManager.get();
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

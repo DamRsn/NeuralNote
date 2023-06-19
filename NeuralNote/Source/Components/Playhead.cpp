@@ -39,7 +39,7 @@ void Playhead::paint(Graphics& g)
 void Playhead::timerCallback()
 {
     auto playhead_time = mProcessor->getPlayer()->getPlayheadPositionSeconds();
-    auto sample_duration = mProcessor->getAudioSampleDuration();
+    auto sample_duration = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
 
     if (mCurrentPlayerPlayheadTime != playhead_time || sample_duration != mAudioSampleDuration) {
         mCurrentPlayerPlayheadTime = playhead_time;

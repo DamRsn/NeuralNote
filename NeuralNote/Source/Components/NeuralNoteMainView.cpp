@@ -25,10 +25,10 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
         // Recording started
         if (is_on) {
             mVisualizationPanel.startTimerHzAudioThumbnail(10);
-            mProcessor.setStateToRecording();
+            mProcessor.getSourceAudioManager()->startRecording();
         } else {
             // Recording has ended, set processor state to processing
-            mProcessor.setStateToProcessing();
+            mProcessor.getSourceAudioManager()->stopRecording();
             mVisualizationPanel.stopTimerAudioThumbnail();
         }
 

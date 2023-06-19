@@ -7,14 +7,14 @@
 
 #include <JuceHeader.h>
 
-#include "AudioFileLoader.h"
+#include "AudioUtils.h"
 #include "PluginProcessor.h"
 #include "UIDefines.h"
 
 class AudioRegion : public Component
 {
 public:
-    AudioRegion(NeuralNoteAudioProcessor& processor);
+    explicit AudioRegion(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 
@@ -39,8 +39,6 @@ private:
     juce::AudioFormatManager mThumbnailFormatManager;
     juce::AudioThumbnailCache mThumbnailCache;
     juce::AudioThumbnail mThumbnail;
-
-    AudioFileLoader mFileLoader;
 
     bool mIsFileOver = false;
 };

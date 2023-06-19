@@ -47,7 +47,7 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     ignoreUnused(y);
     mAudioRegion.setIsFileOver(false);
 
-    bool success = mAudioRegion.onFileDrop(files[0]);
+    bool success = mProcessor.getSourceAudioManager()->onFileDrop(files[0]);
 
     if (success) {
         resizeAccordingToNumSamplesAvailable();
@@ -81,7 +81,7 @@ void CombinedAudioMidiRegion::repaintPianoRoll()
 
 void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
 {
-    int num_samples_available = mProcessor.getNumSamplesAcquired();
+    int num_samples_available = mProcessor.getSourceAudioManager()->getNumSamplesDownAcquired();
 
     int thumbnail_width =
         static_cast<int>(std::round((num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE));
