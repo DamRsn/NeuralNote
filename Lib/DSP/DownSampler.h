@@ -6,6 +6,7 @@
 #define DownSampler_h
 
 #include <JuceHeader.h>
+#include "BasicPitchConstants.h"
 
 class DownSampler
 {
@@ -32,7 +33,7 @@ private:
     int mNumInputSamplesAvailable = mInitPadding;
     double mSpeedRatio;
     double mSourceSampleRate;
-    const double mTargetSampleRate = 22050.0;
+    const double mTargetSampleRate = BASIC_PITCH_SAMPLE_RATE;
 
     // Low pass filter
     std::vector<juce::dsp::IIR::Filter<float>> mLowpassFilters;

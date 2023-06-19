@@ -8,7 +8,7 @@
 #include "RTNeural/RTNeural.h"
 
 #include "BinaryData.h"
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 
 /**
  * Class to run basic pitch CNN with RTNeural

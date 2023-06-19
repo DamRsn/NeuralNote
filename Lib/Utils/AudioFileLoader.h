@@ -8,7 +8,7 @@
 #include <JuceHeader.h>
 
 #include "DownSampler.h"
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 
 class AudioFileLoader
 {

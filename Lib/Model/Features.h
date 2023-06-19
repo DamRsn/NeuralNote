@@ -9,7 +9,7 @@
 #include <onnxruntime_cxx_api.h>
 
 #include "BinaryData.h"
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 
 /**
  * Class to compute the CQT and harmonically stack those. Output of this can be given as input to Basic Pitch cnn.

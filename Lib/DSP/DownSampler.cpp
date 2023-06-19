@@ -18,7 +18,7 @@ void DownSampler::prepareToPlay(double inSampleRate, int inMaxBlockSize)
     mLowpassFilters.resize(static_cast<size_t>(filter_coeffs.size()));
 
     for (size_t i = 0; i < mLowpassFilters.size(); i++) {
-        mLowpassFilters[i].coefficients = filter_coeffs[(size_t) i];
+        mLowpassFilters[i].coefficients = filter_coeffs[(int) i];
     }
 
     reset();

@@ -51,16 +51,12 @@ public:
 
     void clear();
 
-    AudioBuffer<float>& getAudioBufferForMidi();
-
-    int getNumSamplesAcquired() const;
-
-    /* Returns the duration in seconds of the audio acquired for transcription */
-    double getAudioSampleDuration() const;
-
-    void setNumSamplesAcquired(int inNumSamplesAcquired);
-
+    // TODO: function to put in a new class TranscriptionManager
     void launchTranscribeJob();
+
+    bool isJobRunningOrQueued() const;
+
+    AudioBuffer<float>& getAudioBufferForMidi();
 
     const std::vector<Notes::Event>& getNoteEventVector() const;
 
@@ -70,16 +66,26 @@ public:
 
     Parameters* getCustomParameters();
 
-    const juce::Optional<juce::AudioPlayHead::PositionInfo>& getPlayheadInfoOnRecordStart();
+    const juce::Optional<juce::AudioPlayHead::PositionInfo>&
+        getPlayheadInfoOnRecordStart(); // TODO: Add to timeQuantizeManager
 
     // Value tree state to pass automatable parameters from UI
     juce::AudioProcessorValueTreeState mTree;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+    // TODO: Create an SourceAudioManager for recorded and dropped files
     void setFileDrop(const std::string& inFilename);
 
     std::string getDroppedFilename() const;
 
+    int getNumSamplesAcquired() const;
+
+    /* Returns the duration in seconds of the audio acquired for transcription */
+    double getAudioSampleDuration() const;
+
+    void setNumSamplesAcquired(int inNumSamplesAcquired);
+
+    // TODO: TimeQuantizeManager
     bool canQuantize() const;
 
     std::string getTempoStr() const;
@@ -90,12 +96,10 @@ public:
 
     double getMidiFileTempo() const;
 
-    bool isJobRunningOrQueued() const;
-
     Player* getPlayer();
 
 private:
-    void _runModel();
+    void _runModel(); // Add to TranscriptionManager
 
     std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
