@@ -63,8 +63,9 @@ void SourceAudioManager::processBlock(const AudioBuffer<float>& inBuffer)
         int num_samples_down = mDownSampler.processBlock(mInternalMonoBuffer.getReadPointer(0),
                                                          mInternalDownsampledBuffer.getWritePointer(0),
                                                          inBuffer.getNumSamples());
+        jassert(num_samples_down <= mInternalDownsampledBuffer.getNumSamples());
 
-        // Write downsampled audio to file at native sample rate
+        // Write downsampled audio to file at downsampled sample rate
         bool result_down =
             mThreadedWriterDown->write(mInternalDownsampledBuffer.getArrayOfReadPointers(), num_samples_down);
         jassertquiet(result_down);
@@ -81,10 +82,7 @@ void SourceAudioManager::startRecording()
         return;
     }
 
-    // Init first writer at native sample rate (stereo)
-    juce::WavAudioFormat format;
-    juce::StringPairArray meta_data_values;
-
+    // Prepare files to be written
     File neural_note_dir =
         File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("NeuralNote");
 
@@ -112,11 +110,12 @@ void SourceAudioManager::startRecording()
         return;
     }
 
-    DBG(mRecordedFileDown.getFullPathName());
-    DBG(mRecordedFile.getFullPathName());
-
     mFilesToDelete.push_back(mRecordedFile);
     mFilesToDelete.push_back(mRecordedFileDown);
+
+    // Init first writer at native sample rate (stereo)
+    juce::WavAudioFormat format;
+    juce::StringPairArray meta_data_values;
 
     auto* wav_writer =
         format.createWriterFor(new juce::FileOutputStream(mRecordedFile), mSampleRate, 2, 16, meta_data_values, 0);
@@ -129,11 +128,11 @@ void SourceAudioManager::startRecording()
     juce::StringPairArray meta_data_values_down;
 
     auto* wav_writer_down = format_down.createWriterFor(
-        new juce::FileOutputStream(mRecordedFileDown), BASIC_PITCH_SAMPLE_RATE, 1, 16, meta_data_values, 0);
+        new juce::FileOutputStream(mRecordedFileDown), BASIC_PITCH_SAMPLE_RATE, 1, 16, meta_data_values_down, 0);
 
     mWriterThreadDown.startThread();
     mThreadedWriterDown =
-        std::make_unique<juce::AudioFormatWriter::ThreadedWriter>(wav_writer_down, mWriterThread, 32768);
+        std::make_unique<juce::AudioFormatWriter::ThreadedWriter>(wav_writer_down, mWriterThreadDown, 32768);
     mDownSampler.reset();
 
     mNumSamplesAcquired = 0;

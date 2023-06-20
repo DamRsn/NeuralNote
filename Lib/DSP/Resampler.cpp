@@ -47,8 +47,8 @@ int Resampler::processBlock(const float* inBuffer, float* outBuffer, int inNumSa
     mInternalBuffer.copyFrom(0, mNumInputSamplesAvailable, inBuffer, inNumSamples);
     float* internal_buffer_ptr = mInternalBuffer.getWritePointer(0);
 
-    // Lowpass filter and copy data in internal buffer at the same time
-    if (mSourceSampleRate > mTargetSampleRate) {
+    // Lowpass filter if necessary
+    if (mTargetSampleRate < mSourceSampleRate) {
         for (int i = 0; i < inNumSamples; i++) {
             for (auto& lowpass_filter: mLowpassFilters) {
                 internal_buffer_ptr[mNumInputSamplesAvailable + i] =
@@ -67,6 +67,10 @@ int Resampler::processBlock(const float* inBuffer, float* outBuffer, int inNumSa
     jassert(num_input_samples_used <= mNumInputSamplesAvailable);
 
     mNumInputSamplesAvailable -= num_input_samples_used;
+
+    for (int i = 0; i < mNumInputSamplesAvailable; i++) {
+        mInternalBuffer.setSample(0, i, mInternalBuffer.getSample(0, i + num_input_samples_used));
+    }
 
     return num_out_samples_to_produce;
 }
