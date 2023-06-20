@@ -57,8 +57,6 @@ public:
 
     bool isJobRunningOrQueued() const;
 
-    //    AudioBuffer<float>& getAudioBufferForMidi();
-
     const std::vector<Notes::Event>& getNoteEventVector() const;
 
     void updateTranscription();
@@ -97,9 +95,6 @@ private:
     std::unique_ptr<SourceAudioManager> mSourceAudioManager;
     std::unique_ptr<Player> mPlayer;
 
-    //    AudioBuffer<float> mMonoBuffer;
-    //    Resampler mDownSampler;
-
     Parameters mParameters;
     bool mWasRecording = false;
     bool mIsPlayheadPlaying = false;
@@ -108,26 +103,19 @@ private:
     std::atomic<int> mCurrentTimeSignatureNum = -1;
     std::atomic<int> mCurrentTimeSignatureDenom = -1;
 
-    AudioBuffer<float> mAudioBufferForMIDITranscription;
-
     double mMidiFileTempo = 120.0;
 
+    // To transcription manager
     BasicPitch mBasicPitch;
     NoteOptions mNoteOptions;
     RhythmOptions mRhythmOptions;
 
-    std::string mDroppedFilename;
-
     std::vector<Notes::Event> mPostProcessedNotes;
 
+    // To quantize manager
     juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
 
-    // Thread pool to run ML in background thread.
+    // Thread pool to run ML in background thread. To transcription manager
     juce::ThreadPool mThreadPool;
     std::function<void()> mJobLambda;
-
-    int mNumSamplesAcquired = 0;
-    //    const double mBasicPitchSampleRate = 22050.0;
-    //    const double mMaxDuration = 3 * 60;
-    //    const int mMaxNumSamplesToConvert = static_cast<int>(mBasicPitchSampleRate * mMaxDuration);
 };

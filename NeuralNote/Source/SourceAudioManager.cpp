@@ -209,7 +209,18 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
 
 void SourceAudioManager::clear()
 {
-    // TODO:
+    if (mIsRecording) {
+        stopRecording();
+    }
+
+    mSourceAudio = {};
+    mDownsampledSourceAudio = {};
+
+    mNumSamplesAcquiredDown = 0;
+    mNumSamplesAcquired = 0;
+    mDuration = 0.0;
+
+    mDroppedFilename = "";
 }
 
 AudioBuffer<float>& SourceAudioManager::getDownsampledSourceAudioForTranscription()

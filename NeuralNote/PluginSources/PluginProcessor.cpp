@@ -5,9 +5,6 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     : mTree(*this, nullptr, "PARAMETERS", createParameterLayout())
     , mThreadPool(1)
 {
-    //    mAudioBufferForMIDITranscription.setSize(1, mMaxNumSamplesToConvert);
-    //    mAudioBufferForMIDITranscription.clear();
-
     mJobLambda = [this]() { _runModel(); };
 
     mSourceAudioManager = std::make_unique<SourceAudioManager>(this);
@@ -66,7 +63,6 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         // If we were previously recording but not anymore (user clicked record button to stop it).
         if (mWasRecording) {
             mWasRecording = false;
-            launchTranscribeJob();
         }
     }
 
@@ -93,12 +89,8 @@ void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInB
 
 void NeuralNoteAudioProcessor::clear()
 {
-    mNumSamplesAcquired = 0;
-    mAudioBufferForMIDITranscription.clear();
-
     mPostProcessedNotes.clear();
     mPlayheadInfoStartRecord = juce::Optional<juce::AudioPlayHead::PositionInfo>();
-    mDroppedFilename = "";
 
     mCurrentTempo = -1;
     mCurrentTimeSignatureNum = -1;
@@ -109,33 +101,20 @@ void NeuralNoteAudioProcessor::clear()
     mBasicPitch.reset();
     mWasRecording = false;
     mIsPlayheadPlaying = false;
+
+    // TODO:
+    //    mPlayer->clear();
+    mSourceAudioManager->clear();
+
     mState.store(EmptyAudioAndMidiRegions);
 }
-
-//AudioBuffer<float>& NeuralNoteAudioProcessor::getAudioBufferForMidi()
-//{
-//    return mAudioBufferForMIDITranscription;
-//}
-
-//int NeuralNoteAudioProcessor::getNumSamplesAcquired() const
-//{
-//    return mNumSamplesAcquired;
-//}
-//
-//double NeuralNoteAudioProcessor::getAudioSampleDuration() const
-//{
-//    return (double) mNumSamplesAcquired / BASIC_PITCH_SAMPLE_RATE;
-//}
-//
-//void NeuralNoteAudioProcessor::setNumSamplesAcquired(int inNumSamplesAcquired)
-//{
-//    mNumSamplesAcquired = inNumSamplesAcquired;
-//}
 
 void NeuralNoteAudioProcessor::launchTranscribeJob()
 {
     jassert(mState.load() == Processing);
-    if (mNumSamplesAcquired >= 1 * AUDIO_SAMPLE_RATE) {
+
+    // Have at least one second to transcribe
+    if (getSourceAudioManager()->getNumSamplesDownAcquired() >= 1 * AUDIO_SAMPLE_RATE) {
         mThreadPool.addJob(mJobLambda);
     } else {
         clear();
@@ -161,7 +140,9 @@ void NeuralNoteAudioProcessor::_runModel()
 {
     mBasicPitch.setParameters(mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
 
-    mBasicPitch.transcribeToMIDI(mAudioBufferForMIDITranscription.getWritePointer(0), mNumSamplesAcquired);
+    mBasicPitch.transcribeToMIDI(
+        getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
+        getSourceAudioManager()->getNumSamplesDownAcquired());
 
     mNoteOptions.setParameters(NoteUtils::RootNote(mParameters.keyRootNote.load()),
                                NoteUtils::ScaleType(mParameters.keyType.load()),
@@ -227,17 +208,6 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
         mPlayer->getSynthController()->setNewMidiEventsVectorToUse(single_events);
     }
 }
-
-//void NeuralNoteAudioProcessor::setFileDrop(const std::string& inFilename)
-//{
-//    mRhythmOptions.setInfo(true);
-//    mDroppedFilename = inFilename;
-//}
-//
-//std::string NeuralNoteAudioProcessor::getDroppedFilename() const
-//{
-//    return mDroppedFilename;
-//}
 
 bool NeuralNoteAudioProcessor::canQuantize() const
 {
