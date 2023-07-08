@@ -30,8 +30,6 @@ void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
 void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused(midiMessages);
-    const int num_in_channels = getTotalNumInputChannels();
-    const int num_out_channels = getTotalNumOutputChannels();
 
     // Get tempo and time signature for UI.
     auto playhead_info = getPlayHead()->getPosition();
@@ -103,7 +101,7 @@ void NeuralNoteAudioProcessor::clear()
     mIsPlayheadPlaying = false;
 
     // TODO:
-    //    mPlayer->clear();
+    //        mPlayer->clear();
     mSourceAudioManager->clear();
 
     mState.store(EmptyAudioAndMidiRegions);

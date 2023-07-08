@@ -9,6 +9,8 @@
 
 SourceAudioManager::SourceAudioManager(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
+    , mThumbnailCache(1)
+    , mThumbnail(mSourceSamplesPerThumbnailSample, mThumbnailFormatManager, mThumbnailCache)
 {
 }
 
@@ -135,6 +137,8 @@ void SourceAudioManager::startRecording()
         std::make_unique<juce::AudioFormatWriter::ThreadedWriter>(wav_writer_down, mWriterThreadDown, 32768);
     mDownSampler.reset();
 
+    mThreadedWriterDown->setDataReceiver(&mThumbnail);
+
     mNumSamplesAcquired = 0;
     mNumSamplesAcquiredDown = 0;
 
@@ -198,6 +202,9 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
 
         mDroppedFilename = inFile.getFileName().toStdString();
 
+        mThumbnail.clear();
+        mThumbnail.setSource(&mDownsampledSourceAudio, BASIC_PITCH_SAMPLE_RATE, 0);
+
         mProcessor->setStateToProcessing();
         mProcessor->launchTranscribeJob();
     } else {
@@ -219,6 +226,12 @@ void SourceAudioManager::clear()
     mNumSamplesAcquiredDown = 0;
     mNumSamplesAcquired = 0;
     mDuration = 0.0;
+
+    for (auto& file: mFilesToDelete) {
+        file.deleteFile();
+    }
+
+    mFilesToDelete.clear();
 
     mDroppedFilename = "";
 }
@@ -246,4 +259,9 @@ int SourceAudioManager::getNumSamplesDownAcquired() const
 double SourceAudioManager::getAudioSampleDuration() const
 {
     return mDuration;
+}
+
+AudioThumbnail* SourceAudioManager::getAudioThumbnail()
+{
+    return &mThumbnail;
 }

@@ -20,11 +20,7 @@ public:
 
     void paint(Graphics& g) override;
 
-    void updateThumbnail();
-
     void setIsFileOver(bool inIsFileOver);
-
-    bool onFileDrop(const juce::File& inFile);
 
     void setThumbnailWidth(int inThumbnailWidth);
 
@@ -34,12 +30,6 @@ private:
     NeuralNoteAudioProcessor& mProcessor;
 
     int mThumbnailWidth = 0;
-
-    const int mSourceSamplesPerThumbnailSample = 128;
-    juce::AudioFormatManager mThumbnailFormatManager;
-    juce::AudioThumbnailCache mThumbnailCache;
-    juce::AudioThumbnail mThumbnail;
-
     bool mIsFileOver = false;
 };
 

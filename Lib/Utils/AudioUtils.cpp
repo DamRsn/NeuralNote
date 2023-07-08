@@ -52,6 +52,7 @@ void resampleBuffer(const AudioBuffer<float>& inBuffer,
     outBuffer.setSize(inBuffer.getNumChannels(), num_expected_samples_after_resample);
 
     for (int ch = 0; ch < inBuffer.getNumChannels(); ch++) {
+        resampler.reset();
         int num_samples_after_resample = resampler.processBlock(
             inBuffer.getReadPointer(ch), outBuffer.getWritePointer(ch), inBuffer.getNumSamples());
         jassertquiet(num_samples_after_resample == num_expected_samples_after_resample);

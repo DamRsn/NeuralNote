@@ -26,7 +26,6 @@ void CombinedAudioMidiRegion::paint(Graphics& g)
 void CombinedAudioMidiRegion::timerCallback()
 {
     resizeAccordingToNumSamplesAvailable();
-    mAudioRegion.updateThumbnail();
 
     if (mViewportPtr)
         mViewportPtr->setViewPositionProportionately(1.0f, 0.0f);
@@ -51,7 +50,6 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
 
     if (success) {
         resizeAccordingToNumSamplesAvailable();
-        mAudioRegion.updateThumbnail();
     }
 
     repaint();
@@ -100,23 +98,16 @@ void CombinedAudioMidiRegion::setViewportPtr(juce::Viewport* inViewportPtr)
 
 void CombinedAudioMidiRegion::mouseDown(const juce::MouseEvent& e)
 {
-    if (!(isInterestedInFileDrag({}) && e.originalComponent == &mAudioRegion))
+    if (e.originalComponent != &mAudioRegion || mProcessor.getState() != EmptyAudioAndMidiRegions)
         return;
 
     mFileChooser = std::make_shared<juce::FileChooser>(
         "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
+
     mFileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
                               [this](const juce::FileChooser& fc) {
                                   if (fc.getResults().isEmpty())
                                       return;
-
-                                  bool success = mAudioRegion.onFileDrop(fc.getResult());
-
-                                  if (success) {
-                                      resizeAccordingToNumSamplesAvailable();
-                                      mAudioRegion.updateThumbnail();
-                                  }
-
-                                  repaint();
+                                  filesDropped(StringArray(fc.getResult().getFullPathName()), 1, 1);
                               });
 }

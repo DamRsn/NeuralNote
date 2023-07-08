@@ -15,7 +15,7 @@ class NeuralNoteAudioProcessor;
 class SourceAudioManager
 {
 public:
-    SourceAudioManager(NeuralNoteAudioProcessor* inProcessor);
+    explicit SourceAudioManager(NeuralNoteAudioProcessor* inProcessor);
 
     ~SourceAudioManager();
 
@@ -43,6 +43,8 @@ public:
     /* Returns the duration in seconds of the audio acquired for transcription */
     double getAudioSampleDuration() const;
 
+    AudioThumbnail* getAudioThumbnail();
+
 private:
     NeuralNoteAudioProcessor* mProcessor;
 
@@ -54,6 +56,11 @@ private:
     CriticalSection mWriterLock;
 
     Resampler mDownSampler;
+
+    const int mSourceSamplesPerThumbnailSample = 128;
+    juce::AudioFormatManager mThumbnailFormatManager;
+    juce::AudioThumbnailCache mThumbnailCache;
+    juce::AudioThumbnail mThumbnail;
 
     File mRecordedFile;
     File mRecordedFileDown;

@@ -77,5 +77,5 @@ int Resampler::processBlock(const float* inBuffer, float* outBuffer, int inNumSa
 
 int Resampler::getNumOutSamplesOnNextProcessBlock(int inNumSamples) const
 {
-    return static_cast<int>(std::floor(mNumInputSamplesAvailable + inNumSamples / mSpeedRatio));
+    return static_cast<int>(std::floor((mNumInputSamplesAvailable + inNumSamples) / mSpeedRatio));
 }
