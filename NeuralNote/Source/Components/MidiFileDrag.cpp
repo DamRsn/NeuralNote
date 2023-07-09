@@ -39,9 +39,7 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
                 juce::MessageBoxIconType::NoIcon, "Error", "Temporary directory for midi file failed.");
         }
     }
-
-    std::cout << mTempDirectory.getFullPathName() << std::endl;
-
+    
     std::string filename = mProcessor.getSourceAudioManager()->getDroppedFilename();
 
     if (filename.empty())

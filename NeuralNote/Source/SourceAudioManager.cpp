@@ -46,7 +46,6 @@ void SourceAudioManager::processBlock(const AudioBuffer<float>& inBuffer)
     if (mIsRecording) {
         ScopedLock sl(mWriterLock);
 
-        // TODO: make sure there are always two channels
         // Write incoming audio to file at native sample rate
         bool result = mThreadedWriter->write(inBuffer.getArrayOfReadPointers(), inBuffer.getNumSamples());
         jassertquiet(result);
@@ -91,6 +90,8 @@ void SourceAudioManager::startRecording()
     if (!neural_note_dir.isDirectory()) {
         neural_note_dir.createDirectory();
     }
+
+    mDroppedFilename = "";
 
     mRecordedFile = neural_note_dir.getChildFile("recorded_audio.wav");
     mRecordedFileDown = neural_note_dir.getChildFile("recorded_audio_downsampled.wav");
