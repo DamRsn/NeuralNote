@@ -17,7 +17,7 @@ void Playhead::resized()
 
 void Playhead::paint(Graphics& g)
 {
-    if (mAudioSampleDuration > 0) {
+    if (mAudioSampleDuration > 0 && mProcessor->getState() == PopulatedAudioAndMidiRegions) {
         auto playhead_x = jlimit(0.0f,
                                  (float) getWidth(),
                                  static_cast<float>(mCurrentPlayerPlayheadTime / mAudioSampleDuration * getWidth()));
