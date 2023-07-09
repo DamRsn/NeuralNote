@@ -101,6 +101,7 @@ void SourceAudioManager::startRecording()
     while (mRecordedFile.existsAsFile() || mRecordedFileDown.existsAsFile()) {
         mRecordedFile = neural_note_dir.getChildFile("recorded_audio_" + std::to_string(i) + ".wav");
         mRecordedFileDown = neural_note_dir.getChildFile("recorded_audio_downsampled_" + std::to_string(i) + ".wav");
+        i += 1;
     }
 
     Result file_creation_result = mRecordedFile.create();
