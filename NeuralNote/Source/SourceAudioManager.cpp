@@ -201,7 +201,7 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
         mNumSamplesAcquired = mSourceAudio.getNumSamples();
         mDuration = (double) mNumSamplesAcquiredDown / BASIC_PITCH_SAMPLE_RATE;
 
-        mDroppedFilename = inFile.getFileName().toStdString();
+        mDroppedFilename = inFile.getFileNameWithoutExtension().toStdString();
 
         mThumbnail.clear();
         mThumbnail.setSource(&mDownsampledSourceAudio, BASIC_PITCH_SAMPLE_RATE, 0);
