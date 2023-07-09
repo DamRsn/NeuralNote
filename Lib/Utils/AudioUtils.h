@@ -2,8 +2,8 @@
 // Created by Damien Ronssin on 09.03.23.
 //
 
-#ifndef AudioFileLoader_h
-#define AudioFileLoader_h
+#ifndef AudioUtils_h
+#define AudioUtils_h
 
 #include <JuceHeader.h>
 
@@ -37,4 +37,4 @@ void resampleBuffer(const AudioBuffer<float>& inBuffer,
 
 }; // namespace AudioUtils
 
-#endif // AudioFileLoader_h
+#endif // AudioUtils_h
