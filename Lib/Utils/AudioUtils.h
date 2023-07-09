@@ -14,12 +14,12 @@ namespace AudioUtils
 {
 
 /**
-     * Load an audio file. *.wav, *.aiff, *.flac formats supported
-     * @param inFile Audio file to load.
-     * @param outBuffer Buffer where to load audio data. Will be resized to correct number of channels and samples.
-     * @param outSampleRate Will be set to audio file sample rate.
-     * @return Whether the load was sucessfull or not.
-     */
+ * Load an audio file. *.wav, *.aiff, *.flac formats supported
+ * @param inFile Audio file to load.
+ * @param outBuffer Buffer where to load audio data. Will be resized to correct number of channels and samples.
+ * @param outSampleRate Will be set to audio file sample rate.
+ * @return Whether the load was sucessfull or not.
+ */
 bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, double& outSampleRate);
 
 /**
