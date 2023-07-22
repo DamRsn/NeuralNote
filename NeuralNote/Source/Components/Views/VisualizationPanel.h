@@ -27,10 +27,6 @@ public:
 
     void clear();
 
-    void startTimerHzAudioThumbnail(int inFreqHz);
-
-    void stopTimerAudioThumbnail();
-
     void repaintPianoRoll();
 
     void setMidiFileDragComponentVisible();

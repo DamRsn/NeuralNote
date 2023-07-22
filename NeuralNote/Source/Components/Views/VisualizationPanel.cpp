@@ -87,7 +87,7 @@ void VisualizationPanel::resized()
 
     mCombinedAudioMidiRegion.setBaseWidth(getWidth() - KEYBOARD_WIDTH);
     mCombinedAudioMidiRegion.setBounds(KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
-    mCombinedAudioMidiRegion.timerCallback();
+    mCombinedAudioMidiRegion.changeListenerCallback(mProcessor.getSourceAudioManager()->getAudioThumbnail());
 
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
     mFileTempo->setBounds(6, 55, 40, 17);
@@ -124,16 +124,6 @@ void VisualizationPanel::clear()
     mCombinedAudioMidiRegion.setSize(getWidth() - KEYBOARD_WIDTH, getHeight());
     mMidiFileDrag.setVisible(false);
     mFileTempo->setVisible(false);
-}
-
-void VisualizationPanel::startTimerHzAudioThumbnail(int inFreqHz)
-{
-    mCombinedAudioMidiRegion.startTimerHz(inFreqHz);
-}
-
-void VisualizationPanel::stopTimerAudioThumbnail()
-{
-    mCombinedAudioMidiRegion.stopTimer();
 }
 
 void VisualizationPanel::repaintPianoRoll()

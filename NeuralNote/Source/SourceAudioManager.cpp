@@ -165,12 +165,28 @@ void SourceAudioManager::stopRecording()
     mWriterThread.stopThread(1000);
     mWriterThreadDown.stopThread(1000);
 
-    AudioUtils::loadAudioFile(mRecordedFile, mSourceAudio, mSourceAudioSampleRate);
+    bool success = AudioUtils::loadAudioFile(mRecordedFile, mSourceAudio, mSourceAudioSampleRate);
     jassert(mSourceAudioSampleRate == mSampleRate);
 
+    // Should def not happen
+    if (!success) {
+        mProcessor->clear();
+        juce::NativeMessageBox::showMessageBoxAsync(
+            juce::MessageBoxIconType::NoIcon, "Could not load the recorded audio sample.", "");
+        return;
+    }
+
     double dummy_sr;
-    AudioUtils::loadAudioFile(mRecordedFileDown, mDownsampledSourceAudio, dummy_sr);
+    success = AudioUtils::loadAudioFile(mRecordedFileDown, mDownsampledSourceAudio, dummy_sr);
     jassert(dummy_sr == BASIC_PITCH_SAMPLE_RATE);
+
+    // Should def not happen
+    if (!success) {
+        mProcessor->clear();
+        juce::NativeMessageBox::showMessageBoxAsync(
+            juce::MessageBoxIconType::NoIcon, "Could not load the recorded audio sample.", "");
+        return;
+    }
 
     mProcessor->setStateToProcessing();
     mProcessor->launchTranscribeJob();
@@ -179,6 +195,7 @@ void SourceAudioManager::stopRecording()
 bool SourceAudioManager::onFileDrop(const File& inFile)
 {
     if (mProcessor->getState() == EmptyAudioAndMidiRegions || mProcessor->getState() == PopulatedAudioAndMidiRegions) {
+        mProcessor->clear();
         bool success = AudioUtils::loadAudioFile(inFile, mSourceAudio, mSourceAudioSampleRate);
 
         if (!success) {
@@ -209,10 +226,12 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
         mDroppedFilename = inFile.getFileNameWithoutExtension().toStdString();
 
         mThumbnail.clear();
+        mThumbnailCache.clear();
         mThumbnail.setSource(&mDownsampledSourceAudio, BASIC_PITCH_SAMPLE_RATE, 0);
 
         mProcessor->setStateToProcessing();
         mProcessor->launchTranscribeJob();
+
     } else {
         jassertfalse;
     }

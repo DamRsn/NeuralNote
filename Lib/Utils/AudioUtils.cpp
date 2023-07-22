@@ -24,8 +24,9 @@ bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, doub
     // Get properties of input audio
     outSampleRate = format_reader->sampleRate;
     int num_source_samples = static_cast<int>(format_reader->lengthInSamples);
+    int num_channels = format_reader->numChannels;
 
-    outBuffer.setSize(2, num_source_samples);
+    outBuffer.setSize(num_channels, num_source_samples);
 
     // Read source file. If not successful, return false
     if (!format_reader->read(&outBuffer, 0, num_source_samples, 0, true, true))

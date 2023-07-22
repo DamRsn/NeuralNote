@@ -24,12 +24,10 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
 
         // Recording started
         if (is_on) {
-            mVisualizationPanel.startTimerHzAudioThumbnail(10);
             mProcessor.getSourceAudioManager()->startRecording();
         } else {
             // Recording has ended, set processor state to processing
             mProcessor.getSourceAudioManager()->stopRecording();
-            mVisualizationPanel.stopTimerAudioThumbnail();
         }
 
         updateEnablements();
@@ -104,7 +102,6 @@ void NeuralNoteMainView::timerCallback()
     auto processor_state = mProcessor.getState();
     if (mRecordButton->getToggleState() && processor_state != Recording) {
         mRecordButton->setToggleState(false, juce::sendNotification);
-        mVisualizationPanel.stopTimerAudioThumbnail();
         updateEnablements();
     }
 
@@ -146,10 +143,9 @@ void NeuralNoteMainView::updateEnablements()
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
         mQuantizePanel.setEnabled(false);
-        mVisualizationPanel.startTimerHzAudioThumbnail(10);
     } else if (current_state == Processing) {
         mRecordButton->setEnabled(false);
-        // TODO: activate clear button to avoid being blocked in processing state.
+        // TODO: activate clear button to be able to cancel processing.
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
@@ -160,8 +156,6 @@ void NeuralNoteMainView::updateEnablements()
         mTranscriptionOptions.setEnabled(true);
         mNoteOptions.setEnabled(true);
         mQuantizePanel.setEnabled(mProcessor.canQuantize());
-        mVisualizationPanel.stopTimerAudioThumbnail();
-
         mVisualizationPanel.setMidiFileDragComponentVisible();
     }
 

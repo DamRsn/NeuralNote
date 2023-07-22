@@ -11,6 +11,12 @@ CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& proce
 {
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
+    mProcessor.getSourceAudioManager()->getAudioThumbnail()->addChangeListener(this);
+}
+
+CombinedAudioMidiRegion::~CombinedAudioMidiRegion()
+{
+    mProcessor.getSourceAudioManager()->getAudioThumbnail()->removeChangeListener(this);
 }
 
 void CombinedAudioMidiRegion::resized()
@@ -21,18 +27,6 @@ void CombinedAudioMidiRegion::resized()
 
 void CombinedAudioMidiRegion::paint(Graphics& g)
 {
-}
-
-void CombinedAudioMidiRegion::timerCallback()
-{
-    resizeAccordingToNumSamplesAvailable();
-
-    if (mViewportPtr)
-        mViewportPtr->setViewPositionProportionately(1.0f, 0.0f);
-    else
-        jassertfalse;
-
-    mAudioRegion.repaint();
 }
 
 bool CombinedAudioMidiRegion::isInterestedInFileDrag(const StringArray& files)
@@ -46,18 +40,25 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     ignoreUnused(y);
     mAudioRegion.setIsFileOver(false);
 
-    bool success = mProcessor.getSourceAudioManager()->onFileDrop(files[0]);
+    if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
+        || files[0].endsWith(".mp3")) {
+        bool success = mProcessor.getSourceAudioManager()->onFileDrop(files[0]);
 
-    if (success) {
-        resizeAccordingToNumSamplesAvailable();
+        if (success) {
+            resizeAccordingToNumSamplesAvailable();
+        }
+
+        repaint();
     }
-
-    repaint();
 }
 
 void CombinedAudioMidiRegion::fileDragEnter(const StringArray& files, int x, int y)
 {
-    mAudioRegion.setIsFileOver(true);
+    if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
+        || files[0].endsWith(".mp3")) {
+        mAudioRegion.setIsFileOver(true);
+    }
+
     mAudioRegion.repaint();
 }
 
@@ -110,4 +111,20 @@ void CombinedAudioMidiRegion::mouseDown(const juce::MouseEvent& e)
                                       return;
                                   filesDropped(StringArray(fc.getResult().getFullPathName()), 1, 1);
                               });
+}
+
+void CombinedAudioMidiRegion::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (source == mProcessor.getSourceAudioManager()->getAudioThumbnail()) {
+        if (mProcessor.getState() == Recording) {
+            resizeAccordingToNumSamplesAvailable();
+
+            if (mViewportPtr)
+                mViewportPtr->setViewPositionProportionately(1.0f, 0.0f);
+            else
+                jassertfalse;
+        }
+
+        mAudioRegion.repaint();
+    }
 }

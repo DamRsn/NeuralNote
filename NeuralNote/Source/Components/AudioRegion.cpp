@@ -23,8 +23,6 @@ void AudioRegion::paint(Graphics& g)
         g.setColour(WAVEFORM_BG_COLOR);
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
 
-        const auto audio_buffer = mProcessor.getSourceAudioManager()->getDownsampledSourceAudioForTranscription();
-
         auto thumbnail_area = getLocalBounds();
         thumbnail_area.setWidth(mThumbnailWidth);
 
@@ -36,6 +34,9 @@ void AudioRegion::paint(Graphics& g)
                                num_samples_available / BASIC_PITCH_SAMPLE_RATE,
                                0,
                                0.95f / std::max(thumbnail->getApproximatePeak(), 0.1f));
+    } else if (mProcessor.getState() == Processing) {
+        g.setColour(WAVEFORM_BG_COLOR);
+        g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
     } else {
         if (mIsFileOver)
             g.setColour(WAVEFORM_BG_COLOR);
