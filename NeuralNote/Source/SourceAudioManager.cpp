@@ -123,7 +123,7 @@ void SourceAudioManager::startRecording()
 
     auto* wav_writer = format.createWriterFor(new juce::FileOutputStream(mRecordedFile),
                                               mSampleRate,
-                                              mProcessor->getTotalNumInputChannels(),
+                                              std::min(mProcessor->getTotalNumInputChannels(), 2),
                                               16,
                                               meta_data_values,
                                               0);
