@@ -100,8 +100,7 @@ void NeuralNoteAudioProcessor::clear()
     mWasRecording = false;
     mIsPlayheadPlaying = false;
 
-    // TODO:
-    //        mPlayer->clear();
+    mPlayer->reset();
     mSourceAudioManager->clear();
 
     mState.store(EmptyAudioAndMidiRegions);
