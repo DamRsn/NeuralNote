@@ -149,6 +149,7 @@ void NeuralNoteMainView::updateEnablements()
         mVisualizationPanel.startTimerHzAudioThumbnail(10);
     } else if (current_state == Processing) {
         mRecordButton->setEnabled(false);
+        // TODO: activate clear button to avoid being blocked in processing state.
         mClearButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);

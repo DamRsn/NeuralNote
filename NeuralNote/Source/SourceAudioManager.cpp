@@ -121,8 +121,12 @@ void SourceAudioManager::startRecording()
     juce::WavAudioFormat format;
     juce::StringPairArray meta_data_values;
 
-    auto* wav_writer =
-        format.createWriterFor(new juce::FileOutputStream(mRecordedFile), mSampleRate, 2, 16, meta_data_values, 0);
+    auto* wav_writer = format.createWriterFor(new juce::FileOutputStream(mRecordedFile),
+                                              mSampleRate,
+                                              mProcessor->getTotalNumInputChannels(),
+                                              16,
+                                              meta_data_values,
+                                              0);
 
     mWriterThread.startThread();
     mThreadedWriter = std::make_unique<juce::AudioFormatWriter::ThreadedWriter>(wav_writer, mWriterThread, 32768);
