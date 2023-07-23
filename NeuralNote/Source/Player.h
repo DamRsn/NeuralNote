@@ -36,10 +36,21 @@ public:
     static constexpr int NUM_VOICES_SYNTH = 16;
 
 private:
+    void _setGains(float inGainAudioSourceDB, float inGainSynthDB);
+
     std::atomic<bool> mIsPlaying = false;
+    NeuralNoteAudioProcessor* mProcessor;
 
     std::unique_ptr<SynthController> mSynthController;
     std::unique_ptr<MPESynthesiser> mSynth;
+
+    AudioBuffer<float> mInternalBuffer;
+
+    int mPlayheadIndex = 0;
+    double mSampleRate = 44100;
+
+    float mGainSourceAudio = 0;
+    float mGainSynth = 0;
 };
 
 #endif // Player_h

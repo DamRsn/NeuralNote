@@ -31,6 +31,9 @@ public:
 
         std::atomic<int> rhythmTimeDivision = RhythmUtils::_1_8;
         std::atomic<float> rhythmQuantizationForce = 0.0f;
+
+        std::atomic<float> gainSourceAudioDb = -12.0f;
+        std::atomic<float> gainSynthDb = 0.0f;
     };
 
     NeuralNoteAudioProcessor();
