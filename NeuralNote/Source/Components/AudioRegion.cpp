@@ -3,14 +3,19 @@
 //
 
 #include "AudioRegion.h"
+#include "CombinedAudioMidiRegion.h"
 
-AudioRegion::AudioRegion(NeuralNoteAudioProcessor& processor)
+AudioRegion::AudioRegion(NeuralNoteAudioProcessor& processor, double inNumPixelsPerSecond)
     : mProcessor(processor)
+    , mPlayhead(&processor)
+    , mNumPixelsPerSecond(inNumPixelsPerSecond)
 {
+    addAndMakeVisible(mPlayhead);
 }
 
 void AudioRegion::resized()
 {
+    mPlayhead.setSize(getWidth(), getHeight());
 }
 
 void AudioRegion::paint(Graphics& g)
@@ -67,6 +72,33 @@ void AudioRegion::setThumbnailWidth(int inThumbnailWidth)
 
 void AudioRegion::mouseDown(const juce::MouseEvent& e)
 {
-    if (auto* parent = getParentComponent())
-        parent->mouseDown(e);
+    //    if (auto* parent = getParentComponent())
+    //        parent->mouseDown(e);
+
+    if (mProcessor.getState() == EmptyAudioAndMidiRegions) {
+        mFileChooser = std::make_shared<juce::FileChooser>(
+            "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
+
+        mFileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                                  [this](const juce::FileChooser& fc) {
+                                      if (fc.getResults().isEmpty())
+                                          return;
+                                      auto* parent = dynamic_cast<CombinedAudioMidiRegion*>(getParentComponent());
+                                      if (parent) {
+                                          parent->filesDropped(StringArray(fc.getResult().getFullPathName()), 1, 1);
+                                      }
+                                  });
+    } else if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
+        mPlayhead.setPlayheadTime(_pixelToTime(e.x));
+    }
+}
+
+float AudioRegion::_timeToPixel(float inTime) const
+{
+    return inTime * static_cast<float>(mNumPixelsPerSecond);
+}
+
+float AudioRegion::_pixelToTime(float inPixel) const
+{
+    return inPixel / static_cast<float>(mNumPixelsPerSecond);
 }

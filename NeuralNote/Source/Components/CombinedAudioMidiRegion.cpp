@@ -6,7 +6,7 @@
 
 CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor, Keyboard& keyboard)
     : mProcessor(processor)
-    , mAudioRegion(processor)
+    , mAudioRegion(processor, mNumPixelsPerSecond)
     , mPianoRoll(processor, keyboard, mNumPixelsPerSecond)
 {
     addAndMakeVisible(mAudioRegion);
@@ -95,22 +95,6 @@ void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
 void CombinedAudioMidiRegion::setViewportPtr(juce::Viewport* inViewportPtr)
 {
     mViewportPtr = inViewportPtr;
-}
-
-void CombinedAudioMidiRegion::mouseDown(const juce::MouseEvent& e)
-{
-    if (e.originalComponent != &mAudioRegion || mProcessor.getState() != EmptyAudioAndMidiRegions)
-        return;
-
-    mFileChooser = std::make_shared<juce::FileChooser>(
-        "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
-
-    mFileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-                              [this](const juce::FileChooser& fc) {
-                                  if (fc.getResults().isEmpty())
-                                      return;
-                                  filesDropped(StringArray(fc.getResult().getFullPathName()), 1, 1);
-                              });
 }
 
 void CombinedAudioMidiRegion::changeListenerCallback(juce::ChangeBroadcaster* source)

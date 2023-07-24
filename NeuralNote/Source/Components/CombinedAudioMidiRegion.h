@@ -42,8 +42,6 @@ public:
 
     void resizeAccordingToNumSamplesAvailable();
 
-    void mouseDown(const juce::MouseEvent& e) override;
-
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
     const double mNumPixelsPerSecond = 100.0;
@@ -61,8 +59,6 @@ private:
 
     AudioRegion mAudioRegion;
     PianoRoll mPianoRoll;
-
-    std::shared_ptr<juce::FileChooser> mFileChooser;
 };
 
 #endif // CombinedAudioMidiRegion_h

@@ -10,11 +10,14 @@
 #include "AudioUtils.h"
 #include "PluginProcessor.h"
 #include "UIDefines.h"
+#include "Playhead.h"
+
+class CombinedAudioMidiRegion;
 
 class AudioRegion : public Component
 {
 public:
-    explicit AudioRegion(NeuralNoteAudioProcessor& processor);
+    explicit AudioRegion(NeuralNoteAudioProcessor& processor, double inNumPixelsPerSecond);
 
     void resized() override;
 
@@ -28,6 +31,16 @@ public:
 
 private:
     NeuralNoteAudioProcessor& mProcessor;
+
+    float _timeToPixel(float inTime) const;
+
+    float _pixelToTime(float inPixel) const;
+
+    Playhead mPlayhead;
+
+    std::shared_ptr<juce::FileChooser> mFileChooser;
+
+    const double mNumPixelsPerSecond;
 
     int mThumbnailWidth = 0;
     bool mIsFileOver = false;
