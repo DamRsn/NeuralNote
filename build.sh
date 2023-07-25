@@ -5,6 +5,7 @@ os=windows
 arch="$(uname -m)"
 file=onnxruntime.lib
 version=v1.14.1-neuralnote.1
+
 if test "$(uname -s)" = "Darwin"; then
 	os=macOS
 	arch=universal
@@ -12,6 +13,14 @@ if test "$(uname -s)" = "Darwin"; then
 	# To remove warnings about minimum macOS target versions
 	version=v1.14.1-neuralnote.2
 fi
+if test "$(uname -s)" = "Linux"; then
+	os=linux
+	arch=x86_64
+	file=libonnxruntime.so
+	# this is what gets build manually when following the libonnxruntime readme
+	version=v1.14.1-neuralnote.0
+fi
+
 dir="onnxruntime-${version}-${os}-${arch}"
 archive="$dir.tar.gz"
 

@@ -28,10 +28,10 @@ add_subdirectory(ThirdParty/RTNeural)
 set(BaseTargetName NeuralNote)
 
 # Set COPY_PLUGIN_AFTER_BUILD to TRUE on Mac and to FALSE on Windows due to permission issues
-if (APPLE)
-    set(COPY_PLUGIN_AFTER_BUILD TRUE)
-else ()
+if (WIN32) # which do we want for Linux?
     set(COPY_PLUGIN_AFTER_BUILD FALSE)
+else () # APPLE and LIUNX
+    set(COPY_PLUGIN_AFTER_BUILD TRUE)
 endif ()
 
 juce_add_plugin("${BaseTargetName}"
@@ -109,12 +109,24 @@ target_compile_definitions(${BaseTargetName}
         JUCE_USE_CURL=0
         JUCE_VST3_CAN_REPLACE_VST2=0)
 
-add_library(onnxruntime STATIC IMPORTED)
 
-if (APPLE)
-    set_property(TARGET onnxruntime PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/lib/libonnxruntime.a)
+
+if (LINUX)
+    # at the moment, we are getting linker errors with either the shared or static versions.
+    # add_library(onnxruntime SHARED IMPORTED)
+    add_library(onnxruntime STATIC IMPORTED)
+    set_property(TARGET onnxruntime PROPERTY IMPORTED_LOCATION
+        ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/lib/libonnxruntime.a
+        )
+
+elseif (APPLE)
+    add_library(onnxruntime STATIC IMPORTED)
+    set_property(TARGET onnxruntime PROPERTY IMPORTED_LOCATION
+        ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/lib/libonnxruntime.a
+        )
 
 elseif (WIN32)
+    add_library(onnxruntime STATIC IMPORTED)
     set_property(TARGET onnxruntime APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 
     set_target_properties(onnxruntime PROPERTIES
@@ -128,7 +140,7 @@ elseif (WIN32)
             )
 endif ()
 
-
+include_directories(${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/include)
 target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/include)
 
 target_link_libraries(${BaseTargetName}

@@ -92,6 +92,42 @@ Now you can get back to building NeuralNote as follows:
 > .\build.bat
 ```
 
+#### Linux
+##### Dependencies
+Use you distro's package manager to install the following:
+```
+libXinerama-devel
+libXcursor-devel
+freetype2-devel
+alsa-devel
+libcurl-devel
+webkit2gtk4-devel
+```
+You need a custom build of [libonnxruntime-neuralnote](https://github.com/tiborvass/libonnxruntime-neuralnote/)
+The Build-linux script in this repo works, except it doesn't create the shared libraries in the lib directory as used by the make-archive script. Adding the following lines to the end of build-linux.sh in this repo will allow make archive to generate the appropriate archive
+```
+mkdir -p "lib"
+
+# using find to avoid cp stat errors with wildcards
+find ./onnxruntime/build/Linux_x86_64/MinSizeRel -name "libonnxruntime.so*" -exec cp {} -a lib/ \;
+```
+Then run `./make-archive.sh v1.14.1-neuralnote.0`.  When it is finished, manually copy the resultant linux archive (eg onnxruntime-v1.14.1-neuralnote.0-linux-x86_64.tar.gz) to the root of the NeuralNote repo.
+Now, running build.sh should find and extract the compiled for linux archive.
+Alternatively, manually extract the archive.  This is usedfull if you used the "dirty" build of libonnxruntime. For example
+```
+rm -rf ThirdParty/onnxruntime
+tar -C ThirdParty/ -xvf onnxruntime-neuralnote.git2067da8.dirty-linux-x86_64.tar.gz
+mv ThirdParty/onnxruntime-neuralnote.git2067da8.dirty-linux-x86_64/ ThirdParty/onnxruntime
+cp -a ThirdParty/onnxruntime/model.with_runtime_opt.ort Lib/ModelData/features_model.ort
+```
+Then run the `build-linux.sh` script.
+
+At the moment, this will fail while linking with the following error:
+```
+/usr/lib64/gcc/x86_64-suse-linux/12/../../../../x86_64-suse-linux/bin/ld: libBasicPitchCNN.a(BasicPitchCNN.cpp.o): relocation R_X86_64_32 against `.rodata.str1.1' can not be used when making a shared object; recompile with -fPIC
+/usr/lib64/gcc/x86_64-suse-linux/12/../../../../x86_64-suse-linux/bin/ld: failed to set dynamic section sizes: bad value
+collect2: error: ld returned 1 exit status
+```
 #### IDEs
 
 Once the build script has been executed at least once, you can load this project in your favorite IDE
