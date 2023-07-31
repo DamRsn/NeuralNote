@@ -15,18 +15,18 @@
 class CombinedAudioMidiRegion
     : public Component
     , public FileDragAndDropTarget
-    , public Timer
+    , public ChangeListener
 {
 public:
     CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor, Keyboard& keyboard);
+
+    ~CombinedAudioMidiRegion();
 
     void setViewportPtr(juce::Viewport* inViewportPtr);
 
     void resized() override;
 
     void paint(Graphics& g) override;
-
-    void timerCallback() override;
 
     bool isInterestedInFileDrag(const StringArray& files) override;
 
@@ -43,6 +43,8 @@ public:
     void resizeAccordingToNumSamplesAvailable();
 
     void mouseDown(const juce::MouseEvent& e) override;
+
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
     const double mNumPixelsPerSecond = 100.0;
 

@@ -93,10 +93,10 @@ const MidiBuffer& SynthController::generateNextMidiBuffer(int inNumSamples)
     mCurrentTime = end_time;
     mCurrentSampleIndex += inNumSamples;
 
-    if (mCurrentTime >= mProcessor->getAudioSampleDuration()) {
+    if (mCurrentTime >= mProcessor->getSourceAudioManager()->getAudioSampleDuration()) {
+        // Stop playing and reset to start
         mProcessor->getPlayer()->setPlayingState(false);
-        mCurrentTime = mProcessor->getAudioSampleDuration();
-        mCurrentSampleIndex = mProcessor->getNumSamplesAcquired();
+        setNewTimeSeconds(0);
     }
 
     return mMidiBuffer;

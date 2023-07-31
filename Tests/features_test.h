@@ -7,7 +7,7 @@
 
 #include "Features.h"
 #include "test_utils.h"
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 #include <fstream>
 
 bool feature_test()

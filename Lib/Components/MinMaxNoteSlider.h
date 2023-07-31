@@ -7,7 +7,7 @@
 
 #include <JuceHeader.h>
 #include "NoteUtils.h"
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 #include "UIDefines.h"
 
 class MinMaxNoteSlider : public Component

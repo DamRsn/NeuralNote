@@ -6,7 +6,7 @@
 #define BasicPitch_h
 
 #include "BasicPitchCNN.h"
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 #include "Features.h"
 #include "Notes.h"
 

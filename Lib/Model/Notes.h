@@ -8,7 +8,7 @@
 #include <cmath>
 #include <vector>
 
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 #include "NoteUtils.h"
 
 enum PitchBendModes { NoPitchBend = 0, SinglePitchBend, MultiPitchBend };

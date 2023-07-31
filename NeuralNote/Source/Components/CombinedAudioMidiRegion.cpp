@@ -11,6 +11,12 @@ CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& proce
 {
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
+    mProcessor.getSourceAudioManager()->getAudioThumbnail()->addChangeListener(this);
+}
+
+CombinedAudioMidiRegion::~CombinedAudioMidiRegion()
+{
+    mProcessor.getSourceAudioManager()->getAudioThumbnail()->removeChangeListener(this);
 }
 
 void CombinedAudioMidiRegion::resized()
@@ -21,19 +27,6 @@ void CombinedAudioMidiRegion::resized()
 
 void CombinedAudioMidiRegion::paint(Graphics& g)
 {
-}
-
-void CombinedAudioMidiRegion::timerCallback()
-{
-    resizeAccordingToNumSamplesAvailable();
-    mAudioRegion.updateThumbnail();
-
-    if (mViewportPtr)
-        mViewportPtr->setViewPositionProportionately(1.0f, 0.0f);
-    else
-        jassertfalse;
-
-    mAudioRegion.repaint();
 }
 
 bool CombinedAudioMidiRegion::isInterestedInFileDrag(const StringArray& files)
@@ -47,19 +40,25 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     ignoreUnused(y);
     mAudioRegion.setIsFileOver(false);
 
-    bool success = mAudioRegion.onFileDrop(files[0]);
+    if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
+        || files[0].endsWith(".mp3")) {
+        bool success = mProcessor.getSourceAudioManager()->onFileDrop(files[0]);
 
-    if (success) {
-        resizeAccordingToNumSamplesAvailable();
-        mAudioRegion.updateThumbnail();
+        if (success) {
+            resizeAccordingToNumSamplesAvailable();
+        }
+
+        repaint();
     }
-
-    repaint();
 }
 
 void CombinedAudioMidiRegion::fileDragEnter(const StringArray& files, int x, int y)
 {
-    mAudioRegion.setIsFileOver(true);
+    if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
+        || files[0].endsWith(".mp3")) {
+        mAudioRegion.setIsFileOver(true);
+    }
+
     mAudioRegion.repaint();
 }
 
@@ -81,7 +80,7 @@ void CombinedAudioMidiRegion::repaintPianoRoll()
 
 void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
 {
-    int num_samples_available = mProcessor.getNumSamplesAcquired();
+    int num_samples_available = mProcessor.getSourceAudioManager()->getNumSamplesDownAcquired();
 
     int thumbnail_width =
         static_cast<int>(std::round((num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE));
@@ -100,23 +99,32 @@ void CombinedAudioMidiRegion::setViewportPtr(juce::Viewport* inViewportPtr)
 
 void CombinedAudioMidiRegion::mouseDown(const juce::MouseEvent& e)
 {
-    if (!(isInterestedInFileDrag({}) && e.originalComponent == &mAudioRegion))
+    if (e.originalComponent != &mAudioRegion || mProcessor.getState() != EmptyAudioAndMidiRegions)
         return;
 
     mFileChooser = std::make_shared<juce::FileChooser>(
         "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
+
     mFileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
                               [this](const juce::FileChooser& fc) {
                                   if (fc.getResults().isEmpty())
                                       return;
-
-                                  bool success = mAudioRegion.onFileDrop(fc.getResult());
-
-                                  if (success) {
-                                      resizeAccordingToNumSamplesAvailable();
-                                      mAudioRegion.updateThumbnail();
-                                  }
-
-                                  repaint();
+                                  filesDropped(StringArray(fc.getResult().getFullPathName()), 1, 1);
                               });
+}
+
+void CombinedAudioMidiRegion::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (source == mProcessor.getSourceAudioManager()->getAudioThumbnail()) {
+        if (mProcessor.getState() == Recording) {
+            resizeAccordingToNumSamplesAvailable();
+
+            if (mViewportPtr)
+                mViewportPtr->setViewPositionProportionately(1.0f, 0.0f);
+            else
+                jassertfalse;
+        }
+
+        mAudioRegion.repaint();
+    }
 }

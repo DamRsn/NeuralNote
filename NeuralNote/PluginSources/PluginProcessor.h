@@ -3,13 +3,14 @@
 #include "atomic"
 #include <JuceHeader.h>
 
-#include "DownSampler.h"
+#include "Resampler.h"
 #include "ProcessorBase.h"
 #include "BasicPitch.h"
 #include "NoteOptions.h"
 #include "MidiFileWriter.h"
 #include "RhythmOptions.h"
 #include "Player.h"
+#include "SourceAudioManager.h"
 
 enum State { EmptyAudioAndMidiRegions = 0, Recording, Processing, PopulatedAudioAndMidiRegions };
 
@@ -51,16 +52,10 @@ public:
 
     void clear();
 
-    AudioBuffer<float>& getAudioBufferForMidi();
-
-    int getNumSamplesAcquired() const;
-
-    /* Returns the duration in seconds of the audio acquired for transcription */
-    double getAudioSampleDuration() const;
-
-    void setNumSamplesAcquired(int inNumSamplesAcquired);
-
+    // TODO: function to put in a new class TranscriptionManager
     void launchTranscribeJob();
+
+    bool isJobRunningOrQueued() const;
 
     const std::vector<Notes::Event>& getNoteEventVector() const;
 
@@ -70,16 +65,14 @@ public:
 
     Parameters* getCustomParameters();
 
-    const juce::Optional<juce::AudioPlayHead::PositionInfo>& getPlayheadInfoOnRecordStart();
+    const juce::Optional<juce::AudioPlayHead::PositionInfo>&
+        getPlayheadInfoOnRecordStart(); // TODO: Add to timeQuantizeManager
 
     // Value tree state to pass automatable parameters from UI
     juce::AudioProcessorValueTreeState mTree;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    void setFileDrop(const std::string& inFilename);
-
-    std::string getDroppedFilename() const;
-
+    // TODO: TimeQuantizeManager
     bool canQuantize() const;
 
     std::string getTempoStr() const;
@@ -90,17 +83,17 @@ public:
 
     double getMidiFileTempo() const;
 
-    bool isJobRunningOrQueued() const;
+    SourceAudioManager* getSourceAudioManager();
 
     Player* getPlayer();
 
 private:
-    void _runModel();
+    void _runModel(); // Add to TranscriptionManager
 
     std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
-    AudioBuffer<float> mMonoBuffer;
-    DownSampler mDownSampler;
+    std::unique_ptr<SourceAudioManager> mSourceAudioManager;
+    std::unique_ptr<Player> mPlayer;
 
     Parameters mParameters;
     bool mWasRecording = false;
@@ -110,28 +103,19 @@ private:
     std::atomic<int> mCurrentTimeSignatureNum = -1;
     std::atomic<int> mCurrentTimeSignatureDenom = -1;
 
-    AudioBuffer<float> mAudioBufferForMIDITranscription;
-
     double mMidiFileTempo = 120.0;
 
+    // To transcription manager
     BasicPitch mBasicPitch;
     NoteOptions mNoteOptions;
     RhythmOptions mRhythmOptions;
 
-    std::string mDroppedFilename;
-
     std::vector<Notes::Event> mPostProcessedNotes;
 
-    std::unique_ptr<Player> mPlayer;
-
+    // To quantize manager
     juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
 
-    // Thread pool to run ML in background thread.
+    // Thread pool to run ML in background thread. To transcription manager
     juce::ThreadPool mThreadPool;
     std::function<void()> mJobLambda;
-
-    int mNumSamplesAcquired = 0;
-    const double mBasicPitchSampleRate = 22050.0;
-    const double mMaxDuration = 3 * 60;
-    const int mMaxNumSamplesToConvert = static_cast<int>(mBasicPitchSampleRate * mMaxDuration);
 };

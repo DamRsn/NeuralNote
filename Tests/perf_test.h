@@ -5,7 +5,7 @@
 #ifndef NN_PERF_TEST_H
 #define NN_PERF_TEST_H
 
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 #include "Features.h"
 #include "BasicPitchCNN.h"
 #include "test_utils.h"

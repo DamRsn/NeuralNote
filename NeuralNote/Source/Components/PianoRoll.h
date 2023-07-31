@@ -7,7 +7,7 @@
 
 #include <JuceHeader.h>
 
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 #include "Keyboard.h"
 #include "PluginProcessor.h"
 #include "UIDefines.h"

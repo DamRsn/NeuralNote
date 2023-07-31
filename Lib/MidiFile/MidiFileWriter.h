@@ -7,7 +7,7 @@
 
 #include <JuceHeader.h>
 
-#include "Constants.h"
+#include "BasicPitchConstants.h"
 #include "Notes.h"
 
 class MidiFileWriter

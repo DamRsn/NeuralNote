@@ -7,24 +7,20 @@
 
 #include <JuceHeader.h>
 
-#include "AudioFileLoader.h"
+#include "AudioUtils.h"
 #include "PluginProcessor.h"
 #include "UIDefines.h"
 
 class AudioRegion : public Component
 {
 public:
-    AudioRegion(NeuralNoteAudioProcessor& processor);
+    explicit AudioRegion(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 
     void paint(Graphics& g) override;
 
-    void updateThumbnail();
-
     void setIsFileOver(bool inIsFileOver);
-
-    bool onFileDrop(const juce::File& inFile);
 
     void setThumbnailWidth(int inThumbnailWidth);
 
@@ -34,14 +30,6 @@ private:
     NeuralNoteAudioProcessor& mProcessor;
 
     int mThumbnailWidth = 0;
-
-    const int mSourceSamplesPerThumbnailSample = 128;
-    juce::AudioFormatManager mThumbnailFormatManager;
-    juce::AudioThumbnailCache mThumbnailCache;
-    juce::AudioThumbnail mThumbnail;
-
-    AudioFileLoader mFileLoader;
-
     bool mIsFileOver = false;
 };
 

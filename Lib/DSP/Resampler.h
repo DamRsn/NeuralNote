@@ -2,25 +2,25 @@
 // Created by Damien Ronssin on 05.03.23.
 //
 
-#ifndef DownSampler_h
-#define DownSampler_h
+#ifndef Resampler_h
+#define Resampler_h
 
 #include <JuceHeader.h>
 
-class DownSampler
+class Resampler
 {
 public:
-    DownSampler() = default;
+    Resampler() = default;
 
-    ~DownSampler() = default;
+    ~Resampler() = default;
 
-    void prepareToPlay(double inSampleRate, int inMaxBlockSize);
+    void prepareToPlay(double inSourceSampleRate, int inMaxBlockSize, double inTargetSampleRate);
 
     void reset();
 
-    int processBlock(const juce::AudioBuffer<float>& inBuffer, float* outBuffer, int inNumSamples);
+    int processBlock(const float* inBuffer, float* outBuffer, int inNumSamples);
 
-    int numOutSamplesOnNextProcessBlock(int inNumSamples);
+    int getNumOutSamplesOnNextProcessBlock(int inNumSamples) const;
 
 private:
     LagrangeInterpolator mInterpolator;
@@ -32,10 +32,10 @@ private:
     int mNumInputSamplesAvailable = mInitPadding;
     double mSpeedRatio;
     double mSourceSampleRate;
-    const double mTargetSampleRate = 22050.0;
+    double mTargetSampleRate;
 
     // Low pass filter
     std::vector<juce::dsp::IIR::Filter<float>> mLowpassFilters;
 };
 
-#endif // DownSampler_h
+#endif // Resampler_h
