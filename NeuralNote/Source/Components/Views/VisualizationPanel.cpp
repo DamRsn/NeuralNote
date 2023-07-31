@@ -73,6 +73,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mResetButton.onClick = [this]() {
         mProcessor.getPlayer()->reset();
         mPlayPauseButton.setToggleState(false, juce::sendNotification);
+        mAudioMidiViewport.setViewPositionProportionately(0, 0);
     };
 
     addAndMakeVisible(mResetButton);

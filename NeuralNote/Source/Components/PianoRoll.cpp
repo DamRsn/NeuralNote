@@ -8,7 +8,7 @@ PianoRoll::PianoRoll(NeuralNoteAudioProcessor& inProcessor, Keyboard& keyboard, 
     : mProcessor(inProcessor)
     , mKeyboard(keyboard)
     , mNumPixelsPerSecond(inNumPixelsPerSecond)
-    , mPlayhead(&inProcessor)
+    , mPlayhead(&inProcessor, inNumPixelsPerSecond)
 {
     mKeyboard.addChangeListener(this);
 

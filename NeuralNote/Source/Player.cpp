@@ -101,8 +101,10 @@ double Player::getPlayheadPositionSeconds() const
 
 void Player::setPlayheadPositionSeconds(double inNewPosition)
 {
-    mSynthController->setNewTimeSeconds(inNewPosition);
-    mPlayheadIndex = (int) std::round(inNewPosition * mSampleRate);
+    if (inNewPosition >= 0 && inNewPosition < mProcessor->getSourceAudioManager()->getAudioSampleDuration()) {
+        mSynthController->setNewTimeSeconds(inNewPosition);
+        mPlayheadIndex = (int) std::round(inNewPosition * mSampleRate);
+    }
 }
 
 SynthController* Player::getSynthController()

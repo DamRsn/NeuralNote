@@ -7,7 +7,7 @@
 
 AudioRegion::AudioRegion(NeuralNoteAudioProcessor& processor, double inNumPixelsPerSecond)
     : mProcessor(processor)
-    , mPlayhead(&processor)
+    , mPlayhead(&processor, inNumPixelsPerSecond)
     , mNumPixelsPerSecond(inNumPixelsPerSecond)
 {
     addAndMakeVisible(mPlayhead);
@@ -72,9 +72,6 @@ void AudioRegion::setThumbnailWidth(int inThumbnailWidth)
 
 void AudioRegion::mouseDown(const juce::MouseEvent& e)
 {
-    //    if (auto* parent = getParentComponent())
-    //        parent->mouseDown(e);
-
     if (mProcessor.getState() == EmptyAudioAndMidiRegions) {
         mFileChooser = std::make_shared<juce::FileChooser>(
             "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
@@ -89,7 +86,7 @@ void AudioRegion::mouseDown(const juce::MouseEvent& e)
                                       }
                                   });
     } else if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-        mPlayhead.setPlayheadTime(_pixelToTime(e.x));
+        mPlayhead.setPlayheadTime(_pixelToTime((float) e.x));
     }
 }
 

@@ -13,7 +13,7 @@ class Playhead
     , public Timer
 {
 public:
-    Playhead(NeuralNoteAudioProcessor* inProcessor);
+    Playhead(NeuralNoteAudioProcessor* inProcessor, double inNumPixelsPerSecond);
 
     void resized() override;
 
@@ -28,6 +28,7 @@ private:
 
     double mCurrentPlayerPlayheadTime = 0;
     double mAudioSampleDuration = 0;
+    const double mNumPixelsPerSecond;
 
     static constexpr float mTriangleSide = 8.0f;
     static constexpr float mTriangleHeight = 0.86602540378 * mTriangleSide; // Sqrt(3) / 2

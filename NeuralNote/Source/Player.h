@@ -27,6 +27,11 @@ public:
 
     void reset();
 
+    /**
+     * Sets the new playhead position (in seconds).
+     * Nothing is performed if inNewPosition is out of bounds (less than 0 or larger than audio length available)
+     * @param inNewPosition New playhead position in seconds
+     */
     void setPlayheadPositionSeconds(double inNewPosition);
 
     double getPlayheadPositionSeconds() const;

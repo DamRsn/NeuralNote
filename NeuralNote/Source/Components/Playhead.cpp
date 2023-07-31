@@ -3,8 +3,9 @@
 //
 
 #include "Playhead.h"
-Playhead::Playhead(NeuralNoteAudioProcessor* inProcessor)
+Playhead::Playhead(NeuralNoteAudioProcessor* inProcessor, double inNumPixelsPerSecond)
     : mProcessor(inProcessor)
+    , mNumPixelsPerSecond(inNumPixelsPerSecond)
 {
     setInterceptsMouseClicks(false, false);
 
@@ -19,9 +20,9 @@ void Playhead::paint(Graphics& g)
 {
     if (mAudioSampleDuration > 0 && mProcessor->getState() == PopulatedAudioAndMidiRegions) {
         // TODO: Fix this, does not work when the audio does not span the whole width
-        auto playhead_x = jlimit(0.0f,
-                                 (float) getWidth(),
-                                 static_cast<float>(mCurrentPlayerPlayheadTime / mAudioSampleDuration * getWidth()));
+        float playhead_x = mCurrentPlayerPlayheadTime / mAudioSampleDuration
+                           * std::min(mNumPixelsPerSecond * mAudioSampleDuration, (double) getWidth());
+        playhead_x = jlimit(0.0f, (float) getWidth(), playhead_x);
 
         g.setColour(juce::Colours::white);
         g.drawLine(playhead_x, 0, playhead_x, (float) getHeight(), 1);
