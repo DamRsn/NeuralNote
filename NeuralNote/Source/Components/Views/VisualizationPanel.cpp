@@ -77,6 +77,13 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     };
 
     addAndMakeVisible(mResetButton);
+
+    mCenterButton.setButtonText("Center");
+    mCenterButton.setClickingTogglesState(true);
+    mCenterButton.setToggleState(false, sendNotification);
+    mCenterButton.onClick = [this]() { mCombinedAudioMidiRegion.setCenterView(mCenterButton.getToggleState()); };
+
+    addAndMakeVisible(mCenterButton);
 }
 
 void VisualizationPanel::resized()
@@ -95,7 +102,7 @@ void VisualizationPanel::resized()
 
     mPlayPauseButton.setBounds(getWidth() - 100, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
     mResetButton.setBounds(getWidth() - 200, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
-
+    mCenterButton.setBounds(getWidth() - 300, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
     startTimerHz(15);
 }
 

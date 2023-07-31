@@ -8,9 +8,7 @@
 #include "PluginProcessor.h"
 #include <JuceHeader.h>
 
-class Playhead
-    : public Component
-    , public Timer
+class Playhead : public Component
 {
 public:
     Playhead(NeuralNoteAudioProcessor* inProcessor, double inNumPixelsPerSecond);
@@ -19,12 +17,18 @@ public:
 
     void paint(juce::Graphics& g) override;
 
-    void timerCallback() override;
-
     void setPlayheadTime(double inNewTime);
 
+    static double computePlayheadPositionPixel(double inPlayheadPositionSeconds,
+                                               double inSampleDuration,
+                                               double inNumPixelPerSecond,
+                                               int inWidth);
+
 private:
+    void _onVBlankCallback();
+
     NeuralNoteAudioProcessor* mProcessor;
+    VBlankAttachment mVBlankAttachment;
 
     double mCurrentPlayerPlayheadTime = 0;
     double mAudioSampleDuration = 0;

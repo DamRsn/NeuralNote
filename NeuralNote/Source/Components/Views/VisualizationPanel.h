@@ -42,6 +42,7 @@ private:
 
     juce::TextButton mPlayPauseButton;
     juce::TextButton mResetButton;
+    juce::TextButton mCenterButton;
 
     std::unique_ptr<juce::TextEditor> mFileTempo;
 };

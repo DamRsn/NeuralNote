@@ -8,6 +8,7 @@ CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& proce
     : mProcessor(processor)
     , mAudioRegion(processor, mNumPixelsPerSecond)
     , mPianoRoll(processor, keyboard, mNumPixelsPerSecond)
+    , mVBlankAttachment(this, [this]() { _onVBlankCallback(); })
 {
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
@@ -110,5 +111,40 @@ void CombinedAudioMidiRegion::changeListenerCallback(juce::ChangeBroadcaster* so
         }
 
         mAudioRegion.repaint();
+    }
+}
+
+void CombinedAudioMidiRegion::centerViewOnPlayhead()
+{
+    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
+        double playhead_position =
+            Playhead::computePlayheadPositionPixel(mProcessor.getPlayer()->getPlayheadPositionSeconds(),
+                                                   mProcessor.getSourceAudioManager()->getAudioSampleDuration(),
+                                                   mNumPixelsPerSecond,
+                                                   mAudioRegion.getWidth());
+
+        int full_width = mAudioRegion.getWidth();
+        int visible_width = mViewportPtr->getWidth();
+        int half_visible_width = visible_width / 2;
+
+        auto pixel_offset = (int) std::round(
+            std::max(0.0, std::min(playhead_position, (double) full_width) - (double) half_visible_width));
+        auto prev_pixel_offset = mViewportPtr->getViewPositionX();
+
+        if (pixel_offset != prev_pixel_offset)
+            mViewportPtr->setViewPosition(pixel_offset, 0);
+    }
+}
+
+void CombinedAudioMidiRegion::setCenterView(bool inShouldCenterView)
+{
+    mShouldCenterView = inShouldCenterView;
+}
+
+void CombinedAudioMidiRegion::_onVBlankCallback()
+{
+    if (mShouldCenterView && mProcessor.getState() == PopulatedAudioAndMidiRegions
+        && mProcessor.getPlayer()->isPlaying()) {
+        centerViewOnPlayhead();
     }
 }

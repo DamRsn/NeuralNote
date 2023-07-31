@@ -44,6 +44,10 @@ public:
 
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
+    void centerViewOnPlayhead();
+
+    void setCenterView(bool inShouldCenterView);
+
     const double mNumPixelsPerSecond = 100.0;
 
     const int mAudioRegionHeight = 85;
@@ -51,9 +55,14 @@ public:
     const int mPianoRollY = mAudioRegionHeight + mHeightBetweenAudioMidi;
 
 private:
+    void _onVBlankCallback();
+
     NeuralNoteAudioProcessor& mProcessor;
 
     juce::Viewport* mViewportPtr = nullptr;
+    juce::VBlankAttachment mVBlankAttachment;
+
+    bool mShouldCenterView = false;
 
     int mBaseWidth = 0;
 
