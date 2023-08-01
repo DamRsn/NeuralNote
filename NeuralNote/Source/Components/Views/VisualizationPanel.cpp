@@ -6,7 +6,7 @@
 
 VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
-    , mCombinedAudioMidiRegion(processor, mKeyboard)
+    , mCombinedAudioMidiRegion(processor, mKeyboard, this)
     , mMidiFileDrag(processor)
 {
     mAudioMidiViewport.setViewedComponent(&mCombinedAudioMidiRegion);
@@ -84,6 +84,28 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mCenterButton.onClick = [this]() { mCombinedAudioMidiRegion.setCenterView(mCenterButton.getToggleState()); };
 
     addAndMakeVisible(mCenterButton);
+
+    mAudioGainSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+    mAudioGainSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxLeft, true, 40, 20);
+    mAudioGainSlider.setTextValueSuffix(" dB");
+    mAudioGainSlider.setColour(Slider::ColourIds::textBoxTextColourId, BLACK);
+    mAudioGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
+
+    mAudioGainSliderAttachment =
+        std::make_unique<SliderParameterAttachment>(*mProcessor.mTree.getParameter("AUDIO_LEVEL_DB"), mAudioGainSlider);
+
+    addChildComponent(mAudioGainSlider);
+
+    mMidiGainSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+    mMidiGainSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxLeft, true, 40, 20);
+    mMidiGainSlider.setTextValueSuffix(" dB");
+    mMidiGainSlider.setColour(Slider::ColourIds::textBoxTextColourId, BLACK);
+    mMidiGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
+
+    mMidiGainSliderAttachment =
+        std::make_unique<SliderParameterAttachment>(*mProcessor.mTree.getParameter("MIDI_LEVEL_DB"), mMidiGainSlider);
+
+    addChildComponent(mMidiGainSlider);
 }
 
 void VisualizationPanel::resized()
@@ -100,10 +122,13 @@ void VisualizationPanel::resized()
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
     mFileTempo->setBounds(6, 55, 40, 17);
 
-    mPlayPauseButton.setBounds(getWidth() - 100, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
-    mResetButton.setBounds(getWidth() - 200, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
-    mCenterButton.setBounds(getWidth() - 300, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
+    mPlayPauseButton.setBounds(getWidth() - 305, mCombinedAudioMidiRegion.mPianoRollY + 3, 80, 25);
+    mResetButton.setBounds(getWidth() - 405, mCombinedAudioMidiRegion.mPianoRollY + 3, 80, 25);
+    mCenterButton.setBounds(getWidth() - 505, mCombinedAudioMidiRegion.mPianoRollY + 3, 80, 25);
     startTimerHz(15);
+
+    mAudioGainSlider.setBounds(getWidth() - 205, 3, 200, 20);
+    mMidiGainSlider.setBounds(getWidth() - 205, mCombinedAudioMidiRegion.mPianoRollY + 3, 200, 20);
 }
 
 void VisualizationPanel::paint(Graphics& g)
@@ -125,6 +150,14 @@ void VisualizationPanel::timerCallback()
     if (mPlayPauseButton.getToggleState() != mProcessor.getPlayer()->isPlaying()) {
         mPlayPauseButton.setToggleState(mProcessor.getPlayer()->isPlaying(), sendNotification);
     }
+
+    if (mAudioGainSlider.isVisible()) {
+        checkMouseExitAudioRegion();
+    }
+
+    if (mMidiGainSlider.isVisible()) {
+        checkMouseExitPianoRoll();
+    }
 }
 
 void VisualizationPanel::clear()
@@ -145,4 +178,35 @@ void VisualizationPanel::setMidiFileDragComponentVisible()
 
     mFileTempo->setText(String(mProcessor.getMidiFileTempo()), sendNotification);
     mFileTempo->setVisible(true);
+}
+
+void VisualizationPanel::mouseEnterAudioRegion()
+{
+    mAudioGainSlider.setVisible(true);
+}
+
+void VisualizationPanel::checkMouseExitAudioRegion()
+{
+    juce::Rectangle<int> audio_region_rect(
+        KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight);
+
+    if (!audio_region_rect.contains(getMouseXYRelative()))
+        mAudioGainSlider.setVisible(false);
+}
+
+void VisualizationPanel::mouseEnterPianoRoll()
+{
+    mMidiGainSlider.setVisible(true);
+}
+
+void VisualizationPanel::checkMouseExitPianoRoll()
+{
+    juce::Rectangle<int> piano_roll_rect(
+        KEYBOARD_WIDTH,
+        mCombinedAudioMidiRegion.mAudioRegionHeight + mCombinedAudioMidiRegion.mHeightBetweenAudioMidi,
+        getWidth() - KEYBOARD_WIDTH,
+        getHeight() - (mCombinedAudioMidiRegion.mAudioRegionHeight + mCombinedAudioMidiRegion.mHeightBetweenAudioMidi));
+
+    if (!piano_roll_rect.contains(getMouseXYRelative()))
+        mMidiGainSlider.setVisible(false);
 }

@@ -12,15 +12,19 @@
 #include "PianoRoll.h"
 #include "PluginProcessor.h"
 
+class VisualizationPanel;
+
 class CombinedAudioMidiRegion
     : public Component
     , public FileDragAndDropTarget
     , public ChangeListener
 {
 public:
-    CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor, Keyboard& keyboard);
+    CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor,
+                            Keyboard& keyboard,
+                            VisualizationPanel* visualizationPanel);
 
-    ~CombinedAudioMidiRegion();
+    ~CombinedAudioMidiRegion() override;
 
     void setViewportPtr(juce::Viewport* inViewportPtr);
 

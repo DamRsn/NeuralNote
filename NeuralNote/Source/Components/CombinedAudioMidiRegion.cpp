@@ -3,11 +3,14 @@
 //
 
 #include "CombinedAudioMidiRegion.h"
+#include "VisualizationPanel.h"
 
-CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor, Keyboard& keyboard)
+CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor,
+                                                 Keyboard& keyboard,
+                                                 VisualizationPanel* visualizationPanel)
     : mProcessor(processor)
-    , mAudioRegion(processor, mNumPixelsPerSecond)
-    , mPianoRoll(processor, keyboard, mNumPixelsPerSecond)
+    , mAudioRegion(processor, mNumPixelsPerSecond, visualizationPanel)
+    , mPianoRoll(processor, keyboard, mNumPixelsPerSecond, visualizationPanel)
     , mVBlankAttachment(this, [this]() { _onVBlankCallback(); })
 {
     addAndMakeVisible(mAudioRegion);

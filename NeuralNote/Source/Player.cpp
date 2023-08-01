@@ -28,8 +28,11 @@ void Player::prepareToPlay(double inSampleRate, int inSamplesPerBlock)
 
 void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
 {
-    _setGains(mProcessor->getCustomParameters()->gainSourceAudioDb.load(),
-              mProcessor->getCustomParameters()->gainSynthDb.load());
+    auto old_audio_gain = mGainSourceAudio;
+    auto old_synth_gain = mGainSynth;
+
+    _setGains(mProcessor->mTree.getRawParameterValue("AUDIO_LEVEL_DB")->load(),
+              mProcessor->mTree.getRawParameterValue("MIDI_LEVEL_DB")->load());
 
     bool is_playing = mIsPlaying.load();
     mInternalBuffer.clear();
@@ -44,22 +47,26 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
         mSynth->renderNextBlock(mInternalBuffer, {}, 0, inAudioBuffer.getNumSamples());
     }
 
-    mInternalBuffer.applyGain(0, 0, inAudioBuffer.getNumSamples(), mGainSynth);
+    mInternalBuffer.applyGainRamp(0, 0, inAudioBuffer.getNumSamples(), old_synth_gain, mGainSynth);
 
     for (int ch = 1; ch < num_out_channels; ch++) {
         mInternalBuffer.copyFrom(ch, 0, mInternalBuffer, 0, 0, inAudioBuffer.getNumSamples());
     }
 
     if (is_playing && mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        const auto source_buffer = mProcessor->getSourceAudioManager()->getSourceAudioForPlayback();
+        const auto& source_buffer = mProcessor->getSourceAudioManager()->getSourceAudioForPlayback();
         int num_samples = std::min(inAudioBuffer.getNumSamples(), source_buffer.getNumSamples() - mPlayheadIndex);
 
         int num_source_channel = source_buffer.getNumChannels();
 
         for (int ch = 0; ch < num_out_channels; ch++) {
             int source_channel = std::min(ch, num_source_channel - 1);
-            mInternalBuffer.addFrom(
-                ch, 0, source_buffer, source_channel, mPlayheadIndex, num_samples, mGainSourceAudio);
+            mInternalBuffer.addFromWithRamp(ch,
+                                            0,
+                                            source_buffer.getReadPointer(source_channel) + mPlayheadIndex,
+                                            num_samples,
+                                            old_audio_gain,
+                                            mGainSourceAudio);
         }
 
         mPlayheadIndex += num_samples;
@@ -114,6 +121,6 @@ SynthController* Player::getSynthController()
 
 void Player::_setGains(float inGainAudioSourceDB, float inGainSynthDB)
 {
-    mGainSourceAudio = Decibels::decibelsToGain(inGainAudioSourceDB);
-    mGainSynth = Decibels::decibelsToGain(inGainSynthDB);
+    mGainSourceAudio = Decibels::decibelsToGain(inGainAudioSourceDB, -36.0f);
+    mGainSynth = Decibels::decibelsToGain(inGainSynthDB, -36.0f);
 }

@@ -13,11 +13,14 @@
 #include "Playhead.h"
 
 class CombinedAudioMidiRegion;
+class VisualizationPanel;
 
 class AudioRegion : public Component
 {
 public:
-    explicit AudioRegion(NeuralNoteAudioProcessor& processor, double inNumPixelsPerSecond);
+    AudioRegion(NeuralNoteAudioProcessor& processor,
+                double inNumPixelsPerSecond,
+                VisualizationPanel* inVisualizationPanel);
 
     void resized() override;
 
@@ -29,8 +32,14 @@ public:
 
     void mouseDown(const juce::MouseEvent& e) override;
 
+    void mouseEnter(const juce::MouseEvent& event) override;
+
+    void mouseExit(const juce::MouseEvent& event) override;
+
 private:
     NeuralNoteAudioProcessor& mProcessor;
+
+    VisualizationPanel* mVisualizationPanel;
 
     float _timeToPixel(float inTime) const;
 

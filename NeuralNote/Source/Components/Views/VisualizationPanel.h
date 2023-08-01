@@ -31,6 +31,14 @@ public:
 
     void setMidiFileDragComponentVisible();
 
+    void mouseEnterAudioRegion();
+
+    void checkMouseExitAudioRegion();
+
+    void mouseEnterPianoRoll();
+
+    void checkMouseExitPianoRoll();
+
     static constexpr int KEYBOARD_WIDTH = 50;
 
 private:
@@ -43,6 +51,12 @@ private:
     juce::TextButton mPlayPauseButton;
     juce::TextButton mResetButton;
     juce::TextButton mCenterButton;
+
+    juce::Slider mAudioGainSlider;
+    std::unique_ptr<juce::SliderParameterAttachment> mAudioGainSliderAttachment;
+
+    juce::Slider mMidiGainSlider;
+    std::unique_ptr<juce::SliderParameterAttachment> mMidiGainSliderAttachment;
 
     std::unique_ptr<juce::TextEditor> mFileTempo;
 };

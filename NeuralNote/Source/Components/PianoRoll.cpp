@@ -3,9 +3,14 @@
 //
 
 #include "PianoRoll.h"
+#include "VisualizationPanel.h"
 
-PianoRoll::PianoRoll(NeuralNoteAudioProcessor& inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond)
+PianoRoll::PianoRoll(NeuralNoteAudioProcessor& inProcessor,
+                     Keyboard& keyboard,
+                     double inNumPixelsPerSecond,
+                     VisualizationPanel* inVisualizationPanel)
     : mProcessor(inProcessor)
+    , mVisualizationPanel(inVisualizationPanel)
     , mKeyboard(keyboard)
     , mNumPixelsPerSecond(inNumPixelsPerSecond)
     , mPlayhead(&inProcessor, inNumPixelsPerSecond)
@@ -111,6 +116,18 @@ void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
 void PianoRoll::mouseDown(const MouseEvent& event)
 {
     mPlayhead.setPlayheadTime(_pixelToTime((float) event.x));
+}
+
+void PianoRoll::mouseEnter(const MouseEvent& event)
+{
+    Component::mouseEnter(event);
+    mVisualizationPanel->mouseEnterPianoRoll();
+}
+
+void PianoRoll::mouseExit(const MouseEvent& event)
+{
+    Component::mouseExit(event);
+    mVisualizationPanel->checkMouseExitPianoRoll();
 }
 
 float PianoRoll::_timeToPixel(float inTime) const

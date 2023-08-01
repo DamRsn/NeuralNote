@@ -4,9 +4,13 @@
 
 #include "AudioRegion.h"
 #include "CombinedAudioMidiRegion.h"
+#include "VisualizationPanel.h"
 
-AudioRegion::AudioRegion(NeuralNoteAudioProcessor& processor, double inNumPixelsPerSecond)
+AudioRegion::AudioRegion(NeuralNoteAudioProcessor& processor,
+                         double inNumPixelsPerSecond,
+                         VisualizationPanel* inVisualizationPanel)
     : mProcessor(processor)
+    , mVisualizationPanel(inVisualizationPanel)
     , mPlayhead(&processor, inNumPixelsPerSecond)
     , mNumPixelsPerSecond(inNumPixelsPerSecond)
 {
@@ -98,4 +102,16 @@ float AudioRegion::_timeToPixel(float inTime) const
 float AudioRegion::_pixelToTime(float inPixel) const
 {
     return inPixel / static_cast<float>(mNumPixelsPerSecond);
+}
+
+void AudioRegion::mouseEnter(const MouseEvent& event)
+{
+    Component::mouseEnter(event);
+    mVisualizationPanel->mouseEnterAudioRegion();
+}
+
+void AudioRegion::mouseExit(const MouseEvent& event)
+{
+    Component::mouseExit(event);
+    mVisualizationPanel->checkMouseExitAudioRegion();
 }
