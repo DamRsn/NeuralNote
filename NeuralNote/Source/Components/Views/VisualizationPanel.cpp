@@ -182,7 +182,8 @@ void VisualizationPanel::setMidiFileDragComponentVisible()
 
 void VisualizationPanel::mouseEnterAudioRegion()
 {
-    mAudioGainSlider.setVisible(true);
+    if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
+        mAudioGainSlider.setVisible(true);
 }
 
 void VisualizationPanel::checkMouseExitAudioRegion()
@@ -196,7 +197,8 @@ void VisualizationPanel::checkMouseExitAudioRegion()
 
 void VisualizationPanel::mouseEnterPianoRoll()
 {
-    mMidiGainSlider.setVisible(true);
+    if (mProcessor.getState() == PopulatedAudioAndMidiRegions)
+        mMidiGainSlider.setVisible(true);
 }
 
 void VisualizationPanel::checkMouseExitPianoRoll()
