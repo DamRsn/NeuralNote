@@ -31,6 +31,8 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
     auto old_audio_gain = mGainSourceAudio;
     auto old_synth_gain = mGainSynth;
 
+    int playhead_index = (int) std::round(mPlayheadTime * mSampleRate);
+
     _setGains(mProcessor->mTree.getRawParameterValue("AUDIO_LEVEL_DB")->load(),
               mProcessor->mTree.getRawParameterValue("MIDI_LEVEL_DB")->load());
 
@@ -55,7 +57,7 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
 
     if (is_playing && mProcessor->getState() == PopulatedAudioAndMidiRegions) {
         const auto& source_buffer = mProcessor->getSourceAudioManager()->getSourceAudioForPlayback();
-        int num_samples = std::min(inAudioBuffer.getNumSamples(), source_buffer.getNumSamples() - mPlayheadIndex);
+        int num_samples = std::min(inAudioBuffer.getNumSamples(), source_buffer.getNumSamples() - playhead_index);
 
         int num_source_channel = source_buffer.getNumChannels();
 
@@ -63,17 +65,19 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
             int source_channel = std::min(ch, num_source_channel - 1);
             mInternalBuffer.addFromWithRamp(ch,
                                             0,
-                                            source_buffer.getReadPointer(source_channel) + mPlayheadIndex,
+                                            source_buffer.getReadPointer(source_channel) + playhead_index,
                                             num_samples,
                                             old_audio_gain,
                                             mGainSourceAudio);
         }
 
-        mPlayheadIndex += num_samples;
+        playhead_index += num_samples;
 
-        if (mPlayheadIndex >= source_buffer.getNumSamples()) {
-            mPlayheadIndex = 0;
+        if (playhead_index >= source_buffer.getNumSamples()) {
+            playhead_index = 0;
         }
+
+        mPlayheadTime = (double) playhead_index / mSampleRate;
     }
 
     for (int ch = 0; ch < num_out_channels; ch++) {
@@ -98,7 +102,7 @@ void Player::reset()
 {
     mSynthController->reset();
     setPlayingState(false);
-    mPlayheadIndex = 0;
+    mPlayheadTime = 0;
 }
 
 double Player::getPlayheadPositionSeconds() const
@@ -110,7 +114,7 @@ void Player::setPlayheadPositionSeconds(double inNewPosition)
 {
     if (inNewPosition >= 0 && inNewPosition < mProcessor->getSourceAudioManager()->getAudioSampleDuration()) {
         mSynthController->setNewTimeSeconds(inNewPosition);
-        mPlayheadIndex = (int) std::round(inNewPosition * mSampleRate);
+        mPlayheadTime = inNewPosition;
     }
 }
 

@@ -51,7 +51,7 @@ private:
 
     AudioBuffer<float> mInternalBuffer;
 
-    int mPlayheadIndex = 0;
+    double mPlayheadTime = 0;
     double mSampleRate = 44100;
 
     float mGainSourceAudio = 0;
