@@ -39,6 +39,8 @@ public:
 
     void checkMouseExitPianoRoll();
 
+    void mouseExit(const juce::MouseEvent& event) override;
+
     static constexpr int KEYBOARD_WIDTH = 50;
 
 private:

@@ -65,6 +65,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
             mPlayPauseButton.setButtonText("Play");
         }
     };
+    mPlayPauseButton.addMouseListener(this, false);
 
     addAndMakeVisible(mPlayPauseButton);
 
@@ -75,6 +76,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
         mPlayPauseButton.setToggleState(false, juce::sendNotification);
         mAudioMidiViewport.setViewPositionProportionately(0, 0);
     };
+    mResetButton.addMouseListener(this, false);
 
     addAndMakeVisible(mResetButton);
 
@@ -82,6 +84,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mCenterButton.setClickingTogglesState(true);
     mCenterButton.setToggleState(false, sendNotification);
     mCenterButton.onClick = [this]() { mCombinedAudioMidiRegion.setCenterView(mCenterButton.getToggleState()); };
+    mCenterButton.addMouseListener(this, false);
 
     addAndMakeVisible(mCenterButton);
 
@@ -90,7 +93,8 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mAudioGainSlider.setTextValueSuffix(" dB");
     mAudioGainSlider.setColour(Slider::ColourIds::textBoxTextColourId, BLACK);
     mAudioGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
-
+    // To also receive mouseExit callback from this slider
+    mAudioGainSlider.addMouseListener(this, false);
     mAudioGainSliderAttachment =
         std::make_unique<SliderParameterAttachment>(*mProcessor.mTree.getParameter("AUDIO_LEVEL_DB"), mAudioGainSlider);
 
@@ -101,6 +105,8 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
     mMidiGainSlider.setTextValueSuffix(" dB");
     mMidiGainSlider.setColour(Slider::ColourIds::textBoxTextColourId, BLACK);
     mMidiGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
+    // To also receive mouseExit callback from this slider
+    mMidiGainSlider.addMouseListener(this, false);
 
     mMidiGainSliderAttachment =
         std::make_unique<SliderParameterAttachment>(*mProcessor.mTree.getParameter("MIDI_LEVEL_DB"), mMidiGainSlider);
@@ -149,14 +155,6 @@ void VisualizationPanel::timerCallback()
 {
     if (mPlayPauseButton.getToggleState() != mProcessor.getPlayer()->isPlaying()) {
         mPlayPauseButton.setToggleState(mProcessor.getPlayer()->isPlaying(), sendNotification);
-    }
-
-    if (mAudioGainSlider.isVisible()) {
-        checkMouseExitAudioRegion();
-    }
-
-    if (mMidiGainSlider.isVisible()) {
-        checkMouseExitPianoRoll();
     }
 }
 
@@ -211,4 +209,17 @@ void VisualizationPanel::checkMouseExitPianoRoll()
 
     if (!piano_roll_rect.contains(getMouseXYRelative()))
         mMidiGainSlider.setVisible(false);
+}
+
+void VisualizationPanel::mouseExit(const MouseEvent& event)
+{
+    Component::mouseExit(event);
+
+    if (mAudioGainSlider.isVisible()) {
+        checkMouseExitAudioRegion();
+    }
+
+    if (mMidiGainSlider.isVisible()) {
+        checkMouseExitPianoRoll();
+    }
 }
