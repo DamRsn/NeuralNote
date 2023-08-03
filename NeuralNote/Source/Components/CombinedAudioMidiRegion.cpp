@@ -44,6 +44,7 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     ignoreUnused(y);
     mAudioRegion.setIsFileOver(false);
 
+    // TODO: change this just to avoid midi files (avoid auto-drop)
     if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
         || files[0].endsWith(".mp3")) {
         bool success = mProcessor.getSourceAudioManager()->onFileDrop(files[0]);
@@ -58,6 +59,7 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
 
 void CombinedAudioMidiRegion::fileDragEnter(const StringArray& files, int x, int y)
 {
+    // TODO: change this just to avoid midi files (avoid auto-drop)
     if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
         || files[0].endsWith(".mp3")) {
         mAudioRegion.setIsFileOver(true);
@@ -93,7 +95,9 @@ void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
 
     mAudioRegion.setThumbnailWidth(thumbnail_width);
 
-    setSize(new_width, getHeight());
+    if (new_width != getWidth()) {
+        setSize(new_width, getHeight());
+    }
 }
 
 void CombinedAudioMidiRegion::setViewportPtr(juce::Viewport* inViewportPtr)
@@ -104,9 +108,9 @@ void CombinedAudioMidiRegion::setViewportPtr(juce::Viewport* inViewportPtr)
 void CombinedAudioMidiRegion::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if (source == mProcessor.getSourceAudioManager()->getAudioThumbnail()) {
-        if (mProcessor.getState() == Recording) {
-            resizeAccordingToNumSamplesAvailable();
+        resizeAccordingToNumSamplesAvailable();
 
+        if (mProcessor.getState() == Recording) {
             if (mViewportPtr)
                 mViewportPtr->setViewPositionProportionately(1.0f, 0.0f);
             else

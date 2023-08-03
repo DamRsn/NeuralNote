@@ -49,7 +49,6 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
 
     mPlayPauseButton.setButtonText("Play");
     mPlayPauseButton.setClickingTogglesState(true);
-    mPlayPauseButton.setToggleState(false, NotificationType::dontSendNotification);
     mPlayPauseButton.onClick = [this]() {
         if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
             mProcessor.getPlayer()->setPlayingState(mPlayPauseButton.getToggleState());
@@ -65,6 +64,8 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
             mPlayPauseButton.setButtonText("Play");
         }
     };
+
+    mPlayPauseButton.setToggleState(mProcessor.getPlayer()->isPlaying(), NotificationType::sendNotification);
     mPlayPauseButton.addMouseListener(this, false);
 
     addAndMakeVisible(mPlayPauseButton);
