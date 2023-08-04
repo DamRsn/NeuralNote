@@ -12,17 +12,13 @@
 #include "PianoRoll.h"
 #include "PluginProcessor.h"
 
-class VisualizationPanel;
-
 class CombinedAudioMidiRegion
     : public Component
     , public FileDragAndDropTarget
     , public ChangeListener
 {
 public:
-    CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor,
-                            Keyboard& keyboard,
-                            VisualizationPanel* visualizationPanel);
+    CombinedAudioMidiRegion(NeuralNoteAudioProcessor* processor, Keyboard& keyboard);
 
     ~CombinedAudioMidiRegion() override;
 
@@ -48,9 +44,11 @@ public:
 
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
-    void centerViewOnPlayhead();
-
     void setCenterView(bool inShouldCenterView);
+
+    AudioRegion* getAudioRegion();
+
+    PianoRoll* getPianoRoll();
 
     const double mNumPixelsPerSecond = 100.0;
 
@@ -61,7 +59,9 @@ public:
 private:
     void _onVBlankCallback();
 
-    NeuralNoteAudioProcessor& mProcessor;
+    void _centerViewOnPlayhead();
+
+    NeuralNoteAudioProcessor* mProcessor;
 
     juce::Viewport* mViewportPtr = nullptr;
     juce::VBlankAttachment mVBlankAttachment;

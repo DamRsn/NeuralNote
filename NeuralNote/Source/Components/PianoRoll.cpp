@@ -3,17 +3,12 @@
 //
 
 #include "PianoRoll.h"
-#include "VisualizationPanel.h"
 
-PianoRoll::PianoRoll(NeuralNoteAudioProcessor& inProcessor,
-                     Keyboard& keyboard,
-                     double inNumPixelsPerSecond,
-                     VisualizationPanel* inVisualizationPanel)
+PianoRoll::PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond)
     : mProcessor(inProcessor)
-    , mVisualizationPanel(inVisualizationPanel)
     , mKeyboard(keyboard)
     , mNumPixelsPerSecond(inNumPixelsPerSecond)
-    , mPlayhead(&inProcessor, inNumPixelsPerSecond)
+    , mPlayhead(inProcessor, inNumPixelsPerSecond)
 {
     mKeyboard.addChangeListener(this);
 
@@ -38,7 +33,7 @@ void PianoRoll::paint(Graphics& g)
     g.setColour(WAVEFORM_BG_COLOR);
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 4);
 
-    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
+    if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
         // Draw horizontal note lines
         for (int i = MIN_MIDI_NOTE; i <= MAX_MIDI_NOTE; i++) {
             if (mKeyboard.getRectangleForKey(i).intersects(local_bounds)) {
@@ -54,12 +49,12 @@ void PianoRoll::paint(Graphics& g)
         }
 
         // Draw vertical lines if we have info on bpm, time signature ...
-        if (mProcessor.canQuantize()) {
+        if (mProcessor->canQuantize()) {
             _drawBeatVerticalLines(g);
         }
 
         // Draw notes
-        for (auto& note_event: mProcessor.getNoteEventVector()) {
+        for (auto& note_event: mProcessor->getNoteEventVector()) {
             auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(note_event.pitch);
             auto note_y_start = note_y_start_n_height.first;
             auto note_height = note_y_start_n_height.second;
@@ -76,7 +71,7 @@ void PianoRoll::paint(Graphics& g)
             g.drawRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height, 0.5);
 
             // Draw pitch bend
-            if (mProcessor.getCustomParameters()->pitchBendMode == SinglePitchBend) {
+            if (mProcessor->getCustomParameters()->pitchBendMode == SinglePitchBend) {
                 const auto& bends = note_event.bends;
 
                 if (!note_event.bends.empty()) {
@@ -116,18 +111,6 @@ void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
 void PianoRoll::mouseDown(const MouseEvent& event)
 {
     mPlayhead.setPlayheadTime(_pixelToTime((float) event.x));
-}
-
-void PianoRoll::mouseEnter(const MouseEvent& event)
-{
-    Component::mouseEnter(event);
-    mVisualizationPanel->mouseEnterPianoRoll();
-}
-
-void PianoRoll::mouseExit(const MouseEvent& event)
-{
-    Component::mouseExit(event);
-    mVisualizationPanel->checkMouseExitPianoRoll();
 }
 
 float PianoRoll::_timeToPixel(float inTime) const
@@ -183,7 +166,7 @@ float PianoRoll::_getNoteWidth(int inNote) const
 
 void PianoRoll::_drawBeatVerticalLines(Graphics& g)
 {
-    auto playhead_info = mProcessor.getPlayheadInfoOnRecordStart();
+    auto playhead_info = mProcessor->getPlayheadInfoOnRecordStart();
     jassert(playhead_info.hasValue());
     double beats_per_second = 60.0 / *playhead_info->getBpm();
     auto time_signature = *playhead_info->getTimeSignature();

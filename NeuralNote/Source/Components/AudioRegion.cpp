@@ -4,14 +4,10 @@
 
 #include "AudioRegion.h"
 #include "CombinedAudioMidiRegion.h"
-#include "VisualizationPanel.h"
 
-AudioRegion::AudioRegion(NeuralNoteAudioProcessor& processor,
-                         double inNumPixelsPerSecond,
-                         VisualizationPanel* inVisualizationPanel)
+AudioRegion::AudioRegion(NeuralNoteAudioProcessor* processor, double inNumPixelsPerSecond)
     : mProcessor(processor)
-    , mVisualizationPanel(inVisualizationPanel)
-    , mPlayhead(&processor, inNumPixelsPerSecond)
+    , mPlayhead(processor, inNumPixelsPerSecond)
     , mNumPixelsPerSecond(inNumPixelsPerSecond)
 {
     addAndMakeVisible(mPlayhead);
@@ -24,9 +20,9 @@ void AudioRegion::resized()
 
 void AudioRegion::paint(Graphics& g)
 {
-    auto num_samples_available = mProcessor.getSourceAudioManager()->getNumSamplesDownAcquired();
+    auto num_samples_available = mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired();
 
-    auto* thumbnail = mProcessor.getSourceAudioManager()->getAudioThumbnail();
+    auto* thumbnail = mProcessor->getSourceAudioManager()->getAudioThumbnail();
 
     if (num_samples_available > 0 && thumbnail->isFullyLoaded()) {
         g.setColour(WAVEFORM_BG_COLOR);
@@ -43,7 +39,7 @@ void AudioRegion::paint(Graphics& g)
                                num_samples_available / BASIC_PITCH_SAMPLE_RATE,
                                0,
                                0.95f / std::max(thumbnail->getApproximatePeak(), 0.1f));
-    } else if (mProcessor.getState() == Processing) {
+    } else if (mProcessor->getState() == Processing) {
         g.setColour(WAVEFORM_BG_COLOR);
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
     } else {
@@ -76,7 +72,7 @@ void AudioRegion::setThumbnailWidth(int inThumbnailWidth)
 
 void AudioRegion::mouseDown(const juce::MouseEvent& e)
 {
-    if (mProcessor.getState() == EmptyAudioAndMidiRegions) {
+    if (mProcessor->getState() == EmptyAudioAndMidiRegions) {
         mFileChooser = std::make_shared<juce::FileChooser>(
             "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
 
@@ -89,29 +85,12 @@ void AudioRegion::mouseDown(const juce::MouseEvent& e)
                                           parent->filesDropped(StringArray(fc.getResult().getFullPathName()), 1, 1);
                                       }
                                   });
-    } else if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
+    } else if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
         mPlayhead.setPlayheadTime(_pixelToTime((float) e.x));
     }
-}
-
-float AudioRegion::_timeToPixel(float inTime) const
-{
-    return inTime * static_cast<float>(mNumPixelsPerSecond);
 }
 
 float AudioRegion::_pixelToTime(float inPixel) const
 {
     return inPixel / static_cast<float>(mNumPixelsPerSecond);
-}
-
-void AudioRegion::mouseEnter(const MouseEvent& event)
-{
-    Component::mouseEnter(event);
-    mVisualizationPanel->mouseEnterAudioRegion();
-}
-
-void AudioRegion::mouseExit(const MouseEvent& event)
-{
-    Component::mouseExit(event);
-    mVisualizationPanel->checkMouseExitAudioRegion();
 }

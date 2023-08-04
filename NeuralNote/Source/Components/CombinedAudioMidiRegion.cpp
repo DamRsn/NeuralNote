@@ -3,24 +3,21 @@
 //
 
 #include "CombinedAudioMidiRegion.h"
-#include "VisualizationPanel.h"
 
-CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor,
-                                                 Keyboard& keyboard,
-                                                 VisualizationPanel* visualizationPanel)
+CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor* processor, Keyboard& keyboard)
     : mProcessor(processor)
-    , mAudioRegion(processor, mNumPixelsPerSecond, visualizationPanel)
-    , mPianoRoll(processor, keyboard, mNumPixelsPerSecond, visualizationPanel)
+    , mAudioRegion(processor, mNumPixelsPerSecond)
+    , mPianoRoll(processor, keyboard, mNumPixelsPerSecond)
     , mVBlankAttachment(this, [this]() { _onVBlankCallback(); })
 {
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
-    mProcessor.getSourceAudioManager()->getAudioThumbnail()->addChangeListener(this);
+    mProcessor->getSourceAudioManager()->getAudioThumbnail()->addChangeListener(this);
 }
 
 CombinedAudioMidiRegion::~CombinedAudioMidiRegion()
 {
-    mProcessor.getSourceAudioManager()->getAudioThumbnail()->removeChangeListener(this);
+    mProcessor->getSourceAudioManager()->getAudioThumbnail()->removeChangeListener(this);
 }
 
 void CombinedAudioMidiRegion::resized()
@@ -35,7 +32,7 @@ void CombinedAudioMidiRegion::paint(Graphics& g)
 
 bool CombinedAudioMidiRegion::isInterestedInFileDrag(const StringArray& files)
 {
-    return mProcessor.getState() == EmptyAudioAndMidiRegions || mProcessor.getState() == PopulatedAudioAndMidiRegions;
+    return mProcessor->getState() == EmptyAudioAndMidiRegions || mProcessor->getState() == PopulatedAudioAndMidiRegions;
 }
 
 void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int y)
@@ -47,7 +44,7 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     // TODO: change this just to avoid midi files (avoid auto-drop)
     if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
         || files[0].endsWith(".mp3")) {
-        bool success = mProcessor.getSourceAudioManager()->onFileDrop(files[0]);
+        bool success = mProcessor->getSourceAudioManager()->onFileDrop(files[0]);
 
         if (success) {
             resizeAccordingToNumSamplesAvailable();
@@ -86,7 +83,7 @@ void CombinedAudioMidiRegion::repaintPianoRoll()
 
 void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
 {
-    int num_samples_available = mProcessor.getSourceAudioManager()->getNumSamplesDownAcquired();
+    int num_samples_available = mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired();
 
     int thumbnail_width =
         static_cast<int>(std::round((num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE));
@@ -107,10 +104,10 @@ void CombinedAudioMidiRegion::setViewportPtr(juce::Viewport* inViewportPtr)
 
 void CombinedAudioMidiRegion::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    if (source == mProcessor.getSourceAudioManager()->getAudioThumbnail()) {
+    if (source == mProcessor->getSourceAudioManager()->getAudioThumbnail()) {
         resizeAccordingToNumSamplesAvailable();
 
-        if (mProcessor.getState() == Recording) {
+        if (mProcessor->getState() == Recording) {
             if (mViewportPtr)
                 mViewportPtr->setViewPositionProportionately(1.0f, 0.0f);
             else
@@ -121,12 +118,34 @@ void CombinedAudioMidiRegion::changeListenerCallback(juce::ChangeBroadcaster* so
     }
 }
 
-void CombinedAudioMidiRegion::centerViewOnPlayhead()
+void CombinedAudioMidiRegion::setCenterView(bool inShouldCenterView)
 {
-    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
+    mShouldCenterView = inShouldCenterView;
+}
+
+AudioRegion* CombinedAudioMidiRegion::getAudioRegion()
+{
+    return &mAudioRegion;
+}
+PianoRoll* CombinedAudioMidiRegion::getPianoRoll()
+{
+    return &mPianoRoll;
+}
+
+void CombinedAudioMidiRegion::_onVBlankCallback()
+{
+    if (mShouldCenterView && mProcessor->getState() == PopulatedAudioAndMidiRegions
+        && mProcessor->getPlayer()->isPlaying()) {
+        _centerViewOnPlayhead();
+    }
+}
+
+void CombinedAudioMidiRegion::_centerViewOnPlayhead()
+{
+    if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
         double playhead_position =
-            Playhead::computePlayheadPositionPixel(mProcessor.getPlayer()->getPlayheadPositionSeconds(),
-                                                   mProcessor.getSourceAudioManager()->getAudioSampleDuration(),
+            Playhead::computePlayheadPositionPixel(mProcessor->getPlayer()->getPlayheadPositionSeconds(),
+                                                   mProcessor->getSourceAudioManager()->getAudioSampleDuration(),
                                                    mNumPixelsPerSecond,
                                                    mAudioRegion.getWidth());
 
@@ -140,18 +159,5 @@ void CombinedAudioMidiRegion::centerViewOnPlayhead()
 
         if (pixel_offset != prev_pixel_offset)
             mViewportPtr->setViewPosition(pixel_offset, 0);
-    }
-}
-
-void CombinedAudioMidiRegion::setCenterView(bool inShouldCenterView)
-{
-    mShouldCenterView = inShouldCenterView;
-}
-
-void CombinedAudioMidiRegion::_onVBlankCallback()
-{
-    if (mShouldCenterView && mProcessor.getState() == PopulatedAudioAndMidiRegions
-        && mProcessor.getPlayer()->isPlaying()) {
-        centerViewOnPlayhead();
     }
 }

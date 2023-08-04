@@ -13,17 +13,12 @@
 #include "UIDefines.h"
 #include "Playhead.h"
 
-class VisualizationPanel;
-
 class PianoRoll
     : public juce::Component
     , public juce::ChangeListener
 {
 public:
-    PianoRoll(NeuralNoteAudioProcessor& inProcessor,
-              Keyboard& keyboard,
-              double inNumPixelsPerSecond,
-              VisualizationPanel* inVisualizationPanel);
+    PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond);
 
     void resized() override;
 
@@ -32,10 +27,6 @@ public:
     void changeListenerCallback(ChangeBroadcaster* source) override;
 
     void mouseDown(const MouseEvent& event) override;
-
-    void mouseEnter(const juce::MouseEvent& event) override;
-
-    void mouseExit(const juce::MouseEvent& event) override;
 
 private:
     float _timeToPixel(float inTime) const;
@@ -76,8 +67,7 @@ private:
     juce::ColourGradient mNoteGradient;
 
     Keyboard& mKeyboard;
-    NeuralNoteAudioProcessor& mProcessor;
-    VisualizationPanel* mVisualizationPanel;
+    NeuralNoteAudioProcessor* mProcessor;
 
     Playhead mPlayhead;
 };

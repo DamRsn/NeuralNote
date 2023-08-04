@@ -6,7 +6,7 @@
 
 NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
-    , mVisualizationPanel(processor)
+    , mVisualizationPanel(&processor)
     , mTranscriptionOptions(processor)
     , mNoteOptions(processor)
     , mQuantizePanel(processor)
