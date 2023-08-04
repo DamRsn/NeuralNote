@@ -29,12 +29,13 @@ public:
 
     std::vector<Notes::Event> quantize(const std::vector<Notes::Event>& inNoteEvents);
 
+    void reset();
+
 private:
     static double quantizeTime(
         double inEventTime, double inBPM, double inTimeDivision, double inStartTimeQN, float inQuantizationForce);
 
     struct RhythmInfo {
-        bool droppedFile = false;
         juce::Optional<double> bpm;
         juce::Optional<juce::AudioPlayHead::TimeSignature> timeSignature;
         juce::Optional<double> ppqPositionOfLastBarStart;

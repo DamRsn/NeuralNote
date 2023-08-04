@@ -10,15 +10,11 @@ RhythmOptions::RhythmOptions()
 void RhythmOptions::setInfo(bool inDroppedFile,
                             const juce::Optional<juce::AudioPlayHead::PositionInfo>& inPositionInfoPtr)
 {
-    // Reset to default struct where nothing is set and bool false.
-    mRhythmInfo = RhythmInfo();
+    reset();
 
     if (inDroppedFile) {
-        mRhythmInfo.droppedFile = true;
         mRhythmInfo.canQuantize = false;
     } else {
-        mRhythmInfo.droppedFile = false;
-
         if (inPositionInfoPtr.hasValue()) {
             mRhythmInfo.timeSignature = inPositionInfoPtr->getTimeSignature();
             mRhythmInfo.isPlaying = inPositionInfoPtr->getIsPlaying();
@@ -106,4 +102,10 @@ double RhythmOptions::quantizeTime(
     double quantized_time = quantized_shifted_time - new_time_origin;
 
     return quantized_time;
+}
+
+void RhythmOptions::reset()
+{
+    // Reset to default struct where nothing is set and bool false.
+    mRhythmInfo = RhythmInfo();
 }

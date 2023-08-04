@@ -57,12 +57,6 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
             mWasRecording = true;
             mPlayheadInfoStartRecord = getPlayHead()->getPosition();
 
-            if (mPlayheadInfoStartRecord.hasValue()) {
-                mIsPlayheadPlaying = mPlayheadInfoStartRecord->getIsPlaying();
-            } else {
-                mIsPlayheadPlaying = false;
-            }
-
             mRhythmOptions.setInfo(false, mPlayheadInfoStartRecord);
         }
     } else {
@@ -106,10 +100,11 @@ void NeuralNoteAudioProcessor::clear()
 
     mBasicPitch.reset();
     mWasRecording = false;
-    mIsPlayheadPlaying = false;
 
     mPlayer->reset();
     mSourceAudioManager->clear();
+
+    mRhythmOptions.reset();
 
     mState.store(EmptyAudioAndMidiRegions);
 }
@@ -265,6 +260,11 @@ Player* NeuralNoteAudioProcessor::getPlayer()
 SourceAudioManager* NeuralNoteAudioProcessor::getSourceAudioManager()
 {
     return mSourceAudioManager.get();
+}
+
+RhythmOptions* NeuralNoteAudioProcessor::getRhythmOptions()
+{
+    return &mRhythmOptions;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
