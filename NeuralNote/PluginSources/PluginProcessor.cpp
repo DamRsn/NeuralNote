@@ -18,6 +18,14 @@ AudioProcessorValueTreeState::ParameterLayout NeuralNoteAudioProcessor::createPa
     auto mute = std::make_unique<juce::AudioParameterBool>(juce::ParameterID {"MUTE", 1}, "Mute", true);
     params.push_back(std::move(mute));
 
+    auto audio_level_db = std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID {"AUDIO_LEVEL_DB", 1}, "Audio Level dB", NormalisableRange<float>(-36.f, 6.0f, 1.0f), 0.0f);
+    params.push_back(std::move(audio_level_db));
+
+    auto midi_level_db = std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID {"MIDI_LEVEL_DB", 1}, "Midi Level dB", NormalisableRange<float>(-36.f, 6.0f, 1.0f), 0.0f);
+    params.push_back(std::move(midi_level_db));
+
     return {params.begin(), params.end()};
 }
 
@@ -48,12 +56,6 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         if (!mWasRecording) {
             mWasRecording = true;
             mPlayheadInfoStartRecord = getPlayHead()->getPosition();
-
-            if (mPlayheadInfoStartRecord.hasValue()) {
-                mIsPlayheadPlaying = mPlayheadInfoStartRecord->getIsPlaying();
-            } else {
-                mIsPlayheadPlaying = false;
-            }
 
             mRhythmOptions.setInfo(false, mPlayheadInfoStartRecord);
         }
@@ -98,10 +100,11 @@ void NeuralNoteAudioProcessor::clear()
 
     mBasicPitch.reset();
     mWasRecording = false;
-    mIsPlayheadPlaying = false;
 
     mPlayer->reset();
     mSourceAudioManager->clear();
+
+    mRhythmOptions.reset();
 
     mState.store(EmptyAudioAndMidiRegions);
 }
@@ -257,6 +260,11 @@ Player* NeuralNoteAudioProcessor::getPlayer()
 SourceAudioManager* NeuralNoteAudioProcessor::getSourceAudioManager()
 {
     return mSourceAudioManager.get();
+}
+
+RhythmOptions* NeuralNoteAudioProcessor::getRhythmOptions()
+{
+    return &mRhythmOptions;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

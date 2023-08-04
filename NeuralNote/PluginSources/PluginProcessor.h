@@ -87,6 +87,8 @@ public:
 
     Player* getPlayer();
 
+    RhythmOptions* getRhythmOptions();
+
 private:
     void _runModel(); // Add to TranscriptionManager
 
@@ -97,7 +99,6 @@ private:
 
     Parameters mParameters;
     bool mWasRecording = false;
-    bool mIsPlayheadPlaying = false;
 
     std::atomic<double> mCurrentTempo = -1.0;
     std::atomic<int> mCurrentTimeSignatureNum = -1;

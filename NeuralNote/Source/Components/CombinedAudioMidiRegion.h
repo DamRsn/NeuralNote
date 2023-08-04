@@ -18,9 +18,9 @@ class CombinedAudioMidiRegion
     , public ChangeListener
 {
 public:
-    CombinedAudioMidiRegion(NeuralNoteAudioProcessor& processor, Keyboard& keyboard);
+    CombinedAudioMidiRegion(NeuralNoteAudioProcessor* processor, Keyboard& keyboard);
 
-    ~CombinedAudioMidiRegion();
+    ~CombinedAudioMidiRegion() override;
 
     void setViewportPtr(juce::Viewport* inViewportPtr);
 
@@ -42,9 +42,13 @@ public:
 
     void resizeAccordingToNumSamplesAvailable();
 
-    void mouseDown(const juce::MouseEvent& e) override;
-
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+    void setCenterView(bool inShouldCenterView);
+
+    AudioRegion* getAudioRegion();
+
+    PianoRoll* getPianoRoll();
 
     const double mNumPixelsPerSecond = 100.0;
 
@@ -53,16 +57,21 @@ public:
     const int mPianoRollY = mAudioRegionHeight + mHeightBetweenAudioMidi;
 
 private:
-    NeuralNoteAudioProcessor& mProcessor;
+    void _onVBlankCallback();
+
+    void _centerViewOnPlayhead();
+
+    NeuralNoteAudioProcessor* mProcessor;
 
     juce::Viewport* mViewportPtr = nullptr;
+    juce::VBlankAttachment mVBlankAttachment;
+
+    bool mShouldCenterView = false;
 
     int mBaseWidth = 0;
 
     AudioRegion mAudioRegion;
     PianoRoll mPianoRoll;
-
-    std::shared_ptr<juce::FileChooser> mFileChooser;
 };
 
 #endif // CombinedAudioMidiRegion_h

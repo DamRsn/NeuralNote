@@ -4,7 +4,7 @@
 
 #include "MidiFileDrag.h"
 
-MidiFileDrag::MidiFileDrag(NeuralNoteAudioProcessor& processor)
+MidiFileDrag::MidiFileDrag(NeuralNoteAudioProcessor* processor)
     : mProcessor(processor)
 {
 }
@@ -39,8 +39,8 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
                 juce::MessageBoxIconType::NoIcon, "Error", "Temporary directory for midi file failed.");
         }
     }
-    
-    std::string filename = mProcessor.getSourceAudioManager()->getDroppedFilename();
+
+    std::string filename = mProcessor->getSourceAudioManager()->getDroppedFilename();
 
     if (filename.empty())
         filename = "NNTranscription.mid";
@@ -50,11 +50,11 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
     auto out_file = mTempDirectory.getChildFile(filename);
 
     auto success_midi_file_creation = mMidiFileWriter.writeMidiFile(
-        mProcessor.getNoteEventVector(),
+        mProcessor->getNoteEventVector(),
         out_file,
-        mProcessor.getPlayheadInfoOnRecordStart(),
-        mProcessor.getMidiFileTempo(),
-        static_cast<PitchBendModes>(mProcessor.getCustomParameters()->pitchBendMode.load()));
+        mProcessor->getPlayheadInfoOnRecordStart(),
+        mProcessor->getMidiFileTempo(),
+        static_cast<PitchBendModes>(mProcessor->getCustomParameters()->pitchBendMode.load()));
 
     if (!success_midi_file_creation) {
         NativeMessageBox::showMessageBoxAsync(

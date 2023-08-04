@@ -17,7 +17,7 @@ class VisualizationPanel : public juce::Component,
                            public juce::Timer // To update play/pause button state from processor
 {
 public:
-    explicit VisualizationPanel(NeuralNoteAudioProcessor& processor);
+    explicit VisualizationPanel(NeuralNoteAudioProcessor* processor);
 
     void resized() override;
 
@@ -31,10 +31,14 @@ public:
 
     void setMidiFileDragComponentVisible();
 
+    void mouseEnter(const juce::MouseEvent& event) override;
+
+    void mouseExit(const juce::MouseEvent& event) override;
+
     static constexpr int KEYBOARD_WIDTH = 50;
 
 private:
-    NeuralNoteAudioProcessor& mProcessor;
+    NeuralNoteAudioProcessor* mProcessor;
     Keyboard mKeyboard;
     juce::Viewport mAudioMidiViewport;
     CombinedAudioMidiRegion mCombinedAudioMidiRegion;
@@ -42,6 +46,16 @@ private:
 
     juce::TextButton mPlayPauseButton;
     juce::TextButton mResetButton;
+    juce::TextButton mCenterButton;
+
+    juce::Slider mAudioGainSlider;
+    std::unique_ptr<juce::SliderParameterAttachment> mAudioGainSliderAttachment;
+
+    juce::Slider mMidiGainSlider;
+    std::unique_ptr<juce::SliderParameterAttachment> mMidiGainSliderAttachment;
+
+    juce::Rectangle<int> mAudioRegionBounds;
+    juce::Rectangle<int> mPianoRollBounds;
 
     std::unique_ptr<juce::TextEditor> mFileTempo;
 };

@@ -3,12 +3,12 @@
 //
 
 #include "Playhead.h"
-Playhead::Playhead(NeuralNoteAudioProcessor* inProcessor)
+Playhead::Playhead(NeuralNoteAudioProcessor* inProcessor, double inNumPixelsPerSecond)
     : mProcessor(inProcessor)
+    , mNumPixelsPerSecond(inNumPixelsPerSecond)
+    , mVBlankAttachment(this, [this]() { _onVBlankCallback(); })
 {
     setInterceptsMouseClicks(false, false);
-
-    startTimerHz(60);
 }
 
 void Playhead::resized()
@@ -18,9 +18,8 @@ void Playhead::resized()
 void Playhead::paint(Graphics& g)
 {
     if (mAudioSampleDuration > 0 && mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        auto playhead_x = jlimit(0.0f,
-                                 (float) getWidth(),
-                                 static_cast<float>(mCurrentPlayerPlayheadTime / mAudioSampleDuration * getWidth()));
+        auto playhead_x = static_cast<float>(computePlayheadPositionPixel(
+            mCurrentPlayerPlayheadTime, mAudioSampleDuration, mNumPixelsPerSecond, getWidth()));
 
         g.setColour(juce::Colours::white);
         g.drawLine(playhead_x, 0, playhead_x, (float) getHeight(), 1);
@@ -36,7 +35,22 @@ void Playhead::paint(Graphics& g)
     }
 }
 
-void Playhead::timerCallback()
+void Playhead::setPlayheadTime(double inNewTime)
+{
+    mProcessor->getPlayer()->setPlayheadPositionSeconds(inNewTime);
+}
+
+double Playhead::computePlayheadPositionPixel(double inPlayheadPositionSeconds,
+                                              double inSampleDuration,
+                                              double inNumPixelPerSecond,
+                                              int inWidth)
+{
+    auto playhead_pos = inPlayheadPositionSeconds / inSampleDuration
+                        * std::min(inNumPixelPerSecond * inSampleDuration, (double) inWidth);
+    return jlimit(0.0, (double) inWidth, playhead_pos);
+}
+
+void Playhead::_onVBlankCallback()
 {
     auto playhead_time = mProcessor->getPlayer()->getPlayheadPositionSeconds();
     auto sample_duration = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
@@ -46,9 +60,4 @@ void Playhead::timerCallback()
         mAudioSampleDuration = sample_duration;
         repaint();
     }
-}
-
-void Playhead::setPlayheadTime(double inNewTime)
-{
-    mProcessor->getPlayer()->setPlayheadPositionSeconds(inNewTime);
 }

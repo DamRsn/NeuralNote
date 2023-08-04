@@ -3,21 +3,26 @@
 //
 
 #include "AudioRegion.h"
+#include "CombinedAudioMidiRegion.h"
 
-AudioRegion::AudioRegion(NeuralNoteAudioProcessor& processor)
+AudioRegion::AudioRegion(NeuralNoteAudioProcessor* processor, double inNumPixelsPerSecond)
     : mProcessor(processor)
+    , mPlayhead(processor, inNumPixelsPerSecond)
+    , mNumPixelsPerSecond(inNumPixelsPerSecond)
 {
+    addAndMakeVisible(mPlayhead);
 }
 
 void AudioRegion::resized()
 {
+    mPlayhead.setSize(getWidth(), getHeight());
 }
 
 void AudioRegion::paint(Graphics& g)
 {
-    auto num_samples_available = mProcessor.getSourceAudioManager()->getNumSamplesDownAcquired();
+    auto num_samples_available = mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired();
 
-    auto* thumbnail = mProcessor.getSourceAudioManager()->getAudioThumbnail();
+    auto* thumbnail = mProcessor->getSourceAudioManager()->getAudioThumbnail();
 
     if (num_samples_available > 0 && thumbnail->isFullyLoaded()) {
         g.setColour(WAVEFORM_BG_COLOR);
@@ -34,7 +39,7 @@ void AudioRegion::paint(Graphics& g)
                                num_samples_available / BASIC_PITCH_SAMPLE_RATE,
                                0,
                                0.95f / std::max(thumbnail->getApproximatePeak(), 0.1f));
-    } else if (mProcessor.getState() == Processing) {
+    } else if (mProcessor->getState() == Processing) {
         g.setColour(WAVEFORM_BG_COLOR);
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
     } else {
@@ -67,6 +72,25 @@ void AudioRegion::setThumbnailWidth(int inThumbnailWidth)
 
 void AudioRegion::mouseDown(const juce::MouseEvent& e)
 {
-    if (auto* parent = getParentComponent())
-        parent->mouseDown(e);
+    if (mProcessor->getState() == EmptyAudioAndMidiRegions) {
+        mFileChooser = std::make_shared<juce::FileChooser>(
+            "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
+
+        mFileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                                  [this](const juce::FileChooser& fc) {
+                                      if (fc.getResults().isEmpty())
+                                          return;
+                                      auto* parent = dynamic_cast<CombinedAudioMidiRegion*>(getParentComponent());
+                                      if (parent) {
+                                          parent->filesDropped(StringArray(fc.getResult().getFullPathName()), 1, 1);
+                                      }
+                                  });
+    } else if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
+        mPlayhead.setPlayheadTime(_pixelToTime((float) e.x));
+    }
+}
+
+float AudioRegion::_pixelToTime(float inPixel) const
+{
+    return inPixel / static_cast<float>(mNumPixelsPerSecond);
 }

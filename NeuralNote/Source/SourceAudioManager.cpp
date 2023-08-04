@@ -224,6 +224,7 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
         mDuration = (double) mNumSamplesAcquiredDown / BASIC_PITCH_SAMPLE_RATE;
 
         mDroppedFilename = inFile.getFileNameWithoutExtension().toStdString();
+        mProcessor->getRhythmOptions()->setInfo(true);
 
         mThumbnail.clear();
         mThumbnailCache.clear();

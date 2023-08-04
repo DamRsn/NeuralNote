@@ -4,7 +4,7 @@
 
 #include "VisualizationPanel.h"
 
-VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
+VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     : mProcessor(processor)
     , mCombinedAudioMidiRegion(processor, mKeyboard)
     , mMidiFileDrag(processor)
@@ -37,22 +37,21 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
         String correct_tempo_str = String(tempo);
         correct_tempo_str = correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
         mFileTempo->setText(correct_tempo_str);
-        mProcessor.setMidiFileTempo(tempo);
+        mProcessor->setMidiFileTempo(tempo);
     };
     mFileTempo->onTextChange = [this]() {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
-        mProcessor.setMidiFileTempo(tempo);
+        mProcessor->setMidiFileTempo(tempo);
     };
 
-    mFileTempo->setText(String(mProcessor.getMidiFileTempo()));
+    mFileTempo->setText(String(mProcessor->getMidiFileTempo()));
     addChildComponent(*mFileTempo);
 
     mPlayPauseButton.setButtonText("Play");
     mPlayPauseButton.setClickingTogglesState(true);
-    mPlayPauseButton.setToggleState(false, NotificationType::dontSendNotification);
     mPlayPauseButton.onClick = [this]() {
-        if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-            mProcessor.getPlayer()->setPlayingState(mPlayPauseButton.getToggleState());
+        if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
+            mProcessor->getPlayer()->setPlayingState(mPlayPauseButton.getToggleState());
         } else {
             mPlayPauseButton.setToggleState(false, sendNotification);
         }
@@ -66,16 +65,58 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor& processor)
         }
     };
 
+    mPlayPauseButton.setToggleState(mProcessor->getPlayer()->isPlaying(), NotificationType::sendNotification);
+    mPlayPauseButton.addMouseListener(this, true);
+
     addAndMakeVisible(mPlayPauseButton);
 
     mResetButton.setButtonText("Reset");
     mResetButton.setClickingTogglesState(false);
     mResetButton.onClick = [this]() {
-        mProcessor.getPlayer()->reset();
+        mProcessor->getPlayer()->reset();
         mPlayPauseButton.setToggleState(false, juce::sendNotification);
+        mAudioMidiViewport.setViewPositionProportionately(0, 0);
     };
+    mResetButton.addMouseListener(this, true);
 
     addAndMakeVisible(mResetButton);
+
+    mCenterButton.setButtonText("Center");
+    mCenterButton.setClickingTogglesState(true);
+    mCenterButton.setToggleState(false, sendNotification);
+    mCenterButton.onClick = [this]() { mCombinedAudioMidiRegion.setCenterView(mCenterButton.getToggleState()); };
+    mCenterButton.addMouseListener(this, false);
+
+    addAndMakeVisible(mCenterButton);
+
+    mAudioGainSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+    mAudioGainSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxLeft, true, 40, 20);
+    mAudioGainSlider.setTextValueSuffix(" dB");
+    mAudioGainSlider.setColour(Slider::ColourIds::textBoxTextColourId, BLACK);
+    mAudioGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
+    // To also receive mouseExit callback from this slider
+    mAudioGainSlider.addMouseListener(this, true);
+    mAudioGainSliderAttachment = std::make_unique<SliderParameterAttachment>(
+        *mProcessor->mTree.getParameter("AUDIO_LEVEL_DB"), mAudioGainSlider);
+
+    addChildComponent(mAudioGainSlider);
+
+    mMidiGainSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+    mMidiGainSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxLeft, true, 40, 20);
+    mMidiGainSlider.setTextValueSuffix(" dB");
+    mMidiGainSlider.setColour(Slider::ColourIds::textBoxTextColourId, BLACK);
+    mMidiGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
+    // To also receive mouseExit callback from this slider
+    mMidiGainSlider.addMouseListener(this, true);
+
+    mMidiGainSliderAttachment =
+        std::make_unique<SliderParameterAttachment>(*mProcessor->mTree.getParameter("MIDI_LEVEL_DB"), mMidiGainSlider);
+
+    addChildComponent(mMidiGainSlider);
+
+    // Add this as mouse listener of audio region and pianoroll to control visibility of gain sliders
+    mCombinedAudioMidiRegion.getAudioRegion()->addMouseListener(this, true);
+    mCombinedAudioMidiRegion.getPianoRoll()->addMouseListener(this, true);
 }
 
 void VisualizationPanel::resized()
@@ -87,15 +128,25 @@ void VisualizationPanel::resized()
 
     mCombinedAudioMidiRegion.setBaseWidth(getWidth() - KEYBOARD_WIDTH);
     mCombinedAudioMidiRegion.setBounds(KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, getHeight());
-    mCombinedAudioMidiRegion.changeListenerCallback(mProcessor.getSourceAudioManager()->getAudioThumbnail());
+    mCombinedAudioMidiRegion.changeListenerCallback(mProcessor->getSourceAudioManager()->getAudioThumbnail());
 
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
     mFileTempo->setBounds(6, 55, 40, 17);
 
-    mPlayPauseButton.setBounds(getWidth() - 100, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
-    mResetButton.setBounds(getWidth() - 200, mCombinedAudioMidiRegion.mPianoRollY + 20, 80, 25);
-
+    mPlayPauseButton.setBounds(getWidth() - 305, mCombinedAudioMidiRegion.mPianoRollY + 3, 80, 25);
+    mResetButton.setBounds(getWidth() - 405, mCombinedAudioMidiRegion.mPianoRollY + 3, 80, 25);
+    mCenterButton.setBounds(getWidth() - 505, mCombinedAudioMidiRegion.mPianoRollY + 3, 80, 25);
     startTimerHz(15);
+
+    mAudioGainSlider.setBounds(getWidth() - 205, 3, 200, 20);
+    mMidiGainSlider.setBounds(getWidth() - 205, mCombinedAudioMidiRegion.mPianoRollY + 3, 200, 20);
+
+    mAudioRegionBounds = {KEYBOARD_WIDTH, 0, getWidth() - KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight};
+    mPianoRollBounds = {
+        KEYBOARD_WIDTH,
+        mCombinedAudioMidiRegion.mAudioRegionHeight + mCombinedAudioMidiRegion.mHeightBetweenAudioMidi,
+        getWidth() - KEYBOARD_WIDTH,
+        getHeight() - (mCombinedAudioMidiRegion.mAudioRegionHeight + mCombinedAudioMidiRegion.mHeightBetweenAudioMidi)};
 }
 
 void VisualizationPanel::paint(Graphics& g)
@@ -114,8 +165,8 @@ void VisualizationPanel::paint(Graphics& g)
 
 void VisualizationPanel::timerCallback()
 {
-    if (mPlayPauseButton.getToggleState() != mProcessor.getPlayer()->isPlaying()) {
-        mPlayPauseButton.setToggleState(mProcessor.getPlayer()->isPlaying(), sendNotification);
+    if (mPlayPauseButton.getToggleState() != mProcessor->getPlayer()->isPlaying()) {
+        mPlayPauseButton.setToggleState(mProcessor->getPlayer()->isPlaying(), sendNotification);
     }
 }
 
@@ -135,6 +186,34 @@ void VisualizationPanel::setMidiFileDragComponentVisible()
 {
     mMidiFileDrag.setVisible(true);
 
-    mFileTempo->setText(String(mProcessor.getMidiFileTempo()), sendNotification);
+    mFileTempo->setText(String(mProcessor->getMidiFileTempo()), sendNotification);
     mFileTempo->setVisible(true);
+}
+
+void VisualizationPanel::mouseEnter(const MouseEvent& event)
+{
+    Component::mouseEnter(event);
+
+    if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
+        if (event.originalComponent == mCombinedAudioMidiRegion.getAudioRegion()) {
+            mAudioGainSlider.setVisible(true);
+        } else if (event.originalComponent == mCombinedAudioMidiRegion.getPianoRoll()) {
+            mMidiGainSlider.setVisible(true);
+        }
+    }
+}
+
+void VisualizationPanel::mouseExit(const MouseEvent& event)
+{
+    Component::mouseExit(event);
+
+    if (mAudioGainSlider.isVisible()) {
+        if (!mAudioRegionBounds.contains(getMouseXYRelative()))
+            mAudioGainSlider.setVisible(false);
+    }
+
+    if (mMidiGainSlider.isVisible()) {
+        if (!mPianoRollBounds.contains(getMouseXYRelative()))
+            mMidiGainSlider.setVisible(false);
+    }
 }
