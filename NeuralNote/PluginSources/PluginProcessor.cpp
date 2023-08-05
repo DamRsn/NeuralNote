@@ -227,6 +227,7 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
         mRhythmOptions.setParameters(RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
                                      mParameters.rhythmQuantizationForce.load());
 
+        // TODO: Pass mPostProcessedNotes as reference
         mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
         Notes::dropOverlappingPitchBends(mPostProcessedNotes);
