@@ -76,7 +76,6 @@ bool _loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuff
     int loadResult = mp3dec_load(&mp3d, filename.c_str(), &info, nullptr, nullptr);
 
     if (loadResult) {
-        std::cout << "Failed to open file\n";
         return false;
     }
 
