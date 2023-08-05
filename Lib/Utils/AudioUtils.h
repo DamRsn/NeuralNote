@@ -5,6 +5,11 @@
 #ifndef AudioUtils_h
 #define AudioUtils_h
 
+#include <iostream>
+#include <fstream>
+#include <iterator>
+#include <string>
+
 #include <JuceHeader.h>
 
 #include "Resampler.h"
@@ -12,6 +17,8 @@
 
 namespace AudioUtils
 {
+
+bool loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuffer, double& outSampleRate);
 
 /**
  * Load an audio file. *.wav, *.aiff, *.flac formats supported

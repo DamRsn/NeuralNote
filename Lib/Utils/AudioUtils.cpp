@@ -3,11 +3,43 @@
 //
 
 #include "AudioUtils.h"
+
+#define MINIMP3_IMPLEMENTATION
+#include "minimp3.h"
+#include "minimp3_ex.h"
+
 namespace AudioUtils
 {
 
+bool loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuffer, double& outSampleRate)
+{
+    mp3dec_t mp3d;
+    mp3dec_file_info_t info;
+    int loadResult = mp3dec_load(&mp3d, filename.c_str(), &info, NULL, NULL);
+
+    if (loadResult) {
+        std::cout << "Failed to open file\n";
+        return false;
+    }
+
+    outBuffer.setSize(info.channels, static_cast<int>(info.samples / info.channels));
+
+    for (size_t i = 0; i < info.samples; ++i) {
+        size_t channel = i % info.channels;
+        outBuffer.setSample((int) channel, static_cast<int>(i / info.channels), (float) info.buffer[i] / 32768.0f);
+    }
+
+    outSampleRate = static_cast<double>(info.hz);
+    free(info.buffer);
+    return true;
+}
+
 bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, double& outSampleRate)
 {
+    if (inFile.getFileExtension() == ".mp3") {
+        return loadMP3File(inFile.getFullPathName().toStdString(), outBuffer, outSampleRate);
+    }
+
     // Register different audio formats
     AudioFormatManager audio_format_manager;
     audio_format_manager.registerFormat(new juce::WavAudioFormat, true);
