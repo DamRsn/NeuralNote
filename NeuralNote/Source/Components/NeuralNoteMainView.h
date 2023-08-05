@@ -58,8 +58,6 @@ private:
     std::unique_ptr<ComboBox> mMode; // Major, Minor, Chromatic
 
     int mNumCallbacksStuckInProcessingState = 0;
-
-    // Eventually quantise functionality: need for time division, quantize force (0 - 100)
 };
 
 #endif // PluginMainView_h

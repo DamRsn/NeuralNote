@@ -13,7 +13,9 @@
 
 class NeuralNoteMainView;
 
-class TranscriptionOptionsView : public juce::Component
+class TranscriptionOptionsView
+    : public juce::Component
+    , public AudioProcessorValueTreeState::Listener
 {
 public:
     explicit TranscriptionOptionsView(NeuralNoteAudioProcessor& processor);
@@ -22,9 +24,9 @@ public:
 
     void paint(Graphics& g) override;
 
-private:
-    void _valueChanged();
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
+private:
     NeuralNoteAudioProcessor& mProcessor;
 
     std::unique_ptr<Knob> mNoteSensibility;
@@ -32,6 +34,7 @@ private:
     std::unique_ptr<Knob> mMinNoteDuration;
 
     std::unique_ptr<juce::ComboBox> mPitchBendDropDown;
+    std::unique_ptr<juce::ComboBoxParameterAttachment> mPitchBendDropDownParameterAttachment;
 };
 
 #endif // TranscriptionOptionsView_h

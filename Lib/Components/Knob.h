@@ -12,14 +12,9 @@
 class Knob : public juce::Component
 {
 public:
-    Knob(const std::string& inLabelText,
-         double inMinRange,
-         double inMaxRange,
-         double inInterval,
-         double inDefaultValue,
+    Knob(RangedAudioParameter& inParameter,
+         const std::string& inLabelText,
          bool inSetChangeNotificationOnlyOnRelease,
-         std::atomic<float>& inAttachedValue,
-         const std::function<void()>& inOnChangeAction,
          const std::string& inPostValue = "");
 
     void resized() override;
@@ -32,12 +27,10 @@ public:
 
 private:
     juce::Slider mSlider;
+    std::unique_ptr<juce::SliderParameterAttachment> mSliderParameterAttachment;
     String mLabel;
 
     std::string mPostValueStr;
-    const double mDefaultValue;
-    std::atomic<float>& mAttachedValue;
-    std::function<void()> mOnChangeAction;
 
     bool mIsMouseOver = false;
 };

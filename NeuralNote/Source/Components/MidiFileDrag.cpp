@@ -54,7 +54,7 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
         out_file,
         mProcessor->getPlayheadInfoOnRecordStart(),
         mProcessor->getMidiFileTempo(),
-        static_cast<PitchBendModes>(mProcessor->getCustomParameters()->pitchBendMode.load()));
+        static_cast<PitchBendModes>(mProcessor->mTree.getRawParameterValue("PITCH_BEND_MODE")->load()));
 
     if (!success_midi_file_creation) {
         NativeMessageBox::showMessageBoxAsync(

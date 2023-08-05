@@ -18,6 +18,31 @@ AudioProcessorValueTreeState::ParameterLayout NeuralNoteAudioProcessor::createPa
     auto mute = std::make_unique<juce::AudioParameterBool>(juce::ParameterID {"MUTE", 1}, "Mute", true);
     params.push_back(std::move(mute));
 
+    auto note_sensibility = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID {"NOTE_SENSIBILITY", 1},
+                                                                        "NOTE SENSIBILITY",
+                                                                        NormalisableRange<float>(0.05f, 0.95f, 0.01f),
+                                                                        0.7f);
+    params.push_back(std::move(note_sensibility));
+
+    auto split_sensibility = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID {"SPLIT_SENSIBILITY", 1},
+                                                                         "SPLIT SENSIBILITY",
+                                                                         NormalisableRange<float>(0.05f, 0.95f, 0.01f),
+                                                                         0.5f);
+    params.push_back(std::move(split_sensibility));
+
+    auto min_note_duration = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID {"MIN_NOTE_DURATION", 1},
+                                                                         "MIN NOTE DURATION",
+                                                                         NormalisableRange<float>(35.0f, 580.0f, 1.0f),
+                                                                         125.0f);
+    params.push_back(std::move(min_note_duration));
+
+    auto pitch_bend_mode =
+        std::make_unique<juce::AudioParameterChoice>(juce::ParameterID {"PITCH_BEND_MODE", 1},
+                                                     "PITCH BEND MODE",
+                                                     StringArray({"No Pitch Bend", "Single Pitch Bend"}),
+                                                     0);
+    params.push_back(std::move(pitch_bend_mode));
+
     auto audio_level_db = std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID {"AUDIO_LEVEL_DB", 1}, "Audio Level dB", NormalisableRange<float>(-36.f, 6.0f, 1.0f), 0.0f);
     params.push_back(std::move(audio_level_db));
@@ -66,7 +91,7 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         }
     }
 
-    auto isMute = mTree.getRawParameterValue("MUTE")->load() > 0.5;
+    auto isMute = mTree.getRawParameterValue("MUTE")->load() > 0.5f;
 
     if (isMute)
         buffer.clear();
@@ -138,7 +163,9 @@ const juce::Optional<juce::AudioPlayHead::PositionInfo>& NeuralNoteAudioProcesso
 
 void NeuralNoteAudioProcessor::_runModel()
 {
-    mBasicPitch.setParameters(mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
+    mBasicPitch.setParameters(mTree.getRawParameterValue("NOTE_SENSIBILITY")->load(),
+                              mTree.getRawParameterValue("SPLIT_SENSIBILITY")->load(),
+                              mTree.getRawParameterValue("MIN_NOTE_DURATION")->load());
 
     mBasicPitch.transcribeToMIDI(
         getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
@@ -174,8 +201,9 @@ void NeuralNoteAudioProcessor::updateTranscription()
     jassert(mState == PopulatedAudioAndMidiRegions);
 
     if (mState == PopulatedAudioAndMidiRegions) {
-        mBasicPitch.setParameters(
-            mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
+        mBasicPitch.setParameters(mTree.getRawParameterValue("NOTE_SENSIBILITY")->load(),
+                                  mTree.getRawParameterValue("SPLIT_SENSIBILITY")->load(),
+                                  mTree.getRawParameterValue("MIN_NOTE_DURATION")->load());
 
         mBasicPitch.updateMIDI();
         updatePostProcessing();
@@ -193,6 +221,7 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
                                    mParameters.minMidiNote.load(),
                                    mParameters.maxMidiNote.load());
 
+        // TODO: Make this vector a member to avoid reallocating every time
         auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
         mRhythmOptions.setParameters(RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),

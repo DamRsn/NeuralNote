@@ -18,11 +18,6 @@ class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
 {
 public:
     struct Parameters {
-        std::atomic<float> noteSensibility = 0.7;
-        std::atomic<float> splitSensibility = 0.5;
-        std::atomic<float> minNoteDurationMs = 125;
-        std::atomic<int> pitchBendMode = NoPitchBend;
-
         std::atomic<int> minMidiNote = MIN_MIDI_NOTE;
         std::atomic<int> maxMidiNote = MAX_MIDI_NOTE;
         std::atomic<int> keyRootNote = NoteUtils::C;

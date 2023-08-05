@@ -4,22 +4,14 @@
 
 #include "Knob.h"
 
-Knob::Knob(const std::string& inLabelText,
-           double inMinRange,
-           double inMaxRange,
-           double inInterval,
-           double inDefaultValue,
+Knob::Knob(RangedAudioParameter& inParameter,
+           const std::string& inLabelText,
            bool inSetChangeNotificationOnlyOnRelease,
-           std::atomic<float>& inAttachedValue,
-           const std::function<void()>& inOnChangeAction,
            const std::string& inPostValue)
-    : mAttachedValue(inAttachedValue)
-    , mDefaultValue(inDefaultValue)
 {
     mSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     mSlider.setRotaryParameters(5.0f * MathConstants<float>::pi / 4.0f, 11.0f * MathConstants<float>::pi / 4.0f, true);
-
-    mSlider.setRange(inMinRange, inMaxRange, inInterval);
+    mSliderParameterAttachment = std::make_unique<SliderParameterAttachment>(inParameter, mSlider);
 
     mSlider.setChangeNotificationOnlyOnRelease(inSetChangeNotificationOnlyOnRelease);
 
@@ -28,16 +20,7 @@ Knob::Knob(const std::string& inLabelText,
     mLabel = inLabelText;
     mPostValueStr = inPostValue;
 
-    mOnChangeAction = inOnChangeAction;
-
-    mSlider.onValueChange = [this]() {
-        mAttachedValue.store(static_cast<float>(mSlider.getValue()));
-        mOnChangeAction();
-        repaint();
-    };
-
-    mSlider.setDoubleClickReturnValue(true, mDefaultValue);
-    mSlider.setValue(inAttachedValue.load());
+    mSlider.onValueChange = [this]() { repaint(); };
 
     addAndMakeVisible(mSlider);
 
