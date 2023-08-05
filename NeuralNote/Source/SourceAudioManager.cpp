@@ -203,7 +203,7 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
             juce::NativeMessageBox::showMessageBoxAsync(
                 juce::MessageBoxIconType::NoIcon,
                 "Could not load the audio sample.",
-                "Check your file format (Accepted formats: .wav, .aiff, .flac).");
+                "Check your file format (Accepted formats: .wav, .aiff, .flac, .mp3, .ogg).");
             return false;
         }
 

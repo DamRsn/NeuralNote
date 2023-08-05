@@ -10,34 +10,10 @@
 
 namespace AudioUtils
 {
-
-bool loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuffer, double& outSampleRate)
-{
-    mp3dec_t mp3d;
-    mp3dec_file_info_t info;
-    int loadResult = mp3dec_load(&mp3d, filename.c_str(), &info, NULL, NULL);
-
-    if (loadResult) {
-        std::cout << "Failed to open file\n";
-        return false;
-    }
-
-    outBuffer.setSize(info.channels, static_cast<int>(info.samples / info.channels));
-
-    for (size_t i = 0; i < info.samples; ++i) {
-        size_t channel = i % info.channels;
-        outBuffer.setSample((int) channel, static_cast<int>(i / info.channels), (float) info.buffer[i] / 32768.0f);
-    }
-
-    outSampleRate = static_cast<double>(info.hz);
-    free(info.buffer);
-    return true;
-}
-
 bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, double& outSampleRate)
 {
     if (inFile.getFileExtension() == ".mp3") {
-        return loadMP3File(inFile.getFullPathName().toStdString(), outBuffer, outSampleRate);
+        return _loadMP3File(inFile.getFullPathName().toStdString(), outBuffer, outSampleRate);
     }
 
     // Register different audio formats
@@ -45,6 +21,7 @@ bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, doub
     audio_format_manager.registerFormat(new juce::WavAudioFormat, true);
     audio_format_manager.registerFormat(new juce::AiffAudioFormat, false);
     audio_format_manager.registerFormat(new juce::FlacAudioFormat, false);
+    audio_format_manager.registerFormat(new juce::OggVorbisAudioFormat, false);
 
     std::unique_ptr<juce::AudioFormatReader> format_reader;
     format_reader.reset(audio_format_manager.createReaderFor(inFile));
@@ -56,7 +33,7 @@ bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, doub
     // Get properties of input audio
     outSampleRate = format_reader->sampleRate;
     int num_source_samples = static_cast<int>(format_reader->lengthInSamples);
-    int num_channels = format_reader->numChannels;
+    int num_channels = (int) format_reader->numChannels;
 
     outBuffer.setSize(num_channels, num_source_samples);
 
@@ -91,4 +68,28 @@ void resampleBuffer(const AudioBuffer<float>& inBuffer,
         jassertquiet(num_samples_after_resample == num_expected_samples_after_resample);
     }
 }
+
+bool _loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuffer, double& outSampleRate)
+{
+    mp3dec_t mp3d;
+    mp3dec_file_info_t info;
+    int loadResult = mp3dec_load(&mp3d, filename.c_str(), &info, nullptr, nullptr);
+
+    if (loadResult) {
+        std::cout << "Failed to open file\n";
+        return false;
+    }
+
+    outBuffer.setSize(info.channels, static_cast<int>(info.samples / info.channels));
+
+    for (size_t i = 0; i < info.samples; ++i) {
+        size_t channel = i % info.channels;
+        outBuffer.setSample((int) channel, static_cast<int>(i / info.channels), (float) info.buffer[i] / 32768.0f);
+    }
+
+    outSampleRate = static_cast<double>(info.hz);
+    free(info.buffer);
+    return true;
+}
+
 } // namespace AudioUtils

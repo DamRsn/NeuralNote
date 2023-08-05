@@ -74,7 +74,7 @@ void AudioRegion::mouseDown(const juce::MouseEvent& e)
 {
     if (mProcessor->getState() == EmptyAudioAndMidiRegions) {
         mFileChooser = std::make_shared<juce::FileChooser>(
-            "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac", true, false, this);
+            "Select Audio File", juce::File {}, "*.wav;*.aiff;*.flac;*.mp3;*.ogg", true, false, this);
 
         mFileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
                                   [this](const juce::FileChooser& fc) {

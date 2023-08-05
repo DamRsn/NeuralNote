@@ -43,7 +43,7 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
 
     // TODO: change this just to avoid midi files (avoid auto-drop)
     if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
-        || files[0].endsWith(".mp3")) {
+        || files[0].endsWith(".mp3") || files[0].endsWith(".ogg")) {
         bool success = mProcessor->getSourceAudioManager()->onFileDrop(files[0]);
 
         if (success) {
