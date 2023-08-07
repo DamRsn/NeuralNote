@@ -51,6 +51,11 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
         }
 
         repaint();
+    } else {
+        juce::NativeMessageBox::showMessageBoxAsync(
+            juce::MessageBoxIconType::NoIcon,
+            "Could not load the file.",
+            "Check your file format (Accepted formats: .wav, .aiff, .flac, .mp3, .ogg).");
     }
 }
 
