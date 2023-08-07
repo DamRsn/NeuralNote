@@ -15,18 +15,13 @@ SynthController::SynthController(NeuralNoteAudioProcessor* inProcessor, MPESynth
 
 std::vector<MidiMessage> SynthController::buildMidiEventsVector(const std::vector<Notes::Event>& inNoteEvents)
 {
-    // TODO: Deal with pitch bends
-    bool INCLUDE_PITCH_BENDS = false;
+    int pitch_bend_channel = 2;
+
     // Compute size of single event vector
     size_t num_midi_messages = 0;
 
     for (const auto& note_event: inNoteEvents) {
-        num_midi_messages += 2;
-
-        if (INCLUDE_PITCH_BENDS) {
-            if (!note_event.bends.empty())
-                num_midi_messages += note_event.bends.size();
-        }
+        num_midi_messages += 2 + note_event.bends.size();
     }
 
     std::vector<MidiMessage> out(num_midi_messages);
@@ -34,23 +29,24 @@ std::vector<MidiMessage> SynthController::buildMidiEventsVector(const std::vecto
     size_t i = 0;
 
     for (const auto& note_event: inNoteEvents) {
-        bool include_bends = INCLUDE_PITCH_BENDS && !note_event.bends.empty();
-        float first_bend = include_bends ? float(note_event.bends[0]) / 3.0f : 0.0f;
+        bool has_pitch_bends = !note_event.bends.empty();
 
-        // TODO: Use different channels if there's a pitch bend
-        out[i++] =
-            MidiMessage::noteOn(1, note_event.pitch, (float) note_event.amplitude).withTimeStamp(note_event.startTime);
+        int channel = has_pitch_bends ? pitch_bend_channel : 1;
 
-        if (include_bends) {
-            for (size_t j = 0; j < note_event.bends.size(); j++) {
-                out[i++] =
-                    MidiMessage::pitchWheel(
-                        1, MidiMessage::pitchbendToPitchwheelPos(static_cast<float>(note_event.bends[j]) / 3.0f, 2))
-                        .withTimeStamp(note_event.startTime + double(j) * 0.011);
-            }
+        if (has_pitch_bends)
+            pitch_bend_channel = pitch_bend_channel < 16 ? pitch_bend_channel + 1 : 2;
+
+        out[i++] = MidiMessage::noteOn(channel, note_event.pitch, (float) note_event.amplitude)
+                       .withTimeStamp(note_event.startTime);
+
+        for (size_t j = 0; j < note_event.bends.size(); j++) {
+            out[i++] =
+                MidiMessage::pitchWheel(
+                    channel, MidiMessage::pitchbendToPitchwheelPos(static_cast<float>(note_event.bends[j]) / 3.0f, 2))
+                    .withTimeStamp(note_event.startTime + (double) j * 256.0 / BASIC_PITCH_SAMPLE_RATE);
         }
-
-        out[i++] = MidiMessage::noteOff(1, note_event.pitch).withTimeStamp(note_event.endTime);
+        
+        out[i++] = MidiMessage::noteOff(channel, note_event.pitch).withTimeStamp(note_event.endTime);
 
         jassert(i <= num_midi_messages);
     }
