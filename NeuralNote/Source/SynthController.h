@@ -5,6 +5,7 @@
 #ifndef SynthController_h
 #define SynthController_h
 
+#include <array>
 #include <JuceHeader.h>
 
 #include "SynthVoice.h"

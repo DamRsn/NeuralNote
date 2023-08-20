@@ -28,8 +28,12 @@ public:
      * @param inNoteSensibility Note sensibility threshold (0.05, 0.95). Higher gives more notes.
      * @param inSplitSensibility Split sensibility threshold (0.05, 0.95). Higher will split note more, lower will merge close notes with same pitch
      * @param inMinNoteDurationMs Minimum note duration to keep in ms.
+     * @param inPitchBendMode Pitch bend mode to use for transcription
      */
-    void setParameters(float inNoteSensibility, float inSplitSensibility, float inMinNoteDurationMs);
+    void setParameters(float inNoteSensibility,
+                       float inSplitSensibility,
+                       float inMinNoteDurationMs,
+                       int inPitchBendMode);
 
     /**
      * Transcribe the input audio. The note event vector can be obtained after this with getNoteEvents

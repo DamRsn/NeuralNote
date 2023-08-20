@@ -138,7 +138,10 @@ const juce::Optional<juce::AudioPlayHead::PositionInfo>& NeuralNoteAudioProcesso
 
 void NeuralNoteAudioProcessor::_runModel()
 {
-    mBasicPitch.setParameters(mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
+    mBasicPitch.setParameters(mParameters.noteSensibility,
+                              mParameters.splitSensibility,
+                              mParameters.minNoteDurationMs,
+                              mParameters.pitchBendMode);
 
     mBasicPitch.transcribeToMIDI(
         getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
@@ -174,8 +177,10 @@ void NeuralNoteAudioProcessor::updateTranscription()
     jassert(mState == PopulatedAudioAndMidiRegions);
 
     if (mState == PopulatedAudioAndMidiRegions) {
-        mBasicPitch.setParameters(
-            mParameters.noteSensibility, mParameters.splitSensibility, mParameters.minNoteDurationMs);
+        mBasicPitch.setParameters(mParameters.noteSensibility,
+                                  mParameters.splitSensibility,
+                                  mParameters.minNoteDurationMs,
+                                  mParameters.pitchBendMode);
 
         mBasicPitch.updateMIDI();
         updatePostProcessing();

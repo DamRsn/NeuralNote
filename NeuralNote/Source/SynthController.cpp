@@ -11,44 +11,65 @@ SynthController::SynthController(NeuralNoteAudioProcessor* inProcessor, MPESynth
 {
     // Set midi buffer size to 200 elements to avoid allocating memory on audio thread.
     mMidiBuffer.ensureSize(3 * 200);
+
+    mSynth->enableLegacyMode(2);
 }
 
 std::vector<MidiMessage> SynthController::buildMidiEventsVector(const std::vector<Notes::Event>& inNoteEvents)
 {
-    int pitch_bend_channel = 2;
+    // For each channel from 2 to 16, indicates after which frame the channel is available for some pitch bend info.
+    std::array<int, 15> pitch_bend_end_frames;
+    std::fill(pitch_bend_end_frames.begin(), pitch_bend_end_frames.end(), -1);
 
-    // Compute size of single event vector
-    size_t num_midi_messages = 0;
+    // Compute max size of single event vector
+    size_t max_num_midi_messages = 0;
 
     for (const auto& note_event: inNoteEvents) {
-        num_midi_messages += 2 + note_event.bends.size();
+        max_num_midi_messages += 2 + note_event.bends.size();
     }
 
-    std::vector<MidiMessage> out(num_midi_messages);
-
-    size_t i = 0;
+    std::vector<MidiMessage> out;
+    out.reserve(max_num_midi_messages);
 
     for (const auto& note_event: inNoteEvents) {
         bool has_pitch_bends = !note_event.bends.empty();
 
-        int channel = has_pitch_bends ? pitch_bend_channel : 1;
+        // Notes with no pitch bend are using channel 1
+        int channel = 1;
 
-        if (has_pitch_bends)
-            pitch_bend_channel = pitch_bend_channel < 16 ? pitch_bend_channel + 1 : 2;
+        if (has_pitch_bends) {
+            // Find a channel for pitch bend that is available, or if none, use the one that will be available first.
+            // (this might result in overlapping pitch bends fir different notes on the same channel)
+            auto pitch_bend_channel_index =
+                int(std::min_element(pitch_bend_end_frames.begin(), pitch_bend_end_frames.end())
+                    - pitch_bend_end_frames.begin());
 
-        out[i++] = MidiMessage::noteOn(channel, note_event.pitch, (float) note_event.amplitude)
-                       .withTimeStamp(note_event.startTime);
+            channel = pitch_bend_channel_index + 2;
+
+            // Remove all pitch bend events on this channel that have time >= note_event.start_time
+            if (pitch_bend_end_frames[pitch_bend_channel_index] >= note_event.startFrame) {
+                auto new_end = std::remove_if(out.begin(), out.end(), [channel, note_event](const MidiMessage& x) {
+                    return x.isPitchWheel() && (x.getChannel() == channel) && (x.getTimeStamp() >= note_event.startTime)
+                           && (x.getTimeStamp() <= note_event.endTime);
+                });
+
+                out.erase(new_end, out.end());
+            }
+
+            pitch_bend_end_frames[pitch_bend_channel_index] = note_event.endFrame;
+        }
+
+        out.push_back(MidiMessage::noteOn(channel, note_event.pitch, (float) note_event.amplitude)
+                          .withTimeStamp(note_event.startTime));
 
         for (size_t j = 0; j < note_event.bends.size(); j++) {
-            out[i++] =
+            out.push_back(
                 MidiMessage::pitchWheel(
                     channel, MidiMessage::pitchbendToPitchwheelPos(static_cast<float>(note_event.bends[j]) / 3.0f, 2))
-                    .withTimeStamp(note_event.startTime + (double) j * 256.0 / BASIC_PITCH_SAMPLE_RATE);
+                    .withTimeStamp(note_event.startTime + (double) j * 256.0 / BASIC_PITCH_SAMPLE_RATE));
         }
-        
-        out[i++] = MidiMessage::noteOff(channel, note_event.pitch).withTimeStamp(note_event.endTime);
 
-        jassert(i <= num_midi_messages);
+        out.push_back(MidiMessage::noteOff(channel, note_event.pitch).withTimeStamp(note_event.endTime));
     }
 
     std::sort(out.begin(), out.end(), [](const MidiMessage& a, const MidiMessage& b) {
