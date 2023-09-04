@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <vector>
+#include <assert.h>
 
 #include "BasicPitchConstants.h"
 #include "NoteUtils.h"
