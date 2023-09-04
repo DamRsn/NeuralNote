@@ -29,7 +29,7 @@ The workflow is very simple:
 
 - Gather some audio
     - Click record. Works when recording for real or when playing the track in a DAW.
-    - Or drop an audio file on the plugin. (.wav, .aiff and .flac supported)
+    - Or drop an audio file on the plugin. (.wav, .aiff, .flac, .mp3 and .ogg (vorbis) supported)
 - The midi transcription instantly appears in the piano roll section. Play with the different settings to adjust it.
 - Export the MIDI transcription with a simple drag and drop from the plugin to a MIDI track.
 
@@ -123,7 +123,6 @@ The original basic-pitch CNN was split in 4 sequential models wired together, so
 - Build a simple synth in the plugin so that one can listen to the transcription while playing with the settings, before
   export
 - Allow pitch bends on non-overlapping parts of overlapping notes
-- Support transcription of mp3 files
 
 ## Bug reports and feature requests
 
@@ -148,6 +147,7 @@ Here's a list of all the third party libraries used in NeuralNote and the licens
 - [ort-builder](https://github.com/olilarkin/ort-builder) (MIT License)
 - [basic-pitch](https://github.com/spotify/basic-pitch) (Apache-2.0 license)
 - [basic-pitch-ts](https://github.com/spotify/basic-pitch-ts) (Apache-2.0 license)
+- [minimp3](https://github.com/lieff/minimp3) (CC0-1.0 license)
 
 ## Could NeuralNote transcribe audio in real-time?
 
