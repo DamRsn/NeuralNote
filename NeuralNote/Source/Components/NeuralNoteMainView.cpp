@@ -11,13 +11,18 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     , mNoteOptions(processor)
     , mQuantizePanel(processor)
 {
-    mRecordButton = std::make_unique<TextButton>("RecordButton");
-    mRecordButton->setButtonText("RECORD");
+    mRecordButton = std::make_unique<DrawableButton>("RecordButton", DrawableButton::ButtonStyle::ImageRaw);
     mRecordButton->setClickingTogglesState(true);
-    mRecordButton->setColour(TextButton::ColourIds::buttonColourId, WHITE_TRANSPARENT);
-    mRecordButton->setColour(TextButton::ColourIds::textColourOffId, BLACK);
-    mRecordButton->setColour(TextButton::ColourIds::buttonOnColourId, BLACK);
-    mRecordButton->setColour(TextButton::ColourIds::textColourOnId, RECORD_RED);
+    mRecordButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
+    mRecordButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
+
+    auto record_off_drawable =
+        Drawable::createFromImageData(BinaryData::recordingoff_svg, BinaryData::recordingoff_svgSize);
+    auto record_on_drawable =
+        Drawable::createFromImageData(BinaryData::recordingon_svg, BinaryData::recordingon_svgSize);
+
+    mRecordButton->setImages(
+        record_off_drawable.get(), nullptr, nullptr, nullptr, record_on_drawable.get(), nullptr, nullptr);
 
     mRecordButton->onClick = [this]() {
         bool is_on = mRecordButton->getToggleState();
@@ -37,18 +42,75 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
 
     addAndMakeVisible(*mRecordButton);
 
-    mClearButton = std::make_unique<TextButton>("ClearButton");
-    mClearButton->setButtonText("CLEAR");
+    mClearButton = std::make_unique<DrawableButton>("ClearButton", DrawableButton::ButtonStyle::ImageRaw);
     mClearButton->setClickingTogglesState(false);
-    mClearButton->setColour(TextButton::ColourIds::buttonOnColourId, BLACK);
-    mClearButton->setColour(TextButton::ColourIds::buttonColourId, WHITE_TRANSPARENT);
-    mClearButton->setColour(TextButton::ColourIds::textColourOffId, BLACK);
+    mClearButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
+    mClearButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
+
+    auto bin_drawable = Drawable::createFromImageData(BinaryData::deleteicon_svg, BinaryData::deleteicon_svgSize);
+    mClearButton->setImages(bin_drawable.get());
+
     mClearButton->onClick = [this]() {
         mProcessor.clear();
         mVisualizationPanel.clear();
         updateEnablements();
     };
     addAndMakeVisible(*mClearButton);
+
+    mBackButton = std::make_unique<DrawableButton>("BackButton", DrawableButton::ButtonStyle::ImageRaw);
+    mBackButton->setClickingTogglesState(false);
+    mBackButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
+    mBackButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
+    auto back_icon_drawable = Drawable::createFromImageData(BinaryData::back_svg, BinaryData::back_svgSize);
+    mBackButton->setImages(back_icon_drawable.get());
+    mBackButton->onClick = [this]() {
+        mProcessor.getPlayer()->reset();
+        mPlayPauseButton->setToggleState(false, juce::sendNotification);
+        mVisualizationPanel.getAudioMidiViewport().setViewPositionProportionately(0, 0);
+    };
+
+    addAndMakeVisible(*mBackButton);
+
+    mPlayPauseButton = std::make_unique<DrawableButton>("PlayPauseButton", DrawableButton::ButtonStyle::ImageRaw);
+    mPlayPauseButton->setClickingTogglesState(true);
+    mPlayPauseButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
+    mPlayPauseButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
+    auto play_icon_drawable = Drawable::createFromImageData(BinaryData::play_svg, BinaryData::play_svgSize);
+    auto pause_icon_drawable = Drawable::createFromImageData(BinaryData::pause_svg, BinaryData::pause_svgSize);
+    mPlayPauseButton->setImages(
+        play_icon_drawable.get(), nullptr, nullptr, nullptr, pause_icon_drawable.get(), nullptr, nullptr, nullptr);
+
+    mPlayPauseButton->onClick = [this]() {
+        if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
+            mProcessor.getPlayer()->setPlayingState(mPlayPauseButton->getToggleState());
+        } else {
+            mPlayPauseButton->setToggleState(false, sendNotification);
+        }
+    };
+
+    addAndMakeVisible(*mPlayPauseButton);
+
+    mCenterButton = std::make_unique<DrawableButton>("PlayPauseButton", DrawableButton::ButtonStyle::ImageRaw);
+    mCenterButton->setClickingTogglesState(true);
+    mCenterButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
+    mCenterButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
+    auto center_icon_drawable_off =
+        Drawable::createFromImageData(BinaryData::center_off_svg, BinaryData::center_off_svgSize);
+    auto center_icon_drawable_on =
+        Drawable::createFromImageData(BinaryData::center_on_svg, BinaryData::center_on_svgSize);
+    mCenterButton->setImages(center_icon_drawable_off.get(),
+                             nullptr,
+                             nullptr,
+                             nullptr,
+                             center_icon_drawable_on.get(),
+                             nullptr,
+                             nullptr,
+                             nullptr);
+    mCenterButton->onClick = [this]() {
+        mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(mCenterButton->getToggleState());
+    };
+
+    addAndMakeVisible(*mCenterButton);
 
     mMuteButton = std::make_unique<juce::TextButton>("MuteButton");
     mMuteButton->setButtonText("");
@@ -78,8 +140,12 @@ NeuralNoteMainView::~NeuralNoteMainView()
 
 void NeuralNoteMainView::resized()
 {
-    mRecordButton->setBounds(588, 36, 144, 51);
-    mClearButton->setBounds(748, 36, 144, 51);
+    mRecordButton->setBounds(537, 43, 35, 35);
+    mClearButton->setBounds(589, 43, 35, 35);
+    mBackButton->setBounds(682, 43, 35, 35);
+    mPlayPauseButton->setBounds(734, 43, 35, 35);
+    mCenterButton->setBounds(786, 43, 35, 35);
+
     mMuteButton->setBounds(943, 38, 24, 24);
 
     mVisualizationPanel.setBounds(328, 120, 642, 491);
@@ -103,6 +169,10 @@ void NeuralNoteMainView::timerCallback()
     if (mRecordButton->getToggleState() && processor_state != Recording) {
         mRecordButton->setToggleState(false, juce::sendNotification);
         updateEnablements();
+    }
+
+    if (mPlayPauseButton->getToggleState() != mProcessor.getPlayer()->isPlaying()) {
+        mPlayPauseButton->setToggleState(mProcessor.getPlayer()->isPlaying(), sendNotification);
     }
 
     if (mPrevState != processor_state) {
@@ -134,12 +204,18 @@ void NeuralNoteMainView::updateEnablements()
     if (current_state == EmptyAudioAndMidiRegions) {
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
+        mPlayPauseButton->setEnabled(false);
+        mBackButton->setEnabled(false);
+        mCenterButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
         mQuantizePanel.setEnabled(false);
     } else if (current_state == Recording) {
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
+        mPlayPauseButton->setEnabled(false);
+        mBackButton->setEnabled(false);
+        mCenterButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
         mQuantizePanel.setEnabled(false);
@@ -147,12 +223,18 @@ void NeuralNoteMainView::updateEnablements()
         mRecordButton->setEnabled(false);
         // TODO: activate clear button to be able to cancel processing.
         mClearButton->setEnabled(false);
+        mPlayPauseButton->setEnabled(false);
+        mBackButton->setEnabled(false);
+        mCenterButton->setEnabled(false);
         mTranscriptionOptions.setEnabled(false);
         mNoteOptions.setEnabled(false);
         mQuantizePanel.setEnabled(false);
     } else if (current_state == PopulatedAudioAndMidiRegions) {
         mRecordButton->setEnabled(false);
         mClearButton->setEnabled(true);
+        mPlayPauseButton->setEnabled(true);
+        mBackButton->setEnabled(true);
+        mCenterButton->setEnabled(true);
         mTranscriptionOptions.setEnabled(true);
         mNoteOptions.setEnabled(true);
         mQuantizePanel.setEnabled(mProcessor.canQuantize());
