@@ -98,6 +98,36 @@ std::array<int, 7> NoteOptions::_createKeyArray(RootNote inRootNote, ScaleType i
     } else if (inScaleType == Dorian) {
         for (size_t i = 0; i < 7; i++)
             key_array[i] = (root_note_idx + DORIAN_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == Mixolydian) {
+        for (size_t i = 0; i < 7; i++)
+            key_array[i] = (root_note_idx + MIXOLYDIAN_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == Lydian) {
+        for (size_t i = 0; i < 7; i++)
+            key_array[i] = (root_note_idx + LYDIAN_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == Phrygian) {
+        for (size_t i = 0; i < 7; i++)
+            key_array[i] = (root_note_idx + PHRYGIAN_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == Locrian) {
+        for (size_t i = 0; i < 7; i++)
+            key_array[i] = (root_note_idx + LOCRIAN_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == MinorBlues) {
+        for (size_t i = 0; i < 6; i++)
+            key_array[i] = (root_note_idx + MINOR_BLUES_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == MinorPentatonic) {
+        for (size_t i = 0; i < 5; i++)
+            key_array[i] = (root_note_idx + MINOR_PENTATONIC_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == MajorPentatonic) {
+        for (size_t i = 0; i < 5; i++)
+            key_array[i] = (root_note_idx + MAJOR_PENTATONIC_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == MelodicMinor) {
+        for (size_t i = 0; i < 7; i++)
+            key_array[i] = (root_note_idx + MELODIC_MINOR_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == HarmonicMinor) {
+        for (size_t i = 0; i < 7; i++)
+            key_array[i] = (root_note_idx + HARMONIC_MINOR_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == HarmonicMajor) {
+        for (size_t i = 0; i < 7; i++)
+            key_array[i] = (root_note_idx + HARMONIC_MAJOR_SCALE_INTERVALS[i]) % 12;
     } else {
         // If chromatic, array should not be used.
         return {};
