@@ -95,6 +95,9 @@ std::array<int, 7> NoteOptions::_createKeyArray(RootNote inRootNote, ScaleType i
     } else if (inScaleType == Minor) {
         for (size_t i = 0; i < 7; i++)
             key_array[i] = (root_note_idx + MINOR_SCALE_INTERVALS[i]) % 12;
+    } else if (inScaleType == Dorian) {
+        for (size_t i = 0; i < 7; i++)
+            key_array[i] = (root_note_idx + DORIAN_SCALE_INTERVALS[i]) % 12;
     } else {
         // If chromatic, array should not be used.
         return {};

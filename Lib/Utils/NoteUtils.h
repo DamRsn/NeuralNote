@@ -15,9 +15,9 @@ static const juce::StringArray RootNotesFlatStr {"A", "Bb", "B", "C", "Db", "D",
 
 enum RootNote { A = 0, A_sharp, B, C, C_sharp, D, D_sharp, E, F_sharp, F, G_sharp, G, TotalNumRootNotes };
 
-static const juce::StringArray ScaleTypesStr {"Chromatic", "Major", "Minor"};
+static const juce::StringArray ScaleTypesStr {"Chromatic", "Major", "Minor", "Dorian"};
 
-enum ScaleType { Chromatic = 0, Major, Minor, TotalNumScaleTypes };
+enum ScaleType { Chromatic = 0, Major, Minor, Dorian, TotalNumScaleTypes };
 
 static const juce::StringArray SnapModesStr {"Adjust", "Remove"};
 

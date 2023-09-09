@@ -39,6 +39,7 @@ private:
 
     static constexpr std::array<int, 7> MAJOR_SCALE_INTERVALS = {0, 2, 4, 5, 7, 9, 11};
     static constexpr std::array<int, 7> MINOR_SCALE_INTERVALS = {0, 2, 3, 5, 7, 8, 10};
+    static constexpr std::array<int, 7> DORIAN_SCALE_INTERVALS = {0, 2, 3, 5, 7, 9, 10};
 };
 
 #endif // NoteOptions_h
