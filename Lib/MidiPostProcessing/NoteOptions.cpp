@@ -84,56 +84,51 @@ int NoteOptions::_midiToNoteIndex(int inMidiNote)
     return inMidiNote % 12;
 }
 
+std::array<int, 7> NoteOptions::_createKeyArrayForScale(int rootNoteIndex, const std::array<int, 7>& intervals)
+{
+    std::array<int, 7> key_array {};
+	for (size_t i = 0; i < sizeof(intervals) / sizeof(int); i++)
+		key_array[i] = (rootNoteIndex + intervals[i]) % 12;
+
+    return key_array;
+}
+
+
 std::array<int, 7> NoteOptions::_createKeyArray(RootNote inRootNote, ScaleType inScaleType)
 {
     auto root_note_idx = _rootNoteToNoteIdx(inRootNote);
-    std::array<int, 7> key_array {};
 
-    if (inScaleType == Major) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + MAJOR_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == Minor) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + MINOR_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == Dorian) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + DORIAN_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == Mixolydian) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + MIXOLYDIAN_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == Lydian) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + LYDIAN_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == Phrygian) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + PHRYGIAN_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == Locrian) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + LOCRIAN_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == MinorBlues) {
-        for (size_t i = 0; i < 6; i++)
-            key_array[i] = (root_note_idx + MINOR_BLUES_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == MinorPentatonic) {
-        for (size_t i = 0; i < 5; i++)
-            key_array[i] = (root_note_idx + MINOR_PENTATONIC_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == MajorPentatonic) {
-        for (size_t i = 0; i < 5; i++)
-            key_array[i] = (root_note_idx + MAJOR_PENTATONIC_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == MelodicMinor) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + MELODIC_MINOR_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == HarmonicMinor) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + HARMONIC_MINOR_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == HarmonicMajor) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + HARMONIC_MAJOR_SCALE_INTERVALS[i]) % 12;
-    } else {
-        // If chromatic, array should not be used.
-        return {};
+    switch (inScaleType) {
+        case Major:
+            return _createKeyArrayForScale(root_note_idx, MAJOR_SCALE_INTERVALS);
+        case Minor:
+            return _createKeyArrayForScale(root_note_idx, MINOR_SCALE_INTERVALS);
+        case Dorian:
+            return _createKeyArrayForScale(root_note_idx, DORIAN_SCALE_INTERVALS);
+        case Mixolydian:
+            return _createKeyArrayForScale(root_note_idx, MIXOLYDIAN_SCALE_INTERVALS);
+        case Lydian:
+            return _createKeyArrayForScale(root_note_idx, LYDIAN_SCALE_INTERVALS);
+        case Phrygian:
+            return _createKeyArrayForScale(root_note_idx, PHRYGIAN_SCALE_INTERVALS);
+        case Locrian:
+            return _createKeyArrayForScale(root_note_idx, LOCRIAN_SCALE_INTERVALS);
+        case MinorBlues:
+            return _createKeyArrayForScale(root_note_idx, MINOR_BLUES_SCALE_INTERVALS);
+        case MinorPentatonic:
+            return _createKeyArrayForScale(root_note_idx, MINOR_PENTATONIC_SCALE_INTERVALS);
+        case MajorPentatonic:
+            return _createKeyArrayForScale(root_note_idx, MAJOR_PENTATONIC_SCALE_INTERVALS);
+        case MelodicMinor:
+            return _createKeyArrayForScale(root_note_idx, MELODIC_MINOR_SCALE_INTERVALS);
+        case HarmonicMinor:
+            return _createKeyArrayForScale(root_note_idx, HARMONIC_MINOR_SCALE_INTERVALS);
+        case HarmonicMajor:
+            return _createKeyArrayForScale(root_note_idx, HARMONIC_MAJOR_SCALE_INTERVALS);
+        default:
+			// If chromatic, array should not be used.
+			return {};
     }
-
-    return key_array;
 }
 
 int NoteOptions::_rootNoteToNoteIdx(RootNote inRootNote)
