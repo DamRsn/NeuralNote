@@ -5,10 +5,10 @@ your favorite Digital Audio Workstation.
 
 - Works with any tonal instrument (voice included)
 - Supports polyphonic transcription
-- Supports pitch bends
+- Supports pitch bend detection
 - Lightweight and very fast transcription
-- Adjust the transcription parameters while listening to it
-- Scale and time quantize transcribed MIDI directly in the plugin
+- Allows to adjust the parameters while listening to the transcription
+- Allows to scale and time quantize transcribed MIDI directly in the plugin
 
 ## Install NeuralNote
 
@@ -161,8 +161,8 @@ Unfortunately no and this for a few reasons:
 - Basic Pitch uses the Constant-Q transform (CQT) as input feature. The CQT requires really long audio chunks (> 1s) to
   get amplitudes for the lowest frequency bins. This makes the latency too high to have real-time transcription.
 - The basic pitch CNN has an additional latency of approximately 120ms.
-- Very few DAWs support audio input/MIDI output plugins as far as I know. This is partially why NeuralNote is an
-  Audio FX plugin (audio-to-audio) and that MIDI is exported via drag and drop.
+- The note events creation algorithm processes the posteriorgrams backward (from future to past) and is hence
+  non-causal.
 
 But if you have ideas please share!
 
