@@ -126,8 +126,8 @@ std::array<int, 7> NoteOptions::_createKeyArray(RootNote inRootNote, ScaleType i
         case HarmonicMajor:
             return _createKeyArrayForScale(root_note_idx, HARMONIC_MAJOR_SCALE_INTERVALS);
         default:
-			// If chromatic, array should not be used.
-			return {};
+            // If chromatic, array should not be used.
+            return {};
     }
 }
 
