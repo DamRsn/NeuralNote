@@ -13,8 +13,7 @@
 #include "PluginProcessor.h"
 #include "VisualizationPanel.h"
 
-class VisualizationPanel : public juce::Component,
-                           public juce::Timer // To update play/pause button state from processor
+class VisualizationPanel : public juce::Component
 {
 public:
     explicit VisualizationPanel(NeuralNoteAudioProcessor* processor);
@@ -22,8 +21,6 @@ public:
     void resized() override;
 
     void paint(Graphics& g) override;
-
-    void timerCallback() override;
 
     void clear();
 
@@ -35,6 +32,10 @@ public:
 
     void mouseExit(const juce::MouseEvent& event) override;
 
+    Viewport& getAudioMidiViewport();
+
+    CombinedAudioMidiRegion& getCombinedAudioMidiRegion();
+
     static constexpr int KEYBOARD_WIDTH = 50;
 
 private:
@@ -43,10 +44,6 @@ private:
     juce::Viewport mAudioMidiViewport;
     CombinedAudioMidiRegion mCombinedAudioMidiRegion;
     MidiFileDrag mMidiFileDrag;
-
-    juce::TextButton mPlayPauseButton;
-    juce::TextButton mResetButton;
-    juce::TextButton mCenterButton;
 
     juce::Slider mAudioGainSlider;
     std::unique_ptr<juce::SliderParameterAttachment> mAudioGainSliderAttachment;

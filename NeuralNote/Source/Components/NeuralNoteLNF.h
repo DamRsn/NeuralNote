@@ -19,6 +19,8 @@ public:
 
     Font getTextButtonFont(TextButton&, int buttonHeight) override { return LARGE_FONT; };
 
+    Font getLabelFont(juce::Label&) override { return DROPDOWN_FONT; };
+
     void drawRotarySlider(Graphics&,
                           int x,
                           int y,

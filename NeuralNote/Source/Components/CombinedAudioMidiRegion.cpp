@@ -41,9 +41,8 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     ignoreUnused(y);
     mAudioRegion.setIsFileOver(false);
 
-    // TODO: change this just to avoid midi files (avoid auto-drop)
     if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
-        || files[0].endsWith(".mp3")) {
+        || files[0].endsWith(".mp3") || files[0].endsWith(".ogg")) {
         bool success = mProcessor->getSourceAudioManager()->onFileDrop(files[0]);
 
         if (success) {
@@ -51,12 +50,16 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
         }
 
         repaint();
+    } else {
+        juce::NativeMessageBox::showMessageBoxAsync(
+            juce::MessageBoxIconType::NoIcon,
+            "Could not load the file.",
+            "Check your file format (Accepted formats: .wav, .aiff, .flac, .mp3, .ogg).");
     }
 }
 
 void CombinedAudioMidiRegion::fileDragEnter(const StringArray& files, int x, int y)
 {
-    // TODO: change this just to avoid midi files (avoid auto-drop)
     if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
         || files[0].endsWith(".mp3")) {
         mAudioRegion.setIsFileOver(true);
