@@ -90,7 +90,7 @@ void VisualizationPanel::resized()
 
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
     mFileTempo->setBounds(6, 55, 40, 17);
-    
+
     mAudioGainSlider.setBounds(getWidth() - 205, 3, 200, 20);
     mMidiGainSlider.setBounds(getWidth() - 205, mCombinedAudioMidiRegion.mPianoRollY + 3, 200, 20);
 
