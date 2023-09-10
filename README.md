@@ -18,7 +18,7 @@ Universal) supported)!
 Currently, only the raw `.vst3`, `.component` (Audio Unit), `.app` and `.exe` (Standalone) files are provided.
 Installers will be created soon. In the meantime, you can manually copy the plugin/app file in the appropriate
 directory. The code is signed on macOS, but not on Windows, so you might have to perform few extra steps in order to be
-able to use NeuralNote on Windows (to be documented soon).
+able to use NeuralNote on Windows.
 
 ## Usage
 
@@ -34,7 +34,7 @@ The workflow is very simple:
 - The MIDI transcription instantly appears in the piano roll section.
 - Listen to the result by clicking the play button.
     - Play with the different settings to adjust the transcription, even while listening to it
-    - Individually adjust the level of the source audio and the synthesized transcription
+    - Individually adjust the level of the source audio and of the synthesized transcription
 - Once you're satisfied, export the MIDI transcription with a simple drag and drop from the plugin to a MIDI track.
 
 **Watch our presentation video for the Neural Audio Plugin
@@ -74,7 +74,8 @@ $ ./build.sh
 Due to [a known issue](https://github.com/DamRsn/NeuralNote/issues/21), if you're not using Visual Studio 2022 (MSVC
 version: 19.35.x, check `cl` output), then you'll need to manually build onnxruntime.lib like so:
 
-1. Ensure you have Python installed; if not, download at https://www.python.org/downloads/windows/
+1. Ensure you have Python installed; if not, download at https://www.python.org/downloads/windows/ (this does not
+   currently work with Python 3.11, prefer Python 3.10).
 
 2. Execute each of the following lines in a command prompt:
 
@@ -122,7 +123,8 @@ The original basic-pitch CNN was split in 4 sequential models wired together, so
 ## Roadmap
 
 - Improve stability
-- Save plugin internal state properly, so it can be loaded back when reentering a session
+- Save plugin internal state properly, so it can be loaded back when reentering a session. Make parameters visible to
+  the DAW.
 - Add tooltips
 - Make internal synth support pitch bends
 - Send MIDI out of the plugin to be routed to another instrument
