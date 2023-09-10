@@ -7,7 +7,8 @@ your favorite Digital Audio Workstation.
 - Supports polyphonic transcription
 - Supports pitch bends
 - Lightweight and very fast transcription
-- Can scale and time quantize transcribed MIDI directly in the plugin
+- Adjust the transcription parameters while listening to it
+- Scale and time quantize transcribed MIDI directly in the plugin
 
 ## Install NeuralNote
 
@@ -30,8 +31,11 @@ The workflow is very simple:
 - Gather some audio
     - Click record. Works when recording for real or when playing the track in a DAW.
     - Or drop an audio file on the plugin. (.wav, .aiff, .flac, .mp3 and .ogg (vorbis) supported)
-- The midi transcription instantly appears in the piano roll section. Play with the different settings to adjust it.
-- Export the MIDI transcription with a simple drag and drop from the plugin to a MIDI track.
+- The MIDI transcription instantly appears in the piano roll section.
+- Listen to the result by clicking the play button.
+    - Play with the different settings to adjust the transcription, even while listening to it
+    - Individually adjust the level of the source audio and the synthesized transcription
+- Once you're satisfied, export the MIDI transcription with a simple drag and drop from the plugin to a MIDI track.
 
 **Watch our presentation video for the Neural Audio Plugin
 competition [here](https://www.youtube.com/watch?v=6_MC0_aG_DQ)**.
@@ -120,9 +124,8 @@ The original basic-pitch CNN was split in 4 sequential models wired together, so
 - Improve stability
 - Save plugin internal state properly, so it can be loaded back when reentering a session
 - Add tooltips
-- Build a simple synth in the plugin so that one can listen to the transcription while playing with the settings, before
-  export
-- Allow pitch bends on non-overlapping parts of overlapping notes
+- Make internal synth support pitch bends
+- Send MIDI out of the plugin to be routed to another instrument
 
 ## Bug reports and feature requests
 
