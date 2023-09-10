@@ -86,7 +86,8 @@ endforeach ()
 file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json
         ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.ort
         ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.ttf
-        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.png)
+        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.png
+        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.svg)
 
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 
@@ -102,6 +103,7 @@ endif ()
 target_link_libraries(BasicPitchCNN PUBLIC RTNeural bin_data)
 
 target_include_directories(${BaseTargetName} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
+target_include_directories(${BaseTargetName} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/minimp3)
 
 target_compile_definitions(${BaseTargetName}
         PUBLIC
@@ -157,3 +159,4 @@ if (WIN32)
     target_compile_definitions(${BaseTargetName} PUBLIC JUCE_ASIO=1)
     target_include_directories(${BaseTargetName} PRIVATE ThirdParty/ASIO/common)
 endif ()
+

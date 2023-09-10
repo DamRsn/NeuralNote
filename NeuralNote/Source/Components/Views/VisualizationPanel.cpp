@@ -47,48 +47,6 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mFileTempo->setText(String(mProcessor->getMidiFileTempo()));
     addChildComponent(*mFileTempo);
 
-    mPlayPauseButton.setButtonText("Play");
-    mPlayPauseButton.setClickingTogglesState(true);
-    mPlayPauseButton.onClick = [this]() {
-        if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-            mProcessor->getPlayer()->setPlayingState(mPlayPauseButton.getToggleState());
-        } else {
-            mPlayPauseButton.setToggleState(false, sendNotification);
-        }
-    };
-
-    mPlayPauseButton.onStateChange = [this]() {
-        if (mPlayPauseButton.getToggleState()) {
-            mPlayPauseButton.setButtonText("Pause");
-        } else {
-            mPlayPauseButton.setButtonText("Play");
-        }
-    };
-
-    mPlayPauseButton.setToggleState(mProcessor->getPlayer()->isPlaying(), NotificationType::sendNotification);
-    mPlayPauseButton.addMouseListener(this, true);
-
-    addAndMakeVisible(mPlayPauseButton);
-
-    mResetButton.setButtonText("Reset");
-    mResetButton.setClickingTogglesState(false);
-    mResetButton.onClick = [this]() {
-        mProcessor->getPlayer()->reset();
-        mPlayPauseButton.setToggleState(false, juce::sendNotification);
-        mAudioMidiViewport.setViewPositionProportionately(0, 0);
-    };
-    mResetButton.addMouseListener(this, true);
-
-    addAndMakeVisible(mResetButton);
-
-    mCenterButton.setButtonText("Center");
-    mCenterButton.setClickingTogglesState(true);
-    mCenterButton.setToggleState(false, sendNotification);
-    mCenterButton.onClick = [this]() { mCombinedAudioMidiRegion.setCenterView(mCenterButton.getToggleState()); };
-    mCenterButton.addMouseListener(this, false);
-
-    addAndMakeVisible(mCenterButton);
-
     mAudioGainSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
     mAudioGainSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxLeft, true, 40, 20);
     mAudioGainSlider.setTextValueSuffix(" dB");
@@ -133,11 +91,6 @@ void VisualizationPanel::resized()
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
     mFileTempo->setBounds(6, 55, 40, 17);
 
-    mPlayPauseButton.setBounds(getWidth() - 305, mCombinedAudioMidiRegion.mPianoRollY + 3, 80, 25);
-    mResetButton.setBounds(getWidth() - 405, mCombinedAudioMidiRegion.mPianoRollY + 3, 80, 25);
-    mCenterButton.setBounds(getWidth() - 505, mCombinedAudioMidiRegion.mPianoRollY + 3, 80, 25);
-    startTimerHz(15);
-
     mAudioGainSlider.setBounds(getWidth() - 205, 3, 200, 20);
     mMidiGainSlider.setBounds(getWidth() - 205, mCombinedAudioMidiRegion.mPianoRollY + 3, 200, 20);
 
@@ -160,13 +113,6 @@ void VisualizationPanel::paint(Graphics& g)
         g.setFont(LABEL_FONT);
         g.drawFittedText(
             "MIDI\nFILE\nTEMPO", Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55), juce::Justification::centred, 3);
-    }
-}
-
-void VisualizationPanel::timerCallback()
-{
-    if (mPlayPauseButton.getToggleState() != mProcessor->getPlayer()->isPlaying()) {
-        mPlayPauseButton.setToggleState(mProcessor->getPlayer()->isPlaying(), sendNotification);
     }
 }
 
@@ -216,4 +162,14 @@ void VisualizationPanel::mouseExit(const MouseEvent& event)
         if (!mPianoRollBounds.contains(getMouseXYRelative()))
             mMidiGainSlider.setVisible(false);
     }
+}
+
+Viewport& VisualizationPanel::getAudioMidiViewport()
+{
+    return mAudioMidiViewport;
+}
+
+CombinedAudioMidiRegion& VisualizationPanel::getCombinedAudioMidiRegion()
+{
+    return mCombinedAudioMidiRegion;
 }
