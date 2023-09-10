@@ -86,7 +86,8 @@ endforeach ()
 file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json
         ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.ort
         ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.ttf
-        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.png)
+        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.png
+        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.svg)
 
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 
