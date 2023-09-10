@@ -170,3 +170,7 @@ But if you have ideas please share!
 
 NeuralNote was developed by [Damien Ronssin](https://github.com/DamRsn) and [Tibor Vass](https://github.com/tiborvass).
 The plugin user interface was designed by Perrine Morel.
+
+#### Contributors
+Many thanks to the contributors!
+- [jatinchowdhury18](https://github.com/jatinchowdhury18): File browser.
