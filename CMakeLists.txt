@@ -154,3 +154,9 @@ target_compile_definitions(${BaseTargetName}
         SAVE_DOWNSAMPLED_AUDIO=0
         USE_TEST_NOTE_FRAME_TO_TIME=0
 )
+
+if (WIN32)
+    target_compile_definitions(${BaseTargetName} PUBLIC JUCE_ASIO=1)
+    target_include_directories(${BaseTargetName} PRIVATE ThirdParty/ASIO/common)
+endif ()
+
