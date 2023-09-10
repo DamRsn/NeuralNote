@@ -17,6 +17,7 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
                                          ConvertParams inParams)
 {
     std::vector<Notes::Event> events;
+    // TODO: better preallocation strategy
     events.reserve(1000);
 
     auto n_frames = inNotesPG.size();
@@ -250,7 +251,10 @@ void Notes::_addPitchBends(std::vector<Notes::Event>& inOutEvents,
                     max = w;
                 }
             }
-            event.bends.emplace_back(bend - pb_shift);
+
+            // TODO: use bigger range.
+            int clamped_bend = jlimit(-6, 6, bend - pb_shift);
+            event.bends.emplace_back(clamped_bend);
         }
     }
 }

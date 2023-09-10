@@ -160,7 +160,11 @@ void NeuralNoteAudioProcessor::_runModel()
 
     mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
-    Notes::dropOverlappingPitchBends(mPostProcessedNotes);
+    Notes::sortEvents(mPostProcessedNotes);
+
+    if (mParameters.pitchBendMode != MultiPitchBend)
+        Notes::dropOverlappingPitchBends(mPostProcessedNotes);
+
     Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
 
     // For the synth
@@ -198,6 +202,7 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
                                    mParameters.minMidiNote.load(),
                                    mParameters.maxMidiNote.load());
 
+        // TODO: preallocate vector of notes and midi vectors
         auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
         mRhythmOptions.setParameters(RhythmUtils::TimeDivisions(mParameters.rhythmTimeDivision.load()),
@@ -205,7 +210,11 @@ void NeuralNoteAudioProcessor::updatePostProcessing()
 
         mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
 
-        Notes::dropOverlappingPitchBends(mPostProcessedNotes);
+        Notes::sortEvents(mPostProcessedNotes);
+
+        if (mParameters.pitchBendMode != MultiPitchBend)
+            Notes::dropOverlappingPitchBends(mPostProcessedNotes);
+
         Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
 
         // For the synth
