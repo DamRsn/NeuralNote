@@ -100,7 +100,6 @@ public:
      */
     static void mergeOverlappingNotesWithSamePitch(std::vector<Notes::Event>& inOutEvents)
     {
-        sortEvents(inOutEvents);
         for (int i = 0; i < int(inOutEvents.size()) - 1; i++) {
             auto& event = inOutEvents[i];
             for (auto j = i + 1; j < inOutEvents.size(); j++) {

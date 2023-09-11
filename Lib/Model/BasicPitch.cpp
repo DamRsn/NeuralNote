@@ -15,14 +15,17 @@ void BasicPitch::reset()
     mNumFrames = 0;
 }
 
-void BasicPitch::setParameters(float inNoteSensibility, float inSplitSensibility, float inMinNoteDurationMs)
+void BasicPitch::setParameters(float inNoteSensibility,
+                               float inSplitSensibility,
+                               float inMinNoteDurationMs,
+                               int inPitchBendMode)
 {
     mParams.frameThreshold = 1.0f - inNoteSensibility;
     mParams.onsetThreshold = 1.0f - inSplitSensibility;
 
     mParams.minNoteLength = static_cast<int>(std::round(inMinNoteDurationMs * FFT_HOP / BASIC_PITCH_SAMPLE_RATE));
 
-    mParams.pitchBend = MultiPitchBend;
+    mParams.pitchBend = (PitchBendModes) inPitchBendMode;
     mParams.melodiaTrick = true;
     mParams.inferOnsets = true;
 }

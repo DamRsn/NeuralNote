@@ -41,6 +41,10 @@ bool MidiFileWriter::writeMidiFile(const std::vector<Notes::Event>& inNoteEvents
         }
     }
 
+    // Remove overlapping pitch bends
+    std::vector<Notes::Event> note_events = inNoteEvents;
+    Notes::dropOverlappingPitchBends(note_events);
+
     juce::MidiMessageSequence message_sequence;
 
     // Set tempo
@@ -58,7 +62,7 @@ bool MidiFileWriter::writeMidiFile(const std::vector<Notes::Event>& inNoteEvents
     float prev_pitch_bend_semitone = 0.0f;
 
     // Add note events
-    for (auto& note: inNoteEvents) {
+    for (auto& note: note_events) {
         auto note_on = juce::MidiMessage::noteOn(1, note.pitch, static_cast<float>(note.amplitude));
         note_on.setTimeStamp((note.startTime + start_offset) * tempo / 60.0 * mTicksPerQuarterNote);
 
@@ -71,7 +75,7 @@ bool MidiFileWriter::writeMidiFile(const std::vector<Notes::Event>& inNoteEvents
         if (inPitchBendMode == SinglePitchBend) {
             for (size_t i = 0; i < note.bends.size(); i++) {
                 prev_pitch_bend_semitone = float(note.bends[i]) / 3.0f;
-                auto pitch_wheel_pos = MidiMessage::pitchbendToPitchwheelPos(prev_pitch_bend_semitone, 4.0f);
+                auto pitch_wheel_pos = MidiMessage::pitchbendToPitchwheelPos(prev_pitch_bend_semitone, 2.0f);
                 auto pitch_wheel_event = MidiMessage::pitchWheel(1, pitch_wheel_pos);
                 pitch_wheel_event.setTimeStamp((note.startTime + start_offset + i * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)
                                                * tempo / 60.0 * mTicksPerQuarterNote);
@@ -94,7 +98,7 @@ bool MidiFileWriter::writeMidiFile(const std::vector<Notes::Event>& inNoteEvents
     message_sequence.sort();
     message_sequence.updateMatchedPairs();
 
-    DBG("Length of note vector: " << inNoteEvents.size());
+    DBG("Length of note vector: " << note_events.size());
     DBG("NumEvents in message sequence:" << message_sequence.getNumEvents());
 
     // Write midi file
