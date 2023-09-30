@@ -18,8 +18,7 @@ std::vector<Notes::Event> NoteOptions::process(const std::vector<Notes::Event>& 
 {
     std::vector<Notes::Event> processed_note_events;
 
-    // Set key array
-    auto key_array = _createKeyArray(mRootNote, mScaleType);
+    auto keyVector = _createKeyVector(mRootNote, mScaleType);
 
     processed_note_events.reserve(inNoteEvents.size());
 
@@ -31,15 +30,15 @@ std::vector<Notes::Event> NoteOptions::process(const std::vector<Notes::Event>& 
             processed_note_events.push_back(note_event);
         } else {
             if (mSnapMode == Remove) {
-                if (_isInKey(note_event.pitch, key_array))
+                if (_isInKey(note_event.pitch, keyVector))
                     processed_note_events.push_back(note_event);
             } else {
-                auto processed_note_event = note_event;
+                Notes::Event processed_note_event = note_event;
 
                 // If pitch bends are more positive: adjust up, otherwise adjust down.
                 // Nothing is done if note is in key.
                 bool adjust_up = std::accumulate(note_event.bends.begin(), note_event.bends.end(), 0) >= 0;
-                processed_note_event.pitch = _getClosestMidiNoteInKey(note_event.pitch, key_array, adjust_up);
+                processed_note_event.pitch = _getClosestMidiNoteInKey(note_event.pitch, keyVector, adjust_up);
 
                 processed_note_events.push_back(processed_note_event);
             }
@@ -49,21 +48,21 @@ std::vector<Notes::Event> NoteOptions::process(const std::vector<Notes::Event>& 
     return processed_note_events;
 }
 
-bool NoteOptions::_isInKey(int inMidiNote, const std::array<int, 7>& inKeyArray)
+bool NoteOptions::_isInKey(int inMidiNote, const std::vector<int>& inKeyArray)
 {
     auto note_index = _midiToNoteIndex(inMidiNote);
 
-    for (int i = 0; i < 7; i++) {
-        if (note_index == inKeyArray[i])
+    for (auto &inKey : inKeyArray) {
+        if (note_index == inKey)
             return true;
     }
 
     return false;
 }
 
-int NoteOptions::_getClosestMidiNoteInKey(int inMidiNote, const std::array<int, 7>& inKeyArray, bool inAdjustUp)
+int NoteOptions::_getClosestMidiNoteInKey(int inMidiNote, const std::vector<int>& inKeyVector, bool inAdjustUp)
 {
-    if (_isInKey(inMidiNote, inKeyArray))
+    if (_isInKey(inMidiNote, inKeyVector))
         return inMidiNote;
 
     if (inAdjustUp) {
@@ -84,23 +83,41 @@ int NoteOptions::_midiToNoteIndex(int inMidiNote)
     return inMidiNote % 12;
 }
 
-std::array<int, 7> NoteOptions::_createKeyArray(RootNote inRootNote, ScaleType inScaleType)
+std::vector<int> NoteOptions::_createKeyVector(RootNote inRootNote, ScaleType inScaleType)
 {
     auto root_note_idx = _rootNoteToNoteIdx(inRootNote);
-    std::array<int, 7> key_array {};
 
-    if (inScaleType == Major) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + MAJOR_SCALE_INTERVALS[i]) % 12;
-    } else if (inScaleType == Minor) {
-        for (size_t i = 0; i < 7; i++)
-            key_array[i] = (root_note_idx + MINOR_SCALE_INTERVALS[i]) % 12;
-    } else {
-        // If chromatic, array should not be used.
-        return {};
+    switch (inScaleType) {
+        case Major:
+            return _createKeyVectorForScale(root_note_idx, MAJOR_SCALE_INTERVALS);
+        case Minor:
+            return _createKeyVectorForScale(root_note_idx, MINOR_SCALE_INTERVALS);
+        case Dorian:
+            return _createKeyVectorForScale(root_note_idx, DORIAN_SCALE_INTERVALS);
+        case Mixolydian:
+            return _createKeyVectorForScale(root_note_idx, MIXOLYDIAN_SCALE_INTERVALS);
+        case Lydian:
+            return _createKeyVectorForScale(root_note_idx, LYDIAN_SCALE_INTERVALS);
+        case Phrygian:
+            return _createKeyVectorForScale(root_note_idx, PHRYGIAN_SCALE_INTERVALS);
+        case Locrian:
+            return _createKeyVectorForScale(root_note_idx, LOCRIAN_SCALE_INTERVALS);
+        case MinorBlues:
+            return _createKeyVectorForScale(root_note_idx, MINOR_BLUES_SCALE_INTERVALS);
+        case MinorPentatonic:
+            return _createKeyVectorForScale(root_note_idx, MINOR_PENTATONIC_SCALE_INTERVALS);
+        case MajorPentatonic:
+            return _createKeyVectorForScale(root_note_idx, MAJOR_PENTATONIC_SCALE_INTERVALS);
+        case MelodicMinor:
+            return _createKeyVectorForScale(root_note_idx, MELODIC_MINOR_SCALE_INTERVALS);
+        case HarmonicMinor:
+            return _createKeyVectorForScale(root_note_idx, HARMONIC_MINOR_SCALE_INTERVALS);
+        case HarmonicMajor:
+            return _createKeyVectorForScale(root_note_idx, HARMONIC_MAJOR_SCALE_INTERVALS);
+        default:
+            // If chromatic, vector should not be used.
+            return {};
     }
-
-    return key_array;
 }
 
 int NoteOptions::_rootNoteToNoteIdx(RootNote inRootNote)
