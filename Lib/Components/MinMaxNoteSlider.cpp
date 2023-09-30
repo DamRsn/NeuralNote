@@ -28,7 +28,7 @@ MinMaxNoteSlider::MinMaxNoteSlider(std::atomic<int>& inAttachedMinValue,
 
 void MinMaxNoteSlider::resized()
 {
-    mSlider.setBounds(17, 0, 121, 17);
+    mSlider.setBounds(17, 0, 156, 17);
 }
 
 void MinMaxNoteSlider::paint(Graphics& g)
@@ -41,6 +41,6 @@ void MinMaxNoteSlider::paint(Graphics& g)
                juce::Justification::centredLeft);
 
     g.drawText(NoteUtils::midiNoteToStr(int(mSlider.getMaxValue())),
-               Rectangle<int>(133, 0, 22, 12),
+               Rectangle<int>(168, 0, 22, 12),
                juce::Justification::centredRight);
 }
