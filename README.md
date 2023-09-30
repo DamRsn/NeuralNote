@@ -174,3 +174,4 @@ The plugin user interface was designed by Perrine Morel.
 #### Contributors
 Many thanks to the contributors!
 - [jatinchowdhury18](https://github.com/jatinchowdhury18): File browser.
+- [trirpi](https://github.com/trirpi) More scale options in `SCALE QUANTIZE`.
