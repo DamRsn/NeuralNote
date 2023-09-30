@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(NeuralNotePlugin VERSION 0.0.1)
+project(NeuralNotePlugin VERSION 0.1.0)
 
 # C++ settings
 set(CMAKE_CXX_STANDARD 17)
@@ -47,6 +47,7 @@ juce_add_plugin("${BaseTargetName}"
         COPY_PLUGIN_AFTER_BUILD ${COPY_PLUGIN_AFTER_BUILD}
         MICROPHONE_PERMISSION_ENABLED TRUE
         MICROPHONE_PERMISSION_TEXT "Need access to Microphone"
+        HARDENED_RUNTIME_ENABLED TRUE
         PLUGIN_MANUFACTURER_CODE DrAu
         PLUGIN_CODE NRNT
         FORMATS AU VST3 Standalone
@@ -86,7 +87,8 @@ endforeach ()
 file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.json
         ${CMAKE_CURRENT_LIST_DIR}/Lib/ModelData/*.ort
         ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.ttf
-        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.png)
+        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.png
+        ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/*.svg)
 
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
 
@@ -153,3 +155,9 @@ target_compile_definitions(${BaseTargetName}
         SAVE_DOWNSAMPLED_AUDIO=0
         USE_TEST_NOTE_FRAME_TO_TIME=0
 )
+
+if (WIN32)
+    target_compile_definitions(${BaseTargetName} PUBLIC JUCE_ASIO=1)
+    target_include_directories(${BaseTargetName} PRIVATE ThirdParty/ASIO/common)
+endif ()
+
