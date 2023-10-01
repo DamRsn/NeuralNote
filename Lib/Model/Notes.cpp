@@ -3,6 +3,7 @@
 //
 
 #include "Notes.h"
+#include <cassert>
 
 bool Notes::Event::operator==(const Notes::Event& other) const
 {
