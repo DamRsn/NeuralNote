@@ -31,6 +31,10 @@ void PianoRoll::resized()
     mPlayhead.setSize(getWidth(), getHeight());
 }
 
+void PianoRoll::setZoomLevel(float zoomLevel) {
+    mZoomLevel = zoomLevel;
+}
+
 void PianoRoll::paint(Graphics& g)
 {
     Rectangle<float> local_bounds = {0, 0, static_cast<float>(getWidth()), static_cast<float>(getHeight())};
@@ -131,12 +135,12 @@ void PianoRoll::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged,
 
 float PianoRoll::_timeToPixel(float inTime) const
 {
-    return inTime * static_cast<float>(mNumPixelsPerSecond);
+    return inTime * static_cast<float>(mNumPixelsPerSecond) * mZoomLevel;
 }
 
 float PianoRoll::_pixelToTime(float inPixel) const
 {
-    return inPixel / static_cast<float>(mNumPixelsPerSecond);
+    return inPixel / static_cast<float>(mNumPixelsPerSecond) / mZoomLevel;
 }
 
 std::pair<float, float> PianoRoll::_getNoteHeightAndWidthPianoRoll(int inNote) const
