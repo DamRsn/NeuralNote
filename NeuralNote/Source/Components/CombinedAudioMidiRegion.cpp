@@ -36,11 +36,13 @@ bool CombinedAudioMidiRegion::isInterestedInFileDrag(const StringArray& files)
 }
 
 void CombinedAudioMidiRegion::mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel) {
-    std::cout << "test" << std::endl;
-    std::cout << wheel.deltaX << std::endl;
-    std::cout << wheel.deltaY << std::endl;
-    zoomLevel += wheel.deltaY;
-    resizeAccordingToNumSamplesAvailable();
+    if (event.mods.isCommandDown()) {
+		std::cout << "test" << std::endl;
+		zoomLevel += wheel.deltaY;
+        zoomLevel = std::min(zoomLevel, maxZoomLevel);
+        zoomLevel = std::max(zoomLevel, minZoomLevel);
+		resizeAccordingToNumSamplesAvailable();
+    }
 }
 
 void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int y)
@@ -99,9 +101,9 @@ void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
     int thumbnail_width =
         static_cast<int>(std::round((num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE));
 
-    int new_width = zoomLevel * std::max(mBaseWidth, thumbnail_width);
+    int new_width = std::max(mBaseWidth, thumbnail_width);
 
-    mAudioRegion.setThumbnailWidth(thumbnail_width);
+    mAudioRegion.setThumbnailWidth(zoomLevel*thumbnail_width);
 
     if (new_width != getWidth()) {
         setSize(new_width, getHeight());

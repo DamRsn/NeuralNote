@@ -72,6 +72,8 @@ private:
 
     int mBaseWidth = 0;
 
+    const float maxZoomLevel = 5.f;
+    const float minZoomLevel = 0.1f;
     float zoomLevel = 1.f;
 
     AudioRegion mAudioRegion;
