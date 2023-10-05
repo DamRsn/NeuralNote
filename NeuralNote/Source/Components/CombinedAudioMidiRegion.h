@@ -46,6 +46,8 @@ public:
 
     void setCenterView(bool inShouldCenterView);
 
+    void mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel);
+
     AudioRegion* getAudioRegion();
 
     PianoRoll* getPianoRoll();
@@ -69,6 +71,8 @@ private:
     bool mShouldCenterView = false;
 
     int mBaseWidth = 0;
+
+    float zoomLevel = 1.f;
 
     AudioRegion mAudioRegion;
     PianoRoll mPianoRoll;
