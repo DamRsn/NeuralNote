@@ -48,8 +48,13 @@ private:
     std::unique_ptr<juce::TextButton> mMuteButton;
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> mMuteButtonAttachment;
 
-    std::unique_ptr<juce::TextButton> mRecordButton;
-    std::unique_ptr<juce::TextButton> mClearButton;
+    std::unique_ptr<juce::DrawableButton> mRecordButton;
+    std::unique_ptr<juce::DrawableButton> mClearButton;
+
+    std::unique_ptr<juce::DrawableButton> mBackButton;
+    std::unique_ptr<juce::DrawableButton> mPlayPauseButton;
+    std::unique_ptr<juce::DrawableButton> mCenterButton;
+    std::unique_ptr<juce::DrawableButton> mSettingsButton;
 
     std::unique_ptr<Knob> mMinNoteSlider;
     std::unique_ptr<Knob> mMaxNoteSlider;
@@ -58,8 +63,6 @@ private:
     std::unique_ptr<ComboBox> mMode; // Major, Minor, Chromatic
 
     int mNumCallbacksStuckInProcessingState = 0;
-
-    // Eventually quantise functionality: need for time division, quantize force (0 - 100)
 };
 
 #endif // PluginMainView_h

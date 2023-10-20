@@ -41,7 +41,7 @@ TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& pro
 
     mPitchBendDropDown = std::make_unique<juce::ComboBox>("PITCH BEND");
     mPitchBendDropDown->setEditableText(false);
-    mPitchBendDropDown->setJustificationType(juce::Justification::centredRight);
+    mPitchBendDropDown->setJustificationType(juce::Justification::centredLeft);
     mPitchBendDropDown->addItemList({"No Pitch Bend", "Single Pitch Bend"}, 1);
     mPitchBendDropDown->setSelectedItemIndex(mProcessor.getCustomParameters()->pitchBendMode.load());
     mPitchBendDropDown->onChange = [this]() {
@@ -58,7 +58,7 @@ void TranscriptionOptionsView::resized()
     mNoteSensibility->setBounds(18, button_y_start, 66, 89);
     mSplitSensibility->setBounds(106, button_y_start, 66, 89);
     mMinNoteDuration->setBounds(193, button_y_start, 66, 89);
-    mPitchBendDropDown->setBounds(100, 129 + LEFT_SECTIONS_TOP_PAD, 126, 17);
+    mPitchBendDropDown->setBounds(100, 129 + LEFT_SECTIONS_TOP_PAD, 154, 17);
 }
 
 void TranscriptionOptionsView::paint(Graphics& g)
