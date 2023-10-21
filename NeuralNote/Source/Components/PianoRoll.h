@@ -28,6 +28,10 @@ public:
 
     void mouseDown(const MouseEvent& event) override;
 
+    float mZoomLevel = 1.0f;
+
+    void setZoomLevel(float zoomLevel);
+
 private:
     float _timeToPixel(float inTime) const;
 
