@@ -23,7 +23,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mFileTempo->setMultiLine(false, false);
     mFileTempo->setReadOnly(false);
 
-    mFileTempo->setFont(LABEL_FONT);
+    mFileTempo->setFont(UIFonts::get().LABEL_FONT());
     mFileTempo->setJustification(juce::Justification::centred);
 
     mFileTempo->setColour(TextEditor::backgroundColourId, juce::Colours::transparentWhite);
@@ -110,7 +110,7 @@ void VisualizationPanel::paint(Graphics& g)
             Rectangle<int>(0, 0, KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight).toFloat(), 4);
 
         g.setColour(BLACK);
-        g.setFont(LABEL_FONT);
+        g.setFont(UIFonts::get().LABEL_FONT());
         g.drawFittedText(
             "MIDI\nFILE\nTEMPO", Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55), juce::Justification::centred, 3);
     }

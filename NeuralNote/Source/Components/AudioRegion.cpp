@@ -51,7 +51,7 @@ void AudioRegion::paint(Graphics& g)
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
 
         g.setColour(BLACK);
-        g.setFont(LARGE_FONT);
+        g.setFont(UIFonts::get().LARGE_FONT());
 
         if (mIsFileOver)
             g.drawText("YUMMY!", getLocalBounds(), juce::Justification::centred);

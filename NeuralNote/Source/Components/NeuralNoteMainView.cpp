@@ -159,7 +159,7 @@ void NeuralNoteMainView::paint(Graphics& g)
     auto background_image = juce::ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
 
     g.drawImage(background_image, getLocalBounds().toFloat());
-    g.setFont(LABEL_FONT);
+    g.setFont(UIFonts::get().LABEL_FONT());
     g.drawFittedText("MUTE OUT", juce::Rectangle<int>(939, 63, 31, 23), juce::Justification::centred, 2);
 }
 

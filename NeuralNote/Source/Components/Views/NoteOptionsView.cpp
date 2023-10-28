@@ -74,7 +74,7 @@ void NoteOptionsView::paint(Graphics& g)
     mMinMaxNoteSlider->setAlpha(alpha);
     g.setColour(BLACK.withAlpha(alpha));
 
-    g.setFont(TITLE_FONT);
+    g.setFont(UIFonts::get().TITLE_FONT());
     g.drawText("SCALE QUANTIZE", Rectangle<int>(24, 0, 274, 17), juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
@@ -83,7 +83,7 @@ void NoteOptionsView::paint(Graphics& g)
     else
         g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
-    g.setFont(LABEL_FONT);
+    g.setFont(UIFonts::get().LABEL_FONT());
     g.drawText("RANGE", juce::Rectangle<int>(19, mMinMaxNoteSlider->getY(), 80, 17), juce::Justification::centredLeft);
 
     g.drawText("KEY", juce::Rectangle<int>(19, mKeyDropdown->getY(), 80, 17), juce::Justification::centredLeft);
