@@ -31,7 +31,7 @@ public:
 private:
     NeuralNoteAudioProcessor* mProcessor;
 
-    juce::File mTempDirectory = juce::File::getSpecialLocation(juce::File::tempDirectory);
+    juce::File mTempDirectory = juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile("neuralnote");
 
     MidiFileWriter mMidiFileWriter;
 };

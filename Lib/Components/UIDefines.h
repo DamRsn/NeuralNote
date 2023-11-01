@@ -9,20 +9,32 @@
 #include "BinaryData.h"
 
 // Fonts
-const juce::Typeface::Ptr MONTSERRAT_BOLD =
-    juce::Typeface::createSystemTypefaceFor(BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize);
 
-const juce::Typeface::Ptr MONTSERRAT_SEMIBOLD =
-    juce::Typeface::createSystemTypefaceFor(BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize);
+class UIFonts {
+public:
+    static UIFonts& get();
 
-const juce::Typeface::Ptr MONTSERRAT_REGULAR =
-    juce::Typeface::createSystemTypefaceFor(BinaryData::MontserratRegular_ttf, BinaryData::MontserratRegular_ttfSize);
+    Font TITLE_FONT() { return Font(pMONTSERRAT_BOLD).withPointHeight(18.0f); }
+    Font LARGE_FONT() { return Font(pMONTSERRAT_BOLD).withPointHeight(20.0f); }
+    Font LABEL_FONT() { return Font(pMONTSERRAT_SEMIBOLD).withPointHeight(10.0f); }
+    Font DROPDOWN_FONT() { return Font(pMONTSERRAT_REGULAR).withPointHeight(10.0f); }
+    Font BUTTON_FONT() { return Font(pMONTSERRAT_BOLD).withPointHeight(12.0f); }
+    juce::Typeface::Ptr MONTSERRAT_BOLD() { return pMONTSERRAT_BOLD; }
+    juce::Typeface::Ptr MONTSERRAT_SEMIBOLD() { return pMONTSERRAT_SEMIBOLD; }
+    juce::Typeface::Ptr MONTSERRAT_REGULAR() { return pMONTSERRAT_REGULAR; }
+protected:
+    UIFonts() :
+        pMONTSERRAT_BOLD(juce::Typeface::createSystemTypefaceFor(BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize)),
+        pMONTSERRAT_SEMIBOLD(juce::Typeface::createSystemTypefaceFor(BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize)),
+        pMONTSERRAT_REGULAR(juce::Typeface::createSystemTypefaceFor(BinaryData::MontserratRegular_ttf, BinaryData::MontserratRegular_ttfSize))
+    { }
+    static UIFonts* fts;
 
-const Font TITLE_FONT = Font(MONTSERRAT_BOLD).withPointHeight(18.0f);
-const Font LARGE_FONT = Font(MONTSERRAT_BOLD).withPointHeight(20.0f);
-const Font LABEL_FONT = Font(MONTSERRAT_SEMIBOLD).withPointHeight(10.0f);
-const Font DROPDOWN_FONT = Font(MONTSERRAT_REGULAR).withPointHeight(10.0f);
-const Font BUTTON_FONT = Font(MONTSERRAT_BOLD).withPointHeight(12.0f);
+private:
+    juce::Typeface::Ptr pMONTSERRAT_BOLD;
+    juce::Typeface::Ptr pMONTSERRAT_SEMIBOLD;
+    juce::Typeface::Ptr pMONTSERRAT_REGULAR;
+};
 
 // Colors
 static const juce::Colour BLACK(juce::uint8(14), juce::uint8(14), juce::uint8(14));

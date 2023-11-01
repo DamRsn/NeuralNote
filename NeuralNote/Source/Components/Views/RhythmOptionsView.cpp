@@ -44,7 +44,7 @@ void RhythmOptionsView::paint(Graphics& g)
 
     mQuantizationForceSlider->setAlpha(alpha);
     g.setColour(BLACK.withAlpha(alpha));
-    g.setFont(TITLE_FONT);
+    g.setFont(UIFonts::get().TITLE_FONT());
     g.drawText("TIME QUANTIZE", Rectangle<int>(24, 0, 210, 17), juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
@@ -53,7 +53,7 @@ void RhythmOptionsView::paint(Graphics& g)
     else
         g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
-    g.setFont(LABEL_FONT);
+    g.setFont(UIFonts::get().LABEL_FONT());
 
     g.drawText("TEMPO  " + mProcessor.getTempoStr(),
                juce::Rectangle<int>(19, LEFT_SECTIONS_TOP_PAD + 47, 75, 10),
