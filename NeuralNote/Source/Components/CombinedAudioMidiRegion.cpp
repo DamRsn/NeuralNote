@@ -37,7 +37,7 @@ bool CombinedAudioMidiRegion::isInterestedInFileDrag(const StringArray& files)
 
 void CombinedAudioMidiRegion::mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel) {
     if (event.mods.isCommandDown()) {
-		mZoomLevel += wheel.deltaY;
+	    mZoomLevel += wheel.deltaY;
         mZoomLevel = std::min(mZoomLevel, mMaxZoomLevel);
         mZoomLevel = std::max(mZoomLevel, mMinZoomLevel);
         mPianoRoll.setZoomLevel(mZoomLevel);
