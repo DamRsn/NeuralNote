@@ -28,8 +28,6 @@ public:
 
     void mouseDown(const MouseEvent& event) override;
 
-    float mZoomLevel = 1.0f;
-
     void setZoomLevel(float zoomLevel);
 
 private:
@@ -74,6 +72,8 @@ private:
     NeuralNoteAudioProcessor* mProcessor;
 
     Playhead mPlayhead;
+
+    float mZoomLevel = 1.f;
 };
 
 #endif // PianoRoll_h

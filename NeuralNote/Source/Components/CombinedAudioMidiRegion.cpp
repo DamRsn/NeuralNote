@@ -98,9 +98,10 @@ void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
 {
     int num_samples_available = mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired();
 
-    int thumbnail_width =
-        static_cast<int>(std::round((num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE));
-    mAudioRegion.setThumbnailWidth(mZoomLevel*thumbnail_width);
+    int thumbnail_width = static_cast<int>(std::round(
+        (mZoomLevel * num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE
+    ));
+    mAudioRegion.setThumbnailWidth(thumbnail_width);
 
     int new_width = std::max(mBaseWidth, static_cast<int>(std::round(thumbnail_width * mZoomLevel)));
     mAudioRegion.setSize(new_width, mAudioRegion.getHeight());
