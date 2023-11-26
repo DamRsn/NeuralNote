@@ -41,7 +41,7 @@ void CombinedAudioMidiRegion::mouseWheelMove(const MouseEvent& event, const Mous
         mZoomLevel = std::min(mZoomLevel, mMaxZoomLevel);
         mZoomLevel = std::max(mZoomLevel, mMinZoomLevel);
         mPianoRoll.setZoomLevel(mZoomLevel);
-		resizeAccordingToNumSamplesAvailable();
+        resizeAccordingToNumSamplesAvailable();
     }
 }
 
