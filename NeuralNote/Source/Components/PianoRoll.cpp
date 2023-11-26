@@ -33,7 +33,6 @@ void PianoRoll::paint(Graphics& g)
     Rectangle<float> local_bounds = {0, 0, static_cast<float>(getWidth()), static_cast<float>(getHeight())};
 
     auto rect_width = static_cast<float>(getWidth());
-    std::cout << "test2" << rect_width << std::endl;
 
     g.setColour(WAVEFORM_BG_COLOR);
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 4);
