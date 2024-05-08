@@ -53,10 +53,6 @@ StringArray getSupportedAudioFileExtensions()
         }
     }
 
-    for (auto& extension: supported_extensions) {
-        std::cout << extension << std::endl;
-    }
-    
     return supported_extensions;
 }
 
