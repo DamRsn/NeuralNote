@@ -30,13 +30,13 @@ bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, doub
 /**
  * @brief Get the Supported Audio File Extensions object (.wav, .aiff, .flac, .ogg, .mp3 ...)
  * 
- * @return std::vector<String> 
+ * @return StringArray containing all suported file extensions
  */
 StringArray getSupportedAudioFileExtensions();
 
 /**
  * Create an AudioFormatManager with all supported audio formats registered. 
- * @return AudioFormatManager
+ * @return std::unique_ptr<AudioFormatManager>
  */
 std::unique_ptr<AudioFormatManager> createAudioFormatManager();
 
