@@ -4,21 +4,14 @@
 
 #include "QuantizeForceSlider.h"
 
-QuantizeForceSlider::QuantizeForceSlider(std::atomic<float>& inAttachedValue,
-                                         const std::function<void()>& inOnValueChange)
-    : mAttachedValue(inAttachedValue)
+QuantizeForceSlider::QuantizeForceSlider(RangedAudioParameter& inAttachedValue)
 {
-    mOnValueChanged = inOnValueChange;
     mSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     mSlider.setRange(0, 100, 1);
     mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-    mSlider.onValueChange = [this]() {
-        mAttachedValue.store(static_cast<float>(mSlider.getValue()) / 100.f);
-        mOnValueChanged();
-        repaint();
-    };
+    mSlider.onValueChange = [this]() { repaint(); };
 
-    mSlider.setValue(mAttachedValue.load() * 100.0f);
+    mAttachment = std::make_unique<juce::SliderParameterAttachment>(inAttachedValue, mSlider);
 
     addAndMakeVisible(mSlider);
 }

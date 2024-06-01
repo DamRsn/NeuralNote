@@ -9,15 +9,15 @@ TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& pro
     : mProcessor(processor)
 {
     mNoteSensibility =
-        std::make_unique<Knob>(*mProcessor.mTree.getParameter("NOTE_SENSIBILITY"), "NOTE SENSIBILITY", false);
+        std::make_unique<Knob>(*mProcessor.getParams()[ParameterHelpers::NoteSensibilityId], "NOTE SENSIBILITY", false);
     addAndMakeVisible(*mNoteSensibility);
 
-    mSplitSensibility =
-        std::make_unique<Knob>(*mProcessor.mTree.getParameter("SPLIT_SENSIBILITY"), "SPLIT SENSIBILITY", false);
+    mSplitSensibility = std::make_unique<Knob>(
+        *mProcessor.getParams()[ParameterHelpers::SplitSensibilityId], "SPLIT SENSIBILITY", false);
     addAndMakeVisible(*mSplitSensibility);
 
-    mMinNoteDuration =
-        std::make_unique<Knob>(*mProcessor.mTree.getParameter("MIN_NOTE_DURATION"), "MIN NOTE DURATION", false, " ms");
+    mMinNoteDuration = std::make_unique<Knob>(
+        *mProcessor.getParams()[ParameterHelpers::MinimumNoteDurationId], "MIN NOTE DURATION", false, " ms");
     addAndMakeVisible(*mMinNoteDuration);
 
     mPitchBendDropDown = std::make_unique<juce::ComboBox>("PITCH BEND");
@@ -25,14 +25,14 @@ TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& pro
     mPitchBendDropDown->setJustificationType(juce::Justification::centredLeft);
     mPitchBendDropDown->addItemList({"No Pitch Bend", "Single Pitch Bend"}, 1);
     mPitchBendDropDownParameterAttachment = std::make_unique<ComboBoxParameterAttachment>(
-        *mProcessor.mTree.getParameter("PITCH_BEND_MODE"), *mPitchBendDropDown.get());
+        *mProcessor.getParams()[ParameterHelpers::PitchBendModeId], *mPitchBendDropDown);
 
     addAndMakeVisible(*mPitchBendDropDown);
 
-    mProcessor.mTree.addParameterListener("NOTE_SENSIBILITY", this);
-    mProcessor.mTree.addParameterListener("SPLIT_SENSIBILITY", this);
-    mProcessor.mTree.addParameterListener("MIN_NOTE_DURATION", this);
-    mProcessor.mTree.addParameterListener("PITCH_BEND_MODE", this);
+    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::NoteSensibilityId), this);
+    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::SplitSensibilityId), this);
+    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::MinimumNoteDurationId), this);
+    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::PitchBendModeId), this);
 }
 
 void TranscriptionOptionsView::resized()
@@ -73,15 +73,18 @@ void TranscriptionOptionsView::paint(Graphics& g)
 
 void TranscriptionOptionsView::parameterChanged(const String& parameterID, float newValue)
 {
-    jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
+    // Update atomic value in APVTS before calling updateTranscription
+    mProcessor.mAPVTS.getRawParameterValue(parameterID)->store(newValue);
 
-    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-        mProcessor.updateTranscription();
-        auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
+    MessageManager::callAsync([this]() {
+        if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
+            mProcessor.updateTranscription();
+            auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
 
-        if (main_view)
-            main_view->repaintPianoRoll();
-        else
-            jassertfalse;
-    }
+            if (main_view)
+                main_view->repaintPianoRoll();
+            else
+                jassertfalse;
+        }
+    });
 }

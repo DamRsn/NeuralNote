@@ -15,22 +15,20 @@ static const juce::StringArray RootNotesFlatStr {"A", "Bb", "B", "C", "Db", "D",
 
 enum RootNote { A = 0, A_sharp, B, C, C_sharp, D, D_sharp, E, F_sharp, F, G_sharp, G, TotalNumRootNotes };
 
-static const juce::StringArray ScaleTypesStr {
-	"Chromatic",
-	"Major",
-	"Minor",
-	"Dorian",
-	"Mixolydian",
-	"Lydian",
-	"Phrygian",
-	"Locrian",
-	"Minor Blues",
-	"Minor Pentatonic",
-	"Major Pentatonic",
-	"Melodic Minor",
-	"Harmonic Minor",
-	"Harmonic Major"
-};
+static const juce::StringArray ScaleTypesStr {"Chromatic",
+                                              "Major",
+                                              "Minor",
+                                              "Dorian",
+                                              "Mixolydian",
+                                              "Lydian",
+                                              "Phrygian",
+                                              "Locrian",
+                                              "Minor Blues",
+                                              "Minor Pentatonic",
+                                              "Major Pentatonic",
+                                              "Melodic Minor",
+                                              "Harmonic Minor",
+                                              "Harmonic Major"};
 
 enum ScaleType {
     Chromatic = 0,
@@ -70,7 +68,7 @@ static String midiNoteToStr(int inNoteNumber)
  */
 static inline int hzToMidi(float hz)
 {
-    return (int) std::round(12.0 * (std::log2(hz) - std::log2(440.0)) + 69.0);
+    return (int) std::round(12.0f * std::log2(hz / 440.0f) + 69.0f);
 }
 
 /**

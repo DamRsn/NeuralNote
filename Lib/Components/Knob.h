@@ -25,6 +25,8 @@ public:
 
     void mouseExit(const MouseEvent& event) override;
 
+    Slider& getSlider() { return mSlider; }
+
 private:
     juce::Slider mSlider;
     std::unique_ptr<juce::SliderParameterAttachment> mSliderParameterAttachment;

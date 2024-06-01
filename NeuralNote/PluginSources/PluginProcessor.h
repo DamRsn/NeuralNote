@@ -11,6 +11,7 @@
 #include "RhythmOptions.h"
 #include "Player.h"
 #include "SourceAudioManager.h"
+#include "ParameterHelpers.h"
 
 enum State { EmptyAudioAndMidiRegions = 0, Recording, Processing, PopulatedAudioAndMidiRegions };
 
@@ -58,13 +59,13 @@ public:
 
     void updatePostProcessing();
 
-    Parameters* getCustomParameters();
+    //    Parameters* getCustomParameters();
 
     const juce::Optional<juce::AudioPlayHead::PositionInfo>&
         getPlayheadInfoOnRecordStart(); // TODO: Add to timeQuantizeManager
 
     // Value tree state to pass automatable parameters from UI
-    juce::AudioProcessorValueTreeState mTree;
+    juce::AudioProcessorValueTreeState mAPVTS;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     // TODO: TimeQuantizeManager
@@ -84,15 +85,21 @@ public:
 
     RhythmOptions* getRhythmOptions();
 
+    std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams>& getParams();
+
+    float getParameterValue(ParameterHelpers::ParamIdEnum inParamId) const;
+
 private:
     void _runModel(); // Add to TranscriptionManager
+
+    std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams> mParams {};
 
     std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
     std::unique_ptr<SourceAudioManager> mSourceAudioManager;
     std::unique_ptr<Player> mPlayer;
 
-    Parameters mParameters;
+    //    Parameters mParameters;
     bool mWasRecording = false;
 
     std::atomic<double> mCurrentTempo = -1.0;

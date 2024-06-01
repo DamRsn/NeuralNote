@@ -55,7 +55,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     // To also receive mouseExit callback from this slider
     mAudioGainSlider.addMouseListener(this, true);
     mAudioGainSliderAttachment = std::make_unique<SliderParameterAttachment>(
-        *mProcessor->mTree.getParameter("AUDIO_LEVEL_DB"), mAudioGainSlider);
+        *mProcessor->getParams()[ParameterHelpers::AudioPlayerGainId], mAudioGainSlider);
 
     addChildComponent(mAudioGainSlider);
 
@@ -67,8 +67,8 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     // To also receive mouseExit callback from this slider
     mMidiGainSlider.addMouseListener(this, true);
 
-    mMidiGainSliderAttachment =
-        std::make_unique<SliderParameterAttachment>(*mProcessor->mTree.getParameter("MIDI_LEVEL_DB"), mMidiGainSlider);
+    mMidiGainSliderAttachment = std::make_unique<SliderParameterAttachment>(
+        *mProcessor->getParams()[ParameterHelpers::MidiPlayerGainId], mMidiGainSlider);
 
     addChildComponent(mMidiGainSlider);
 

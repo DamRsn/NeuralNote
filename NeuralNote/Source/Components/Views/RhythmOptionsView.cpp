@@ -12,17 +12,22 @@ RhythmOptionsView::RhythmOptionsView(NeuralNoteAudioProcessor& processor)
     mTimeDivisionDropdown->setEditableText(false);
     mTimeDivisionDropdown->setJustificationType(juce::Justification::centredRight);
     mTimeDivisionDropdown->addItemList(RhythmUtils::TimeDivisionsStr, 1);
-    mTimeDivisionDropdown->setSelectedItemIndex(mProcessor.getCustomParameters()->rhythmTimeDivision.load());
-    mTimeDivisionDropdown->onChange = [this]() {
-        mProcessor.getCustomParameters()->rhythmTimeDivision.store(mTimeDivisionDropdown->getSelectedItemIndex());
-        _valueChanged();
-    };
+    //    mTimeDivisionDropdown->setSelectedItemIndex(mProcessor.getParameterValue(ParameterHelpers::TimeDivisionId));
+    //    mTimeDivisionDropdown->onChange = [this]() {
+    //        mProcessor.getCustomParameters()->rhythmTimeDivision.store(mTimeDivisionDropdown->getSelectedItemIndex());
+    //        _valueChanged();
+    //    };
+    mTimeDivisionAttachment = std::make_unique<juce::ComboBoxParameterAttachment>(
+        *mProcessor.getParams()[ParameterHelpers::TimeDivisionId], *mTimeDivisionDropdown);
     addAndMakeVisible(*mTimeDivisionDropdown);
 
-    mQuantizationForceSlider = std::make_unique<QuantizeForceSlider>(
-        mProcessor.getCustomParameters()->rhythmQuantizationForce, [this]() { _valueChanged(); });
+    mQuantizationForceSlider =
+        std::make_unique<QuantizeForceSlider>(*mProcessor.getParams()[ParameterHelpers::QuantizationForceId]);
 
     addAndMakeVisible(*mQuantizationForceSlider);
+
+    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::TimeDivisionId), this);
+    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::QuantizationForceId), this);
 }
 
 void RhythmOptionsView::resized()
@@ -71,15 +76,32 @@ void RhythmOptionsView::paint(Graphics& g)
         "FORCE", juce::Rectangle<int>(19, mQuantizationForceSlider->getY(), 37, 17), juce::Justification::centredLeft);
 }
 
-void RhythmOptionsView::_valueChanged()
-{
-    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-        mProcessor.updateTranscription();
-        auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
+//void RhythmOptionsView::_valueChanged()
+//{
+//    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
+//        mProcessor.updateTranscription();
+//        auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
+//
+//        if (main_view)
+//            main_view->repaintPianoRoll();
+//        else
+//            jassertfalse;
+//    }
+//}
 
-        if (main_view)
-            main_view->repaintPianoRoll();
-        else
-            jassertfalse;
-    }
+void RhythmOptionsView::parameterChanged(const String& parameterID, float newValue)
+{
+    mProcessor.mAPVTS.getRawParameterValue(parameterID)->store(newValue);
+
+    MessageManager::callAsync([this]() {
+        if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
+            mProcessor.updateTranscription();
+            auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
+
+            if (main_view)
+                main_view->repaintPianoRoll();
+            else
+                jassertfalse;
+        }
+    });
 }

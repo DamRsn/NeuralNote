@@ -71,7 +71,8 @@ void PianoRoll::paint(Graphics& g)
             g.drawRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height, 0.5);
 
             // Draw pitch bend
-            if (static_cast<PitchBendModes>(mProcessor->mTree.getRawParameterValue("PITCH_BEND_MODE")->load())
+            if (static_cast<PitchBendModes>(
+                    (int) std::round(mProcessor->getParameterValue(ParameterHelpers::PitchBendModeId)))
                 == SinglePitchBend) {
                 const auto& bends = note_event.bends;
 
