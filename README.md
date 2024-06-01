@@ -5,9 +5,10 @@ your favorite Digital Audio Workstation.
 
 - Works with any tonal instrument (voice included)
 - Supports polyphonic transcription
-- Supports pitch bends
+- Supports pitch bend detection
 - Lightweight and very fast transcription
-- Can scale and time quantize transcribed MIDI directly in the plugin
+- Allows to adjust the parameters while listening to the transcription
+- Allows to scale and time quantize transcribed MIDI directly in the plugin
 
 ## Install NeuralNote
 
@@ -17,7 +18,7 @@ Universal) supported)!
 Currently, only the raw `.vst3`, `.component` (Audio Unit), `.app` and `.exe` (Standalone) files are provided.
 Installers will be created soon. In the meantime, you can manually copy the plugin/app file in the appropriate
 directory. The code is signed on macOS, but not on Windows, so you might have to perform few extra steps in order to be
-able to use NeuralNote on Windows (to be documented soon).
+able to use NeuralNote on Windows.
 
 ## Usage
 
@@ -29,9 +30,12 @@ The workflow is very simple:
 
 - Gather some audio
     - Click record. Works when recording for real or when playing the track in a DAW.
-    - Or drop an audio file on the plugin. (.wav, .aiff and .flac supported)
-- The midi transcription instantly appears in the piano roll section. Play with the different settings to adjust it.
-- Export the MIDI transcription with a simple drag and drop from the plugin to a MIDI track.
+    - Or drop an audio file on the plugin. (.wav, .aiff, .flac, .mp3 and .ogg (vorbis) supported)
+- The MIDI transcription instantly appears in the piano roll section.
+- Listen to the result by clicking the play button.
+    - Play with the different settings to adjust the transcription, even while listening to it
+    - Individually adjust the level of the source audio and of the synthesized transcription
+- Once you're satisfied, export the MIDI transcription with a simple drag and drop from the plugin to a MIDI track.
 
 **Watch our presentation video for the Neural Audio Plugin
 competition [here](https://www.youtube.com/watch?v=6_MC0_aG_DQ)**.
@@ -70,7 +74,8 @@ $ ./build.sh
 Due to [a known issue](https://github.com/DamRsn/NeuralNote/issues/21), if you're not using Visual Studio 2022 (MSVC
 version: 19.35.x, check `cl` output), then you'll need to manually build onnxruntime.lib like so:
 
-1. Ensure you have Python installed; if not, download at https://www.python.org/downloads/windows/
+1. Ensure you have Python installed; if not, download at https://www.python.org/downloads/windows/ (this does not
+   currently work with Python 3.11, prefer Python 3.10).
 
 2. Execute each of the following lines in a command prompt:
 
@@ -118,12 +123,11 @@ The original basic-pitch CNN was split in 4 sequential models wired together, so
 ## Roadmap
 
 - Improve stability
-- Save plugin internal state properly, so it can be loaded back when reentering a session
+- Save plugin internal state properly, so it can be loaded back when reentering a session. Make parameters visible to
+  the DAW.
 - Add tooltips
-- Build a simple synth in the plugin so that one can listen to the transcription while playing with the settings, before
-  export
-- Allow pitch bends on non-overlapping parts of overlapping notes
-- Support transcription of mp3 files
+- Make internal synth support pitch bends
+- Send MIDI out of the plugin to be routed to another instrument
 
 ## Bug reports and feature requests
 
@@ -148,6 +152,7 @@ Here's a list of all the third party libraries used in NeuralNote and the licens
 - [ort-builder](https://github.com/olilarkin/ort-builder) (MIT License)
 - [basic-pitch](https://github.com/spotify/basic-pitch) (Apache-2.0 license)
 - [basic-pitch-ts](https://github.com/spotify/basic-pitch-ts) (Apache-2.0 license)
+- [minimp3](https://github.com/lieff/minimp3) (CC0-1.0 license)
 
 ## Could NeuralNote transcribe audio in real-time?
 
@@ -156,8 +161,8 @@ Unfortunately no and this for a few reasons:
 - Basic Pitch uses the Constant-Q transform (CQT) as input feature. The CQT requires really long audio chunks (> 1s) to
   get amplitudes for the lowest frequency bins. This makes the latency too high to have real-time transcription.
 - The basic pitch CNN has an additional latency of approximately 120ms.
-- Very few DAWs support audio input/MIDI output plugins as far as I know. This is partially why NeuralNote is an
-  Audio FX plugin (audio-to-audio) and that MIDI is exported via drag and drop.
+- The note events creation algorithm processes the posteriorgrams backward (from future to past) and is hence
+  non-causal.
 
 But if you have ideas please share!
 
@@ -165,3 +170,8 @@ But if you have ideas please share!
 
 NeuralNote was developed by [Damien Ronssin](https://github.com/DamRsn) and [Tibor Vass](https://github.com/tiborvass).
 The plugin user interface was designed by Perrine Morel.
+
+#### Contributors
+Many thanks to the contributors!
+- [jatinchowdhury18](https://github.com/jatinchowdhury18): File browser.
+- [trirpi](https://github.com/trirpi) More scale options in `SCALE QUANTIZE`.

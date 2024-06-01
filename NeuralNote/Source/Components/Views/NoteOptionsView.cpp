@@ -54,10 +54,10 @@ NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
 
 void NoteOptionsView::resized()
 {
-    mMinMaxNoteSlider->setBounds(99, 17 + LEFT_SECTIONS_TOP_PAD, 154, 17);
-    mKeyDropdown->setBounds(99, LEFT_SECTIONS_TOP_PAD + 46, 55, 17);
-    mKeyType->setBounds(159, LEFT_SECTIONS_TOP_PAD + 46, 94, 17);
-    mSnapMode->setBounds(99, LEFT_SECTIONS_TOP_PAD + 75, 154, 17);
+    mMinMaxNoteSlider->setBounds(64, 17 + LEFT_SECTIONS_TOP_PAD, 189, 17);
+    mKeyDropdown->setBounds(64, LEFT_SECTIONS_TOP_PAD + 46, 55, 17);
+    mKeyType->setBounds(124, LEFT_SECTIONS_TOP_PAD + 46, 129, 17);
+    mSnapMode->setBounds(100, LEFT_SECTIONS_TOP_PAD + 75, 154, 17);
 }
 
 void NoteOptionsView::paint(Graphics& g)

@@ -5,8 +5,10 @@
 #ifndef Notes_h
 #define Notes_h
 
+#include <cassert>
 #include <cmath>
 #include <vector>
+#include <assert.h>
 
 #include "BasicPitchConstants.h"
 #include "NoteUtils.h"
