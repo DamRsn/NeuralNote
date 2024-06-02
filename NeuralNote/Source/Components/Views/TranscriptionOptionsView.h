@@ -13,9 +13,7 @@
 
 class NeuralNoteMainView;
 
-class TranscriptionOptionsView
-    : public juce::Component
-    , public AudioProcessorValueTreeState::Listener
+class TranscriptionOptionsView : public juce::Component
 {
 public:
     explicit TranscriptionOptionsView(NeuralNoteAudioProcessor& processor);
@@ -23,8 +21,6 @@ public:
     void resized() override;
 
     void paint(Graphics& g) override;
-
-    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
 private:
     NeuralNoteAudioProcessor& mProcessor;

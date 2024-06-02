@@ -14,9 +14,7 @@
 
 class NeuralNoteMainView;
 
-class RhythmOptionsView
-    : public Component
-    , public AudioProcessorValueTreeState::Listener
+class RhythmOptionsView : public Component
 {
 public:
     explicit RhythmOptionsView(NeuralNoteAudioProcessor& processor);
@@ -24,8 +22,6 @@ public:
     void resized() override;
 
     void paint(Graphics& g) override;
-
-    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
 private:
     NeuralNoteAudioProcessor& mProcessor;

@@ -38,12 +38,6 @@ NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
     addAndMakeVisible(*mSnapMode);
 
     setSize(266, 139);
-
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::MinMidiNoteId), this);
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::MaxMidiNoteId), this);
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::KeyRootNoteId), this);
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::KeyTypeId), this);
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::KeySnapModeId), this);
 }
 
 void NoteOptionsView::resized()
@@ -83,22 +77,4 @@ void NoteOptionsView::paint(Graphics& g)
     g.drawText("KEY", juce::Rectangle<int>(19, mKeyDropdown->getY(), 80, 17), juce::Justification::centredLeft);
 
     g.drawText("SNAP MODE", juce::Rectangle<int>(19, mSnapMode->getY(), 80, 17), juce::Justification::centredLeft);
-}
-
-void NoteOptionsView::parameterChanged(const String& parameterID, float newValue)
-{
-    mProcessor.mAPVTS.getRawParameterValue(parameterID)->store(newValue);
-
-    MessageManager::callAsync([this]() {
-        if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-            mProcessor.updatePostProcessing();
-
-            auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
-
-            if (main_view)
-                main_view->repaintPianoRoll();
-            else
-                jassertfalse;
-        }
-    });
 }

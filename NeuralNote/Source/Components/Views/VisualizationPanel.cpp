@@ -37,14 +37,14 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
         String correct_tempo_str = String(tempo);
         correct_tempo_str = correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
         mFileTempo->setText(correct_tempo_str);
-        mProcessor->setMidiFileTempo(tempo);
+        mProcessor->getTranscriptionManager()->setMidiFileTempo(tempo);
     };
     mFileTempo->onTextChange = [this]() {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
-        mProcessor->setMidiFileTempo(tempo);
+        mProcessor->getTranscriptionManager()->setMidiFileTempo(tempo);
     };
 
-    mFileTempo->setText(String(mProcessor->getMidiFileTempo()));
+    mFileTempo->setText(String(mProcessor->getTranscriptionManager()->getMidiFileTempo()));
     addChildComponent(*mFileTempo);
 
     mAudioGainSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
@@ -132,7 +132,7 @@ void VisualizationPanel::setMidiFileDragComponentVisible()
 {
     mMidiFileDrag.setVisible(true);
 
-    mFileTempo->setText(String(mProcessor->getMidiFileTempo()), sendNotification);
+    mFileTempo->setText(String(mProcessor->getTranscriptionManager()->getMidiFileTempo()), sendNotification);
     mFileTempo->setVisible(true);
 }
 

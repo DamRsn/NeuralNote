@@ -188,8 +188,7 @@ void SourceAudioManager::stopRecording()
         return;
     }
 
-    mProcessor->setStateToProcessing();
-    mProcessor->launchTranscribeJob();
+    mProcessor->getTranscriptionManager()->setLauchNewTranscription();
 }
 
 bool SourceAudioManager::onFileDrop(const File& inFile)
@@ -224,14 +223,14 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
         mDuration = (double) mNumSamplesAcquiredDown / BASIC_PITCH_SAMPLE_RATE;
 
         mDroppedFilename = inFile.getFileNameWithoutExtension().toStdString();
-        mProcessor->getRhythmOptions()->setInfo(true);
+        mProcessor->getTranscriptionManager()->getRhythmOptions().setInfo(true);
 
         mThumbnail.clear();
         mThumbnailCache.clear();
         mThumbnail.setSource(&mDownsampledSourceAudio, BASIC_PITCH_SAMPLE_RATE, 0);
 
-        mProcessor->setStateToProcessing();
-        mProcessor->launchTranscribeJob();
+        // Launch transcription job
+        mProcessor->getTranscriptionManager()->launchTranscribeJob();
 
     } else {
         jassertfalse;

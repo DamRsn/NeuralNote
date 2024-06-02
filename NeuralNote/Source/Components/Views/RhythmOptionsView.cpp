@@ -20,9 +20,6 @@ RhythmOptionsView::RhythmOptionsView(NeuralNoteAudioProcessor& processor)
         std::make_unique<QuantizeForceSlider>(*mProcessor.getParams()[ParameterHelpers::QuantizationForceId]);
 
     addAndMakeVisible(*mQuantizationForceSlider);
-
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::TimeDivisionId), this);
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::QuantizationForceId), this);
 }
 
 void RhythmOptionsView::resized()
@@ -69,21 +66,4 @@ void RhythmOptionsView::paint(Graphics& g)
 
     g.drawText(
         "FORCE", juce::Rectangle<int>(19, mQuantizationForceSlider->getY(), 37, 17), juce::Justification::centredLeft);
-}
-
-void RhythmOptionsView::parameterChanged(const String& parameterID, float newValue)
-{
-    mProcessor.mAPVTS.getRawParameterValue(parameterID)->store(newValue);
-
-    MessageManager::callAsync([this]() {
-        if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-            mProcessor.updateTranscription();
-            auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
-
-            if (main_view)
-                main_view->repaintPianoRoll();
-            else
-                jassertfalse;
-        }
-    });
 }

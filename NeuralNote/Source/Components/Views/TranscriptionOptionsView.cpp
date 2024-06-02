@@ -28,11 +28,6 @@ TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& pro
         *mProcessor.getParams()[ParameterHelpers::PitchBendModeId], *mPitchBendDropDown);
 
     addAndMakeVisible(*mPitchBendDropDown);
-
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::NoteSensibilityId), this);
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::SplitSensibilityId), this);
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::MinimumNoteDurationId), this);
-    mProcessor.mAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::PitchBendModeId), this);
 }
 
 void TranscriptionOptionsView::resized()
@@ -69,22 +64,4 @@ void TranscriptionOptionsView::paint(Graphics& g)
     g.setFont(LABEL_FONT);
     g.drawText(
         "PITCH BEND", juce::Rectangle<int>(19, mPitchBendDropDown->getY(), 67, 17), juce::Justification::centredLeft);
-}
-
-void TranscriptionOptionsView::parameterChanged(const String& parameterID, float newValue)
-{
-    // Update atomic value in APVTS before calling updateTranscription
-    mProcessor.mAPVTS.getRawParameterValue(parameterID)->store(newValue);
-
-    MessageManager::callAsync([this]() {
-        if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-            mProcessor.updateTranscription();
-            auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
-
-            if (main_view)
-                main_view->repaintPianoRoll();
-            else
-                jassertfalse;
-        }
-    });
 }

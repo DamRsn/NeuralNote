@@ -12,6 +12,7 @@
 #include "Player.h"
 #include "SourceAudioManager.h"
 #include "ParameterHelpers.h"
+#include "TranscriptionManager.h"
 
 enum State { EmptyAudioAndMidiRegions = 0, Recording, Processing, PopulatedAudioAndMidiRegions };
 
@@ -27,6 +28,7 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
 
     void getStateInformation(juce::MemoryBlock& destData) override;
+
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     State getState() const { return mState.load(); }
@@ -35,18 +37,9 @@ public:
 
     void setStateToProcessing() { mState.store(Processing); }
 
+    void setStateToPopulatedAudioAndMidiRegions() { mState.store(PopulatedAudioAndMidiRegions); }
+
     void clear();
-
-    // TODO: function to put in a new class TranscriptionManager
-    void launchTranscribeJob();
-
-    bool isJobRunningOrQueued() const;
-
-    const std::vector<Notes::Event>& getNoteEventVector() const;
-
-    void updateTranscription();
-
-    void updatePostProcessing();
 
     const juce::Optional<juce::AudioPlayHead::PositionInfo>&
         getPlayheadInfoOnRecordStart(); // TODO: Add to timeQuantizeManager
@@ -62,29 +55,26 @@ public:
 
     std::string getTimeSignatureStr() const;
 
-    void setMidiFileTempo(double inMidiFileTempo);
-
-    double getMidiFileTempo() const;
-
     SourceAudioManager* getSourceAudioManager();
 
     Player* getPlayer();
 
-    RhythmOptions* getRhythmOptions();
+    TranscriptionManager* getTranscriptionManager();
 
     std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams>& getParams();
 
     float getParameterValue(ParameterHelpers::ParamIdEnum inParamId) const;
 
-private:
-    void _runModel(); // Add to TranscriptionManager
+    AudioProcessorValueTreeState& getAPVTS() { return mAPVTS; }
 
+private:
     std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams> mParams {};
 
     std::atomic<State> mState = EmptyAudioAndMidiRegions;
 
     std::unique_ptr<SourceAudioManager> mSourceAudioManager;
     std::unique_ptr<Player> mPlayer;
+    std::unique_ptr<TranscriptionManager> mTranscriptionManager;
 
     bool mWasRecording = false;
 
@@ -92,19 +82,6 @@ private:
     std::atomic<int> mCurrentTimeSignatureNum = -1;
     std::atomic<int> mCurrentTimeSignatureDenom = -1;
 
-    double mMidiFileTempo = 120.0;
-
-    // To transcription manager
-    BasicPitch mBasicPitch;
-    NoteOptions mNoteOptions;
-    RhythmOptions mRhythmOptions;
-
-    std::vector<Notes::Event> mPostProcessedNotes;
-
     // To quantize manager
     juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
-
-    // Thread pool to run ML in background thread. To transcription manager
-    juce::ThreadPool mThreadPool;
-    std::function<void()> mJobLambda;
 };
