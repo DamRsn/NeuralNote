@@ -4,23 +4,18 @@
 
 #include "MinMaxNoteSlider.h"
 
-MinMaxNoteSlider::MinMaxNoteSlider(RangedAudioParameter& inMinValue, RangedAudioParameter& inMaxValue)
+MinMaxNoteSlider::MinMaxNoteSlider(AudioProcessorValueTreeState& inAPVTS,
+                                   RangedAudioParameter& inMinValue,
+                                   RangedAudioParameter& inMaxValue)
 
 {
-    //    mOnValueChanged = inOnValueChange;
     mSlider.setSliderStyle(juce::Slider::TwoValueHorizontal);
     mSlider.setRange(MIN_MIDI_NOTE, MAX_MIDI_NOTE, 1);
     mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     mAttachment = std::make_unique<TwoValueAttachment>(mSlider, inMinValue, inMaxValue);
 
-    //    mSlider.onValueChange = [this]() {
-    //        mAttachedMinValue.store(int(mSlider.getMinValue()));
-    //        mAttachedMaxValue.store(int(mSlider.getMaxValue()));
-    //        mOnValueChanged();
-    //        repaint();
-    //    };
-
-    //    mSlider.setMinAndMaxValues(mAttachedMinValue.load(), mAttachedMaxValue.load());
+    inAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::MinMidiNoteId), this);
+    inAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::MaxMidiNoteId), this);
 
     addAndMakeVisible(mSlider);
 }
@@ -42,4 +37,9 @@ void MinMaxNoteSlider::paint(Graphics& g)
     g.drawText(NoteUtils::midiNoteToStr(int(mSlider.getMaxValue())),
                Rectangle<int>(168, 0, 22, 12),
                juce::Justification::centredRight);
+}
+
+void MinMaxNoteSlider::parameterChanged(const String& parameterID, float newValue)
+{
+    repaint();
 }

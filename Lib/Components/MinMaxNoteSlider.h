@@ -9,6 +9,7 @@
 #include "NoteUtils.h"
 #include "BasicPitchConstants.h"
 #include "UIDefines.h"
+#include "ParameterHelpers.h"
 
 struct TwoValueAttachment {
     juce::Slider& slider;
@@ -16,6 +17,9 @@ struct TwoValueAttachment {
     juce::RangedAudioParameter& maxParameter;
     std::unique_ptr<juce::ParameterAttachment> minAttach;
     std::unique_ptr<juce::ParameterAttachment> maxAttach;
+
+    std::atomic<bool> minPerformingGesture = false;
+    std::atomic<bool> maxPerformingGesture = false;
 
     TwoValueAttachment(juce::Slider& s, juce::RangedAudioParameter& min, juce::RangedAudioParameter& max)
         : slider(s)
@@ -29,24 +33,30 @@ struct TwoValueAttachment {
             maxParameter, [this](float value) { slider.setMaxValue(value); }, nullptr);
 
         slider.onDragStart = [this] {
-            if (slider.getThumbBeingDragged() == 1)
+            if (slider.getThumbBeingDragged() == 1 && !minPerformingGesture) {
                 minAttach->beginGesture();
-            else if (slider.getThumbBeingDragged() == 2)
+                minPerformingGesture = true;
+            } else if (slider.getThumbBeingDragged() == 2 && !maxPerformingGesture) {
                 maxAttach->beginGesture();
+                maxPerformingGesture = true;
+            }
         };
 
         slider.onDragEnd = [this] {
-            if (slider.getThumbBeingDragged() == 1)
+            if (minPerformingGesture) {
                 minAttach->endGesture();
-            else if (slider.getThumbBeingDragged() == 2)
-                minAttach->endGesture();
+                minPerformingGesture = false;
+            } else if (maxPerformingGesture) {
+                maxAttach->endGesture();
+                maxPerformingGesture = false;
+            }
         };
 
         slider.onValueChange = [this] {
             if (slider.getThumbBeingDragged() == 1)
-                minAttach->setValueAsPartOfGesture(slider.getMinValue());
+                minAttach->setValueAsPartOfGesture((float) slider.getMinValue());
             else if (slider.getThumbBeingDragged() == 2)
-                maxAttach->setValueAsPartOfGesture(slider.getMaxValue());
+                maxAttach->setValueAsPartOfGesture((float) slider.getMaxValue());
         };
 
         minAttach->sendInitialUpdate();
@@ -54,24 +64,24 @@ struct TwoValueAttachment {
     }
 };
 
-class MinMaxNoteSlider : public Component
+class MinMaxNoteSlider
+    : public Component
+    , public AudioProcessorValueTreeState::Listener
 {
 public:
-    MinMaxNoteSlider(RangedAudioParameter& inMinValue, RangedAudioParameter& inMaxValue);
+    MinMaxNoteSlider(AudioProcessorValueTreeState& inAPVTS,
+                     RangedAudioParameter& inMinValue,
+                     RangedAudioParameter& inMaxValue);
 
     void resized() override;
 
     void paint(Graphics& g) override;
 
+    void parameterChanged(const String& parameterID, float newValue) override;
+
 private:
     juce::Slider mSlider;
     std::unique_ptr<TwoValueAttachment> mAttachment;
-
-    //    std::atomic<int>& mAttachedMinValue;
-    //    std::atomic<int>& mAttachedMaxValue;
-
-    //        std::function<void()>
-    //            mOnValueChanged;
 };
 
 #endif // TwoValueSlider_h

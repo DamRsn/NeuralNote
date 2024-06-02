@@ -21,7 +21,7 @@ class NoteOptionsView
 
 {
 public:
-    NoteOptionsView(NeuralNoteAudioProcessor& processor);
+    explicit NoteOptionsView(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 

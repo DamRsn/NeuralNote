@@ -8,7 +8,8 @@
 NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
 {
-    mMinMaxNoteSlider = std::make_unique<MinMaxNoteSlider>(*mProcessor.getParams()[ParameterHelpers::MinMidiNoteId],
+    mMinMaxNoteSlider = std::make_unique<MinMaxNoteSlider>(processor.mAPVTS,
+                                                           *mProcessor.getParams()[ParameterHelpers::MinMidiNoteId],
                                                            *mProcessor.getParams()[ParameterHelpers::MaxMidiNoteId]);
     addAndMakeVisible(*mMinMaxNoteSlider);
 
@@ -16,11 +17,6 @@ NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
     mKeyDropdown->setEditableText(false);
     mKeyDropdown->setJustificationType(juce::Justification::centredLeft);
     mKeyDropdown->addItemList(NoteUtils::RootNotesSharpStr, 1);
-    //    mKeyDropdown->onChange = [this]() {
-    //        mProcessor.getCustomParameters()->keyRootNote.store(mKeyDropdown->getSelectedItemIndex());
-    //        _valueChanged();
-    //    };
-    //    mKeyDropdown->setSelectedItemIndex(mProcessor.getCustomParameters()->keyRootNote.load());
     mKeyAttachment = std::make_unique<juce::ComboBoxParameterAttachment>(
         *mProcessor.getParams()[ParameterHelpers::KeyRootNoteId], *mKeyDropdown);
     addAndMakeVisible(*mKeyDropdown);
@@ -29,11 +25,6 @@ NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
     mKeyType->setEditableText(false);
     mKeyType->setJustificationType(juce::Justification::centredLeft);
     mKeyType->addItemList(NoteUtils::ScaleTypesStr, 1);
-    //    mKeyType->onChange = [this]() {
-    //        mProcessor.getCustomParameters()->keyType.store(mKeyType->getSelectedItemIndex());
-    //        _valueChanged();
-    //    };
-    //    mKeyType->setSelectedItemIndex(mProcessor.getCustomParameters()->keyType.load());
     mKeyTypeAttachment = std::make_unique<juce::ComboBoxParameterAttachment>(
         *mProcessor.getParams()[ParameterHelpers::KeyTypeId], *mKeyType);
     addAndMakeVisible(*mKeyType);
@@ -42,11 +33,6 @@ NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
     mSnapMode->setEditableText(false);
     mSnapMode->setJustificationType(juce::Justification::centredLeft);
     mSnapMode->addItemList(NoteUtils::SnapModesStr, 1);
-    //    mSnapMode->onChange = [this]() {
-    //        mProcessor.getCustomParameters()->keySnapMode.store(mSnapMode->getSelectedItemIndex());
-    //        _valueChanged();
-    //    };
-    //    mSnapMode->setSelectedItemIndex(mProcessor.getCustomParameters()->keySnapMode.load());
     mSnapModeAttachment = std::make_unique<juce::ComboBoxParameterAttachment>(
         *mProcessor.getParams()[ParameterHelpers::KeySnapModeId], *mSnapMode);
     addAndMakeVisible(*mSnapMode);
@@ -116,17 +102,3 @@ void NoteOptionsView::parameterChanged(const String& parameterID, float newValue
         }
     });
 }
-
-//void NoteOptionsView::_valueChanged()
-//{
-//    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-//        mProcessor.updatePostProcessing();
-//
-//        auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
-//
-//        if (main_view)
-//            main_view->repaintPianoRoll();
-//        else
-//            jassertfalse;
-//    }
-//}

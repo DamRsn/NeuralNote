@@ -76,19 +76,6 @@ void RhythmOptionsView::paint(Graphics& g)
         "FORCE", juce::Rectangle<int>(19, mQuantizationForceSlider->getY(), 37, 17), juce::Justification::centredLeft);
 }
 
-//void RhythmOptionsView::_valueChanged()
-//{
-//    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-//        mProcessor.updateTranscription();
-//        auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
-//
-//        if (main_view)
-//            main_view->repaintPianoRoll();
-//        else
-//            jassertfalse;
-//    }
-//}
-
 void RhythmOptionsView::parameterChanged(const String& parameterID, float newValue)
 {
     mProcessor.mAPVTS.getRawParameterValue(parameterID)->store(newValue);

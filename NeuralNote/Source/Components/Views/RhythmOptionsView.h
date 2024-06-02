@@ -19,7 +19,7 @@ class RhythmOptionsView
     , public AudioProcessorValueTreeState::Listener
 {
 public:
-    RhythmOptionsView(NeuralNoteAudioProcessor& processor);
+    explicit RhythmOptionsView(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 
