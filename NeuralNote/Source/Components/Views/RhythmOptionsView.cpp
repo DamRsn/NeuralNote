@@ -12,11 +12,6 @@ RhythmOptionsView::RhythmOptionsView(NeuralNoteAudioProcessor& processor)
     mTimeDivisionDropdown->setEditableText(false);
     mTimeDivisionDropdown->setJustificationType(juce::Justification::centredRight);
     mTimeDivisionDropdown->addItemList(RhythmUtils::TimeDivisionsStr, 1);
-    //    mTimeDivisionDropdown->setSelectedItemIndex(mProcessor.getParameterValue(ParameterHelpers::TimeDivisionId));
-    //    mTimeDivisionDropdown->onChange = [this]() {
-    //        mProcessor.getCustomParameters()->rhythmTimeDivision.store(mTimeDivisionDropdown->getSelectedItemIndex());
-    //        _valueChanged();
-    //    };
     mTimeDivisionAttachment = std::make_unique<juce::ComboBoxParameterAttachment>(
         *mProcessor.getParams()[ParameterHelpers::TimeDivisionId], *mTimeDivisionDropdown);
     addAndMakeVisible(*mTimeDivisionDropdown);

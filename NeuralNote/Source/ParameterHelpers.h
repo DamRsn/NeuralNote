@@ -127,7 +127,7 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
             return std::make_unique<AudioParameterInt>(
                 toJuceParameterID(id), toName(id), MIN_MIDI_NOTE + 12, MAX_MIDI_NOTE, MAX_MIDI_NOTE);
         case KeyRootNoteId:
-            return std::make_unique<AudioParameterInt>(toJuceParameterID(id), toName(id), 0, 11, 0);
+            return std::make_unique<AudioParameterInt>(toJuceParameterID(id), toName(id), 0, 11, 3);
         case KeyTypeId:
             return std::make_unique<AudioParameterChoice>(
                 toJuceParameterID(id), toName(id), NoteUtils::ScaleTypesStr, 0);
@@ -136,9 +136,9 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
                 toJuceParameterID(id), toName(id), NoteUtils::SnapModesStr, 0);
         case TimeDivisionId:
             return std::make_unique<AudioParameterChoice>(
-                toJuceParameterID(id), toName(id), RhythmUtils::TimeDivisionsStr, 0);
+                toJuceParameterID(id), toName(id), RhythmUtils::TimeDivisionsStr, 5);
         case QuantizationForceId:
-            return std::make_unique<AudioParameterFloat>(toJuceParameterID(id), toName(id), 0.0f, 1.0f, 0.5f);
+            return std::make_unique<AudioParameterFloat>(toJuceParameterID(id), toName(id), 0.0f, 1.0f, 0.f);
 
         default:
             jassertfalse;

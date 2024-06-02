@@ -125,12 +125,6 @@ const std::vector<Notes::Event>& NeuralNoteAudioProcessor::getNoteEventVector() 
     return mPostProcessedNotes;
 }
 
-//NeuralNoteAudioProcessor::Parameters* NeuralNoteAudioProcessor::getCustomParameters()
-//{
-//    //    return &mParameters;
-//    return nullptr;
-//}
-
 const juce::Optional<juce::AudioPlayHead::PositionInfo>& NeuralNoteAudioProcessor::getPlayheadInfoOnRecordStart()
 {
     return mPlayheadInfoStartRecord;

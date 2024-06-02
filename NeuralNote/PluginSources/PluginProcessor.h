@@ -18,17 +18,6 @@ enum State { EmptyAudioAndMidiRegions = 0, Recording, Processing, PopulatedAudio
 class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
 {
 public:
-    struct Parameters {
-        std::atomic<int> minMidiNote = MIN_MIDI_NOTE;
-        std::atomic<int> maxMidiNote = MAX_MIDI_NOTE;
-        std::atomic<int> keyRootNote = NoteUtils::C;
-        std::atomic<int> keyType = NoteUtils::Chromatic;
-        std::atomic<int> keySnapMode = 1;
-
-        std::atomic<int> rhythmTimeDivision = RhythmUtils::_1_8;
-        std::atomic<float> rhythmQuantizationForce = 0.0f;
-    };
-
     NeuralNoteAudioProcessor();
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -58,8 +47,6 @@ public:
     void updateTranscription();
 
     void updatePostProcessing();
-
-    //    Parameters* getCustomParameters();
 
     const juce::Optional<juce::AudioPlayHead::PositionInfo>&
         getPlayheadInfoOnRecordStart(); // TODO: Add to timeQuantizeManager
@@ -99,7 +86,6 @@ private:
     std::unique_ptr<SourceAudioManager> mSourceAudioManager;
     std::unique_ptr<Player> mPlayer;
 
-    //    Parameters mParameters;
     bool mWasRecording = false;
 
     std::atomic<double> mCurrentTempo = -1.0;
