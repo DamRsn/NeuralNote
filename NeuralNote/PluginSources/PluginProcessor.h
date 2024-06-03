@@ -14,6 +14,9 @@
 #include "ParameterHelpers.h"
 #include "TranscriptionManager.h"
 
+class NeuralNoteMainView;
+class NeuralNoteEditor;
+
 enum State { EmptyAudioAndMidiRegions = 0, Recording, Processing, PopulatedAudioAndMidiRegions };
 
 class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
@@ -44,10 +47,6 @@ public:
     const juce::Optional<juce::AudioPlayHead::PositionInfo>&
         getPlayheadInfoOnRecordStart(); // TODO: Add to timeQuantizeManager
 
-    // Value tree state to pass automatable parameters from UI
-    juce::AudioProcessorValueTreeState mAPVTS;
-    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-
     // TODO: TimeQuantizeManager
     bool canQuantize() const;
 
@@ -67,7 +66,12 @@ public:
 
     AudioProcessorValueTreeState& getAPVTS() { return mAPVTS; }
 
+    NeuralNoteMainView* getNeuralNoteMainView() const;
+
 private:
+    // Value tree state to pass automatable parameters from UI
+    juce::AudioProcessorValueTreeState mAPVTS;
+
     std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams> mParams {};
 
     std::atomic<State> mState = EmptyAudioAndMidiRegions;

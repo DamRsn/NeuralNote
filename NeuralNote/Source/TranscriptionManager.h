@@ -12,6 +12,8 @@
 #include "ParameterHelpers.h"
 
 class NeuralNoteAudioProcessor;
+class NeuralNoteMainView;
+class NeuralNoteEditor;
 
 class TranscriptionManager
     : public juce::Timer
@@ -47,6 +49,8 @@ private:
 
     void _updatePostProcessing();
 
+    void _repaintPianoRoll();
+
     NeuralNoteAudioProcessor* mProcessor;
 
     BasicPitch mBasicPitch;
@@ -58,6 +62,7 @@ private:
     std::atomic<bool> mShouldRunNewTranscription = false;
     std::atomic<bool> mShouldUpdateTranscription = false;
     std::atomic<bool> mShouldUpdatePostProcessing = false;
+    std::atomic<bool> mShouldRepaintPianoRoll = false;
 
     juce::ThreadPool mThreadPool;
     std::function<void()> mJobLambda;

@@ -2,29 +2,16 @@
 #include "PluginEditor.h"
 
 NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
-    : mAPVTS(*this, nullptr, "PARAMETERS", createParameterLayout())
-
+    : mAPVTS(*this, nullptr, "PARAMETERS", ParameterHelpers::createParameterLayout())
 {
     for (size_t i = 0; i < mParams.size(); i++) {
         auto pid = static_cast<ParameterHelpers::ParamIdEnum>(i);
-        mParams[i] = mAPVTS.getParameter(ParameterHelpers::toIdStr(pid));
+        mParams[i] = mAPVTS.getParameter(ParameterHelpers::getIdStr(pid));
     }
 
     mSourceAudioManager = std::make_unique<SourceAudioManager>(this);
     mPlayer = std::make_unique<Player>(this);
     mTranscriptionManager = std::make_unique<TranscriptionManager>(this);
-}
-
-AudioProcessorValueTreeState::ParameterLayout NeuralNoteAudioProcessor::createParameterLayout()
-{
-    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
-
-    for (size_t i = 0; i < ParameterHelpers::TotalNumParams; i++) {
-        auto pid = static_cast<ParameterHelpers::ParamIdEnum>(i);
-        params.push_back(ParameterHelpers::getRangedAudioParamForID(pid));
-    }
-
-    return {params.begin(), params.end()};
 }
 
 void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
@@ -157,6 +144,17 @@ std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams>& NeuralNoteA
 float NeuralNoteAudioProcessor::getParameterValue(ParameterHelpers::ParamIdEnum inParamId) const
 {
     return ParameterHelpers::getUnmappedParamValue(mParams[inParamId]);
+}
+
+NeuralNoteMainView* NeuralNoteAudioProcessor::getNeuralNoteMainView() const
+{
+    auto* editor = dynamic_cast<NeuralNoteEditor*>(getActiveEditor());
+
+    if (editor != nullptr) {
+        return editor->getMainView();
+    }
+
+    return nullptr;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

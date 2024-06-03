@@ -120,7 +120,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mMuteButton->setColour(juce::TextButton::buttonOnColourId, BLACK);
 
     mMuteButtonAttachment = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
-        mProcessor.mAPVTS, ParameterHelpers::toIdStr(ParameterHelpers::MuteId), *mMuteButton);
+        mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::MuteId), *mMuteButton);
     addAndMakeVisible(*mMuteButton);
 
     addAndMakeVisible(mVisualizationPanel);

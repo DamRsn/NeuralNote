@@ -4,6 +4,7 @@
 
 #include "TranscriptionManager.h"
 #include "PluginProcessor.h"
+#include "NeuralNoteMainView.h"
 
 TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
@@ -11,18 +12,38 @@ TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor
 {
     mJobLambda = [this]() { _runModel(); };
 
-    startTimerHz(30);
+    auto& apvts = mProcessor->getAPVTS();
+
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::NoteSensibilityId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::SplitSensibilityId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MinimumNoteDurationId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::PitchBendModeId), this);
+
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::KeyRootNoteId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::KeyTypeId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::KeySnapModeId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MinMidiNoteId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MaxMidiNoteId), this);
+
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::TimeDivisionId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::QuantizationForceId), this);
+
+    startTimerHz(15);
 }
 
 void TranscriptionManager::timerCallback()
 {
-    // TODO: should repaint pianoRoll here somehow
     if (mShouldRunNewTranscription) {
         launchTranscribeJob();
+        _repaintPianoRoll();
     } else if (mShouldUpdateTranscription) {
         _updateTranscription();
+        _repaintPianoRoll();
     } else if (mShouldUpdatePostProcessing) {
         _updatePostProcessing();
+        _repaintPianoRoll();
+    } else if (mShouldRepaintPianoRoll) {
+        _repaintPianoRoll();
     }
 }
 
@@ -36,18 +57,24 @@ void TranscriptionManager::setLauchNewTranscription()
 void TranscriptionManager::parameterChanged(const String& parameterID, float newValue)
 {
     if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        if (parameterID == ParameterHelpers::toIdStr(ParameterHelpers::NoteSensibilityId)
-            || parameterID == ParameterHelpers::toIdStr(ParameterHelpers::SplitSensibilityId)
-            || parameterID == ParameterHelpers::toIdStr(ParameterHelpers::MinimumNoteDurationId)) {
+        if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::NoteSensibilityId)
+            || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::SplitSensibilityId)
+            || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::MinimumNoteDurationId)) {
+            mProcessor->getAPVTS().getRawParameterValue(parameterID)->store(newValue);
             mShouldUpdateTranscription = true;
-        } else if (parameterID == ParameterHelpers::toIdStr(ParameterHelpers::KeyRootNoteId)
-                   || parameterID == ParameterHelpers::toIdStr(ParameterHelpers::KeyTypeId)
-                   || parameterID == ParameterHelpers::toIdStr(ParameterHelpers::KeySnapModeId)
-                   || parameterID == ParameterHelpers::toIdStr(ParameterHelpers::MinMidiNoteId)
-                   || parameterID == ParameterHelpers::toIdStr(ParameterHelpers::MaxMidiNoteId)
-                   || parameterID == ParameterHelpers::toIdStr(ParameterHelpers::TimeDivisionId)
-                   || parameterID == ParameterHelpers::toIdStr(ParameterHelpers::QuantizationForceId)) {
+
+        } else if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeyRootNoteId)
+                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeyTypeId)
+                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeySnapModeId)
+                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::MinMidiNoteId)
+                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::MaxMidiNoteId)
+                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::TimeDivisionId)
+                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::QuantizationForceId)) {
+            mProcessor->getAPVTS().getRawParameterValue(parameterID)->store(newValue);
             mShouldUpdatePostProcessing = true;
+        } else if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::PitchBendModeId)) {
+            mProcessor->getAPVTS().getRawParameterValue(parameterID)->store(newValue);
+            mShouldRepaintPianoRoll = true;
         }
     }
 }
@@ -186,4 +213,15 @@ void TranscriptionManager::setMidiFileTempo(double inMidiFileTempo)
 double TranscriptionManager::getMidiFileTempo() const
 {
     return mMidiFileTempo;
+}
+
+void TranscriptionManager::_repaintPianoRoll()
+{
+    auto* main_view = mProcessor->getNeuralNoteMainView();
+    
+    if (main_view) {
+        main_view->repaintPianoRoll();
+    }
+
+    mShouldRepaintPianoRoll = false;
 }

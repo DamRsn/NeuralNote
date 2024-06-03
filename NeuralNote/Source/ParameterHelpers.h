@@ -84,14 +84,14 @@ inline String toName(ParamIdEnum id)
     }
 }
 
-inline String toIdStr(ParamIdEnum id)
+inline const String& getIdStr(ParamIdEnum id)
 {
     return ParamIdStr[id];
 }
 
 inline ParameterID toJuceParameterID(ParamIdEnum id)
 {
-    return {toIdStr(id), versionHint};
+    return {getIdStr(id), versionHint};
 }
 
 inline float getUnmappedParamValue(RangedAudioParameter* inParam)
@@ -145,6 +145,19 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
             return nullptr;
     }
 }
+
+inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    for (size_t i = 0; i < TotalNumParams; i++) {
+        auto pid = static_cast<ParamIdEnum>(i);
+        params.push_back(getRangedAudioParamForID(pid));
+    }
+
+    return {params.begin(), params.end()};
+}
+
 } // namespace ParameterHelpers
 
 #endif //ParameterHelpers_h

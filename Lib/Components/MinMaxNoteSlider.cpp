@@ -14,8 +14,8 @@ MinMaxNoteSlider::MinMaxNoteSlider(AudioProcessorValueTreeState& inAPVTS,
     mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     mAttachment = std::make_unique<TwoValueAttachment>(mSlider, inMinValue, inMaxValue);
 
-    inAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::MinMidiNoteId), this);
-    inAPVTS.addParameterListener(ParameterHelpers::toIdStr(ParameterHelpers::MaxMidiNoteId), this);
+    inAPVTS.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MinMidiNoteId), this);
+    inAPVTS.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MaxMidiNoteId), this);
 
     addAndMakeVisible(mSlider);
 }
