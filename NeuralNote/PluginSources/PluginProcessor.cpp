@@ -65,10 +65,60 @@ juce::AudioProcessorEditor* NeuralNoteAudioProcessor::createEditor()
 
 void NeuralNoteAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
+    auto state_tree = ValueTree("NeuralNoteState");
+
+    state_tree.setProperty("Version", ProjectInfo::versionString, nullptr);
+
+    // PARAMETERS
+    auto apvts = mAPVTS.copyState();
+    jassert(apvts.getType() == Identifier("PARAMETERS"));
+
+    state_tree.appendChild(apvts, nullptr);
+
+    std::unique_ptr<XmlElement> xml(state_tree.createXml());
+
+    if (xml != nullptr) {
+        copyXmlToBinary(*xml, destData);
+    }
 }
 
 void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
+    // Create an XmlElement from the binary data
+    std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if (xmlState != nullptr) {
+        // Convert XmlElement to ValueTree
+        ValueTree stateTree = ValueTree::fromXml(*xmlState);
+
+        if (stateTree.isValid() && stateTree.hasType(Identifier("NeuralNoteState"))) {
+            // Extract the parameters ValueTree
+            auto apvtsState = stateTree.getChildWithName(Identifier("PARAMETERS"));
+
+            if (apvtsState.isValid()) {
+                // Iterate through the properties in the loaded state
+                for (int i = 0; i < apvtsState.getNumChildren(); ++i) {
+                    auto child = apvtsState.getChild(i);
+
+                    if (child.isValid() && child.hasProperty("id") && child.hasProperty("value")) {
+                        auto param_id = child.getProperty("id").toString();
+
+                        int index = ParameterHelpers::ParamIdStr.indexOf(param_id);
+
+                        if (index >= 0) {
+                            auto* param = mParams[index];
+                            auto value = jlimit(param->getNormalisableRange().start,
+                                                param->getNormalisableRange().end,
+                                                static_cast<float>(child.getProperty("value")));
+
+                            auto norm_value = param->getNormalisableRange().convertTo0to1(value);
+                            param->setValueNotifyingHost(norm_value);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 void NeuralNoteAudioProcessor::clear()

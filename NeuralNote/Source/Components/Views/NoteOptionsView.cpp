@@ -8,8 +8,7 @@
 NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
 {
-    mMinMaxNoteSlider = std::make_unique<MinMaxNoteSlider>(processor.getAPVTS(),
-                                                           *mProcessor.getParams()[ParameterHelpers::MinMidiNoteId],
+    mMinMaxNoteSlider = std::make_unique<MinMaxNoteSlider>(*mProcessor.getParams()[ParameterHelpers::MinMidiNoteId],
                                                            *mProcessor.getParams()[ParameterHelpers::MaxMidiNoteId]);
     addAndMakeVisible(*mMinMaxNoteSlider);
 

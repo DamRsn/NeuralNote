@@ -122,10 +122,10 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
                 toJuceParameterID(id), toName(id), NormalisableRange<float>(-36.f, 6.0f, 1.0f), 0.0f);
         case MinMidiNoteId:
             return std::make_unique<AudioParameterInt>(
-                toJuceParameterID(id), toName(id), MIN_MIDI_NOTE, MAX_MIDI_NOTE - 12, MIN_MIDI_NOTE);
+                toJuceParameterID(id), toName(id), MIN_MIDI_NOTE, MAX_MIDI_NOTE, MIN_MIDI_NOTE);
         case MaxMidiNoteId:
             return std::make_unique<AudioParameterInt>(
-                toJuceParameterID(id), toName(id), MIN_MIDI_NOTE + 12, MAX_MIDI_NOTE, MAX_MIDI_NOTE);
+                toJuceParameterID(id), toName(id), MIN_MIDI_NOTE, MAX_MIDI_NOTE, MAX_MIDI_NOTE);
         case KeyRootNoteId:
             return std::make_unique<AudioParameterInt>(toJuceParameterID(id), toName(id), 0, 11, 3);
         case KeyTypeId:

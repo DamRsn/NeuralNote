@@ -11,16 +11,9 @@
 #include "UIDefines.h"
 #include "ParameterHelpers.h"
 
-struct TwoValueAttachment {
-    juce::Slider& slider;
-    juce::RangedAudioParameter& minParameter;
-    juce::RangedAudioParameter& maxParameter;
-    std::unique_ptr<juce::ParameterAttachment> minAttach;
-    std::unique_ptr<juce::ParameterAttachment> maxAttach;
-
-    std::atomic<bool> minPerformingGesture = false;
-    std::atomic<bool> maxPerformingGesture = false;
-
+class TwoValueAttachment : Slider::Listener
+{
+public:
     TwoValueAttachment(juce::Slider& s, juce::RangedAudioParameter& min, juce::RangedAudioParameter& max)
         : slider(s)
         , minParameter(min)
@@ -59,25 +52,41 @@ struct TwoValueAttachment {
                 maxAttach->setValueAsPartOfGesture((float) slider.getMaxValue());
         };
 
+        slider.addListener(this);
+
         minAttach->sendInitialUpdate();
         maxAttach->sendInitialUpdate();
     }
+
+    ~TwoValueAttachment() override { slider.removeListener(this); }
+
+private:
+    void sliderValueChanged(Slider* s) override
+    {
+        if (s == &slider) {
+            minAttach->setValueAsPartOfGesture((float) slider.getMinValue());
+            maxAttach->setValueAsPartOfGesture((float) slider.getMaxValue());
+        }
+    }
+
+    juce::Slider& slider;
+    juce::RangedAudioParameter& minParameter;
+    juce::RangedAudioParameter& maxParameter;
+    std::unique_ptr<juce::ParameterAttachment> minAttach;
+    std::unique_ptr<juce::ParameterAttachment> maxAttach;
+
+    std::atomic<bool> minPerformingGesture = false;
+    std::atomic<bool> maxPerformingGesture = false;
 };
 
-class MinMaxNoteSlider
-    : public Component
-    , public AudioProcessorValueTreeState::Listener
+class MinMaxNoteSlider : public Component
 {
 public:
-    MinMaxNoteSlider(AudioProcessorValueTreeState& inAPVTS,
-                     RangedAudioParameter& inMinValue,
-                     RangedAudioParameter& inMaxValue);
+    MinMaxNoteSlider(RangedAudioParameter& inMinValue, RangedAudioParameter& inMaxValue);
 
     void resized() override;
 
     void paint(Graphics& g) override;
-
-    void parameterChanged(const String& parameterID, float newValue) override;
 
 private:
     juce::Slider mSlider;

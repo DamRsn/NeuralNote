@@ -116,14 +116,4 @@ bool ProcessorBase::isBusesLayoutSupported(const juce::AudioProcessor::BusesLayo
     return true;
 }
 
-void ProcessorBase::getStateInformation(juce::MemoryBlock& destData)
-{
-    juce::ignoreUnused(destData);
-}
-
-void ProcessorBase::setStateInformation(const void* data, int sizeInBytes)
-{
-    juce::ignoreUnused(data, sizeInBytes);
-}
-
 } // namespace PluginHelpers
