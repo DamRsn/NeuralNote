@@ -46,16 +46,18 @@ public:
         };
 
         slider.onValueChange = [this] {
-            if (slider.getThumbBeingDragged() == 1)
-                minAttach->setValueAsPartOfGesture((float) slider.getMinValue());
-            else if (slider.getThumbBeingDragged() == 2)
-                maxAttach->setValueAsPartOfGesture((float) slider.getMaxValue());
+            if (slider.getThumbBeingDragged() == 1) {
+                minAttach->setValueAsPartOfGesture(static_cast<float>(slider.getMinValue()));
+            } else if (slider.getThumbBeingDragged() == 2) {
+                maxAttach->setValueAsPartOfGesture(static_cast<float>(slider.getMaxValue()));
+            }
         };
 
         slider.addListener(this);
 
-        minAttach->sendInitialUpdate();
+        // Important to set the max first, as the min value must be less than the max value
         maxAttach->sendInitialUpdate();
+        minAttach->sendInitialUpdate();
     }
 
     ~TwoValueAttachment() override { slider.removeListener(this); }
