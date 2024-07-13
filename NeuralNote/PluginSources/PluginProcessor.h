@@ -13,6 +13,7 @@
 #include "SourceAudioManager.h"
 #include "ParameterHelpers.h"
 #include "TranscriptionManager.h"
+#include "NnId.h"
 
 class NeuralNoteMainView;
 class NeuralNoteEditor;

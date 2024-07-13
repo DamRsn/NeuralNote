@@ -8,6 +8,7 @@
 #include <JuceHeader.h>
 #include "NoteUtils.h"
 #include "RhythmUtils.h"
+#include "NnId.h"
 
 namespace ParameterHelpers
 {
@@ -158,6 +159,32 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     return {params.begin(), params.end()};
 }
 
+inline void updateParametersFromState(const juce::ValueTree& inParameterTree,
+                                      std::array<RangedAudioParameter*, TotalNumParams>& inParams)
+{
+    if (inParameterTree.isValid()) {
+        // Iterate through the properties in the loaded state
+        for (int i = 0; i < inParameterTree.getNumChildren(); ++i) {
+            auto child = inParameterTree.getChild(i);
+
+            if (child.isValid() && child.hasProperty(NnId::IdId) && child.hasProperty(NnId::ValueId)) {
+                auto param_id = child.getProperty(NnId::IdId).toString();
+
+                int index = ParameterHelpers::ParamIdStr.indexOf(param_id);
+
+                if (index >= 0) {
+                    auto* param = inParams[index];
+                    auto value = jlimit(param->getNormalisableRange().start,
+                                        param->getNormalisableRange().end,
+                                        static_cast<float>(child.getProperty(NnId::ValueId)));
+
+                    auto norm_value = param->getNormalisableRange().convertTo0to1(value);
+                    param->setValueNotifyingHost(norm_value);
+                }
+            }
+        }
+    }
+}
 } // namespace ParameterHelpers
 
 #endif //ParameterHelpers_h

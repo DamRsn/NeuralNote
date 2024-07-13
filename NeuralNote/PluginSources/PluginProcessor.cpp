@@ -2,7 +2,7 @@
 #include "PluginEditor.h"
 
 NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
-    : mAPVTS(*this, nullptr, "PARAMETERS", ParameterHelpers::createParameterLayout())
+    : mAPVTS(*this, nullptr, NnId::ParametersId, ParameterHelpers::createParameterLayout())
 {
     for (size_t i = 0; i < mParams.size(); i++) {
         auto pid = static_cast<ParameterHelpers::ParamIdEnum>(i);
@@ -65,13 +65,13 @@ juce::AudioProcessorEditor* NeuralNoteAudioProcessor::createEditor()
 
 void NeuralNoteAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    auto state_tree = ValueTree("NeuralNoteState");
+    auto state_tree = ValueTree(NnId::NeuralNoteStateId);
 
-    state_tree.setProperty("Version", ProjectInfo::versionString, nullptr);
+    state_tree.setProperty(NnId::NeuralNoteVersionId, ProjectInfo::versionString, nullptr);
 
     // PARAMETERS
     auto apvts = mAPVTS.copyState();
-    jassert(apvts.getType() == Identifier("PARAMETERS"));
+    jassert(apvts.getType() == NnId::ParametersId);
 
     state_tree.appendChild(apvts, nullptr);
 
@@ -89,34 +89,16 @@ void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInB
 
     if (xmlState != nullptr) {
         // Convert XmlElement to ValueTree
-        ValueTree stateTree = ValueTree::fromXml(*xmlState);
+        ValueTree full_state_tree = ValueTree::fromXml(*xmlState);
 
-        if (stateTree.isValid() && stateTree.hasType(Identifier("NeuralNoteState"))) {
+        if (full_state_tree.isValid() && full_state_tree.hasType(NnId::NeuralNoteStateId)) {
             // Extract the parameters ValueTree
-            auto apvtsState = stateTree.getChildWithName(Identifier("PARAMETERS"));
+            auto parameter_tree = full_state_tree.getChildWithName(NnId::ParametersId);
 
-            if (apvtsState.isValid()) {
-                // Iterate through the properties in the loaded state
-                for (int i = 0; i < apvtsState.getNumChildren(); ++i) {
-                    auto child = apvtsState.getChild(i);
+            ParameterHelpers::updateParametersFromState(parameter_tree, mParams);
 
-                    if (child.isValid() && child.hasProperty("id") && child.hasProperty("value")) {
-                        auto param_id = child.getProperty("id").toString();
-
-                        int index = ParameterHelpers::ParamIdStr.indexOf(param_id);
-
-                        if (index >= 0) {
-                            auto* param = mParams[index];
-                            auto value = jlimit(param->getNormalisableRange().start,
-                                                param->getNormalisableRange().end,
-                                                static_cast<float>(child.getProperty("value")));
-
-                            auto norm_value = param->getNormalisableRange().convertTo0to1(value);
-                            param->setValueNotifyingHost(norm_value);
-                        }
-                    }
-                }
-            }
+        } else {
+            jassertfalse;
         }
     }
 }
