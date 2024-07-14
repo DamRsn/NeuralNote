@@ -179,16 +179,6 @@ void NeuralNoteMainView::timerCallback()
         mPrevState = processor_state;
         updateEnablements();
     }
-
-    //    // To avoid getting stuck in processing mode if processBlock is not called anymore and recording is over (can happen in some DAWs).
-    //    if (mProcessor.getState() == Processing && !mProcessor.isJobRunningOrQueued()) {
-    //        mNumCallbacksStuckInProcessingState += 1;
-    //        if (mNumCallbacksStuckInProcessingState >= 10) {
-    //            mProcessor.launchTranscribeJob();
-    //        }
-    //    } else {
-    //        mNumCallbacksStuckInProcessingState = 0;
-    //    }
 }
 
 void NeuralNoteMainView::repaintPianoRoll()
