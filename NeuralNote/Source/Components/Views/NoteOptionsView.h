@@ -19,22 +19,25 @@ class NoteOptionsView : public Component
 
 {
 public:
-    NoteOptionsView(NeuralNoteAudioProcessor& processor);
+    explicit NoteOptionsView(NeuralNoteAudioProcessor& processor);
 
     void resized() override;
 
     void paint(Graphics& g) override;
 
 private:
-    void _valueChanged();
-
     NeuralNoteAudioProcessor& mProcessor;
 
     std::unique_ptr<MinMaxNoteSlider> mMinMaxNoteSlider;
 
     std::unique_ptr<juce::ComboBox> mKeyDropdown;
+    std::unique_ptr<juce::ComboBoxParameterAttachment> mKeyAttachment;
+
     std::unique_ptr<juce::ComboBox> mKeyType;
+    std::unique_ptr<juce::ComboBoxParameterAttachment> mKeyTypeAttachment;
+
     std::unique_ptr<juce::ComboBox> mSnapMode;
+    std::unique_ptr<juce::ComboBoxParameterAttachment> mSnapModeAttachment;
 };
 
 #endif // NoteOptionsView_h

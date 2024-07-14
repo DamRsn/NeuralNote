@@ -18,9 +18,6 @@ struct ProcessorBase : juce::AudioProcessor {
 
     using AudioProcessor::processBlock;
 
-    void getStateInformation(juce::MemoryBlock& destData) override;
-    void setStateInformation(const void* data, int sizeInBytes) override;
-
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
 

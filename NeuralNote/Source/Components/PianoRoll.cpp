@@ -54,7 +54,7 @@ void PianoRoll::paint(Graphics& g)
         }
 
         // Draw notes
-        for (auto& note_event: mProcessor->getNoteEventVector()) {
+        for (auto& note_event: mProcessor->getTranscriptionManager()->getNoteEventVector()) {
             auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(note_event.pitch);
             auto note_y_start = note_y_start_n_height.first;
             auto note_height = note_y_start_n_height.second;
@@ -71,7 +71,9 @@ void PianoRoll::paint(Graphics& g)
             g.drawRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height, 0.5);
 
             // Draw pitch bend
-            if (mProcessor->getCustomParameters()->pitchBendMode == SinglePitchBend) {
+            if (static_cast<PitchBendModes>(
+                    (int) std::round(mProcessor->getParameterValue(ParameterHelpers::PitchBendModeId)))
+                == SinglePitchBend) {
                 const auto& bends = note_event.bends;
 
                 if (!note_event.bends.empty()) {

@@ -4,24 +4,15 @@
 
 #include "MinMaxNoteSlider.h"
 
-MinMaxNoteSlider::MinMaxNoteSlider(std::atomic<int>& inAttachedMinValue,
-                                   std::atomic<int>& inAttachedMaxValue,
-                                   const std::function<void()>& inOnValueChange)
-    : mAttachedMinValue(inAttachedMinValue)
-    , mAttachedMaxValue(inAttachedMaxValue)
+MinMaxNoteSlider::MinMaxNoteSlider(RangedAudioParameter& inMinValue, RangedAudioParameter& inMaxValue)
+
 {
-    mOnValueChanged = inOnValueChange;
     mSlider.setSliderStyle(juce::Slider::TwoValueHorizontal);
     mSlider.setRange(MIN_MIDI_NOTE, MAX_MIDI_NOTE, 1);
     mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-    mSlider.onValueChange = [this]() {
-        mAttachedMinValue.store(int(mSlider.getMinValue()));
-        mAttachedMaxValue.store(int(mSlider.getMaxValue()));
-        mOnValueChanged();
-        repaint();
-    };
+    mAttachment = std::make_unique<TwoValueAttachment>(mSlider, inMinValue, inMaxValue);
 
-    mSlider.setMinAndMaxValues(mAttachedMinValue.load(), mAttachedMaxValue.load());
+    mSlider.onValueChange = [this] { repaint(); };
 
     addAndMakeVisible(mSlider);
 }

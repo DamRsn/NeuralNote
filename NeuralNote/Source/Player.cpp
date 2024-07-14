@@ -33,8 +33,10 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
 
     int playhead_index = (int) std::round(mPlayheadTime * mSampleRate);
 
-    _setGains(mProcessor->mTree.getRawParameterValue("AUDIO_LEVEL_DB")->load(),
-              mProcessor->mTree.getRawParameterValue("MIDI_LEVEL_DB")->load());
+    float audio_gain_db = mProcessor->getParameterValue(ParameterHelpers::AudioPlayerGainId);
+    float synth_gain_db = mProcessor->getParameterValue(ParameterHelpers::MidiPlayerGainId);
+
+    _setGains(audio_gain_db, synth_gain_db);
 
     bool is_playing = mIsPlaying.load();
     mInternalBuffer.clear();

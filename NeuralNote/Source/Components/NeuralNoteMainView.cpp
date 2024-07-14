@@ -119,8 +119,8 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mMuteButton->setColour(juce::TextButton::buttonColourId, juce::Colours::white.withAlpha(0.2f));
     mMuteButton->setColour(juce::TextButton::buttonOnColourId, BLACK);
 
-    mMuteButtonAttachment =
-        std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(mProcessor.mTree, "MUTE", *mMuteButton);
+    mMuteButtonAttachment = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
+        mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::MuteId), *mMuteButton);
     addAndMakeVisible(*mMuteButton);
 
     addAndMakeVisible(mVisualizationPanel);
@@ -178,16 +178,6 @@ void NeuralNoteMainView::timerCallback()
     if (mPrevState != processor_state) {
         mPrevState = processor_state;
         updateEnablements();
-    }
-
-    // To avoid getting stuck in processing mode if processBlock is not called anymore and recording is over (can happen in some DAWs).
-    if (mProcessor.getState() == Processing && !mProcessor.isJobRunningOrQueued()) {
-        mNumCallbacksStuckInProcessingState += 1;
-        if (mNumCallbacksStuckInProcessingState >= 10) {
-            mProcessor.launchTranscribeJob();
-        }
-    } else {
-        mNumCallbacksStuckInProcessingState = 0;
     }
 }
 

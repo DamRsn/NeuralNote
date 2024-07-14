@@ -8,46 +8,25 @@
 TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
 {
-    mNoteSensibility = std::make_unique<Knob>(
-        "NOTE SENSIBILITY", 0.05, 0.95, 0.01, 0.7, false, mProcessor.getCustomParameters()->noteSensibility, [this]() {
-            _valueChanged();
-        });
-
+    mNoteSensibility =
+        std::make_unique<Knob>(*mProcessor.getParams()[ParameterHelpers::NoteSensibilityId], "NOTE SENSIBILITY", false);
     addAndMakeVisible(*mNoteSensibility);
 
-    mSplitSensibility = std::make_unique<Knob>("SPLIT SENSIBILITY",
-                                               0.05,
-                                               0.95,
-                                               0.01,
-                                               0.5,
-                                               false,
-                                               mProcessor.getCustomParameters()->splitSensibility,
-                                               [this]() { _valueChanged(); });
-
+    mSplitSensibility = std::make_unique<Knob>(
+        *mProcessor.getParams()[ParameterHelpers::SplitSensibilityId], "SPLIT SENSIBILITY", false);
     addAndMakeVisible(*mSplitSensibility);
 
     mMinNoteDuration = std::make_unique<Knob>(
-        "MIN NOTE DURATION",
-        35,
-        580,
-        1,
-        125,
-        false,
-        mProcessor.getCustomParameters()->minNoteDurationMs,
-        [this]() { _valueChanged(); },
-        " ms");
-
+        *mProcessor.getParams()[ParameterHelpers::MinimumNoteDurationId], "MIN NOTE DURATION", false, " ms");
     addAndMakeVisible(*mMinNoteDuration);
 
     mPitchBendDropDown = std::make_unique<juce::ComboBox>("PITCH BEND");
     mPitchBendDropDown->setEditableText(false);
     mPitchBendDropDown->setJustificationType(juce::Justification::centredLeft);
     mPitchBendDropDown->addItemList({"No Pitch Bend", "Single Pitch Bend"}, 1);
-    mPitchBendDropDown->setSelectedItemIndex(mProcessor.getCustomParameters()->pitchBendMode.load());
-    mPitchBendDropDown->onChange = [this]() {
-        mProcessor.getCustomParameters()->pitchBendMode.store(mPitchBendDropDown->getSelectedItemIndex());
-        _valueChanged();
-    };
+    mPitchBendDropDownParameterAttachment = std::make_unique<ComboBoxParameterAttachment>(
+        *mProcessor.getParams()[ParameterHelpers::PitchBendModeId], *mPitchBendDropDown);
+
     addAndMakeVisible(*mPitchBendDropDown);
 }
 
@@ -85,17 +64,4 @@ void TranscriptionOptionsView::paint(Graphics& g)
     g.setFont(LABEL_FONT);
     g.drawText(
         "PITCH BEND", juce::Rectangle<int>(19, mPitchBendDropDown->getY(), 67, 17), juce::Justification::centredLeft);
-}
-
-void TranscriptionOptionsView::_valueChanged()
-{
-    if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-        mProcessor.updateTranscription();
-        auto* main_view = dynamic_cast<NeuralNoteMainView*>(getParentComponent());
-
-        if (main_view)
-            main_view->repaintPianoRoll();
-        else
-            jassertfalse;
-    }
 }

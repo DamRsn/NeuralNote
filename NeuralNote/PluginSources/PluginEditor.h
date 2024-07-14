@@ -15,6 +15,8 @@ public:
 
     void resized() override;
 
+    NeuralNoteMainView* getMainView() const { return mMainView.get(); }
+
 private:
     std::unique_ptr<NeuralNoteMainView> mMainView;
 

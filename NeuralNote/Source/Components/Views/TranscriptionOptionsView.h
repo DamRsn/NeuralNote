@@ -23,8 +23,6 @@ public:
     void paint(Graphics& g) override;
 
 private:
-    void _valueChanged();
-
     NeuralNoteAudioProcessor& mProcessor;
 
     std::unique_ptr<Knob> mNoteSensibility;
@@ -32,6 +30,7 @@ private:
     std::unique_ptr<Knob> mMinNoteDuration;
 
     std::unique_ptr<juce::ComboBox> mPitchBendDropDown;
+    std::unique_ptr<juce::ComboBoxParameterAttachment> mPitchBendDropDownParameterAttachment;
 };
 
 #endif // TranscriptionOptionsView_h

@@ -4,21 +4,16 @@
 
 #include "QuantizeForceSlider.h"
 
-QuantizeForceSlider::QuantizeForceSlider(std::atomic<float>& inAttachedValue,
-                                         const std::function<void()>& inOnValueChange)
-    : mAttachedValue(inAttachedValue)
+QuantizeForceSlider::QuantizeForceSlider(RangedAudioParameter& inAttachedValue)
 {
-    mOnValueChanged = inOnValueChange;
     mSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     mSlider.setRange(0, 100, 1);
     mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-    mSlider.onValueChange = [this]() {
-        mAttachedValue.store(static_cast<float>(mSlider.getValue()) / 100.f);
-        mOnValueChanged();
-        repaint();
-    };
+    mSlider.onValueChange = [this]() { repaint(); };
 
-    mSlider.setValue(mAttachedValue.load() * 100.0f);
+    mAttachment = std::make_unique<juce::SliderParameterAttachment>(inAttachedValue, mSlider);
+
+    mSlider.onValueChange = [this]() { repaint(); };
 
     addAndMakeVisible(mSlider);
 }
@@ -33,6 +28,7 @@ void QuantizeForceSlider::paint(Graphics& g)
     g.setColour(juce::Colours::black);
     g.setFont(DROPDOWN_FONT);
 
-    g.drawText(
-        std::to_string(int(mSlider.getValue())), Rectangle<int>(133, 0, 23, 17), juce::Justification::centredRight);
+    g.drawText(std::to_string((int) std::round(mSlider.getValue() * 100.0f)),
+               Rectangle<int>(133, 0, 23, 17),
+               juce::Justification::centredRight);
 }
