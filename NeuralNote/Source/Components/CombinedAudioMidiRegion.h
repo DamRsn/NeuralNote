@@ -61,10 +61,14 @@ private:
 
     void _centerViewOnPlayhead();
 
+    bool _isFileTypeSupported(const String& filename);
+
     NeuralNoteAudioProcessor* mProcessor;
 
     juce::Viewport* mViewportPtr = nullptr;
     juce::VBlankAttachment mVBlankAttachment;
+
+    const StringArray mSupportedAudioFileExtensions;
 
     bool mShouldCenterView = false;
 

@@ -9,6 +9,7 @@ CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor* proce
     , mAudioRegion(processor, mNumPixelsPerSecond)
     , mPianoRoll(processor, keyboard, mNumPixelsPerSecond)
     , mVBlankAttachment(this, [this]() { _onVBlankCallback(); })
+    , mSupportedAudioFileExtensions(AudioUtils::getSupportedAudioFileExtensions())
 {
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
@@ -41,8 +42,7 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     ignoreUnused(y);
     mAudioRegion.setIsFileOver(false);
 
-    if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
-        || files[0].endsWith(".mp3") || files[0].endsWith(".ogg")) {
+    if (_isFileTypeSupported(files[0])) {
         bool success = mProcessor->getSourceAudioManager()->onFileDrop(files[0]);
 
         if (success) {
@@ -51,17 +51,18 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
 
         repaint();
     } else {
+        auto supported_format_string = mSupportedAudioFileExtensions.joinIntoString(", ");
+
         juce::NativeMessageBox::showMessageBoxAsync(
             juce::MessageBoxIconType::NoIcon,
             "Could not load the file.",
-            "Check your file format (Accepted formats: .wav, .aiff, .flac, .mp3, .ogg).");
+            "Check your file format (Accepted formats: " + supported_format_string + ").");
     }
 }
 
 void CombinedAudioMidiRegion::fileDragEnter(const StringArray& files, int x, int y)
 {
-    if (files[0].endsWith(".wav") || files[0].endsWith(".aiff") || files[0].endsWith(".flac")
-        || files[0].endsWith(".mp3")) {
+    if (_isFileTypeSupported(files[0])) {
         mAudioRegion.setIsFileOver(true);
     }
 
@@ -163,4 +164,12 @@ void CombinedAudioMidiRegion::_centerViewOnPlayhead()
         if (pixel_offset != prev_pixel_offset)
             mViewportPtr->setViewPosition(pixel_offset, 0);
     }
+}
+
+bool CombinedAudioMidiRegion::_isFileTypeSupported(const String& filename)
+{
+    return std::find_if(mSupportedAudioFileExtensions.begin(),
+                        mSupportedAudioFileExtensions.end(),
+                        [filename](const String& extension) { return filename.endsWith(extension); })
+           != mSupportedAudioFileExtensions.end();
 }

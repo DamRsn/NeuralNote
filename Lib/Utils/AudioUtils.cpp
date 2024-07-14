@@ -17,14 +17,10 @@ bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, doub
     }
 
     // Register different audio formats
-    AudioFormatManager audio_format_manager;
-    audio_format_manager.registerFormat(new juce::WavAudioFormat, true);
-    audio_format_manager.registerFormat(new juce::AiffAudioFormat, false);
-    audio_format_manager.registerFormat(new juce::FlacAudioFormat, false);
-    audio_format_manager.registerFormat(new juce::OggVorbisAudioFormat, false);
+    auto audio_format_manager = createAudioFormatManager();
 
     std::unique_ptr<juce::AudioFormatReader> format_reader;
-    format_reader.reset(audio_format_manager.createReaderFor(inFile));
+    format_reader.reset(audio_format_manager->createReaderFor(inFile));
 
     // Verify format reader is not null
     if (!format_reader)
@@ -42,6 +38,33 @@ bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, doub
         return false;
 
     return true;
+}
+
+StringArray getSupportedAudioFileExtensions()
+{
+    StringArray supported_extensions;
+    supported_extensions.add(".mp3");
+
+    auto audio_format_manager = createAudioFormatManager();
+    for (auto format = audio_format_manager->begin(); format != audio_format_manager->end(); ++format) {
+        StringArray file_extensions = (*format)->getFileExtensions();
+        for (auto extension: file_extensions) {
+            supported_extensions.add(extension);
+        }
+    }
+
+    return supported_extensions;
+}
+
+std::unique_ptr<AudioFormatManager> createAudioFormatManager()
+{
+    std::unique_ptr<AudioFormatManager> audio_format_manager = std::make_unique<AudioFormatManager>();
+    audio_format_manager->registerFormat(new juce::WavAudioFormat, true);
+    audio_format_manager->registerFormat(new juce::AiffAudioFormat, false);
+    audio_format_manager->registerFormat(new juce::FlacAudioFormat, false);
+    audio_format_manager->registerFormat(new juce::OggVorbisAudioFormat, false);
+
+    return std::move(audio_format_manager);
 }
 
 void resampleBuffer(const AudioBuffer<float>& inBuffer,

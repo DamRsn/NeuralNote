@@ -28,6 +28,19 @@ namespace AudioUtils
 bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, double& outSampleRate);
 
 /**
+ * @brief Get the Supported Audio File Extensions object (.wav, .aiff, .flac, .ogg, .mp3 ...)
+ * 
+ * @return StringArray containing all suported file extensions
+ */
+StringArray getSupportedAudioFileExtensions();
+
+/**
+ * Create an AudioFormatManager with all supported audio formats registered. 
+ * @return std::unique_ptr<AudioFormatManager>
+ */
+std::unique_ptr<AudioFormatManager> createAudioFormatManager();
+
+/**
  * Resample an audio buffer from source sample rate to target sample rate.
  * Filters are applied if needed to prevent any aliasing.
  * @param inBuffer Audio buffer to resample
