@@ -69,6 +69,8 @@ public:
 
     NeuralNoteMainView* getNeuralNoteMainView() const;
 
+    double getCurrentTempo() const { return mCurrentTempo.load(); }
+
 private:
     // Value tree state to pass automatable parameters from UI
     juce::AudioProcessorValueTreeState mAPVTS;

@@ -9,7 +9,6 @@
 #include "BasicPitch.h"
 #include "NoteOptions.h"
 #include "RhythmOptions.h"
-#include "ParameterHelpers.h"
 
 class NeuralNoteAudioProcessor;
 class NeuralNoteMainView;

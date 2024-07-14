@@ -88,16 +88,17 @@ void TranscriptionManager::_runModel()
         mProcessor->getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
         mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired());
 
-    mNoteOptions.setParameters(NoteUtils::RootNote(mProcessor->getParameterValue(ParameterHelpers::KeyRootNoteId)),
-                               NoteUtils::ScaleType(mProcessor->getParameterValue(ParameterHelpers::KeyTypeId)),
-                               NoteUtils::SnapMode(mProcessor->getParameterValue(ParameterHelpers::KeySnapModeId)),
-                               (int) mProcessor->getParameterValue(ParameterHelpers::MinMidiNoteId),
-                               (int) mProcessor->getParameterValue(ParameterHelpers::MaxMidiNoteId));
+    mNoteOptions.setParameters(
+        static_cast<NoteUtils::RootNote>(mProcessor->getParameterValue(ParameterHelpers::KeyRootNoteId)),
+        static_cast<NoteUtils::ScaleType>(mProcessor->getParameterValue(ParameterHelpers::KeyTypeId)),
+        static_cast<NoteUtils::SnapMode>(mProcessor->getParameterValue(ParameterHelpers::KeySnapModeId)),
+        static_cast<int>(mProcessor->getParameterValue(ParameterHelpers::MinMidiNoteId)),
+        static_cast<int>(mProcessor->getParameterValue(ParameterHelpers::MaxMidiNoteId)));
 
     auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
     mRhythmOptions.setParameters(
-        RhythmUtils::TimeDivisions(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
+        static_cast<RhythmUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
         mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
 
     mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
@@ -109,7 +110,7 @@ void TranscriptionManager::_runModel()
     auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
     mProcessor->getPlayer()->getSynthController()->setNewMidiEventsVectorToUse(single_events);
 
-    //    mMidiFileTempo = mCurrentTempo.load() > 0 ? mCurrentTempo.load() : 120;
+    mMidiFileTempo = mProcessor->getCurrentTempo() > 0 ? mProcessor->getCurrentTempo() : 120;
 
     mProcessor->setStateToPopulatedAudioAndMidiRegions();
 }
@@ -136,17 +137,18 @@ void TranscriptionManager::_updatePostProcessing()
     jassert(mProcessor->getState() == PopulatedAudioAndMidiRegions);
 
     if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        mNoteOptions.setParameters(NoteUtils::RootNote(mProcessor->getParameterValue(ParameterHelpers::KeyRootNoteId)),
-                                   NoteUtils::ScaleType(mProcessor->getParameterValue(ParameterHelpers::KeyTypeId)),
-                                   NoteUtils::SnapMode(mProcessor->getParameterValue(ParameterHelpers::KeySnapModeId)),
-                                   (int) mProcessor->getParameterValue(ParameterHelpers::MinMidiNoteId),
-                                   (int) mProcessor->getParameterValue(ParameterHelpers::MaxMidiNoteId));
+        mNoteOptions.setParameters(
+            static_cast<NoteUtils::RootNote>(mProcessor->getParameterValue(ParameterHelpers::KeyRootNoteId)),
+            static_cast<NoteUtils::ScaleType>(mProcessor->getParameterValue(ParameterHelpers::KeyTypeId)),
+            static_cast<NoteUtils::SnapMode>(mProcessor->getParameterValue(ParameterHelpers::KeySnapModeId)),
+            static_cast<int>(mProcessor->getParameterValue(ParameterHelpers::MinMidiNoteId)),
+            static_cast<int>(mProcessor->getParameterValue(ParameterHelpers::MaxMidiNoteId)));
 
         // TODO: Make this vector a member to avoid reallocating every time
         auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
         mRhythmOptions.setParameters(
-            RhythmUtils::TimeDivisions(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
+            static_cast<RhythmUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
             mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
 
         // TODO: Pass mPostProcessedNotes as reference
@@ -218,7 +220,7 @@ double TranscriptionManager::getMidiFileTempo() const
 void TranscriptionManager::_repaintPianoRoll()
 {
     auto* main_view = mProcessor->getNeuralNoteMainView();
-    
+
     if (main_view) {
         main_view->repaintPianoRoll();
     }

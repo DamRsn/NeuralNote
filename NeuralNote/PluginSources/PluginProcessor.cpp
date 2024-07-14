@@ -50,10 +50,11 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         }
     }
 
-    auto isMute = mParams[ParameterHelpers::MuteId]->getValue() > 0.5f;
+    auto is_mute = mParams[ParameterHelpers::MuteId]->getValue() > 0.5f;
 
-    if (isMute)
+    if (is_mute) {
         buffer.clear();
+    }
 
     mPlayer->processBlock(buffer);
 }
@@ -132,12 +133,15 @@ bool NeuralNoteAudioProcessor::canQuantize() const
 
 std::string NeuralNoteAudioProcessor::getTempoStr() const
 {
-    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getBpm().hasValue())
+    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getBpm().hasValue()) {
         return std::to_string(static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
-    else if (mCurrentTempo > 0)
+    }
+
+    if (mCurrentTempo > 0) {
         return std::to_string(static_cast<int>(std::round(mCurrentTempo.load())));
-    else
-        return "-";
+    }
+
+    return "-";
 }
 
 std::string NeuralNoteAudioProcessor::getTimeSignatureStr() const
@@ -146,11 +150,14 @@ std::string NeuralNoteAudioProcessor::getTimeSignatureStr() const
         int num = mPlayheadInfoStartRecord->getTimeSignature()->numerator;
         int denom = mPlayheadInfoStartRecord->getTimeSignature()->denominator;
         return std::to_string(num) + " / " + std::to_string(denom);
-    } else if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0)
+    }
+
+    if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0) {
         return std::to_string(mCurrentTimeSignatureNum.load()) + " / "
                + std::to_string(mCurrentTimeSignatureDenom.load());
-    else
-        return "- / -";
+    }
+
+    return "- / -";
 }
 
 SourceAudioManager* NeuralNoteAudioProcessor::getSourceAudioManager()
