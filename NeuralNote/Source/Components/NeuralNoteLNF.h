@@ -13,13 +13,13 @@ class NeuralNoteLNF : public juce::LookAndFeel_V4
 public:
     NeuralNoteLNF();
 
-    Font getComboBoxFont(ComboBox& /*box*/) override { return LABEL_FONT; }
+    Font getComboBoxFont(ComboBox& /*box*/) override { return UIFonts::get().LABEL_FONT(); }
 
-    Font getPopupMenuFont() override { return LABEL_FONT; }
+    Font getPopupMenuFont() override { return UIFonts::get().LABEL_FONT(); }
 
-    Font getTextButtonFont(TextButton&, int buttonHeight) override { return LARGE_FONT; };
+    Font getTextButtonFont(TextButton&, int buttonHeight) override { return UIFonts::get().LARGE_FONT(); };
 
-    Font getLabelFont(juce::Label&) override { return DROPDOWN_FONT; };
+    Font getLabelFont(juce::Label&) override { return UIFonts::get().DROPDOWN_FONT(); };
 
     void drawRotarySlider(Graphics&,
                           int x,
