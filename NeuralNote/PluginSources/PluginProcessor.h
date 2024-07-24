@@ -71,9 +71,22 @@ public:
 
     double getCurrentTempo() const { return mCurrentTempo.load(); }
 
+    ValueTree& getValueTree() { return mValueTree; }
+
+    void addListenerToStateValueTree(juce::ValueTree::Listener* inListener);
+
 private:
+    static ValueTree _createDefaultValueTree();
+
+    void _updateValueTree(const ValueTree& inNewState);
+
+    // ValueTree for general plugin state
+    ValueTree mValueTree = _createDefaultValueTree();
+
     // Value tree state to pass automatable parameters from UI
-    juce::AudioProcessorValueTreeState mAPVTS;
+    AudioProcessorValueTreeState mAPVTS;
+
+
 
     std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams> mParams {};
 
@@ -90,5 +103,5 @@ private:
     std::atomic<int> mCurrentTimeSignatureDenom = -1;
 
     // To quantize manager
-    juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
+    Optional<AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
 };

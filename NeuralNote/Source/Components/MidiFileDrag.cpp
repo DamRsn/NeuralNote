@@ -40,9 +40,9 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
         }
     }
 
-    std::string filename = mProcessor->getSourceAudioManager()->getDroppedFilename();
+    String filename = mProcessor->getSourceAudioManager()->getDroppedFilename();
 
-    if (filename.empty())
+    if (filename.isEmpty())
         filename = "NNTranscription.mid";
     else
         filename += "_NNTranscription.mid";

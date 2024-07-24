@@ -14,10 +14,12 @@
 #include "TranscriptionOptionsView.h"
 #include "VisualizationPanel.h"
 #include "NeuralNoteLNF.h"
+#include "NnId.h"
 
 class NeuralNoteMainView
     : public juce::Component
     , public juce::Timer
+    , public juce::ValueTree::Listener
 {
 public:
     explicit NeuralNoteMainView(NeuralNoteAudioProcessor& processor);
@@ -34,6 +36,8 @@ public:
 
 private:
     void updateEnablements();
+
+    void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
 
     NeuralNoteAudioProcessor& mProcessor;
     NeuralNoteLNF mLNF;

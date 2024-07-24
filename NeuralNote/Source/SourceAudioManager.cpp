@@ -12,13 +12,8 @@ SourceAudioManager::SourceAudioManager(NeuralNoteAudioProcessor* inProcessor)
     , mThumbnailCache(1)
     , mThumbnail(mSourceSamplesPerThumbnailSample, mThumbnailFormatManager, mThumbnailCache)
 {
-}
-
-SourceAudioManager::~SourceAudioManager()
-{
-    for (auto& file: mFilesToDelete) {
-        file.deleteFile();
-    }
+    mProcessor->addListenerToStateValueTree(this);
+    jassert(mProcessor->getValueTree().hasProperty(NnId::SourceAudioNativeSrPathId));
 }
 
 void SourceAudioManager::prepareToPlay(double inSampleRate, int inSamplesPerBlock)
@@ -84,27 +79,29 @@ void SourceAudioManager::startRecording()
     }
 
     // Prepare files to be written
-    File neural_note_dir =
-        File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("NeuralNote");
-
-    if (!neural_note_dir.isDirectory()) {
-        neural_note_dir.createDirectory();
+    if (!mNeuralNoteDir.isDirectory()) {
+        bool res = mNeuralNoteDir.createDirectory();
+        jassertquiet(res);
     }
 
     mDroppedFilename = "";
 
-    mRecordedFile = neural_note_dir.getChildFile("recorded_audio.wav");
-    mRecordedFileDown = neural_note_dir.getChildFile("recorded_audio_downsampled.wav");
+    // TODO: change name with timestamp.
+    String timestamp = Time::getCurrentTime().formatted("%Y-%m-%d_%H-%M-%S");
+
+    mSourceFile = mNeuralNoteDir.getChildFile("recorded_audio" + timestamp + ".wav");
+    mRecordedFileDown = mNeuralNoteDir.getChildFile("recorded_audio" + timestamp + "_downsampled.wav");
 
     size_t i = 1;
 
-    while (mRecordedFile.existsAsFile() || mRecordedFileDown.existsAsFile()) {
-        mRecordedFile = neural_note_dir.getChildFile("recorded_audio_" + std::to_string(i) + ".wav");
-        mRecordedFileDown = neural_note_dir.getChildFile("recorded_audio_downsampled_" + std::to_string(i) + ".wav");
+    while (mSourceFile.existsAsFile() || mRecordedFileDown.existsAsFile()) {
+        mSourceFile = mNeuralNoteDir.getChildFile("recorded_audio" + timestamp + "_" + String(i) + ".wav");
+        mRecordedFileDown =
+            mNeuralNoteDir.getChildFile("recorded_audio" + timestamp + "_" + String(i) + "_downsampled.wav");
         i += 1;
     }
 
-    Result file_creation_result = mRecordedFile.create();
+    Result file_creation_result = mSourceFile.create();
     Result file_creation_result_down = mRecordedFileDown.create();
 
     if (!file_creation_result.wasOk() || !file_creation_result_down.wasOk()) {
@@ -114,14 +111,14 @@ void SourceAudioManager::startRecording()
         return;
     }
 
-    mFilesToDelete.push_back(mRecordedFile);
+    mFilesToDelete.push_back(mSourceFile);
     mFilesToDelete.push_back(mRecordedFileDown);
 
     // Init first writer at native sample rate (stereo)
     juce::WavAudioFormat format;
     juce::StringPairArray meta_data_values;
 
-    auto* wav_writer = format.createWriterFor(new juce::FileOutputStream(mRecordedFile),
+    auto* wav_writer = format.createWriterFor(new juce::FileOutputStream(mSourceFile),
                                               mSampleRate,
                                               std::min(mProcessor->getTotalNumInputChannels(), 2),
                                               16,
@@ -165,7 +162,7 @@ void SourceAudioManager::stopRecording()
     mWriterThread.stopThread(1000);
     mWriterThreadDown.stopThread(1000);
 
-    bool success = AudioUtils::loadAudioFile(mRecordedFile, mSourceAudio, mSourceAudioSampleRate);
+    bool success = AudioUtils::loadAudioFile(mSourceFile, mSourceAudio, mSourceAudioSampleRate);
     jassert(mSourceAudioSampleRate == mSampleRate);
 
     // Should def not happen
@@ -187,6 +184,9 @@ void SourceAudioManager::stopRecording()
             juce::MessageBoxIconType::NoIcon, "Could not load the recorded audio sample.", "");
         return;
     }
+
+    auto& tree = mProcessor->getValueTree();
+    tree.setPropertyExcludingListener(this, NnId::SourceAudioNativeSrPathId, mSourceFile.getFullPathName(), nullptr);
 
     mProcessor->getTranscriptionManager()->setLauchNewTranscription();
 }
@@ -220,9 +220,13 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
 
         mNumSamplesAcquiredDown = mDownsampledSourceAudio.getNumSamples();
         mNumSamplesAcquired = mSourceAudio.getNumSamples();
-        mDuration = (double) mNumSamplesAcquiredDown / BASIC_PITCH_SAMPLE_RATE;
+        mDuration = static_cast<double>(mNumSamplesAcquiredDown) / BASIC_PITCH_SAMPLE_RATE;
 
-        mDroppedFilename = inFile.getFileNameWithoutExtension().toStdString();
+        mDroppedFilename = inFile.getFileNameWithoutExtension();
+        mSourceFile = inFile;
+
+        auto& tree = mProcessor->getValueTree();
+        tree.setPropertyExcludingListener(this, NnId::SourceAudioNativeSrPathId, inFile.getFullPathName(), nullptr);
         mProcessor->getTranscriptionManager()->getRhythmOptions().setInfo(true);
 
         mThumbnail.clear();
@@ -252,11 +256,10 @@ void SourceAudioManager::clear()
     mNumSamplesAcquired = 0;
     mDuration = 0.0;
 
-    for (auto& file: mFilesToDelete) {
-        file.deleteFile();
-    }
+    _deleteFilesToDelete();
 
-    mFilesToDelete.clear();
+    auto& tree = mProcessor->getValueTree();
+    tree.setPropertyExcludingListener(this, NnId::SourceAudioNativeSrPathId, String(), nullptr);
 
     mDroppedFilename = "";
 }
@@ -271,14 +274,14 @@ AudioBuffer<float>& SourceAudioManager::getSourceAudioForPlayback()
     return mSourceAudio;
 }
 
-std::string SourceAudioManager::getDroppedFilename() const
+String SourceAudioManager::getDroppedFilename() const
 {
     return mDroppedFilename;
 }
 
 int SourceAudioManager::getNumSamplesDownAcquired() const
 {
-    return (int) mNumSamplesAcquiredDown;
+    return static_cast<int>(mNumSamplesAcquiredDown);
 }
 
 double SourceAudioManager::getAudioSampleDuration() const
@@ -289,4 +292,38 @@ double SourceAudioManager::getAudioSampleDuration() const
 AudioThumbnail* SourceAudioManager::getAudioThumbnail()
 {
     return &mThumbnail;
+}
+
+void SourceAudioManager::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
+{
+    if (property == NnId::SourceAudioNativeSrPathId) {
+        auto path = treeWhosePropertyHasChanged.getProperty(property).toString();
+
+        if (path != mSourceFile.getFullPathName()) {
+            if (path.isEmpty()) {
+                clear();
+                return;
+            }
+
+            onFileDrop(File(path));
+
+            // If loading state from recorded audio, add to files to delete on clear.
+            if (mSourceFile.getParentDirectory() == mNeuralNoteDir) {
+                mRecordedFileDown =
+                    mNeuralNoteDir.getChildFile(mSourceFile.getFileNameWithoutExtension() + "_downsampled.wav");
+                mFilesToDelete.push_back(mSourceFile);
+                mFilesToDelete.push_back(mRecordedFileDown);
+            }
+        }
+    }
+}
+
+void SourceAudioManager::_deleteFilesToDelete()
+{
+    for (auto& file: mFilesToDelete) {
+        bool res = file.deleteFile();
+        jassertquiet(res);
+    }
+
+    mFilesToDelete.clear();
 }

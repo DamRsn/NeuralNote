@@ -11,6 +11,9 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     , mNoteOptions(processor)
     , mQuantizePanel(processor)
 {
+    mProcessor.addListenerToStateValueTree(this);
+    jassert(mProcessor.getValueTree().hasProperty(NnId::PlayheadCenteredId));
+
     mRecordButton = std::make_unique<DrawableButton>("RecordButton", DrawableButton::ButtonStyle::ImageRaw);
     mRecordButton->setClickingTogglesState(true);
     mRecordButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
@@ -107,8 +110,13 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
                              nullptr,
                              nullptr);
     mCenterButton->onClick = [this]() {
+        mProcessor.getValueTree().setPropertyExcludingListener(
+            this, NnId::PlayheadCenteredId, mCenterButton->getToggleState(), nullptr);
         mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(mCenterButton->getToggleState());
     };
+
+    mCenterButton->setToggleState(mProcessor.getValueTree().getProperty(NnId::PlayheadCenteredId),
+                                  juce::dontSendNotification);
 
     addAndMakeVisible(*mCenterButton);
 
@@ -232,4 +240,13 @@ void NeuralNoteMainView::updateEnablements()
     }
 
     repaint();
+}
+
+void NeuralNoteMainView::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
+{
+    if (property == NnId::PlayheadCenteredId) {
+        bool prop_value = treeWhosePropertyHasChanged.getProperty(property);
+        mCenterButton->setToggleState(prop_value, sendNotification);
+        mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(prop_value);
+    }
 }

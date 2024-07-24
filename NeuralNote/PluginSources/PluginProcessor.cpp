@@ -66,17 +66,19 @@ juce::AudioProcessorEditor* NeuralNoteAudioProcessor::createEditor()
 
 void NeuralNoteAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    auto state_tree = ValueTree(NnId::NeuralNoteStateId);
+    auto full_state_tree = ValueTree(NnId::FullStateId);
 
-    state_tree.setProperty(NnId::NeuralNoteVersionId, ProjectInfo::versionString, nullptr);
+    full_state_tree.setProperty(NnId::NeuralNoteVersionId, ProjectInfo::versionString, nullptr);
 
     // PARAMETERS
     auto apvts = mAPVTS.copyState();
     jassert(apvts.getType() == NnId::ParametersId);
 
-    state_tree.appendChild(apvts, nullptr);
+    full_state_tree.appendChild(apvts, nullptr);
 
-    std::unique_ptr<XmlElement> xml(state_tree.createXml());
+    full_state_tree.appendChild(mValueTree, nullptr);
+
+    std::unique_ptr<XmlElement> xml(full_state_tree.createXml());
 
     if (xml != nullptr) {
         copyXmlToBinary(*xml, destData);
@@ -92,12 +94,19 @@ void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInB
         // Convert XmlElement to ValueTree
         ValueTree full_state_tree = ValueTree::fromXml(*xmlState);
 
-        if (full_state_tree.isValid() && full_state_tree.hasType(NnId::NeuralNoteStateId)) {
+        if (full_state_tree.isValid() && full_state_tree.hasType(NnId::FullStateId)) {
             // Extract the parameters ValueTree
             auto parameter_tree = full_state_tree.getChildWithName(NnId::ParametersId);
 
             ParameterHelpers::updateParametersFromState(parameter_tree, mParams);
 
+        } else {
+            jassertfalse;
+        }
+
+        if (full_state_tree.isValid() && full_state_tree.hasType(NnId::FullStateId)) {
+            auto new_value_tree = full_state_tree.getChildWithName(NnId::NeuralNoteStateId);
+            _updateValueTree(new_value_tree);
         } else {
             jassertfalse;
         }
@@ -194,6 +203,40 @@ NeuralNoteMainView* NeuralNoteAudioProcessor::getNeuralNoteMainView() const
     }
 
     return nullptr;
+}
+
+void NeuralNoteAudioProcessor::addListenerToStateValueTree(juce::ValueTree::Listener* inListener)
+{
+    mValueTree.addListener(inListener);
+}
+
+ValueTree NeuralNoteAudioProcessor::_createDefaultValueTree()
+{
+    ValueTree default_value_tree(NnId::NeuralNoteStateId);
+
+    for (const auto& [id, default_value]: NnId::OrderedStatePropertiesWithDefault) {
+        default_value_tree.setProperty(id, default_value, nullptr);
+    }
+
+    return default_value_tree;
+}
+
+void NeuralNoteAudioProcessor::_updateValueTree(const ValueTree& inNewState)
+{
+    jassert(inNewState.getType() == NnId::NeuralNoteStateId);
+    jassert(mValueTree.getNumProperties() == static_cast<int>(NnId::OrderedStatePropertiesWithDefault.size()));
+
+    if (inNewState.isValid()) {
+        // Set all properties from inNewState to mValueTree, ignoring extra ones if any.
+        // If less, missing properties will be left as is.
+        for (const auto& [prop_id, default_val]: NnId::OrderedStatePropertiesWithDefault) {
+            if (inNewState.hasProperty(prop_id)) {
+                mValueTree.setProperty(prop_id, inNewState.getProperty(prop_id), nullptr);
+            }
+        }
+    } else {
+        jassertfalse;
+    }
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
