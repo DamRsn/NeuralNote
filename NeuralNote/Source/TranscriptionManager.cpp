@@ -47,13 +47,8 @@ void TranscriptionManager::timerCallback()
         _repaintPianoRoll();
     }
 }
-void TranscriptionManager::prepare(double inSampleRate, int inMaxNumSamplesPerBlock)
-{
-    mSampleRate = inSampleRate;
-    mMaxNumSamplesPerBlock = inMaxNumSamplesPerBlock;
-}
 
-void TranscriptionManager::processBlock(int inNumSamples)
+void TranscriptionManager::processBlock()
 {
     mRhythmOptions.processBlock();
 }
@@ -201,7 +196,7 @@ void TranscriptionManager::clear()
     mShouldUpdatePostProcessing = false;
     mPostProcessedNotes.clear();
     mMidiFileTempo = 120.0;
-    // mWasRecording = false;
+    mRhythmOptions.clear();
 }
 
 void TranscriptionManager::launchTranscribeJob()

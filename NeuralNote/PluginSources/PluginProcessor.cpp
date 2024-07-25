@@ -25,7 +25,7 @@ void NeuralNoteAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuff
     ignoreUnused(midiMessages);
 
     mSourceAudioManager->processBlock(buffer);
-    mTranscriptionManager->processBlock(buffer.getNumSamples());
+    mTranscriptionManager->processBlock();
 
     auto is_mute = mParams[ParameterHelpers::MuteId]->getValue() > 0.5f;
 

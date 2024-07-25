@@ -23,9 +23,7 @@ public:
 
     void timerCallback() override;
 
-    void prepare(double inSampleRate, int inMaxNumSamplesPerBlock);
-
-    void processBlock(int inNumSamples);
+    void processBlock();
 
     void setLauchNewTranscription();
 
@@ -61,9 +59,6 @@ private:
     RhythmOptions mRhythmOptions;
 
     std::vector<Notes::Event> mPostProcessedNotes;
-
-    double mSampleRate = 44100;
-    int mMaxNumSamplesPerBlock = 512;
 
     std::atomic<bool> mShouldRunNewTranscription = false;
     std::atomic<bool> mShouldUpdateTranscription = false;
