@@ -3,12 +3,40 @@
 //
 
 #include "RhythmOptions.h"
-RhythmOptions::RhythmOptions()
+#include "PluginProcessor.h"
+
+RhythmOptions::RhythmOptions(NeuralNoteAudioProcessor* inProcessor)
+    : mProcessor(inProcessor)
 {
 }
 
-void RhythmOptions::setInfo(bool inDroppedFile,
-                            const juce::Optional<juce::AudioPlayHead::PositionInfo>& inPositionInfoPtr)
+void RhythmOptions::processBlock()
+{
+    if (mProcessor->getState() == Recording) {
+        if (!mWasRecording) {
+            mWasRecording = true;
+            // TODO: Set playhead info later if not playing at the start of recording.
+            setInfo(false, mProcessor->getPlayHead()->getPosition());
+        }
+    } else {
+        // If we were previously recording but not anymore (user clicked record button to stop it).
+        if (mWasRecording) {
+            mWasRecording = false;
+        }
+    }
+
+    // Get tempo and time signature for UI.
+    auto playhead_info = mProcessor->getPlayHead()->getPosition();
+    if (playhead_info.hasValue()) {
+        if (playhead_info->getBpm().hasValue())
+            mCurrentTempo = *playhead_info->getBpm();
+        if (playhead_info->getTimeSignature().hasValue()) {
+            mCurrentTimeSignatureNum = playhead_info->getTimeSignature()->numerator;
+            mCurrentTimeSignatureDenom = playhead_info->getTimeSignature()->denominator;
+        }
+    }
+}
+void RhythmOptions::setInfo(bool inDroppedFile, const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr)
 {
     reset();
 
@@ -16,12 +44,15 @@ void RhythmOptions::setInfo(bool inDroppedFile,
         mRhythmInfo.canQuantize = false;
     } else {
         if (inPositionInfoPtr.hasValue()) {
+            mPlayheadInfoStartRecord = inPositionInfoPtr;
+
             mRhythmInfo.timeSignature = inPositionInfoPtr->getTimeSignature();
             mRhythmInfo.isPlaying = inPositionInfoPtr->getIsPlaying();
             mRhythmInfo.bpm = inPositionInfoPtr->getBpm();
             mRhythmInfo.ppqPositionOfLastBarStart = inPositionInfoPtr->getPpqPositionOfLastBarStart();
             mRhythmInfo.ppqPosition = inPositionInfoPtr->getPpqPosition();
             // Can quantize only if recorded while playing, bpm is defined, lastBarStart is defined ...
+            // TODO: allow quantization if not playing at the start of recording (but has to be playing at some point)
             mRhythmInfo.canQuantize = mRhythmInfo.isPlaying && mRhythmInfo.bpm.hasValue()
                                       && mRhythmInfo.ppqPositionOfLastBarStart.hasValue() && mRhythmInfo.ppqPosition
                                       && mRhythmInfo.timeSignature.hasValue();
@@ -31,7 +62,7 @@ void RhythmOptions::setInfo(bool inDroppedFile,
     }
 }
 
-bool RhythmOptions::canPerformQuantization() const
+bool RhythmOptions::canQuantize() const
 {
     return mRhythmInfo.canQuantize;
 }
@@ -73,6 +104,61 @@ std::vector<Notes::Event> RhythmOptions::quantize(const std::vector<Notes::Event
     return out_events;
 }
 
+void RhythmOptions::reset()
+{
+    // Reset to default struct where nothing is set and bool false.
+    mRhythmInfo = RhythmInfo();
+    mPlayheadInfoStartRecord = nullopt;
+}
+void RhythmOptions::clear()
+{
+    mPlayheadInfoStartRecord = juce::Optional<juce::AudioPlayHead::PositionInfo>();
+
+    mCurrentTempo = -1;
+    mCurrentTimeSignatureNum = -1;
+    mCurrentTimeSignatureDenom = -1;
+    mWasRecording = false;
+}
+
+const Optional<AudioPlayHead::PositionInfo>& RhythmOptions::getPlayheadInfoOnRecordStart() const
+{
+    return mPlayheadInfoStartRecord;
+}
+
+double RhythmOptions::getCurrentTempo() const
+{
+    return mCurrentTempo.load();
+}
+
+std::string RhythmOptions::getTempoStr() const
+{
+    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getBpm().hasValue()) {
+        return std::to_string(static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
+    }
+
+    if (mCurrentTempo > 0) {
+        return std::to_string(static_cast<int>(std::round(mCurrentTempo.load())));
+    }
+
+    return "-";
+}
+
+std::string RhythmOptions::getTimeSignatureStr() const
+{
+    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getTimeSignature().hasValue()) {
+        int num = mPlayheadInfoStartRecord->getTimeSignature()->numerator;
+        int denom = mPlayheadInfoStartRecord->getTimeSignature()->denominator;
+        return std::to_string(num) + " / " + std::to_string(denom);
+    }
+
+    if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0) {
+        return std::to_string(mCurrentTimeSignatureNum.load()) + " / "
+               + std::to_string(mCurrentTimeSignatureDenom.load());
+    }
+
+    return "- / -";
+}
+
 double RhythmOptions::quantizeTime(
     double inEventTime, double inBPM, double inTimeDivision, double inStartTimeQN, float inQuantizationForce)
 {
@@ -96,16 +182,10 @@ double RhythmOptions::quantizeTime(
 
     jassert(shifted_time >= previous_division_time && shifted_time < previous_division_time + division_duration);
 
-    double quantized_shifted_time = jmap(double(inQuantizationForce), shifted_time, target_time);
+    double quantized_shifted_time = jmap(static_cast<double>(inQuantizationForce), shifted_time, target_time);
 
     // Re-shift
     double quantized_time = quantized_shifted_time - new_time_origin;
 
     return quantized_time;
-}
-
-void RhythmOptions::reset()
-{
-    // Reset to default struct where nothing is set and bool false.
-    mRhythmInfo = RhythmInfo();
 }

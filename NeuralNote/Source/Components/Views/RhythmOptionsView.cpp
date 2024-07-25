@@ -52,11 +52,11 @@ void RhythmOptionsView::paint(Graphics& g)
 
     g.setFont(LABEL_FONT);
 
-    g.drawText("TEMPO  " + mProcessor.getTempoStr(),
+    g.drawText("TEMPO  " + mProcessor.getTranscriptionManager()->getRhythmOptions().getTempoStr(),
                juce::Rectangle<int>(19, LEFT_SECTIONS_TOP_PAD + 47, 75, 10),
                juce::Justification::centredLeft);
 
-    g.drawText("TIME SIGNATURE  " + mProcessor.getTimeSignatureStr(),
+    g.drawText("TIME SIGNATURE  " + mProcessor.getTranscriptionManager()->getRhythmOptions().getTimeSignatureStr(),
                juce::Rectangle<int>(122, LEFT_SECTIONS_TOP_PAD + 47, 130, 10),
                juce::Justification::centredRight);
 

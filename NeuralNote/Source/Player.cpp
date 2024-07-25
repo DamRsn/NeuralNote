@@ -8,6 +8,8 @@
 Player::Player(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
 {
+    mProcessor->addListenerToStateValueTree(this);
+
     mSynth = std::make_unique<MPESynthesiser>();
     mSynth->setCurrentPlaybackSampleRate(44100);
 
@@ -16,6 +18,8 @@ Player::Player(NeuralNoteAudioProcessor* inProcessor)
     }
 
     mSynthController = std::make_unique<SynthController>(inProcessor, mSynth.get());
+
+    setPlayheadPositionSeconds(mProcessor->getValueTree().getProperty(NnId::PlayheadPositionSecId, 0.0));
 }
 
 void Player::prepareToPlay(double inSampleRate, int inSamplesPerBlock)
@@ -31,7 +35,7 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
     auto old_audio_gain = mGainSourceAudio;
     auto old_synth_gain = mGainSynth;
 
-    int playhead_index = (int) std::round(mPlayheadTime * mSampleRate);
+    int playhead_index = static_cast<int>(std::round(mPlayheadTime * mSampleRate));
 
     float audio_gain_db = mProcessor->getParameterValue(ParameterHelpers::AudioPlayerGainId);
     float synth_gain_db = mProcessor->getParameterValue(ParameterHelpers::MidiPlayerGainId);
@@ -79,7 +83,7 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
             playhead_index = 0;
         }
 
-        mPlayheadTime = (double) playhead_index / mSampleRate;
+        mPlayheadTime = static_cast<double>(playhead_index) / mSampleRate;
     }
 
     for (int ch = 0; ch < num_out_channels; ch++) {
@@ -123,6 +127,26 @@ void Player::setPlayheadPositionSeconds(double inNewPosition)
 SynthController* Player::getSynthController()
 {
     return mSynthController.get();
+}
+
+void Player::saveStateToValueTree()
+{
+    mProcessor->getValueTree().setPropertyExcludingListener(this, NnId::PlayheadPositionSecId, mPlayheadTime, nullptr);
+}
+
+void Player::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
+{
+    if (property == NnId::PlayheadPositionSecId) {
+        double new_position = treeWhosePropertyHasChanged.getProperty(property);
+
+        if (mProcessor->getState() != EmptyAudioAndMidiRegions) {
+            new_position = std::clamp(new_position, 0.0, mProcessor->getSourceAudioManager()->getAudioSampleDuration());
+        } else {
+            new_position = 0.0;
+        }
+
+        setPlayheadPositionSeconds(new_position);
+    }
 }
 
 void Player::_setGains(float inGainAudioSourceDB, float inGainSynthDB)

@@ -8,6 +8,7 @@
 
 TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
+    , mRhythmOptions(inProcessor)
     , mThreadPool(1)
 {
     mJobLambda = [this]() { _runModel(); };
@@ -45,6 +46,16 @@ void TranscriptionManager::timerCallback()
     } else if (mShouldRepaintPianoRoll) {
         _repaintPianoRoll();
     }
+}
+void TranscriptionManager::prepare(double inSampleRate, int inMaxNumSamplesPerBlock)
+{
+    mSampleRate = inSampleRate;
+    mMaxNumSamplesPerBlock = inMaxNumSamplesPerBlock;
+}
+
+void TranscriptionManager::processBlock(int inNumSamples)
+{
+    mRhythmOptions.processBlock();
 }
 
 void TranscriptionManager::setLauchNewTranscription()
@@ -110,7 +121,9 @@ void TranscriptionManager::_runModel()
     auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
     mProcessor->getPlayer()->getSynthController()->setNewMidiEventsVectorToUse(single_events);
 
-    mMidiFileTempo = mProcessor->getCurrentTempo() > 0 ? mProcessor->getCurrentTempo() : 120;
+    mMidiFileTempo = mProcessor->getTranscriptionManager()->getRhythmOptions().getCurrentTempo() > 0
+                         ? mProcessor->getTranscriptionManager()->getRhythmOptions().getCurrentTempo()
+                         : 120;
 
     mProcessor->setStateToPopulatedAudioAndMidiRegions();
 }
@@ -188,6 +201,7 @@ void TranscriptionManager::clear()
     mShouldUpdatePostProcessing = false;
     mPostProcessedNotes.clear();
     mMidiFileTempo = 120.0;
+    // mWasRecording = false;
 }
 
 void TranscriptionManager::launchTranscribeJob()

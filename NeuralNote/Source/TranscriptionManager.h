@@ -15,13 +15,17 @@ class NeuralNoteMainView;
 class NeuralNoteEditor;
 
 class TranscriptionManager
-    : public juce::Timer
+    : public Timer
     , public AudioProcessorValueTreeState::Listener
 {
 public:
     explicit TranscriptionManager(NeuralNoteAudioProcessor* inProcessor);
 
     void timerCallback() override;
+
+    void prepare(double inSampleRate, int inMaxNumSamplesPerBlock);
+
+    void processBlock(int inNumSamples);
 
     void setLauchNewTranscription();
 
@@ -58,12 +62,15 @@ private:
 
     std::vector<Notes::Event> mPostProcessedNotes;
 
+    double mSampleRate = 44100;
+    int mMaxNumSamplesPerBlock = 512;
+
     std::atomic<bool> mShouldRunNewTranscription = false;
     std::atomic<bool> mShouldUpdateTranscription = false;
     std::atomic<bool> mShouldUpdatePostProcessing = false;
     std::atomic<bool> mShouldRepaintPianoRoll = false;
 
-    juce::ThreadPool mThreadPool;
+    ThreadPool mThreadPool;
     std::function<void()> mJobLambda;
 
     double mMidiFileTempo = 120.0;

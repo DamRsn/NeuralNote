@@ -20,35 +20,12 @@ void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     mPlayer->prepareToPlay(sampleRate, samplesPerBlock);
 }
 
-void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void NeuralNoteAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused(midiMessages);
-
-    // Get tempo and time signature for UI.
-    auto playhead_info = getPlayHead()->getPosition();
-    if (playhead_info.hasValue()) {
-        if (playhead_info->getBpm().hasValue())
-            mCurrentTempo = *playhead_info->getBpm();
-        if (playhead_info->getTimeSignature().hasValue()) {
-            mCurrentTimeSignatureNum = playhead_info->getTimeSignature()->numerator;
-            mCurrentTimeSignatureDenom = playhead_info->getTimeSignature()->denominator;
-        }
-    }
+    ignoreUnused(midiMessages);
 
     mSourceAudioManager->processBlock(buffer);
-
-    if (mState.load() == Recording) {
-        if (!mWasRecording) {
-            mWasRecording = true;
-            mPlayheadInfoStartRecord = getPlayHead()->getPosition();
-            mTranscriptionManager->getRhythmOptions().setInfo(false, mPlayheadInfoStartRecord);
-        }
-    } else {
-        // If we were previously recording but not anymore (user clicked record button to stop it).
-        if (mWasRecording) {
-            mWasRecording = false;
-        }
-    }
+    mTranscriptionManager->processBlock(buffer.getNumSamples());
 
     auto is_mute = mParams[ParameterHelpers::MuteId]->getValue() > 0.5f;
 
@@ -59,12 +36,12 @@ void NeuralNoteAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     mPlayer->processBlock(buffer);
 }
 
-juce::AudioProcessorEditor* NeuralNoteAudioProcessor::createEditor()
+AudioProcessorEditor* NeuralNoteAudioProcessor::createEditor()
 {
     return new NeuralNoteEditor(*this);
 }
 
-void NeuralNoteAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
+void NeuralNoteAudioProcessor::getStateInformation(MemoryBlock& destData)
 {
     auto full_state_tree = ValueTree(NnId::FullStateId);
 
@@ -75,6 +52,10 @@ void NeuralNoteAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
     jassert(apvts.getType() == NnId::ParametersId);
 
     full_state_tree.appendChild(apvts, nullptr);
+
+    // NEURAL NOTE STATE
+    // Update value tree with current state
+    mPlayer->saveStateToValueTree();
 
     full_state_tree.appendChild(mValueTree, nullptr);
 
@@ -115,14 +96,6 @@ void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInB
 
 void NeuralNoteAudioProcessor::clear()
 {
-    mPlayheadInfoStartRecord = juce::Optional<juce::AudioPlayHead::PositionInfo>();
-
-    mCurrentTempo = -1;
-    mCurrentTimeSignatureNum = -1;
-    mCurrentTimeSignatureDenom = -1;
-
-    mWasRecording = false;
-
     mPlayer->reset();
     mSourceAudioManager->clear();
     mTranscriptionManager->clear();
@@ -130,56 +103,17 @@ void NeuralNoteAudioProcessor::clear()
     mState.store(EmptyAudioAndMidiRegions);
 }
 
-const juce::Optional<juce::AudioPlayHead::PositionInfo>& NeuralNoteAudioProcessor::getPlayheadInfoOnRecordStart()
-{
-    return mPlayheadInfoStartRecord;
-}
-
-bool NeuralNoteAudioProcessor::canQuantize() const
-{
-    return mTranscriptionManager->getRhythmOptions().canPerformQuantization();
-}
-
-std::string NeuralNoteAudioProcessor::getTempoStr() const
-{
-    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getBpm().hasValue()) {
-        return std::to_string(static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
-    }
-
-    if (mCurrentTempo > 0) {
-        return std::to_string(static_cast<int>(std::round(mCurrentTempo.load())));
-    }
-
-    return "-";
-}
-
-std::string NeuralNoteAudioProcessor::getTimeSignatureStr() const
-{
-    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getTimeSignature().hasValue()) {
-        int num = mPlayheadInfoStartRecord->getTimeSignature()->numerator;
-        int denom = mPlayheadInfoStartRecord->getTimeSignature()->denominator;
-        return std::to_string(num) + " / " + std::to_string(denom);
-    }
-
-    if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0) {
-        return std::to_string(mCurrentTimeSignatureNum.load()) + " / "
-               + std::to_string(mCurrentTimeSignatureDenom.load());
-    }
-
-    return "- / -";
-}
-
-SourceAudioManager* NeuralNoteAudioProcessor::getSourceAudioManager()
+SourceAudioManager* NeuralNoteAudioProcessor::getSourceAudioManager() const
 {
     return mSourceAudioManager.get();
 }
 
-Player* NeuralNoteAudioProcessor::getPlayer()
+Player* NeuralNoteAudioProcessor::getPlayer() const
 {
     return mPlayer.get();
 }
 
-TranscriptionManager* NeuralNoteAudioProcessor::getTranscriptionManager()
+TranscriptionManager* NeuralNoteAudioProcessor::getTranscriptionManager() const
 {
     return mTranscriptionManager.get();
 }
@@ -205,7 +139,17 @@ NeuralNoteMainView* NeuralNoteAudioProcessor::getNeuralNoteMainView() const
     return nullptr;
 }
 
-void NeuralNoteAudioProcessor::addListenerToStateValueTree(juce::ValueTree::Listener* inListener)
+AudioProcessorValueTreeState& NeuralNoteAudioProcessor::getAPVTS()
+{
+    return mAPVTS;
+}
+
+ValueTree& NeuralNoteAudioProcessor::getValueTree()
+{
+    return mValueTree;
+}
+
+void NeuralNoteAudioProcessor::addListenerToStateValueTree(ValueTree::Listener* inListener)
 {
     mValueTree.addListener(inListener);
 }
@@ -239,7 +183,7 @@ void NeuralNoteAudioProcessor::_updateValueTree(const ValueTree& inNewState)
     }
 }
 
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new NeuralNoteAudioProcessor();
 }

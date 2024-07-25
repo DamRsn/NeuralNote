@@ -49,7 +49,7 @@ void PianoRoll::paint(Graphics& g)
         }
 
         // Draw vertical lines if we have info on bpm, time signature ...
-        if (mProcessor->canQuantize()) {
+        if (mProcessor->getTranscriptionManager()->getRhythmOptions().canQuantize()) {
             _drawBeatVerticalLines(g);
         }
 
@@ -168,7 +168,7 @@ float PianoRoll::_getNoteWidth(int inNote) const
 
 void PianoRoll::_drawBeatVerticalLines(Graphics& g)
 {
-    auto playhead_info = mProcessor->getPlayheadInfoOnRecordStart();
+    auto playhead_info = mProcessor->getTranscriptionManager()->getRhythmOptions().getPlayheadInfoOnRecordStart();
     jassert(playhead_info.hasValue());
     double beats_per_second = 60.0 / *playhead_info->getBpm();
     auto time_signature = *playhead_info->getTimeSignature();
