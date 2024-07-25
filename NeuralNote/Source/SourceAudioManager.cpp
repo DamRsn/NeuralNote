@@ -321,8 +321,13 @@ void SourceAudioManager::valueTreePropertyChanged(ValueTree& treeWhosePropertyHa
 void SourceAudioManager::_deleteFilesToDelete()
 {
     for (auto& file: mFilesToDelete) {
-        bool res = file.deleteFile();
-        jassertquiet(res);
+        // Make sure we only ever delete files that have been recorded, not loaded from disk.
+        if (file.getParentDirectory() == mNeuralNoteDir) {
+            bool res = file.deleteFile();
+            jassertquiet(res);
+        } else {
+            jassertfalse;
+        }
     }
 
     mFilesToDelete.clear();
