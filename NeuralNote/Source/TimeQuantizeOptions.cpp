@@ -2,15 +2,15 @@
 // Created by Damien Ronssin on 19.03.23.
 //
 
-#include "RhythmOptions.h"
+#include "TimeQuantizeOptions.h"
 #include "PluginProcessor.h"
 
-RhythmOptions::RhythmOptions(NeuralNoteAudioProcessor* inProcessor)
+TimeQuantizeOptions::TimeQuantizeOptions(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
 {
 }
 
-void RhythmOptions::processBlock()
+void TimeQuantizeOptions::processBlock()
 {
     if (mProcessor->getState() == Recording) {
         if (!mWasRecording) {
@@ -36,57 +36,58 @@ void RhythmOptions::processBlock()
         }
     }
 }
-void RhythmOptions::setInfo(bool inDroppedFile, const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr)
+void TimeQuantizeOptions::setInfo(bool inDroppedFile, const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr)
 {
     reset();
 
     if (inDroppedFile) {
-        mRhythmInfo.canQuantize = false;
+        mTimeQuantizeInfo.canQuantize = false;
     } else {
         if (inPositionInfoPtr.hasValue()) {
             mPlayheadInfoStartRecord = inPositionInfoPtr;
 
-            mRhythmInfo.timeSignature = inPositionInfoPtr->getTimeSignature();
-            mRhythmInfo.isPlaying = inPositionInfoPtr->getIsPlaying();
-            mRhythmInfo.bpm = inPositionInfoPtr->getBpm();
-            mRhythmInfo.ppqPositionOfLastBarStart = inPositionInfoPtr->getPpqPositionOfLastBarStart();
-            mRhythmInfo.ppqPosition = inPositionInfoPtr->getPpqPosition();
+            mTimeQuantizeInfo.timeSignature = inPositionInfoPtr->getTimeSignature();
+            mTimeQuantizeInfo.isPlaying = inPositionInfoPtr->getIsPlaying();
+            mTimeQuantizeInfo.bpm = inPositionInfoPtr->getBpm();
+            mTimeQuantizeInfo.ppqPositionOfLastBarStart = inPositionInfoPtr->getPpqPositionOfLastBarStart();
+            mTimeQuantizeInfo.ppqPosition = inPositionInfoPtr->getPpqPosition();
             // Can quantize only if recorded while playing, bpm is defined, lastBarStart is defined ...
             // TODO: allow quantization if not playing at the start of recording (but has to be playing at some point)
-            mRhythmInfo.canQuantize = mRhythmInfo.isPlaying && mRhythmInfo.bpm.hasValue()
-                                      && mRhythmInfo.ppqPositionOfLastBarStart.hasValue() && mRhythmInfo.ppqPosition
-                                      && mRhythmInfo.timeSignature.hasValue();
+            mTimeQuantizeInfo.canQuantize = mTimeQuantizeInfo.isPlaying && mTimeQuantizeInfo.bpm.hasValue()
+                                            && mTimeQuantizeInfo.ppqPositionOfLastBarStart.hasValue()
+                                            && mTimeQuantizeInfo.ppqPosition
+                                            && mTimeQuantizeInfo.timeSignature.hasValue();
         } else {
-            mRhythmInfo.canQuantize = false;
+            mTimeQuantizeInfo.canQuantize = false;
         }
     }
 }
 
-bool RhythmOptions::canQuantize() const
+bool TimeQuantizeOptions::canQuantize() const
 {
-    return mRhythmInfo.canQuantize;
+    return mTimeQuantizeInfo.canQuantize;
 }
 
-void RhythmOptions::setParameters(RhythmUtils::TimeDivisions inDivision, float inQuantizationForce)
+void TimeQuantizeOptions::setParameters(TimeQuantizeUtils::TimeDivisions inDivision, float inQuantizationForce)
 {
     mParameters.division = inDivision;
     mParameters.quantizationForce = inQuantizationForce;
 }
 
-std::vector<Notes::Event> RhythmOptions::quantize(const std::vector<Notes::Event>& inNoteEvents)
+std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes::Event>& inNoteEvents)
 {
     std::vector<Notes::Event> out_events;
 
-    if (!mRhythmInfo.canQuantize) {
+    if (!mTimeQuantizeInfo.canQuantize) {
         out_events = inNoteEvents;
         return out_events;
     }
 
-    double bpm = *mRhythmInfo.bpm;
+    double bpm = *mTimeQuantizeInfo.bpm;
     // Offset from previous bar start
-    double start_pos_qn = *mRhythmInfo.ppqPosition - *mRhythmInfo.ppqPositionOfLastBarStart;
+    double start_pos_qn = *mTimeQuantizeInfo.ppqPosition - *mTimeQuantizeInfo.ppqPositionOfLastBarStart;
 
-    double time_division = RhythmUtils::TimeDivisionsDouble.at(static_cast<size_t>(mParameters.division));
+    double time_division = TimeQuantizeUtils::TimeDivisionsDouble.at(static_cast<size_t>(mParameters.division));
 
     for (const auto& event: inNoteEvents) {
         double duration = event.endTime - event.startTime;
@@ -104,15 +105,17 @@ std::vector<Notes::Event> RhythmOptions::quantize(const std::vector<Notes::Event
     return out_events;
 }
 
-void RhythmOptions::reset()
+void TimeQuantizeOptions::reset()
 {
     // Reset to default struct where nothing is set and bool false.
-    mRhythmInfo = RhythmInfo();
-    mPlayheadInfoStartRecord = nullopt;
+    mTimeQuantizeInfo = TimeQuantizeInfo();
+    mPlayheadInfoStartRecord = Optional<AudioPlayHead::PositionInfo>();
 }
-void RhythmOptions::clear()
+
+void TimeQuantizeOptions::clear()
 {
-    mPlayheadInfoStartRecord = juce::Optional<juce::AudioPlayHead::PositionInfo>();
+    mTimeQuantizeInfo = TimeQuantizeInfo();
+    mPlayheadInfoStartRecord = Optional<AudioPlayHead::PositionInfo>();
 
     mCurrentTempo = -1;
     mCurrentTimeSignatureNum = -1;
@@ -120,17 +123,17 @@ void RhythmOptions::clear()
     mWasRecording = false;
 }
 
-const Optional<AudioPlayHead::PositionInfo>& RhythmOptions::getPlayheadInfoOnRecordStart() const
+const Optional<AudioPlayHead::PositionInfo>& TimeQuantizeOptions::getPlayheadInfoOnRecordStart() const
 {
     return mPlayheadInfoStartRecord;
 }
 
-double RhythmOptions::getCurrentTempo() const
+double TimeQuantizeOptions::getCurrentTempo() const
 {
     return mCurrentTempo.load();
 }
 
-std::string RhythmOptions::getTempoStr() const
+std::string TimeQuantizeOptions::getTempoStr() const
 {
     if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getBpm().hasValue()) {
         return std::to_string(static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
@@ -143,7 +146,7 @@ std::string RhythmOptions::getTempoStr() const
     return "-";
 }
 
-std::string RhythmOptions::getTimeSignatureStr() const
+std::string TimeQuantizeOptions::getTimeSignatureStr() const
 {
     if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getTimeSignature().hasValue()) {
         int num = mPlayheadInfoStartRecord->getTimeSignature()->numerator;
@@ -159,7 +162,7 @@ std::string RhythmOptions::getTimeSignatureStr() const
     return "- / -";
 }
 
-double RhythmOptions::quantizeTime(
+double TimeQuantizeOptions::quantizeTime(
     double inEventTime, double inBPM, double inTimeDivision, double inStartTimeQN, float inQuantizationForce)
 {
     jassert(inEventTime >= 0.0);

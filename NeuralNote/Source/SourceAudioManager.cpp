@@ -25,13 +25,13 @@ void SourceAudioManager::prepareToPlay(double inSampleRate, int inSamplesPerBloc
     mSampleRate = inSampleRate;
     mInternalMonoBuffer.setSize(1, inSamplesPerBlock);
     mDownSampler.prepareToPlay(inSampleRate, inSamplesPerBlock, BASIC_PITCH_SAMPLE_RATE);
-    mInternalDownsampledBuffer.setSize(1,
-                                       (int) std::ceil(BASIC_PITCH_SAMPLE_RATE / inSampleRate * inSamplesPerBlock) + 5);
+    mInternalDownsampledBuffer.setSize(
+        1, static_cast<int>(std::ceil(BASIC_PITCH_SAMPLE_RATE / inSampleRate * inSamplesPerBlock)) + 5);
 
     if (mProcessor->getState() == PopulatedAudioAndMidiRegions && mSampleRate != mSourceAudioSampleRate) {
         AudioBuffer<float> tmp_buffer;
         AudioUtils::resampleBuffer(mSourceAudio, tmp_buffer, mSourceAudioSampleRate, mSampleRate);
-        mSourceAudio = tmp_buffer;
+        mSourceAudio = std::move(tmp_buffer);
         mSourceAudioSampleRate = mSampleRate;
     }
 }
@@ -45,7 +45,7 @@ void SourceAudioManager::processBlock(const AudioBuffer<float>& inBuffer)
         bool result = mThreadedWriter->write(inBuffer.getArrayOfReadPointers(), inBuffer.getNumSamples());
         jassertquiet(result);
         mNumSamplesAcquired += inBuffer.getNumSamples();
-        mDuration = (double) mNumSamplesAcquiredDown / BASIC_PITCH_SAMPLE_RATE;
+        mDuration = static_cast<double>(mNumSamplesAcquiredDown) / BASIC_PITCH_SAMPLE_RATE;
 
         // Downmix to mono
         mInternalMonoBuffer.copyFrom(0, 0, inBuffer, 0, 0, inBuffer.getNumSamples());
@@ -53,7 +53,7 @@ void SourceAudioManager::processBlock(const AudioBuffer<float>& inBuffer)
             mInternalMonoBuffer.addFrom(0, 0, inBuffer, ch, 0, inBuffer.getNumSamples());
         }
 
-        mInternalMonoBuffer.applyGain(1.0f / (float) inBuffer.getNumChannels());
+        mInternalMonoBuffer.applyGain(1.0f / static_cast<float>(inBuffer.getNumChannels()));
 
         // Downsample to basic pitch sample rate
         int num_samples_down = mDownSampler.processBlock(mInternalMonoBuffer.getReadPointer(0),
@@ -86,7 +86,6 @@ void SourceAudioManager::startRecording()
 
     mDroppedFilename = "";
 
-    // TODO: change name with timestamp.
     String timestamp = Time::getCurrentTime().formatted("%Y-%m-%d_%H-%M-%S");
 
     mSourceFile = mNeuralNoteDir.getChildFile("recorded_audio" + timestamp + ".wav");
@@ -107,7 +106,7 @@ void SourceAudioManager::startRecording()
     if (!file_creation_result.wasOk() || !file_creation_result_down.wasOk()) {
         mProcessor->clear();
         NativeMessageBox::showMessageBoxAsync(
-            juce::MessageBoxIconType::NoIcon, "Error", "File creation for recording failed.");
+            MessageBoxIconType::NoIcon, "Error", "File creation for recording failed.");
         return;
     }
 
@@ -115,10 +114,10 @@ void SourceAudioManager::startRecording()
     mFilesToDelete.push_back(mRecordedFileDown);
 
     // Init first writer at native sample rate (stereo)
-    juce::WavAudioFormat format;
-    juce::StringPairArray meta_data_values;
+    WavAudioFormat format;
+    StringPairArray meta_data_values;
 
-    auto* wav_writer = format.createWriterFor(new juce::FileOutputStream(mSourceFile),
+    auto* wav_writer = format.createWriterFor(new FileOutputStream(mSourceFile),
                                               mSampleRate,
                                               std::min(mProcessor->getTotalNumInputChannels(), 2),
                                               16,
@@ -126,18 +125,18 @@ void SourceAudioManager::startRecording()
                                               0);
 
     mWriterThread.startThread();
-    mThreadedWriter = std::make_unique<juce::AudioFormatWriter::ThreadedWriter>(wav_writer, mWriterThread, 32768);
+    mThreadedWriter = std::make_unique<AudioFormatWriter::ThreadedWriter>(wav_writer, mWriterThread, 32768);
 
     // Init second writer at basic pitch sample rate (mono)
-    juce::WavAudioFormat format_down;
-    juce::StringPairArray meta_data_values_down;
+    WavAudioFormat format_down;
+    StringPairArray meta_data_values_down;
 
     auto* wav_writer_down = format_down.createWriterFor(
-        new juce::FileOutputStream(mRecordedFileDown), BASIC_PITCH_SAMPLE_RATE, 1, 16, meta_data_values_down, 0);
+        new FileOutputStream(mRecordedFileDown), BASIC_PITCH_SAMPLE_RATE, 1, 16, meta_data_values_down, 0);
 
     mWriterThreadDown.startThread();
     mThreadedWriterDown =
-        std::make_unique<juce::AudioFormatWriter::ThreadedWriter>(wav_writer_down, mWriterThreadDown, 32768);
+        std::make_unique<AudioFormatWriter::ThreadedWriter>(wav_writer_down, mWriterThreadDown, 32768);
     mDownSampler.reset();
 
     mThreadedWriterDown->setDataReceiver(&mThumbnail);
@@ -168,8 +167,8 @@ void SourceAudioManager::stopRecording()
     // Should def not happen
     if (!success) {
         mProcessor->clear();
-        juce::NativeMessageBox::showMessageBoxAsync(
-            juce::MessageBoxIconType::NoIcon, "Could not load the recorded audio sample.", "");
+        NativeMessageBox::showMessageBoxAsync(
+            MessageBoxIconType::NoIcon, "Could not load the recorded audio sample.", "");
         return;
     }
 
@@ -180,8 +179,8 @@ void SourceAudioManager::stopRecording()
     // Should def not happen
     if (!success) {
         mProcessor->clear();
-        juce::NativeMessageBox::showMessageBoxAsync(
-            juce::MessageBoxIconType::NoIcon, "Could not load the recorded audio sample.", "");
+        NativeMessageBox::showMessageBoxAsync(
+            MessageBoxIconType::NoIcon, "Could not load the recorded audio sample.", "");
         return;
     }
 
@@ -199,8 +198,8 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
 
         if (!success) {
             mProcessor->clear();
-            juce::NativeMessageBox::showMessageBoxAsync(
-                juce::MessageBoxIconType::NoIcon,
+            NativeMessageBox::showMessageBoxAsync(
+                MessageBoxIconType::NoIcon,
                 "Could not load the audio file.",
                 "Check your file format (Accepted formats: .wav, .aiff, .flac, .mp3, .ogg).");
             return false;
@@ -214,7 +213,7 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
         if (mSourceAudioSampleRate != mSampleRate) {
             AudioBuffer<float> tmp_buffer;
             AudioUtils::resampleBuffer(mSourceAudio, tmp_buffer, mSourceAudioSampleRate, mSampleRate);
-            mSourceAudio = tmp_buffer;
+            mSourceAudio = std::move(tmp_buffer);
             mSourceAudioSampleRate = mSampleRate;
         }
 
@@ -227,7 +226,7 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
 
         auto& tree = mProcessor->getValueTree();
         tree.setPropertyExcludingListener(this, NnId::SourceAudioNativeSrPathId, inFile.getFullPathName(), nullptr);
-        mProcessor->getTranscriptionManager()->getRhythmOptions().setInfo(true);
+        mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().setInfo(true);
 
         mThumbnail.clear();
         mThumbnailCache.clear();
@@ -258,8 +257,7 @@ void SourceAudioManager::clear()
 
     _deleteFilesToDelete();
 
-    auto& tree = mProcessor->getValueTree();
-    tree.setPropertyExcludingListener(this, NnId::SourceAudioNativeSrPathId, String(), nullptr);
+    mProcessor->getValueTree().setPropertyExcludingListener(this, NnId::SourceAudioNativeSrPathId, String(), nullptr);
 
     mDroppedFilename = "";
 }
@@ -313,6 +311,7 @@ void SourceAudioManager::valueTreePropertyChanged(ValueTree& treeWhosePropertyHa
                     mNeuralNoteDir.getChildFile(mSourceFile.getFileNameWithoutExtension() + "_downsampled.wav");
                 mFilesToDelete.push_back(mSourceFile);
                 mFilesToDelete.push_back(mRecordedFileDown);
+                mDroppedFilename = "";
             }
         }
     }

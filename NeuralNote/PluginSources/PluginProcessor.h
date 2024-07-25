@@ -8,7 +8,7 @@
 #include "BasicPitch.h"
 #include "NoteOptions.h"
 #include "MidiFileWriter.h"
-#include "RhythmOptions.h"
+#include "TimeQuantizeOptions.h"
 #include "Player.h"
 #include "SourceAudioManager.h"
 #include "ParameterHelpers.h"

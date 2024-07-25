@@ -235,7 +235,7 @@ void NeuralNoteMainView::updateEnablements()
         mCenterButton->setEnabled(true);
         mTranscriptionOptions.setEnabled(true);
         mNoteOptions.setEnabled(true);
-        mQuantizePanel.setEnabled(mProcessor.getTranscriptionManager()->getRhythmOptions().canQuantize());
+        mQuantizePanel.setEnabled(mProcessor.getTranscriptionManager()->getTimeQuantizeOptions().canQuantize());
         mVisualizationPanel.setMidiFileDragComponentVisible();
     }
 

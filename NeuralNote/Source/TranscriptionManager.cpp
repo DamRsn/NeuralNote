@@ -104,7 +104,7 @@ void TranscriptionManager::_runModel()
     auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
     mRhythmOptions.setParameters(
-        static_cast<RhythmUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
+        static_cast<TimeQuantizeUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
         mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
 
     mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
@@ -116,8 +116,8 @@ void TranscriptionManager::_runModel()
     auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
     mProcessor->getPlayer()->getSynthController()->setNewMidiEventsVectorToUse(single_events);
 
-    mMidiFileTempo = mProcessor->getTranscriptionManager()->getRhythmOptions().getCurrentTempo() > 0
-                         ? mProcessor->getTranscriptionManager()->getRhythmOptions().getCurrentTempo()
+    mMidiFileTempo = mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getCurrentTempo() > 0
+                         ? mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getCurrentTempo()
                          : 120;
 
     mProcessor->setStateToPopulatedAudioAndMidiRegions();
@@ -155,9 +155,9 @@ void TranscriptionManager::_updatePostProcessing()
         // TODO: Make this vector a member to avoid reallocating every time
         auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
-        mRhythmOptions.setParameters(
-            static_cast<RhythmUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
-            mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
+        mRhythmOptions.setParameters(static_cast<TimeQuantizeUtils::TimeDivisions>(
+                                         mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
+                                     mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
 
         // TODO: Pass mPostProcessedNotes as reference
         mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
@@ -183,7 +183,7 @@ const std::vector<Notes::Event>& TranscriptionManager::getNoteEventVector() cons
     return mPostProcessedNotes;
 }
 
-RhythmOptions& TranscriptionManager::getRhythmOptions()
+TimeQuantizeOptions& TranscriptionManager::getTimeQuantizeOptions()
 {
     return mRhythmOptions;
 }

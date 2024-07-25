@@ -8,7 +8,7 @@
 #include <JuceHeader.h>
 #include "BasicPitch.h"
 #include "NoteOptions.h"
-#include "RhythmOptions.h"
+#include "TimeQuantizeOptions.h"
 
 class NeuralNoteAudioProcessor;
 class NeuralNoteMainView;
@@ -35,7 +35,7 @@ public:
 
     const std::vector<Notes::Event>& getNoteEventVector() const;
 
-    RhythmOptions& getRhythmOptions();
+    TimeQuantizeOptions& getTimeQuantizeOptions();
 
     void clear();
 
@@ -56,7 +56,7 @@ private:
 
     BasicPitch mBasicPitch;
     NoteOptions mNoteOptions;
-    RhythmOptions mRhythmOptions;
+    TimeQuantizeOptions mRhythmOptions;
 
     std::vector<Notes::Event> mPostProcessedNotes;
 

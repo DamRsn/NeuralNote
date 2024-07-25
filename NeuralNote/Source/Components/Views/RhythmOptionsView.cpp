@@ -11,7 +11,7 @@ RhythmOptionsView::RhythmOptionsView(NeuralNoteAudioProcessor& processor)
     mTimeDivisionDropdown = std::make_unique<juce::ComboBox>("TimeDivisionDropDown");
     mTimeDivisionDropdown->setEditableText(false);
     mTimeDivisionDropdown->setJustificationType(juce::Justification::centredRight);
-    mTimeDivisionDropdown->addItemList(RhythmUtils::TimeDivisionsStr, 1);
+    mTimeDivisionDropdown->addItemList(TimeQuantizeUtils::TimeDivisionsStr, 1);
     mTimeDivisionAttachment = std::make_unique<juce::ComboBoxParameterAttachment>(
         *mProcessor.getParams()[ParameterHelpers::TimeDivisionId], *mTimeDivisionDropdown);
     addAndMakeVisible(*mTimeDivisionDropdown);
@@ -52,11 +52,11 @@ void RhythmOptionsView::paint(Graphics& g)
 
     g.setFont(LABEL_FONT);
 
-    g.drawText("TEMPO  " + mProcessor.getTranscriptionManager()->getRhythmOptions().getTempoStr(),
+    g.drawText("TEMPO  " + mProcessor.getTranscriptionManager()->getTimeQuantizeOptions().getTempoStr(),
                juce::Rectangle<int>(19, LEFT_SECTIONS_TOP_PAD + 47, 75, 10),
                juce::Justification::centredLeft);
 
-    g.drawText("TIME SIGNATURE  " + mProcessor.getTranscriptionManager()->getRhythmOptions().getTimeSignatureStr(),
+    g.drawText("TIME SIGNATURE  " + mProcessor.getTranscriptionManager()->getTimeQuantizeOptions().getTimeSignatureStr(),
                juce::Rectangle<int>(122, LEFT_SECTIONS_TOP_PAD + 47, 130, 10),
                juce::Justification::centredRight);
 

@@ -9,7 +9,7 @@
 
 #include "PluginProcessor.h"
 #include "UIDefines.h"
-#include "RhythmUtils.h"
+#include "TimeQuantizeUtils.h"
 #include "QuantizeForceSlider.h"
 
 class NeuralNoteMainView;

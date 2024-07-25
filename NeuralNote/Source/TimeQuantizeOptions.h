@@ -7,19 +7,19 @@
 
 #include "JuceHeader.h"
 #include "Notes.h"
-#include "RhythmUtils.h"
+#include "TimeQuantizeUtils.h"
 
 class NeuralNoteAudioProcessor;
 
-class RhythmOptions
+class TimeQuantizeOptions
 {
 public:
     struct Parameters {
-        RhythmUtils::TimeDivisions division = RhythmUtils::_1_4;
+        TimeQuantizeUtils::TimeDivisions division = TimeQuantizeUtils::_1_4;
         float quantizationForce = 0.f;
     };
 
-    explicit RhythmOptions(NeuralNoteAudioProcessor* inProcessor);
+    explicit TimeQuantizeOptions(NeuralNoteAudioProcessor* inProcessor);
 
     void processBlock();
 
@@ -27,7 +27,7 @@ public:
 
     bool canQuantize() const;
 
-    void setParameters(RhythmUtils::TimeDivisions inDivision, float inQuantizationForce);
+    void setParameters(TimeQuantizeUtils::TimeDivisions inDivision, float inQuantizationForce);
 
     std::vector<Notes::Event> quantize(const std::vector<Notes::Event>& inNoteEvents);
 
@@ -47,7 +47,7 @@ private:
     static double quantizeTime(
         double inEventTime, double inBPM, double inTimeDivision, double inStartTimeQN, float inQuantizationForce);
 
-    struct RhythmInfo {
+    struct TimeQuantizeInfo {
         Optional<double> bpm;
         Optional<AudioPlayHead::TimeSignature> timeSignature;
         Optional<double> ppqPositionOfLastBarStart;
@@ -58,7 +58,7 @@ private:
 
     NeuralNoteAudioProcessor* mProcessor;
 
-    RhythmInfo mRhythmInfo;
+    TimeQuantizeInfo mTimeQuantizeInfo;
 
     Parameters mParameters;
 
