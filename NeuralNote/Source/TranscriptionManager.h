@@ -43,6 +43,8 @@ public:
 
     double getMidiFileTempo() const;
 
+    void saveStateToValueTree();
+
 private:
     void _runModel();
 
@@ -56,7 +58,7 @@ private:
 
     BasicPitch mBasicPitch;
     NoteOptions mNoteOptions;
-    TimeQuantizeOptions mRhythmOptions;
+    TimeQuantizeOptions mTimeQuantizeOptions;
 
     std::vector<Notes::Event> mPostProcessedNotes;
 

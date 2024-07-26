@@ -11,7 +11,7 @@
 
 class NeuralNoteAudioProcessor;
 
-class TimeQuantizeOptions
+class TimeQuantizeOptions : public ValueTree::Listener
 {
 public:
     struct Parameters {
@@ -20,6 +20,8 @@ public:
     };
 
     explicit TimeQuantizeOptions(NeuralNoteAudioProcessor* inProcessor);
+
+    ~TimeQuantizeOptions();
 
     void processBlock();
 
@@ -43,9 +45,13 @@ public:
 
     std::string getTimeSignatureStr() const;
 
+    void saveStateToValueTree();
+
 private:
     static double quantizeTime(
         double inEventTime, double inBPM, double inTimeDivision, double inStartTimeQN, float inQuantizationForce);
+
+    void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
 
     struct TimeQuantizeInfo {
         Optional<double> bpm;

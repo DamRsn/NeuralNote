@@ -17,6 +17,8 @@ class Player : public ValueTree::Listener
 public:
     explicit Player(NeuralNoteAudioProcessor* inProcessor);
 
+    ~Player() override;
+
     void prepareToPlay(double inSampleRate, int inSamplesPerBlock);
 
     void processBlock(AudioBuffer<float>& inAudioBuffer);

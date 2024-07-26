@@ -22,6 +22,11 @@ Player::Player(NeuralNoteAudioProcessor* inProcessor)
     setPlayheadPositionSeconds(mProcessor->getValueTree().getProperty(NnId::PlayheadPositionSecId, 0.0));
 }
 
+Player::~Player()
+{
+    mProcessor->getValueTree().removeListener(this);
+}
+
 void Player::prepareToPlay(double inSampleRate, int inSamplesPerBlock)
 {
     mSynth->setCurrentPlaybackSampleRate(inSampleRate);

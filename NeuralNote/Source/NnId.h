@@ -27,20 +27,23 @@ inline static Identifier PlayheadPositionSecId = "PLAYHEAD_POSITION_SEC";
 
 inline static Identifier PlayheadCenteredId = "PLAYHEAD_CENTERED";
 
-inline static Identifier DetectedTempoId = "DETECTED_TEMPO";
+inline static Identifier TempoId = "TEMPO";
 
-inline static Identifier DetectedTimeSignatureId = "DETECTED_TIME_SIGNATURE";
+inline static Identifier TimeSignatureNumeratorId = "TIME_SIGNATURE_NUMERATOR";
+
+inline static Identifier TimeSignatureDenominatorId = "TIME_SIGNATURE_DENOMINATOR";
 
 inline static Identifier ExportTempoId = "EXPORT_TEMPO";
 
+// To be set in this specific order
 const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault = {
+    {TempoId, 120.0},
+    {TimeSignatureNumeratorId, 4},
+    {TimeSignatureDenominatorId, 4},
     {SourceAudioNativeSrPathId, String()},
     {PlayheadPositionSecId, 0.0},
     {PlayheadCenteredId, true},
-    {DetectedTempoId, 120.0},
-    {DetectedTimeSignatureId, "4/4"},
     {ExportTempoId, 120.0}};
-
 } // namespace NnId
 
 #endif //NNID_H

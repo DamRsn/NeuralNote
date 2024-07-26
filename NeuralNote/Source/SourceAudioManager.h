@@ -17,7 +17,7 @@ class SourceAudioManager : public ValueTree::Listener
 public:
     explicit SourceAudioManager(NeuralNoteAudioProcessor* inProcessor);
 
-    ~SourceAudioManager() override = default;
+    ~SourceAudioManager() override;
 
     /**
      * PrepareToPlay

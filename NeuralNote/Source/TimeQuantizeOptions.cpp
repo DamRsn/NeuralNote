@@ -8,6 +8,11 @@
 TimeQuantizeOptions::TimeQuantizeOptions(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
 {
+    mProcessor->addListenerToStateValueTree(this);
+}
+TimeQuantizeOptions::~TimeQuantizeOptions()
+{
+    mProcessor->getValueTree().removeListener(this);
 }
 
 void TimeQuantizeOptions::processBlock()
@@ -162,6 +167,15 @@ std::string TimeQuantizeOptions::getTimeSignatureStr() const
     return "- / -";
 }
 
+void TimeQuantizeOptions::saveStateToValueTree()
+{
+    mProcessor->getValueTree().setPropertyExcludingListener(this, NnId::TempoId, mCurrentTempo.load(), nullptr);
+    mProcessor->getValueTree().setPropertyExcludingListener(
+        this, NnId::TimeSignatureNumeratorId, mCurrentTimeSignatureNum.load(), nullptr);
+    mProcessor->getValueTree().setPropertyExcludingListener(
+        this, NnId::TimeSignatureDenominatorId, mCurrentTimeSignatureDenom.load(), nullptr);
+}
+
 double TimeQuantizeOptions::quantizeTime(
     double inEventTime, double inBPM, double inTimeDivision, double inStartTimeQN, float inQuantizationForce)
 {
@@ -191,4 +205,15 @@ double TimeQuantizeOptions::quantizeTime(
     double quantized_time = quantized_shifted_time - new_time_origin;
 
     return quantized_time;
+}
+
+void TimeQuantizeOptions::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
+{
+    if (property == NnId::TempoId) {
+        mCurrentTempo = mProcessor->getValueTree().getProperty(property);
+    } else if (property == NnId::TimeSignatureNumeratorId) {
+        mCurrentTimeSignatureNum = mProcessor->getValueTree().getProperty(property);
+    } else if (property == NnId::TimeSignatureDenominatorId) {
+        mCurrentTimeSignatureDenom = mProcessor->getValueTree().getProperty(property);
+    }
 }

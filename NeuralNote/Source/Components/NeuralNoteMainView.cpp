@@ -143,6 +143,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
 
 NeuralNoteMainView::~NeuralNoteMainView()
 {
+    mProcessor.getValueTree().removeListener(this);
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
 }
 

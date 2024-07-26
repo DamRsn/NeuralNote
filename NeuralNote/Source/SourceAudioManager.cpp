@@ -16,6 +16,11 @@ SourceAudioManager::SourceAudioManager(NeuralNoteAudioProcessor* inProcessor)
     jassert(mProcessor->getValueTree().hasProperty(NnId::SourceAudioNativeSrPathId));
 }
 
+SourceAudioManager::~SourceAudioManager()
+{
+    mProcessor->getValueTree().removeListener(this);
+}
+
 void SourceAudioManager::prepareToPlay(double inSampleRate, int inSamplesPerBlock)
 {
     if (mIsRecording.load()) {
