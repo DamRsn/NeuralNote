@@ -21,7 +21,7 @@ public:
 
     explicit TimeQuantizeOptions(NeuralNoteAudioProcessor* inProcessor);
 
-    ~TimeQuantizeOptions();
+    ~TimeQuantizeOptions() override;
 
     void processBlock();
 

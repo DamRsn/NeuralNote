@@ -8,11 +8,11 @@
 TimeQuantizeOptions::TimeQuantizeOptions(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
 {
-    mProcessor->addListenerToStateValueTree(this);
+    // mProcessor->addListenerToStateValueTree(this);
 }
 TimeQuantizeOptions::~TimeQuantizeOptions()
 {
-    mProcessor->getValueTree().removeListener(this);
+    // mProcessor->getValueTree().removeListener(this);
 }
 
 void TimeQuantizeOptions::processBlock()
@@ -169,11 +169,11 @@ std::string TimeQuantizeOptions::getTimeSignatureStr() const
 
 void TimeQuantizeOptions::saveStateToValueTree()
 {
-    mProcessor->getValueTree().setPropertyExcludingListener(this, NnId::TempoId, mCurrentTempo.load(), nullptr);
-    mProcessor->getValueTree().setPropertyExcludingListener(
-        this, NnId::TimeSignatureNumeratorId, mCurrentTimeSignatureNum.load(), nullptr);
-    mProcessor->getValueTree().setPropertyExcludingListener(
-        this, NnId::TimeSignatureDenominatorId, mCurrentTimeSignatureDenom.load(), nullptr);
+    //     mProcessor->getValueTree().setPropertyExcludingListener(this, NnId::TempoId, mCurrentTempo.load(), nullptr);
+    //     mProcessor->getValueTree().setPropertyExcludingListener(
+    //         this, NnId::TimeSignatureNumeratorId, mCurrentTimeSignatureNum.load(), nullptr);
+    //     mProcessor->getValueTree().setPropertyExcludingListener(
+    //         this, NnId::TimeSignatureDenominatorId, mCurrentTimeSignatureDenom.load(), nullptr);
 }
 
 double TimeQuantizeOptions::quantizeTime(
@@ -209,11 +209,12 @@ double TimeQuantizeOptions::quantizeTime(
 
 void TimeQuantizeOptions::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
 {
-    if (property == NnId::TempoId) {
-        mCurrentTempo = mProcessor->getValueTree().getProperty(property);
-    } else if (property == NnId::TimeSignatureNumeratorId) {
-        mCurrentTimeSignatureNum = mProcessor->getValueTree().getProperty(property);
-    } else if (property == NnId::TimeSignatureDenominatorId) {
-        mCurrentTimeSignatureDenom = mProcessor->getValueTree().getProperty(property);
-    }
+    // // TODO: not enough to characterize whole state (can quantize? start of recording info?)
+    // if (property == NnId::TempoId) {
+    //     mCurrentTempo = mProcessor->getValueTree().getProperty(property);
+    // } else if (property == NnId::TimeSignatureNumeratorId) {
+    //     mCurrentTimeSignatureNum = mProcessor->getValueTree().getProperty(property);
+    // } else if (property == NnId::TimeSignatureDenominatorId) {
+    //     mCurrentTimeSignatureDenom = mProcessor->getValueTree().getProperty(property);
+    // }
 }

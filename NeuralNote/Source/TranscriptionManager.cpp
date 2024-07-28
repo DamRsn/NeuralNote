@@ -156,8 +156,8 @@ void TranscriptionManager::_updatePostProcessing()
         auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
         mTimeQuantizeOptions.setParameters(static_cast<TimeQuantizeUtils::TimeDivisions>(
-                                         mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
-                                     mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
+                                               mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
+                                           mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
 
         // TODO: Pass mPostProcessedNotes as reference
         mPostProcessedNotes = mTimeQuantizeOptions.quantize(post_processed_notes);
