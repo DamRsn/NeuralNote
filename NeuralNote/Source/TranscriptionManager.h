@@ -8,20 +8,22 @@
 #include <JuceHeader.h>
 #include "BasicPitch.h"
 #include "NoteOptions.h"
-#include "RhythmOptions.h"
+#include "TimeQuantizeOptions.h"
 
 class NeuralNoteAudioProcessor;
 class NeuralNoteMainView;
 class NeuralNoteEditor;
 
 class TranscriptionManager
-    : public juce::Timer
+    : public Timer
     , public AudioProcessorValueTreeState::Listener
 {
 public:
     explicit TranscriptionManager(NeuralNoteAudioProcessor* inProcessor);
 
     void timerCallback() override;
+
+    void processBlock();
 
     void setLauchNewTranscription();
 
@@ -33,13 +35,15 @@ public:
 
     const std::vector<Notes::Event>& getNoteEventVector() const;
 
-    RhythmOptions& getRhythmOptions();
+    TimeQuantizeOptions& getTimeQuantizeOptions();
 
     void clear();
 
     void setMidiFileTempo(double inMidiFileTempo);
 
     double getMidiFileTempo() const;
+
+    void saveStateToValueTree();
 
 private:
     void _runModel();
@@ -54,7 +58,7 @@ private:
 
     BasicPitch mBasicPitch;
     NoteOptions mNoteOptions;
-    RhythmOptions mRhythmOptions;
+    TimeQuantizeOptions mTimeQuantizeOptions;
 
     std::vector<Notes::Event> mPostProcessedNotes;
 
@@ -63,7 +67,7 @@ private:
     std::atomic<bool> mShouldUpdatePostProcessing = false;
     std::atomic<bool> mShouldRepaintPianoRoll = false;
 
-    juce::ThreadPool mThreadPool;
+    ThreadPool mThreadPool;
     std::function<void()> mJobLambda;
 
     double mMidiFileTempo = 120.0;

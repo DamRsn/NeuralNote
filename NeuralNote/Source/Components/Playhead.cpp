@@ -5,8 +5,8 @@
 #include "Playhead.h"
 Playhead::Playhead(NeuralNoteAudioProcessor* inProcessor, double inNumPixelsPerSecond)
     : mProcessor(inProcessor)
-    , mNumPixelsPerSecond(inNumPixelsPerSecond)
     , mVBlankAttachment(this, [this]() { _onVBlankCallback(); })
+    , mNumPixelsPerSecond(inNumPixelsPerSecond)
 {
     setInterceptsMouseClicks(false, false);
 }
@@ -46,8 +46,8 @@ double Playhead::computePlayheadPositionPixel(double inPlayheadPositionSeconds,
                                               int inWidth)
 {
     auto playhead_pos = inPlayheadPositionSeconds / inSampleDuration
-                        * std::min(inNumPixelPerSecond * inSampleDuration, (double) inWidth);
-    return jlimit(0.0, (double) inWidth, playhead_pos);
+                        * std::min(inNumPixelPerSecond * inSampleDuration, static_cast<double>(inWidth));
+    return jlimit(0.0, static_cast<double>(inWidth), playhead_pos);
 }
 
 void Playhead::_onVBlankCallback()

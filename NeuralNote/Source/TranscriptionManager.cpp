@@ -8,6 +8,7 @@
 
 TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
+    , mTimeQuantizeOptions(inProcessor)
     , mThreadPool(1)
 {
     mJobLambda = [this]() { _runModel(); };
@@ -45,6 +46,11 @@ void TranscriptionManager::timerCallback()
     } else if (mShouldRepaintPianoRoll) {
         _repaintPianoRoll();
     }
+}
+
+void TranscriptionManager::processBlock()
+{
+    mTimeQuantizeOptions.processBlock();
 }
 
 void TranscriptionManager::setLauchNewTranscription()
@@ -97,11 +103,11 @@ void TranscriptionManager::_runModel()
 
     auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
-    mRhythmOptions.setParameters(
-        static_cast<RhythmUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
+    mTimeQuantizeOptions.setParameters(
+        static_cast<TimeQuantizeUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
         mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
 
-    mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
+    mPostProcessedNotes = mTimeQuantizeOptions.quantize(post_processed_notes);
 
     Notes::dropOverlappingPitchBends(mPostProcessedNotes);
     Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
@@ -110,7 +116,9 @@ void TranscriptionManager::_runModel()
     auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
     mProcessor->getPlayer()->getSynthController()->setNewMidiEventsVectorToUse(single_events);
 
-    mMidiFileTempo = mProcessor->getCurrentTempo() > 0 ? mProcessor->getCurrentTempo() : 120;
+    mMidiFileTempo = mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getCurrentTempo() > 0
+                         ? mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getCurrentTempo()
+                         : 120;
 
     mProcessor->setStateToPopulatedAudioAndMidiRegions();
 }
@@ -147,12 +155,12 @@ void TranscriptionManager::_updatePostProcessing()
         // TODO: Make this vector a member to avoid reallocating every time
         auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
-        mRhythmOptions.setParameters(
-            static_cast<RhythmUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
-            mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
+        mTimeQuantizeOptions.setParameters(static_cast<TimeQuantizeUtils::TimeDivisions>(
+                                         mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
+                                     mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
 
         // TODO: Pass mPostProcessedNotes as reference
-        mPostProcessedNotes = mRhythmOptions.quantize(post_processed_notes);
+        mPostProcessedNotes = mTimeQuantizeOptions.quantize(post_processed_notes);
 
         Notes::dropOverlappingPitchBends(mPostProcessedNotes);
         Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
@@ -175,9 +183,9 @@ const std::vector<Notes::Event>& TranscriptionManager::getNoteEventVector() cons
     return mPostProcessedNotes;
 }
 
-RhythmOptions& TranscriptionManager::getRhythmOptions()
+TimeQuantizeOptions& TranscriptionManager::getTimeQuantizeOptions()
 {
-    return mRhythmOptions;
+    return mTimeQuantizeOptions;
 }
 
 void TranscriptionManager::clear()
@@ -188,6 +196,7 @@ void TranscriptionManager::clear()
     mShouldUpdatePostProcessing = false;
     mPostProcessedNotes.clear();
     mMidiFileTempo = 120.0;
+    mTimeQuantizeOptions.clear();
 }
 
 void TranscriptionManager::launchTranscribeJob()
@@ -215,6 +224,11 @@ void TranscriptionManager::setMidiFileTempo(double inMidiFileTempo)
 double TranscriptionManager::getMidiFileTempo() const
 {
     return mMidiFileTempo;
+}
+
+void TranscriptionManager::saveStateToValueTree()
+{
+    mTimeQuantizeOptions.saveStateToValueTree();
 }
 
 void TranscriptionManager::_repaintPianoRoll()

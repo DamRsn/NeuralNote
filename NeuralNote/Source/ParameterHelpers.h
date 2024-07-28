@@ -7,7 +7,7 @@
 
 #include <JuceHeader.h>
 #include "NoteUtils.h"
-#include "RhythmUtils.h"
+#include "TimeQuantizeUtils.h"
 #include "NnId.h"
 
 namespace ParameterHelpers
@@ -137,7 +137,7 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
                 toJuceParameterID(id), toName(id), NoteUtils::SnapModesStr, 0);
         case TimeDivisionId:
             return std::make_unique<AudioParameterChoice>(
-                toJuceParameterID(id), toName(id), RhythmUtils::TimeDivisionsStr, 5);
+                toJuceParameterID(id), toName(id), TimeQuantizeUtils::TimeDivisionsStr, 5);
         case QuantizationForceId:
             return std::make_unique<AudioParameterFloat>(toJuceParameterID(id), toName(id), 0.0f, 1.0f, 0.f);
 
@@ -147,9 +147,9 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
     }
 }
 
-inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
+inline AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
 {
-    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+    std::vector<std::unique_ptr<RangedAudioParameter>> params;
 
     for (size_t i = 0; i < TotalNumParams; i++) {
         auto pid = static_cast<ParamIdEnum>(i);
@@ -159,7 +159,7 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     return {params.begin(), params.end()};
 }
 
-inline void updateParametersFromState(const juce::ValueTree& inParameterTree,
+inline void updateParametersFromState(const ValueTree& inParameterTree,
                                       std::array<RangedAudioParameter*, TotalNumParams>& inParams)
 {
     if (inParameterTree.isValid()) {

@@ -12,12 +12,12 @@
 
 class NeuralNoteAudioProcessor;
 
-class SourceAudioManager
+class SourceAudioManager : public ValueTree::Listener
 {
 public:
     explicit SourceAudioManager(NeuralNoteAudioProcessor* inProcessor);
 
-    ~SourceAudioManager();
+    ~SourceAudioManager() override;
 
     /**
      * PrepareToPlay
@@ -73,7 +73,7 @@ public:
      * If the source audio was recorded (not loaded from file), an empty string is returned.
      * @return Filename of dropped audio file, or empty string if source audio recorded.
      */
-    std::string getDroppedFilename() const;
+    String getDroppedFilename() const;
 
     /**
      * Get number of samples currently acquired (either recorded or loaded from file) at basic pitch sample rate (22.05 kHz)
@@ -94,6 +94,10 @@ public:
     AudioThumbnail* getAudioThumbnail();
 
 private:
+    void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
+
+    void _deleteFilesToDelete();
+
     NeuralNoteAudioProcessor* mProcessor;
 
     std::unique_ptr<juce::AudioFormatWriter::ThreadedWriter> mThreadedWriter;
@@ -103,14 +107,16 @@ private:
     juce::TimeSliceThread mWriterThreadDown = juce::TimeSliceThread("Downsampled Source Audio Writer Thread");
     CriticalSection mWriterLock;
 
-    Resampler mDownSampler;
+    Resampler mDownSampler = {};
 
     const int mSourceSamplesPerThumbnailSample = 128;
     juce::AudioFormatManager mThumbnailFormatManager;
     juce::AudioThumbnailCache mThumbnailCache;
     juce::AudioThumbnail mThumbnail;
 
-    File mRecordedFile;
+    const File mNeuralNoteDir =
+        File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("NeuralNote");
+    File mSourceFile;
     File mRecordedFileDown;
 
     AudioBuffer<float> mSourceAudio;
@@ -127,7 +133,7 @@ private:
     unsigned long long mNumSamplesAcquiredDown = 0;
     double mDuration = 0.0;
 
-    std::string mDroppedFilename;
+    String mDroppedFilename;
 
     AudioBuffer<float> mInternalMonoBuffer;
     AudioBuffer<float> mInternalDownsampledBuffer;
