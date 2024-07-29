@@ -20,12 +20,14 @@ TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MinimumNoteDurationId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::PitchBendModeId), this);
 
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::EnableNoteQuantizationId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::KeyRootNoteId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::KeyTypeId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::KeySnapModeId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MinMidiNoteId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MaxMidiNoteId), this);
 
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::EnableTimeQuantizationId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::TimeDivisionId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::QuantizationForceId), this);
 
@@ -69,11 +71,13 @@ void TranscriptionManager::parameterChanged(const String& parameterID, float new
             mProcessor->getAPVTS().getRawParameterValue(parameterID)->store(newValue);
             mShouldUpdateTranscription = true;
 
-        } else if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeyRootNoteId)
+        } else if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::EnableNoteQuantizationId)
+                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeyRootNoteId)
                    || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeyTypeId)
                    || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeySnapModeId)
                    || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::MinMidiNoteId)
                    || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::MaxMidiNoteId)
+                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::EnableTimeQuantizationId)
                    || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::TimeDivisionId)
                    || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::QuantizationForceId)) {
             mProcessor->getAPVTS().getRawParameterValue(parameterID)->store(newValue);
@@ -95,6 +99,7 @@ void TranscriptionManager::_runModel()
         mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired());
 
     mNoteOptions.setParameters(
+        mProcessor->getParameterValue(ParameterHelpers::EnableNoteQuantizationId) > 0.5f,
         static_cast<NoteUtils::RootNote>(mProcessor->getParameterValue(ParameterHelpers::KeyRootNoteId)),
         static_cast<NoteUtils::ScaleType>(mProcessor->getParameterValue(ParameterHelpers::KeyTypeId)),
         static_cast<NoteUtils::SnapMode>(mProcessor->getParameterValue(ParameterHelpers::KeySnapModeId)),
@@ -104,6 +109,7 @@ void TranscriptionManager::_runModel()
     auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
     mTimeQuantizeOptions.setParameters(
+        mProcessor->getParameterValue(ParameterHelpers::EnableTimeQuantizationId) > 0.5f,
         static_cast<TimeQuantizeUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
         mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
 
@@ -146,6 +152,7 @@ void TranscriptionManager::_updatePostProcessing()
 
     if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
         mNoteOptions.setParameters(
+            mProcessor->getParameterValue(ParameterHelpers::EnableNoteQuantizationId) > 0.5f,
             static_cast<NoteUtils::RootNote>(mProcessor->getParameterValue(ParameterHelpers::KeyRootNoteId)),
             static_cast<NoteUtils::ScaleType>(mProcessor->getParameterValue(ParameterHelpers::KeyTypeId)),
             static_cast<NoteUtils::SnapMode>(mProcessor->getParameterValue(ParameterHelpers::KeySnapModeId)),
@@ -155,7 +162,9 @@ void TranscriptionManager::_updatePostProcessing()
         // TODO: Make this vector a member to avoid reallocating every time
         auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
 
-        mTimeQuantizeOptions.setParameters(static_cast<TimeQuantizeUtils::TimeDivisions>(
+        mTimeQuantizeOptions.setParameters(mProcessor->getParameterValue(ParameterHelpers::EnableTimeQuantizationId)
+                                               > 0.5f,
+                                           static_cast<TimeQuantizeUtils::TimeDivisions>(
                                                mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
                                            mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
 

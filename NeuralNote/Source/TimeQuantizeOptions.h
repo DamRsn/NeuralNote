@@ -15,6 +15,7 @@ class TimeQuantizeOptions : public ValueTree::Listener
 {
 public:
     struct Parameters {
+        bool enable = false;
         TimeQuantizeUtils::TimeDivisions division = TimeQuantizeUtils::_1_4;
         float quantizationForce = 0.f;
     };
@@ -29,7 +30,7 @@ public:
 
     bool canQuantize() const;
 
-    void setParameters(TimeQuantizeUtils::TimeDivisions inDivision, float inQuantizationForce);
+    void setParameters(bool inEnable, TimeQuantizeUtils::TimeDivisions inDivision, float inQuantizationForce);
 
     std::vector<Notes::Event> quantize(const std::vector<Notes::Event>& inNoteEvents);
 

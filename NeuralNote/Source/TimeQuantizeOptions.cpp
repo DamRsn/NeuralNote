@@ -73,14 +73,21 @@ bool TimeQuantizeOptions::canQuantize() const
     return mTimeQuantizeInfo.canQuantize;
 }
 
-void TimeQuantizeOptions::setParameters(TimeQuantizeUtils::TimeDivisions inDivision, float inQuantizationForce)
+void TimeQuantizeOptions::setParameters(bool inEnable,
+                                        TimeQuantizeUtils::TimeDivisions inDivision,
+                                        float inQuantizationForce)
 {
+    mParameters.enable = inEnable;
     mParameters.division = inDivision;
     mParameters.quantizationForce = inQuantizationForce;
 }
 
 std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes::Event>& inNoteEvents)
 {
+    if (!mParameters.enable) {
+        return inNoteEvents;
+    }
+
     std::vector<Notes::Event> out_events;
 
     if (!mTimeQuantizeInfo.canQuantize) {

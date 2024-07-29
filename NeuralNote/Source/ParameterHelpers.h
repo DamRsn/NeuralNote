@@ -23,11 +23,13 @@ enum ParamIdEnum {
     PitchBendModeId,
     AudioPlayerGainId,
     MidiPlayerGainId,
+    EnableNoteQuantizationId,
     MinMidiNoteId,
     MaxMidiNoteId,
     KeyRootNoteId,
     KeyTypeId,
     KeySnapModeId,
+    EnableTimeQuantizationId,
     TimeDivisionId,
     QuantizationForceId,
     TotalNumParams
@@ -40,11 +42,13 @@ static const StringArray ParamIdStr {"MUTE",
                                      "PITCH_BEND_MODE",
                                      "AUDIO_PLAYER_GAIN",
                                      "MIDI_PLAYER_GAIN",
+                                     "ENABLE_NOTE_QUANTIZATION",
                                      "MIN_MIDI_NOTE",
                                      "MAX_MIDI_NOTE",
                                      "KEY_ROOT_NOTE",
                                      "KEY_TYPE",
                                      "KEY_SNAP_MODE",
+                                     "ENABLE_TIME_QUANTIZATION",
                                      "TIME_DIVISION",
                                      "QUANTIZATION_FORCE"};
 
@@ -63,6 +67,8 @@ inline String toName(ParamIdEnum id)
             return "Pitch Bend Mode";
         case AudioPlayerGainId:
             return "Audio Level";
+        case EnableNoteQuantizationId:
+            return "Enable Note Quantization";
         case MidiPlayerGainId:
             return "Midi Level";
         case MinMidiNoteId:
@@ -75,6 +81,8 @@ inline String toName(ParamIdEnum id)
             return "Key Type";
         case KeySnapModeId:
             return "Key Snap Mode";
+        case EnableTimeQuantizationId:
+            return "Enable Time Quantization";
         case TimeDivisionId:
             return "Time Division";
         case QuantizationForceId:
@@ -121,6 +129,8 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
         case MidiPlayerGainId:
             return std::make_unique<AudioParameterFloat>(
                 toJuceParameterID(id), toName(id), NormalisableRange<float>(-36.f, 6.0f, 1.0f), 0.0f);
+        case EnableNoteQuantizationId:
+            return std::make_unique<AudioParameterBool>(toJuceParameterID(id), toName(id), false);
         case MinMidiNoteId:
             return std::make_unique<AudioParameterInt>(
                 toJuceParameterID(id), toName(id), MIN_MIDI_NOTE, MAX_MIDI_NOTE, MIN_MIDI_NOTE);
@@ -135,6 +145,8 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
         case KeySnapModeId:
             return std::make_unique<AudioParameterChoice>(
                 toJuceParameterID(id), toName(id), NoteUtils::SnapModesStr, 0);
+        case EnableTimeQuantizationId:
+            return std::make_unique<AudioParameterBool>(toJuceParameterID(id), toName(id), false);
         case TimeDivisionId:
             return std::make_unique<AudioParameterChoice>(
                 toJuceParameterID(id), toName(id), TimeQuantizeUtils::TimeDivisionsStr, 5);

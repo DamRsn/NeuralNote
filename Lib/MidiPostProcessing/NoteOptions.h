@@ -14,28 +14,33 @@ using namespace NoteUtils;
 class NoteOptions
 {
 public:
-    void setParameters(
-        RootNote inRootNote, ScaleType inScaleType, SnapMode inSnapMode, int inMinMidiNote, int inMaxMidiNote);
+    void setParameters(bool inEnable,
+                       RootNote inRootNote,
+                       ScaleType inScaleType,
+                       SnapMode inSnapMode,
+                       int inMinMidiNote,
+                       int inMaxMidiNote);
 
     std::vector<Notes::Event> process(const std::vector<Notes::Event>& inNoteEvents);
 
 private:
+    bool mEnable = false;
     RootNote mRootNote = C;
     ScaleType mScaleType = Chromatic;
     SnapMode mSnapMode = Remove;
     int mMinMidiNote = MIN_MIDI_NOTE;
     int mMaxMidiNote = MAX_MIDI_NOTE;
 
-	template <std::size_t N>
-	static std::vector<int> _createKeyVectorForScale(int rootNoteIndex, const std::array<int, N> intervals)
-	{
-		std::vector<int> keyVector{};
-		for (const auto& interval : intervals) {
-			keyVector.push_back(rootNoteIndex + interval);
-		}
+    template <std::size_t N>
+    static std::vector<int> _createKeyVectorForScale(int rootNoteIndex, const std::array<int, N> intervals)
+    {
+        std::vector<int> keyVector {};
+        for (const auto& interval: intervals) {
+            keyVector.push_back(rootNoteIndex + interval);
+        }
 
-		return keyVector;
-	}
+        return keyVector;
+    }
 
     static std::vector<int> _createKeyVector(RootNote inRootNote, ScaleType inScaleType);
 
