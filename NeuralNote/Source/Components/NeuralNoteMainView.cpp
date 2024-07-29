@@ -201,37 +201,24 @@ void NeuralNoteMainView::updateEnablements()
         mPlayPauseButton->setEnabled(false);
         mBackButton->setEnabled(false);
         mCenterButton->setEnabled(false);
-        // mTranscriptionOptions.setEnabled(false);
-        // mNoteOptions.setEnabled(false);
-        // mQuantizePanel.setEnabled(false);
     } else if (current_state == Recording) {
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
         mPlayPauseButton->setEnabled(false);
         mBackButton->setEnabled(false);
         mCenterButton->setEnabled(false);
-        // mTranscriptionOptions.setEnabled(false);
-        // mNoteOptions.setEnabled(false);
-        // mQuantizePanel.setEnabled(false);
     } else if (current_state == Processing) {
         mRecordButton->setEnabled(false);
-        // TODO: activate clear button to be able to cancel processing.
         mClearButton->setEnabled(false);
         mPlayPauseButton->setEnabled(false);
         mBackButton->setEnabled(false);
         mCenterButton->setEnabled(false);
-        // mTranscriptionOptions.setEnabled(false);
-        // mNoteOptions.setEnabled(false);
-        // mQuantizePanel.setEnabled(false);
     } else if (current_state == PopulatedAudioAndMidiRegions) {
         mRecordButton->setEnabled(false);
         mClearButton->setEnabled(true);
         mPlayPauseButton->setEnabled(true);
         mBackButton->setEnabled(true);
         mCenterButton->setEnabled(true);
-        // mTranscriptionOptions.setEnabled(true);
-        // mNoteOptions.setEnabled(true);
-        // mQuantizePanel.setEnabled(mProcessor.getTranscriptionManager()->getTimeQuantizeOptions().canQuantize());
         mVisualizationPanel.setMidiFileDragComponentVisible();
     }
 
@@ -241,8 +228,8 @@ void NeuralNoteMainView::updateEnablements()
 void NeuralNoteMainView::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
 {
     if (property == NnId::PlayheadCenteredId) {
-        bool prop_value = treeWhosePropertyHasChanged.getProperty(property);
-        mCenterButton->setToggleState(prop_value, sendNotification);
-        mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(prop_value);
+        bool should_center = treeWhosePropertyHasChanged.getProperty(property);
+        mCenterButton->setToggleState(should_center, sendNotification);
+        mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(should_center);
     }
 }

@@ -28,23 +28,23 @@ inline static Identifier PlayheadPositionSecId = "PLAYHEAD_POSITION_SEC";
 inline static Identifier PlayheadCenteredId = "PLAYHEAD_CENTERED";
 
 // --------------- Time quantizations ----------------
-// inline static Identifier TempoId = "TEMPO";
-//
-// inline static Identifier TimeSignatureNumeratorId = "TIME_SIGNATURE_NUMERATOR";
-//
-// inline static Identifier TimeSignatureDenominatorId = "TIME_SIGNATURE_DENOMINATOR";
-//
-// inline static Identifier ExportTempoId = "EXPORT_TEMPO";
+inline static Identifier TempoId = "TEMPO";
+
+inline static Identifier TimeSignatureNumeratorId = "TIME_SIGNATURE_NUMERATOR";
+
+inline static Identifier TimeSignatureDenominatorId = "TIME_SIGNATURE_DENOMINATOR";
+
+inline static Identifier ExportTempoId = "EXPORT_TEMPO";
 
 // To be set in this specific order
 const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault = {
-    // {TempoId, 120.0},
-    // {TimeSignatureNumeratorId, 4},
-    // {TimeSignatureDenominatorId, 4},
+    {TempoId, 120},
+    {TimeSignatureNumeratorId, 4},
+    {TimeSignatureDenominatorId, 4},
     {SourceAudioNativeSrPathId, String()},
     {PlayheadPositionSecId, 0.0},
-    {PlayheadCenteredId, true}};
-    // {ExportTempoId, 120.0}};
+    {PlayheadCenteredId, true},
+    {ExportTempoId, 120.0}};
 } // namespace NnId
 
 #endif //NNID_H
