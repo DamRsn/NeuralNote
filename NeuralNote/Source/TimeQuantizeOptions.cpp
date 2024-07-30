@@ -8,69 +8,95 @@
 TimeQuantizeOptions::TimeQuantizeOptions(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
 {
-    // mProcessor->addListenerToStateValueTree(this);
-}
-TimeQuantizeOptions::~TimeQuantizeOptions()
-{
-    // mProcessor->getValueTree().removeListener(this);
+    mProcessor->addListenerToStateValueTree(this);
 }
 
-void TimeQuantizeOptions::processBlock()
+TimeQuantizeOptions::~TimeQuantizeOptions()
+{
+    mProcessor->getValueTree().removeListener(this);
+}
+
+void TimeQuantizeOptions::prepareToPlay(double inSampleRate)
+{
+    mSampleRate = inSampleRate;
+}
+
+void TimeQuantizeOptions::processBlock(int inNumSamples)
 {
     if (mProcessor->getState() == Recording) {
         if (!mWasRecording) {
             mWasRecording = true;
-            // TODO: Set playhead info later if not playing at the start of recording.
-            setInfo(false, mProcessor->getPlayHead()->getPosition());
+            auto playhead_info = mProcessor->getPlayHead()->getPosition();
+            _setInfo(playhead_info);
+
+            mWasPlaying = isPlayheadPlaying(playhead_info);
+
+            mInfoUpdated = true;
+        } else if (!mWasPlaying) {
+            auto playhead_info = mProcessor->getPlayHead()->getPosition();
+
+            if (isPlayheadPlaying(playhead_info)) {
+                _setInfo(playhead_info);
+                mWasPlaying = true;
+            }
         }
+
+        mNumRecordedSamples += inNumSamples;
     } else {
         // If we were previously recording but not anymore (user clicked record button to stop it).
         if (mWasRecording) {
             mWasRecording = false;
         }
     }
-
-    // Get tempo and time signature for UI.
-    auto playhead_info = mProcessor->getPlayHead()->getPosition();
-    if (playhead_info.hasValue()) {
-        if (playhead_info->getBpm().hasValue())
-            mCurrentTempo = *playhead_info->getBpm();
-        if (playhead_info->getTimeSignature().hasValue()) {
-            mCurrentTimeSignatureNum = playhead_info->getTimeSignature()->numerator;
-            mCurrentTimeSignatureDenom = playhead_info->getTimeSignature()->denominator;
-        }
-    }
-}
-void TimeQuantizeOptions::setInfo(bool inDroppedFile, const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr)
-{
-    reset();
-
-    if (inDroppedFile) {
-        mTimeQuantizeInfo.canQuantize = false;
-    } else {
-        if (inPositionInfoPtr.hasValue()) {
-            mPlayheadInfoStartRecord = inPositionInfoPtr;
-
-            mTimeQuantizeInfo.timeSignature = inPositionInfoPtr->getTimeSignature();
-            mTimeQuantizeInfo.isPlaying = inPositionInfoPtr->getIsPlaying();
-            mTimeQuantizeInfo.bpm = inPositionInfoPtr->getBpm();
-            mTimeQuantizeInfo.ppqPositionOfLastBarStart = inPositionInfoPtr->getPpqPositionOfLastBarStart();
-            mTimeQuantizeInfo.ppqPosition = inPositionInfoPtr->getPpqPosition();
-            // Can quantize only if recorded while playing, bpm is defined, lastBarStart is defined ...
-            // TODO: allow quantization if not playing at the start of recording (but has to be playing at some point)
-            mTimeQuantizeInfo.canQuantize = mTimeQuantizeInfo.isPlaying && mTimeQuantizeInfo.bpm.hasValue()
-                                            && mTimeQuantizeInfo.ppqPositionOfLastBarStart.hasValue()
-                                            && mTimeQuantizeInfo.ppqPosition
-                                            && mTimeQuantizeInfo.timeSignature.hasValue();
-        } else {
-            mTimeQuantizeInfo.canQuantize = false;
-        }
-    }
 }
 
-bool TimeQuantizeOptions::canQuantize() const
+void TimeQuantizeOptions::fileLoaded()
 {
-    return mTimeQuantizeInfo.canQuantize;
+    ScopedLock lock(mInfoCriticalSection);
+    mTimeQuantizeInfo.refPositionPpq = 0.0f;
+    mTimeQuantizeInfo.refBarStartPpq = 0.0f;
+    mTimeQuantizeInfo.refPositionSeconds = 0.0f;
+
+    mWasRecording = false;
+    mWasPlaying = false;
+
+    saveStateToValueTree();
+}
+
+void TimeQuantizeOptions::_setInfo(const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr)
+{
+    ScopedLock lock(mInfoCriticalSection);
+
+    mTimeQuantizeInfo = TimeQuantizeInfo();
+
+    if (inPositionInfoPtr.hasValue()) {
+        auto time_signature = inPositionInfoPtr->getTimeSignature();
+        if (time_signature.hasValue()) {
+            mTimeQuantizeInfo.timeSignatureNum = time_signature->numerator;
+            mTimeQuantizeInfo.timeSignatureDenom = time_signature->denominator;
+        }
+
+        auto bpm = inPositionInfoPtr->getBpm();
+
+        if (bpm.hasValue()) {
+            mTimeQuantizeInfo.bpm = *bpm;
+        }
+
+        if (isPlayheadPlaying(inPositionInfoPtr)) {
+            if (!inPositionInfoPtr->getPpqPositionOfLastBarStart().hasValue()
+                || !inPositionInfoPtr->getPpqPosition().hasValue()) {
+                mTimeQuantizeInfo.refBarStartPpq = 0.0;
+                mTimeQuantizeInfo.refPositionPpq = 0.0;
+                mTimeQuantizeInfo.refPositionSeconds = 0.0;
+            } else {
+                mTimeQuantizeInfo.refBarStartPpq = *inPositionInfoPtr->getPpqPositionOfLastBarStart();
+                mTimeQuantizeInfo.refPositionPpq = *inPositionInfoPtr->getPpqPosition();
+                mTimeQuantizeInfo.refPositionSeconds = static_cast<double>(mNumRecordedSamples) / mSampleRate;
+            }
+        }
+    }
+
+    mInfoUpdated = true;
 }
 
 void TimeQuantizeOptions::setParameters(bool inEnable,
@@ -82,7 +108,7 @@ void TimeQuantizeOptions::setParameters(bool inEnable,
     mParameters.quantizationForce = inQuantizationForce;
 }
 
-std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes::Event>& inNoteEvents)
+std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes::Event>& inNoteEvents) const
 {
     if (!mParameters.enable) {
         return inNoteEvents;
@@ -90,14 +116,10 @@ std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes:
 
     std::vector<Notes::Event> out_events;
 
-    if (!mTimeQuantizeInfo.canQuantize) {
-        out_events = inNoteEvents;
-        return out_events;
-    }
-
-    double bpm = *mTimeQuantizeInfo.bpm;
+    const double bpm = mTimeQuantizeInfo.bpm;
     // Offset from previous bar start
-    double start_pos_qn = *mTimeQuantizeInfo.ppqPosition - *mTimeQuantizeInfo.ppqPositionOfLastBarStart;
+    double start_pos_qn = mTimeQuantizeInfo.refPositionPpq - mTimeQuantizeInfo.refPositionSeconds / 60.0 * bpm
+                          - mTimeQuantizeInfo.refBarStartPpq;
 
     double time_division = TimeQuantizeUtils::TimeDivisionsDouble.at(static_cast<size_t>(mParameters.division));
 
@@ -105,7 +127,7 @@ std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes:
         double duration = event.endTime - event.startTime;
         jassert(duration > 0);
         double new_start_time =
-            quantizeTime(event.startTime, bpm, time_division, start_pos_qn, mParameters.quantizationForce);
+            _quantizeTime(event.startTime, bpm, time_division, start_pos_qn, mParameters.quantizationForce);
         double new_end_time = new_start_time + duration;
 
         Notes::Event quantized_event = event;
@@ -117,73 +139,53 @@ std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes:
     return out_events;
 }
 
-void TimeQuantizeOptions::reset()
-{
-    // Reset to default struct where nothing is set and bool false.
-    mTimeQuantizeInfo = TimeQuantizeInfo();
-    mPlayheadInfoStartRecord = Optional<AudioPlayHead::PositionInfo>();
-}
-
 void TimeQuantizeOptions::clear()
 {
     mTimeQuantizeInfo = TimeQuantizeInfo();
-    mPlayheadInfoStartRecord = Optional<AudioPlayHead::PositionInfo>();
-
-    mCurrentTempo = -1;
-    mCurrentTimeSignatureNum = -1;
-    mCurrentTimeSignatureDenom = -1;
     mWasRecording = false;
 }
 
-const Optional<AudioPlayHead::PositionInfo>& TimeQuantizeOptions::getPlayheadInfoOnRecordStart() const
+bool TimeQuantizeOptions::isPlayheadPlaying(const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr)
 {
-    return mPlayheadInfoStartRecord;
-}
-
-double TimeQuantizeOptions::getCurrentTempo() const
-{
-    return mCurrentTempo.load();
-}
-
-std::string TimeQuantizeOptions::getTempoStr() const
-{
-    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getBpm().hasValue()) {
-        return std::to_string(static_cast<int>(std::round(*mPlayheadInfoStartRecord->getBpm())));
+    if (inPositionInfoPtr.hasValue()) {
+        return inPositionInfoPtr->getIsPlaying();
     }
 
-    if (mCurrentTempo > 0) {
-        return std::to_string(static_cast<int>(std::round(mCurrentTempo.load())));
-    }
-
-    return "-";
-}
-
-std::string TimeQuantizeOptions::getTimeSignatureStr() const
-{
-    if (mPlayheadInfoStartRecord.hasValue() && mPlayheadInfoStartRecord->getTimeSignature().hasValue()) {
-        int num = mPlayheadInfoStartRecord->getTimeSignature()->numerator;
-        int denom = mPlayheadInfoStartRecord->getTimeSignature()->denominator;
-        return std::to_string(num) + " / " + std::to_string(denom);
-    }
-
-    if (mCurrentTimeSignatureNum > 0 && mCurrentTimeSignatureDenom > 0) {
-        return std::to_string(mCurrentTimeSignatureNum.load()) + " / "
-               + std::to_string(mCurrentTimeSignatureDenom.load());
-    }
-
-    return "- / -";
+    return false;
 }
 
 void TimeQuantizeOptions::saveStateToValueTree()
 {
-    //     mProcessor->getValueTree().setPropertyExcludingListener(this, NnId::TempoId, mCurrentTempo.load(), nullptr);
-    //     mProcessor->getValueTree().setPropertyExcludingListener(
-    //         this, NnId::TimeSignatureNumeratorId, mCurrentTimeSignatureNum.load(), nullptr);
-    //     mProcessor->getValueTree().setPropertyExcludingListener(
-    //         this, NnId::TimeSignatureDenominatorId, mCurrentTimeSignatureDenom.load(), nullptr);
+    ScopedLock lock(mInfoCriticalSection);
+    const MessageManagerLock mmLock;
+
+    auto& tree = mProcessor->getValueTree();
+    tree.setPropertyExcludingListener(this, NnId::TempoId, mTimeQuantizeInfo.bpm, nullptr);
+    tree.setPropertyExcludingListener(
+        this, NnId::TimeSignatureNumeratorId, mTimeQuantizeInfo.timeSignatureNum, nullptr);
+    tree.setPropertyExcludingListener(
+        this, NnId::TimeSignatureDenominatorId, mTimeQuantizeInfo.timeSignatureDenom, nullptr);
+    tree.setPropertyExcludingListener(this, NnId::TimeQuantizeRefPosPPQId, mTimeQuantizeInfo.refPositionPpq, nullptr);
+    tree.setPropertyExcludingListener(
+        this, NnId::TimeQuantizeRefLastBarPPQId, mTimeQuantizeInfo.refBarStartPpq, nullptr);
+    tree.setPropertyExcludingListener(
+        this, NnId::TimeQuantizeRefPositionSeconds, mTimeQuantizeInfo.refPositionSeconds, nullptr);
 }
 
-double TimeQuantizeOptions::quantizeTime(
+bool TimeQuantizeOptions::checkInfoUpdated()
+{
+    auto out = mInfoUpdated.load();
+    mInfoUpdated = false;
+
+    return out;
+}
+
+TimeQuantizeOptions::TimeQuantizeInfo TimeQuantizeOptions::getTimeQuantizeInfo() const
+{
+    return mTimeQuantizeInfo;
+}
+
+double TimeQuantizeOptions::_quantizeTime(
     double inEventTime, double inBPM, double inTimeDivision, double inStartTimeQN, float inQuantizationForce)
 {
     jassert(inEventTime >= 0.0);
@@ -216,12 +218,28 @@ double TimeQuantizeOptions::quantizeTime(
 
 void TimeQuantizeOptions::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
 {
-    // // TODO: not enough to characterize whole state (can quantize? start of recording info?)
-    // if (property == NnId::TempoId) {
-    //     mCurrentTempo = mProcessor->getValueTree().getProperty(property);
-    // } else if (property == NnId::TimeSignatureNumeratorId) {
-    //     mCurrentTimeSignatureNum = mProcessor->getValueTree().getProperty(property);
-    // } else if (property == NnId::TimeSignatureDenominatorId) {
-    //     mCurrentTimeSignatureDenom = mProcessor->getValueTree().getProperty(property);
-    // }
+    if (property == NnId::TempoId) {
+        ScopedLock lock(mInfoCriticalSection);
+        mTimeQuantizeInfo.bpm = mProcessor->getValueTree().getProperty(property);
+
+    } else if (property == NnId::TimeSignatureNumeratorId) {
+        ScopedLock lock(mInfoCriticalSection);
+        mTimeQuantizeInfo.timeSignatureNum = mProcessor->getValueTree().getProperty(property);
+
+    } else if (property == NnId::TimeSignatureDenominatorId) {
+        ScopedLock lock(mInfoCriticalSection);
+        mTimeQuantizeInfo.timeSignatureDenom = mProcessor->getValueTree().getProperty(property);
+
+    } else if (property == NnId::TimeQuantizeRefPosPPQId) {
+        ScopedLock lock(mInfoCriticalSection);
+        mTimeQuantizeInfo.refPositionPpq = mProcessor->getValueTree().getProperty(property);
+
+    } else if (property == NnId::TimeQuantizeRefLastBarPPQId) {
+        ScopedLock lock(mInfoCriticalSection);
+        mTimeQuantizeInfo.refBarStartPpq = mProcessor->getValueTree().getProperty(property);
+
+    } else if (property == NnId::TimeQuantizeRefPositionSeconds) {
+        ScopedLock lock(mInfoCriticalSection);
+        mTimeQuantizeInfo.refPositionSeconds = mProcessor->getValueTree().getProperty(property);
+    }
 }

@@ -18,6 +18,8 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mAudioMidiViewport.setScrollBarsShown(false, true, false, false);
     addChildComponent(mMidiFileDrag);
 
+    // TODO: create a custom text editor for this. With 2 lambdas to check if entry is correct and one to correct it.
+    //  Also add lose focus on external click by making it a global mouse listener
     mFileTempo = std::make_unique<juce::TextEditor>();
     mFileTempo->setInputRestrictions(6, "0123456789.");
     mFileTempo->setMultiLine(false, false);
@@ -30,16 +32,16 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mFileTempo->setColour(TextEditor::textColourId, BLACK);
     mFileTempo->setColour(TextEditor::outlineColourId, juce::Colours::lightgrey);
     mFileTempo->setColour(TextEditor::focusedOutlineColourId, juce::Colours::grey);
-    mFileTempo->onReturnKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
-    mFileTempo->onEscapeKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
-    mFileTempo->onFocusLost = [this]() {
+    mFileTempo->onReturnKey = [this] { mFileTempo->giveAwayKeyboardFocus(); };
+    mFileTempo->onEscapeKey = [this] { mFileTempo->giveAwayKeyboardFocus(); };
+    mFileTempo->onFocusLost = [this] {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         String correct_tempo_str = String(tempo);
         correct_tempo_str = correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
         mFileTempo->setText(correct_tempo_str);
         mProcessor->getTranscriptionManager()->setMidiFileTempo(tempo);
     };
-    mFileTempo->onTextChange = [this]() {
+    mFileTempo->onTextChange = [this] {
         double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
         mProcessor->getTranscriptionManager()->setMidiFileTempo(tempo);
     };

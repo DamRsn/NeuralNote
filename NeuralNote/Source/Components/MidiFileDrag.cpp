@@ -52,7 +52,7 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
     auto success_midi_file_creation = mMidiFileWriter.writeMidiFile(
         mProcessor->getTranscriptionManager()->getNoteEventVector(),
         out_file,
-        mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getPlayheadInfoOnRecordStart(),
+        mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getTimeQuantizeInfo(),
         mProcessor->getTranscriptionManager()->getMidiFileTempo(),
         static_cast<PitchBendModes>(mProcessor->getParameterValue(ParameterHelpers::PitchBendModeId)));
 

@@ -23,9 +23,11 @@ public:
 
     void timerCallback() override;
 
-    void processBlock();
+    void prepareToPlay(double inSampleRate);
 
-    void setLauchNewTranscription();
+    void processBlock(int inNumSamples);
+
+    void setLaunchNewTranscription();
 
     void launchTranscribeJob();
 

@@ -192,7 +192,7 @@ void SourceAudioManager::stopRecording()
     auto& tree = mProcessor->getValueTree();
     tree.setPropertyExcludingListener(this, NnId::SourceAudioNativeSrPathId, mSourceFile.getFullPathName(), nullptr);
 
-    mProcessor->getTranscriptionManager()->setLauchNewTranscription();
+    mProcessor->getTranscriptionManager()->setLaunchNewTranscription();
 }
 
 bool SourceAudioManager::onFileDrop(const File& inFile)
@@ -231,7 +231,7 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
 
         auto& tree = mProcessor->getValueTree();
         tree.setPropertyExcludingListener(this, NnId::SourceAudioNativeSrPathId, inFile.getFullPathName(), nullptr);
-        mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().setInfo(true);
+        mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().fileLoaded();
 
         mThumbnail.clear();
         mThumbnailCache.clear();

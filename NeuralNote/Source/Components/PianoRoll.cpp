@@ -49,7 +49,7 @@ void PianoRoll::paint(Graphics& g)
         }
 
         // Draw vertical lines if we have info on bpm, time signature ...
-        if (mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().canQuantize()) {
+        if (mProcessor->getParameterValue(ParameterHelpers::EnableTimeQuantizationId) > 0.5f) {
             _drawBeatVerticalLines(g);
         }
 
@@ -168,17 +168,15 @@ float PianoRoll::_getNoteWidth(int inNote) const
 
 void PianoRoll::_drawBeatVerticalLines(Graphics& g)
 {
-    auto playhead_info = mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getPlayheadInfoOnRecordStart();
-    jassert(playhead_info.hasValue());
-    double beats_per_second = 60.0 / *playhead_info->getBpm();
-    auto time_signature = *playhead_info->getTimeSignature();
+    auto tq_info = mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getTimeQuantizeInfo();
+    double beats_per_second = 60.0 / tq_info.bpm;
 
-    double last_bar_qn = *playhead_info->getPpqPositionOfLastBarStart();
-    double start_time_qn = *playhead_info->getPpqPosition();
+    double start_bar_qn = tq_info.getLastBarStartPPQ();
+    double start_time_qn = tq_info.getStartPPQ();
 
-    double beat_increments = 4.0 / time_signature.denominator;
+    double beat_increments = 4.0 / tq_info.timeSignatureDenom;
     double beat_number = 0;
-    float beat_pixel = _qnToPixel(beat_number, last_bar_qn - start_time_qn, beats_per_second);
+    float beat_pixel = _qnToPixel(beat_number, start_bar_qn - start_time_qn, beats_per_second);
 
     auto width = static_cast<float>(getWidth());
     auto height = static_cast<float>(getHeight());
@@ -188,12 +186,12 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g)
     while (beat_pixel < width) {
         if (beat_pixel >= 0) {
             float thickness =
-                std::abs(fmod(beat_number, static_cast<double>(time_signature.numerator))) < 1e-6 ? 1.0f : 0.5f;
+                std::abs(fmod(beat_number, static_cast<double>(tq_info.timeSignatureNum))) < 1e-6 ? 1.0f : 0.5f;
             g.drawLine(beat_pixel, 0, beat_pixel, height, thickness);
         }
 
         beat_number += beat_increments;
-        beat_pixel = _qnToPixel(beat_number, last_bar_qn - start_time_qn, beats_per_second);
+        beat_pixel = _qnToPixel(beat_number, start_bar_qn - start_time_qn, beats_per_second);
     }
 }
 

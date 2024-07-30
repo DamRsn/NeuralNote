@@ -17,6 +17,7 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
 void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     mSourceAudioManager->prepareToPlay(sampleRate, samplesPerBlock);
+    mTranscriptionManager->prepareToPlay(sampleRate);
     mPlayer->prepareToPlay(sampleRate, samplesPerBlock);
 }
 
@@ -25,7 +26,7 @@ void NeuralNoteAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuff
     ignoreUnused(midiMessages);
 
     mSourceAudioManager->processBlock(buffer);
-    mTranscriptionManager->processBlock();
+    mTranscriptionManager->processBlock(buffer.getNumSamples());
 
     auto is_mute = mParams[ParameterHelpers::MuteId]->getValue() > 0.5f;
 

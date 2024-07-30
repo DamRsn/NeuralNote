@@ -31,11 +31,15 @@ TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::TimeDivisionId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::QuantizationForceId), this);
 
-    startTimerHz(15);
+    startTimerHz(30);
 }
 
 void TranscriptionManager::timerCallback()
 {
+    if (mTimeQuantizeOptions.checkInfoUpdated()) {
+        mTimeQuantizeOptions.saveStateToValueTree();
+    }
+
     if (mShouldRunNewTranscription) {
         launchTranscribeJob();
         _repaintPianoRoll();
@@ -49,13 +53,17 @@ void TranscriptionManager::timerCallback()
         _repaintPianoRoll();
     }
 }
-
-void TranscriptionManager::processBlock()
+void TranscriptionManager::prepareToPlay(double inSampleRate)
 {
-    mTimeQuantizeOptions.processBlock();
+    mTimeQuantizeOptions.prepareToPlay(inSampleRate);
 }
 
-void TranscriptionManager::setLauchNewTranscription()
+void TranscriptionManager::processBlock(int inNumSamples)
+{
+    mTimeQuantizeOptions.processBlock(inNumSamples);
+}
+
+void TranscriptionManager::setLaunchNewTranscription()
 {
     mShouldRunNewTranscription = true;
     mShouldUpdateTranscription = false;
@@ -122,9 +130,7 @@ void TranscriptionManager::_runModel()
     auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
     mProcessor->getPlayer()->getSynthController()->setNewMidiEventsVectorToUse(single_events);
 
-    mMidiFileTempo = mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getCurrentTempo() > 0
-                         ? mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getCurrentTempo()
-                         : 120;
+    mMidiFileTempo = mProcessor->getValueTree().getProperty(NnId::ExportTempoId, 120.0);
 
     mProcessor->setStateToPopulatedAudioAndMidiRegions();
 }

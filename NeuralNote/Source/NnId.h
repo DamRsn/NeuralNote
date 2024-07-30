@@ -27,12 +27,18 @@ inline static Identifier PlayheadPositionSecId = "PLAYHEAD_POSITION_SEC";
 
 inline static Identifier PlayheadCenteredId = "PLAYHEAD_CENTERED";
 
-// --------------- Time quantizations ----------------
+// --------------- Time quantization ----------------
 inline static Identifier TempoId = "TEMPO";
 
 inline static Identifier TimeSignatureNumeratorId = "TIME_SIGNATURE_NUMERATOR";
 
 inline static Identifier TimeSignatureDenominatorId = "TIME_SIGNATURE_DENOMINATOR";
+
+inline static Identifier TimeQuantizeRefPosPPQId = "TIME_QUANTIZE_REF_POS_PPQ";
+
+inline static Identifier TimeQuantizeRefLastBarPPQId = "TIME_QUANTIZE_REF_LAST_BAR_PPQ";
+
+inline static Identifier TimeQuantizeRefPositionSeconds = "TIME_QUANTIZE_REF_TIME_SECONDS";
 
 inline static Identifier ExportTempoId = "EXPORT_TEMPO";
 
@@ -41,6 +47,9 @@ const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault 
     {TempoId, 120},
     {TimeSignatureNumeratorId, 4},
     {TimeSignatureDenominatorId, 4},
+    {TimeQuantizeRefPosPPQId, 0.0},
+    {TimeQuantizeRefLastBarPPQId, 0.0},
+    {TimeQuantizeRefPositionSeconds, 0.0},
     {SourceAudioNativeSrPathId, String()},
     {PlayheadPositionSecId, 0.0},
     {PlayheadCenteredId, true},
