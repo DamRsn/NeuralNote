@@ -37,7 +37,7 @@ TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor
 void TranscriptionManager::timerCallback()
 {
     if (mTimeQuantizeOptions.checkInfoUpdated()) {
-        mTimeQuantizeOptions.saveStateToValueTree();
+        mTimeQuantizeOptions.saveStateToValueTree(true);
     }
 
     if (mShouldRunNewTranscription) {
@@ -130,8 +130,6 @@ void TranscriptionManager::_runModel()
     auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
     mProcessor->getPlayer()->getSynthController()->setNewMidiEventsVectorToUse(single_events);
 
-    mMidiFileTempo = mProcessor->getValueTree().getProperty(NnId::ExportTempoId, 120.0);
-
     mProcessor->setStateToPopulatedAudioAndMidiRegions();
 }
 
@@ -210,7 +208,6 @@ void TranscriptionManager::clear()
     mShouldUpdateTranscription = false;
     mShouldUpdatePostProcessing = false;
     mPostProcessedNotes.clear();
-    mMidiFileTempo = 120.0;
     mTimeQuantizeOptions.clear();
 }
 
@@ -229,21 +226,6 @@ void TranscriptionManager::launchTranscribeJob()
     mShouldRunNewTranscription = false;
     mShouldUpdateTranscription = false;
     mShouldUpdatePostProcessing = false;
-}
-
-void TranscriptionManager::setMidiFileTempo(double inMidiFileTempo)
-{
-    mMidiFileTempo = inMidiFileTempo;
-}
-
-double TranscriptionManager::getMidiFileTempo() const
-{
-    return mMidiFileTempo;
-}
-
-void TranscriptionManager::saveStateToValueTree()
-{
-    mTimeQuantizeOptions.saveStateToValueTree();
 }
 
 void TranscriptionManager::_repaintPianoRoll()

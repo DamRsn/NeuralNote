@@ -11,13 +11,13 @@
 #include "UIDefines.h"
 #include "TimeQuantizeUtils.h"
 #include "QuantizeForceSlider.h"
+#include "NumericTextEditor.h"
 
 class NeuralNoteMainView;
 
 class TimeQuantizeOptionsView
     : public Component
     , public AudioProcessorParameter::Listener
-    , public ValueTree::Listener
 {
 public:
     explicit TimeQuantizeOptionsView(NeuralNoteAudioProcessor& processor);
@@ -33,14 +33,11 @@ private:
 
     void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
 
-    void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
-
     void _setViewEnabled(bool inEnable);
 
     void _setupTempoEditor();
 
     void _setupTSEditors();
-
 
     NeuralNoteAudioProcessor& mProcessor;
 
@@ -52,10 +49,10 @@ private:
 
     std::unique_ptr<QuantizeForceSlider> mQuantizationForceSlider;
 
-    std::unique_ptr<TextEditor> mTempoEditor;
+    std::unique_ptr<NumericTextEditor<double>> mTempoEditor;
 
-    std::unique_ptr<TextEditor> mTimeSignatureNumEditor;
-    std::unique_ptr<TextEditor> mTimeSignatureDenomEditor;
+    std::unique_ptr<NumericTextEditor<int>> mTimeSignatureNumEditor;
+    std::unique_ptr<NumericTextEditor<int>> mTimeSignatureDenomEditor;
 
     bool mIsViewEnabled = false;
 };

@@ -63,6 +63,8 @@ public:
 
     void addListenerToStateValueTree(ValueTree::Listener* inListener);
 
+    void removeListenerFromStateValueTree(ValueTree::Listener* inListener);
+
 private:
     static ValueTree _createDefaultValueTree();
 

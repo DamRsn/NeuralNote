@@ -41,12 +41,6 @@ public:
 
     void clear();
 
-    void setMidiFileTempo(double inMidiFileTempo);
-
-    double getMidiFileTempo() const;
-
-    void saveStateToValueTree();
-
 private:
     void _runModel();
 
@@ -71,8 +65,6 @@ private:
 
     ThreadPool mThreadPool;
     std::function<void()> mJobLambda;
-
-    double mMidiFileTempo = 120.0;
 };
 
 #endif //TranscriptionManager_h

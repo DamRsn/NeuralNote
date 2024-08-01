@@ -57,7 +57,6 @@ void NeuralNoteAudioProcessor::getStateInformation(MemoryBlock& destData)
     // NEURAL NOTE STATE
     // Update value tree with current state
     mPlayer->saveStateToValueTree();
-    mTranscriptionManager->saveStateToValueTree();
 
     full_state_tree.appendChild(mValueTree, nullptr);
 
@@ -154,6 +153,11 @@ ValueTree& NeuralNoteAudioProcessor::getValueTree()
 void NeuralNoteAudioProcessor::addListenerToStateValueTree(ValueTree::Listener* inListener)
 {
     mValueTree.addListener(inListener);
+}
+
+void NeuralNoteAudioProcessor::removeListenerFromStateValueTree(ValueTree::Listener* inListener)
+{
+    mValueTree.removeListener(inListener);
 }
 
 ValueTree NeuralNoteAudioProcessor::_createDefaultValueTree()

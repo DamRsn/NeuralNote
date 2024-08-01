@@ -24,7 +24,7 @@ Player::Player(NeuralNoteAudioProcessor* inProcessor)
 
 Player::~Player()
 {
-    mProcessor->getValueTree().removeListener(this);
+    mProcessor->removeListenerFromStateValueTree(this);
 }
 
 void Player::prepareToPlay(double inSampleRate, int inSamplesPerBlock)

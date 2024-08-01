@@ -18,7 +18,7 @@ SourceAudioManager::SourceAudioManager(NeuralNoteAudioProcessor* inProcessor)
 
 SourceAudioManager::~SourceAudioManager()
 {
-    mProcessor->getValueTree().removeListener(this);
+    mProcessor->removeListenerFromStateValueTree(this);
 }
 
 void SourceAudioManager::prepareToPlay(double inSampleRate, int inSamplesPerBlock)

@@ -13,7 +13,7 @@ TimeQuantizeOptions::TimeQuantizeOptions(NeuralNoteAudioProcessor* inProcessor)
 
 TimeQuantizeOptions::~TimeQuantizeOptions()
 {
-    mProcessor->getValueTree().removeListener(this);
+    mProcessor->removeListenerFromStateValueTree(this);
 }
 
 void TimeQuantizeOptions::prepareToPlay(double inSampleRate)
@@ -30,8 +30,6 @@ void TimeQuantizeOptions::processBlock(int inNumSamples)
             _setInfo(playhead_info);
 
             mWasPlaying = isPlayheadPlaying(playhead_info);
-
-            mInfoUpdated = true;
         } else if (!mWasPlaying) {
             auto playhead_info = mProcessor->getPlayHead()->getPosition();
 
@@ -60,7 +58,7 @@ void TimeQuantizeOptions::fileLoaded()
     mWasRecording = false;
     mWasPlaying = false;
 
-    saveStateToValueTree();
+    saveStateToValueTree(false);
 }
 
 void TimeQuantizeOptions::_setInfo(const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr)
@@ -154,10 +152,10 @@ bool TimeQuantizeOptions::isPlayheadPlaying(const Optional<AudioPlayHead::Positi
     return false;
 }
 
-void TimeQuantizeOptions::saveStateToValueTree()
+void TimeQuantizeOptions::saveStateToValueTree(bool inSetExportTempo)
 {
+    jassert(MessageManager::getInstance()->isThisTheMessageThread());
     ScopedLock lock(mInfoCriticalSection);
-    const MessageManagerLock mmLock;
 
     auto& tree = mProcessor->getValueTree();
     tree.setPropertyExcludingListener(this, NnId::TempoId, mTimeQuantizeInfo.bpm, nullptr);
@@ -170,6 +168,10 @@ void TimeQuantizeOptions::saveStateToValueTree()
         this, NnId::TimeQuantizeRefLastBarPPQId, mTimeQuantizeInfo.refBarStartPpq, nullptr);
     tree.setPropertyExcludingListener(
         this, NnId::TimeQuantizeRefPositionSeconds, mTimeQuantizeInfo.refPositionSeconds, nullptr);
+
+    if (inSetExportTempo) {
+        tree.setPropertyExcludingListener(this, NnId::ExportTempoId, mTimeQuantizeInfo.bpm, nullptr);
+    }
 }
 
 bool TimeQuantizeOptions::checkInfoUpdated()

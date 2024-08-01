@@ -30,8 +30,14 @@ public:
         double refPositionPpq = 0.0;
         double refPositionSeconds = 0.0;
 
+        /**
+         * @return The start position in quarter notes
+         */
         double getStartPPQ() const { return refPositionPpq - refPositionSeconds * bpm / 60.0; }
 
+        /**
+         * @return The time in seconds of the last bar start before recording started
+         */
         double getLastBarStartSeconds() const
         {
             const double qn_duration_sec = 60.0 / bpm;
@@ -39,16 +45,13 @@ public:
             return refPositionSeconds - std::ceil(refPositionSeconds / bar_duration) * bar_duration;
         }
 
+        /**
+         * @return The start recording position in quarter notes
+         */
         double getLastBarStartPPQ() const
         {
             const double bar_duration_qn = timeSignatureNum * 4.0 / timeSignatureDenom;
             return refPositionPpq - std::ceil(refPositionPpq / bar_duration_qn) * bar_duration_qn;
-        }
-
-        double getStartTimePPQ() const
-        {
-            const double beats_per_second = 60.0 / bpm;
-            return refPositionPpq - refPositionSeconds / beats_per_second;
         }
     };
 
@@ -68,14 +71,14 @@ public:
 
     void clear();
 
-    void saveStateToValueTree();
+    void saveStateToValueTree(bool inSetExportTempo);
 
     bool checkInfoUpdated();
 
     TimeQuantizeInfo getTimeQuantizeInfo() const;
 
 private:
-    void _setInfo(const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr = nullopt);
+    void _setInfo(const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr);
 
     static double _quantizeTime(
         double inEventTime, double inBPM, double inTimeDivision, double inStartTimeQN, float inQuantizationForce);
