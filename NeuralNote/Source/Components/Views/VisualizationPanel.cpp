@@ -18,9 +18,6 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mAudioMidiViewport.setScrollBarsShown(false, true, false, false);
     addChildComponent(mMidiFileDrag);
 
-    // TODO: create a custom text editor for this. With 2 lambdas to check if entry is correct and one to correct it.
-    //  Also add lose focus on external click by making it a global mouse listener
-
     auto tempo_str_validator = [](const String& tempo_str) {
         if (tempo_str.isEmpty()) {
             return false;
