@@ -64,6 +64,8 @@ public:
                 jassert(inValidator(corrected_text));
                 setText(corrected_text, true);
             }
+
+            Desktop::getInstance().removeGlobalMouseListener(this);
         };
 
         setText(numberToStr(mProcessor->getValueTree().getProperty(inPropIdentifier)), false);
@@ -71,7 +73,13 @@ public:
         mProcessor->addListenerToStateValueTree(this);
     }
 
-    ~NumericTextEditor() override { mProcessor->removeListenerFromStateValueTree(this); }
+    ~NumericTextEditor() override
+    {
+        mProcessor->removeListenerFromStateValueTree(this);
+        Desktop::getInstance().removeGlobalMouseListener(this);
+    }
+
+    void focusGained(FocusChangeType cause) override { Desktop::getInstance().addGlobalMouseListener(this); }
 
     static T strToNumber(const String& text)
     {
@@ -101,6 +109,17 @@ public:
     {
         if (property == mIdentifier) {
             setText(numberToStr(mProcessor->getValueTree().getProperty(mIdentifier)), false);
+        }
+    }
+
+    void mouseDown(const MouseEvent& e) override
+    {
+        if (getScreenBounds().contains(e.getScreenPosition())) {
+            // Delegate mouse clicks inside the editor to the TextEditor class to not break its functionality.
+            TextEditor::mouseDown(e);
+        } else {
+            // Lose focus when mouse clicks occur outside the editor.
+            giveAwayKeyboardFocus();
         }
     }
 

@@ -66,13 +66,6 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     // Add this as mouse listener of audio region and pianoroll to control visibility of gain sliders
     mCombinedAudioMidiRegion.getAudioRegion()->addMouseListener(this, true);
     mCombinedAudioMidiRegion.getPianoRoll()->addMouseListener(this, true);
-
-    mProcessor->addListenerToStateValueTree(this);
-}
-
-VisualizationPanel::~VisualizationPanel()
-{
-    mProcessor->removeListenerFromStateValueTree(this);
 }
 
 void VisualizationPanel::resized()
@@ -169,13 +162,4 @@ Viewport& VisualizationPanel::getAudioMidiViewport()
 CombinedAudioMidiRegion& VisualizationPanel::getCombinedAudioMidiRegion()
 {
     return mCombinedAudioMidiRegion;
-}
-
-void VisualizationPanel::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
-{
-    // if (property == NnId::ExportTempoId) {
-    //     if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-    //         mFileTempo->setText(String(mProcessor->getValueTree().getProperty(NnId::ExportTempoId)), sendNotification);
-    //     }
-    // }
 }

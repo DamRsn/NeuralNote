@@ -14,14 +14,12 @@
 #include "VisualizationPanel.h"
 #include "NumericTextEditor.h"
 
-class VisualizationPanel
-    : public Component
-    , public ValueTree::Listener
+class VisualizationPanel : public Component
 {
 public:
     explicit VisualizationPanel(NeuralNoteAudioProcessor* processor);
 
-    ~VisualizationPanel() override;
+    ~VisualizationPanel() override = default;
 
     void resized() override;
 
@@ -44,8 +42,6 @@ public:
     static constexpr int KEYBOARD_WIDTH = 50;
 
 private:
-    void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
-
     NeuralNoteAudioProcessor* mProcessor;
     Keyboard mKeyboard;
     Viewport mAudioMidiViewport;

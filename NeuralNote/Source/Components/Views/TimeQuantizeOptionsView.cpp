@@ -99,6 +99,15 @@ void TimeQuantizeOptionsView::_setViewEnabled(bool inEnable)
     mIsViewEnabled = inEnable;
     mQuantizationForceSlider->setEnabled(inEnable);
     mTimeDivisionDropdown->setEnabled(inEnable);
+
+    auto alpha = inEnable ? 1.0f : DISABLED_ALPHA;
+    mTempoEditor->setAlpha(alpha);
+    mTimeSignatureNumEditor->setAlpha(alpha);
+    mTimeSignatureDenomEditor->setAlpha(alpha);
+    mTempoEditor->setEnabled(inEnable);
+    mTimeSignatureNumEditor->setEnabled(inEnable);
+    mTimeSignatureDenomEditor->setEnabled(inEnable);
+
     repaint();
 }
 
