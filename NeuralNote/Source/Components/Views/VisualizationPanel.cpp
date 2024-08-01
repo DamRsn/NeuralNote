@@ -118,8 +118,6 @@ void VisualizationPanel::repaintPianoRoll()
 void VisualizationPanel::setMidiFileDragComponentVisible()
 {
     mMidiFileDrag.setVisible(true);
-
-    // mFileTempo->setText(String(mProcessor->getTranscriptionManager()->getMidiFileTempo()), sendNotification);
     mFileTempo->setVisible(true);
 }
 

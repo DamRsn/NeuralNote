@@ -44,7 +44,8 @@ inline static Identifier ExportTempoId = "EXPORT_TEMPO";
 
 // To be set in this specific order
 const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault = {
-    {TempoId, 120},
+    {TempoId, 120.0},
+    {ExportTempoId, 120.0},
     {TimeSignatureNumeratorId, 4},
     {TimeSignatureDenominatorId, 4},
     {TimeQuantizeRefPosPPQId, 0.0},
@@ -52,8 +53,7 @@ const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault 
     {TimeQuantizeRefPositionSeconds, 0.0},
     {SourceAudioNativeSrPathId, String()},
     {PlayheadPositionSecId, 0.0},
-    {PlayheadCenteredId, true},
-    {ExportTempoId, 120.0}};
+    {PlayheadCenteredId, true}};
 } // namespace NnId
 
 #endif //NNID_H
