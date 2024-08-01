@@ -11,11 +11,6 @@ bool MidiFileWriter::writeMidiFile(const std::vector<Notes::Event>& inNoteEvents
                                    PitchBendModes inPitchBendMode) const
 {
     // Compute offset to start at beginning of the previous bar
-    // const double qn_duration_sec = 60.0 / inInfo.bpm;
-    // const double bar_duration = inInfo.timeSignatureNum * qn_duration_sec * 4.0 / inInfo.timeSignatureDenom;
-    // const double start_offset =
-    //     inInfo.refPositionSeconds - std::ceil(inInfo.refPositionSeconds / bar_duration) * bar_duration;
-
     const double start_offset = inInfo.refPositionSeconds - inInfo.getLastBarStartSeconds();
     jassert(start_offset >= 0.0);
 
