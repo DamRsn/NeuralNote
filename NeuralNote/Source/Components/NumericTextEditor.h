@@ -93,17 +93,7 @@ public:
         return {};
     }
 
-    static String numberToStr(T number)
-    {
-        if constexpr (std::is_same_v<T, int>) {
-            return String(number);
-        } else if constexpr (std::is_same_v<T, double>) {
-            return String(number);
-        }
-
-        jassertfalse;
-        return {};
-    }
+    static String numberToStr(T number) { return String(number); }
 
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override
     {
