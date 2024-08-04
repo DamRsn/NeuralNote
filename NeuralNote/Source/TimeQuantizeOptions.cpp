@@ -25,11 +25,13 @@ void TimeQuantizeOptions::processBlock(int inNumSamples)
 {
     if (mProcessor->getState() == Recording) {
         if (!mWasRecording) {
+            jassert(mNumRecordedSamples == 0);
             mWasRecording = true;
+
             auto playhead_info = mProcessor->getPlayHead()->getPosition();
             _setInfo(playhead_info);
-
             mWasPlaying = isPlayheadPlaying(playhead_info);
+
         } else if (!mWasPlaying) {
             auto playhead_info = mProcessor->getPlayHead()->getPosition();
 
@@ -51,12 +53,13 @@ void TimeQuantizeOptions::processBlock(int inNumSamples)
 void TimeQuantizeOptions::fileLoaded()
 {
     ScopedLock lock(mInfoCriticalSection);
-    mTimeQuantizeInfo.refPositionPpq = 0.0f;
-    mTimeQuantizeInfo.refBarStartPpq = 0.0f;
+    mTimeQuantizeInfo.refPositionQn = 0.0f;
+    mTimeQuantizeInfo.refLastBarQn = 0.0f;
     mTimeQuantizeInfo.refPositionSeconds = 0.0f;
 
     mWasRecording = false;
     mWasPlaying = false;
+    mNumRecordedSamples = 0;
 
     saveStateToValueTree(false);
 }
@@ -83,12 +86,12 @@ void TimeQuantizeOptions::_setInfo(const Optional<AudioPlayHead::PositionInfo>& 
         if (isPlayheadPlaying(inPositionInfoPtr)) {
             if (!inPositionInfoPtr->getPpqPositionOfLastBarStart().hasValue()
                 || !inPositionInfoPtr->getPpqPosition().hasValue()) {
-                mTimeQuantizeInfo.refBarStartPpq = 0.0;
-                mTimeQuantizeInfo.refPositionPpq = 0.0;
+                mTimeQuantizeInfo.refLastBarQn = 0.0;
+                mTimeQuantizeInfo.refPositionQn = 0.0;
                 mTimeQuantizeInfo.refPositionSeconds = 0.0;
             } else {
-                mTimeQuantizeInfo.refBarStartPpq = *inPositionInfoPtr->getPpqPositionOfLastBarStart();
-                mTimeQuantizeInfo.refPositionPpq = *inPositionInfoPtr->getPpqPosition();
+                mTimeQuantizeInfo.refLastBarQn = *inPositionInfoPtr->getPpqPositionOfLastBarStart();
+                mTimeQuantizeInfo.refPositionQn = *inPositionInfoPtr->getPpqPosition();
                 mTimeQuantizeInfo.refPositionSeconds = static_cast<double>(mNumRecordedSamples) / mSampleRate;
             }
         }
@@ -116,10 +119,9 @@ std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes:
 
     const double bpm = mTimeQuantizeInfo.bpm;
     // Offset from previous bar start
-    double start_pos_qn = mTimeQuantizeInfo.refPositionPpq - mTimeQuantizeInfo.refPositionSeconds / 60.0 * bpm
-                          - mTimeQuantizeInfo.refBarStartPpq;
+    const double start_pos_qn = mTimeQuantizeInfo.getStartLastBarQn();
 
-    double time_division = TimeQuantizeUtils::TimeDivisionsDouble.at(static_cast<size_t>(mParameters.division));
+    const double time_division = TimeQuantizeUtils::TimeDivisionsDouble.at(static_cast<size_t>(mParameters.division));
 
     for (const auto& event: inNoteEvents) {
         double duration = event.endTime - event.startTime;
@@ -141,6 +143,8 @@ void TimeQuantizeOptions::clear()
 {
     mTimeQuantizeInfo = TimeQuantizeInfo();
     mWasRecording = false;
+    mWasPlaying = false;
+    mNumRecordedSamples = 0;
 }
 
 bool TimeQuantizeOptions::isPlayheadPlaying(const Optional<AudioPlayHead::PositionInfo>& inPositionInfoPtr)
@@ -163,11 +167,9 @@ void TimeQuantizeOptions::saveStateToValueTree(bool inSetExportTempo)
         this, NnId::TimeSignatureNumeratorId, mTimeQuantizeInfo.timeSignatureNum, nullptr);
     tree.setPropertyExcludingListener(
         this, NnId::TimeSignatureDenominatorId, mTimeQuantizeInfo.timeSignatureDenom, nullptr);
-    tree.setPropertyExcludingListener(this, NnId::TimeQuantizeRefPosPPQId, mTimeQuantizeInfo.refPositionPpq, nullptr);
-    tree.setPropertyExcludingListener(
-        this, NnId::TimeQuantizeRefLastBarPPQId, mTimeQuantizeInfo.refBarStartPpq, nullptr);
-    tree.setPropertyExcludingListener(
-        this, NnId::TimeQuantizeRefPositionSeconds, mTimeQuantizeInfo.refPositionSeconds, nullptr);
+    tree.setPropertyExcludingListener(this, NnId::TimeQuantizeRefPosQnId, mTimeQuantizeInfo.refPositionQn, nullptr);
+    tree.setPropertyExcludingListener(this, NnId::TimeQuantizeRefLastBarQnId, mTimeQuantizeInfo.refLastBarQn, nullptr);
+    tree.setPropertyExcludingListener(this, NnId::TimeQuantizeRefPosSec, mTimeQuantizeInfo.refPositionSeconds, nullptr);
 
     if (inSetExportTempo) {
         tree.setPropertyExcludingListener(this, NnId::ExportTempoId, mTimeQuantizeInfo.bpm, nullptr);
@@ -177,7 +179,10 @@ void TimeQuantizeOptions::saveStateToValueTree(bool inSetExportTempo)
 bool TimeQuantizeOptions::checkInfoUpdated()
 {
     auto out = mInfoUpdated.load();
-    mInfoUpdated = false;
+
+    if (out) {
+        mInfoUpdated.store(false);
+    }
 
     return out;
 }
@@ -193,7 +198,7 @@ double TimeQuantizeOptions::_quantizeTime(
     jassert(inEventTime >= 0.0);
     const double seconds_per_qn = 60.0 / inBPM;
 
-    double division_duration = inTimeDivision * 4.0 * seconds_per_qn;
+    const double division_duration = inTimeDivision * 4.0 * seconds_per_qn;
 
     // Set previous bar start of recording start as new time origin.
     double new_time_origin = inStartTimeQN * seconds_per_qn;
@@ -232,15 +237,15 @@ void TimeQuantizeOptions::valueTreePropertyChanged(ValueTree& treeWhosePropertyH
         ScopedLock lock(mInfoCriticalSection);
         mTimeQuantizeInfo.timeSignatureDenom = mProcessor->getValueTree().getProperty(property);
 
-    } else if (property == NnId::TimeQuantizeRefPosPPQId) {
+    } else if (property == NnId::TimeQuantizeRefPosQnId) {
         ScopedLock lock(mInfoCriticalSection);
-        mTimeQuantizeInfo.refPositionPpq = mProcessor->getValueTree().getProperty(property);
+        mTimeQuantizeInfo.refPositionQn = mProcessor->getValueTree().getProperty(property);
 
-    } else if (property == NnId::TimeQuantizeRefLastBarPPQId) {
+    } else if (property == NnId::TimeQuantizeRefLastBarQnId) {
         ScopedLock lock(mInfoCriticalSection);
-        mTimeQuantizeInfo.refBarStartPpq = mProcessor->getValueTree().getProperty(property);
+        mTimeQuantizeInfo.refLastBarQn = mProcessor->getValueTree().getProperty(property);
 
-    } else if (property == NnId::TimeQuantizeRefPositionSeconds) {
+    } else if (property == NnId::TimeQuantizeRefPosSec) {
         ScopedLock lock(mInfoCriticalSection);
         mTimeQuantizeInfo.refPositionSeconds = mProcessor->getValueTree().getProperty(property);
     }

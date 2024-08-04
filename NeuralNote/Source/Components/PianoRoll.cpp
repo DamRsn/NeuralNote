@@ -12,11 +12,18 @@ PianoRoll::PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, 
 {
     mKeyboard.addChangeListener(this);
 
-    mNoteGradient.addColour(0.0, juce::Colours::green);
-    mNoteGradient.addColour(0.5, juce::Colours::blue);
-    mNoteGradient.addColour(1.0, juce::Colours::red);
+    mNoteGradient.addColour(0.0, Colours::green);
+    mNoteGradient.addColour(0.5, Colours::blue);
+    mNoteGradient.addColour(1.0, Colours::red);
 
     addAndMakeVisible(mPlayhead);
+
+    mProcessor->addListenerToStateValueTree(this);
+}
+
+PianoRoll::~PianoRoll()
+{
+    mProcessor->removeListenerFromStateValueTree(this);
 }
 
 void PianoRoll::resized()
@@ -37,7 +44,7 @@ void PianoRoll::paint(Graphics& g)
         // Draw horizontal note lines
         for (int i = MIN_MIDI_NOTE; i <= MAX_MIDI_NOTE; i++) {
             if (mKeyboard.getRectangleForKey(i).intersects(local_bounds)) {
-                juce::Colour fill_colour = _isWhiteKey(i) ? juce::Colours::white : juce::Colours::black;
+                Colour fill_colour = _isWhiteKey(i) ? Colours::white : Colours::black;
 
                 fill_colour = fill_colour.withAlpha(0.2f);
 
@@ -67,7 +74,7 @@ void PianoRoll::paint(Graphics& g)
             g.setColour(mNoteGradient.getColourAtPosition(note_event.amplitude));
             g.fillRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height);
 
-            g.setColour(juce::Colours::black);
+            g.setColour(Colours::black);
             g.drawRect(_timeToPixel(start), note_y_start, _timeToPixel(end) - _timeToPixel(start), note_height, 0.5);
 
             // Draw pitch bend
@@ -77,8 +84,7 @@ void PianoRoll::paint(Graphics& g)
                 const auto& bends = note_event.bends;
 
                 if (!note_event.bends.empty()) {
-                    auto path_stroke_type =
-                        PathStrokeType(1, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
+                    auto path_stroke_type = PathStrokeType(1, PathStrokeType::mitered, PathStrokeType::butt);
                     Path p;
                     float y_ref_pb = note_y_start + note_height / 2.0f;
 
@@ -113,6 +119,15 @@ void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
 void PianoRoll::mouseDown(const MouseEvent& event)
 {
     mPlayhead.setPlayheadTime(_pixelToTime((float) event.x));
+}
+
+void PianoRoll::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
+{
+    if (property == NnId::TempoId || property == NnId::TimeSignatureNumeratorId
+        || property == NnId::TimeSignatureDenominatorId || property == NnId::TimeQuantizeRefLastBarQnId
+        || property == NnId::TimeQuantizeRefPosSec || property == NnId::TimeQuantizeRefPosQnId) {
+        repaint();
+    }
 }
 
 float PianoRoll::_timeToPixel(float inTime) const
@@ -166,17 +181,27 @@ float PianoRoll::_getNoteWidth(int inNote) const
     return _isWhiteKey(inNote) ? mKeyboard.getKeyWidth() : mKeyboard.getBlackNoteWidth();
 }
 
-void PianoRoll::_drawBeatVerticalLines(Graphics& g)
+void PianoRoll::_drawBeatVerticalLines(Graphics& g) const
 {
     auto tq_info = mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getTimeQuantizeInfo();
-    double beats_per_second = 60.0 / tq_info.bpm;
+    double seconds_per_beat = 60.0 / tq_info.bpm;
 
-    double start_bar_qn = tq_info.getLastBarStartPPQ();
-    double start_time_qn = tq_info.getStartPPQ();
+    const double start_bar_qn = tq_info.getStartLastBarQn();
+    const double start_time_qn = tq_info.getStartQn();
+    const double offset_bar_start = start_time_qn - start_bar_qn;
 
-    double beat_increments = 4.0 / tq_info.timeSignatureDenom;
-    double beat_number = 0;
-    float beat_pixel = _qnToPixel(beat_number, start_bar_qn - start_time_qn, beats_per_second);
+    jassert(start_bar_qn <= start_time_qn);
+
+    const double beat_increments = 4.0 / tq_info.timeSignatureDenom;
+
+    // Beat number in quarter notes
+    double beat_pos_qn = 0;
+    float beat_pixel = _beatPosQnToPixel(beat_pos_qn, offset_bar_start, seconds_per_beat);
+
+    g.setColour(WHITE_SOLID);
+    g.drawText("Start bar qn: " + String(start_bar_qn), 10, 10, 200, 20, Justification::left);
+    g.drawText("Start time qn: " + String(start_time_qn), 10, 30, 200, 20, Justification::left);
+    g.drawText("Beat Pixel 0 : " + String(beat_pixel), 10, 50, 200, 20, Justification::left);
 
     auto width = static_cast<float>(getWidth());
     auto height = static_cast<float>(getHeight());
@@ -186,16 +211,16 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g)
     while (beat_pixel < width) {
         if (beat_pixel >= 0) {
             float thickness =
-                std::abs(fmod(beat_number, static_cast<double>(tq_info.timeSignatureNum))) < 1e-6 ? 1.0f : 0.5f;
+                std::abs(std::fmod(beat_pos_qn, static_cast<double>(tq_info.timeSignatureNum))) < 1e-6 ? 1.0f : 0.5f;
             g.drawLine(beat_pixel, 0, beat_pixel, height, thickness);
         }
 
-        beat_number += beat_increments;
-        beat_pixel = _qnToPixel(beat_number, start_bar_qn - start_time_qn, beats_per_second);
+        beat_pos_qn += beat_increments;
+        beat_pixel = _beatPosQnToPixel(beat_pos_qn, offset_bar_start, seconds_per_beat);
     }
 }
 
-float PianoRoll::_qnToPixel(double inQn, double inZeroQn, double inBeatsPerSecond) const
+float PianoRoll::_beatPosQnToPixel(double inPosQn, double inOffsetBarStart, double inSecondsPerBeat) const
 {
-    return static_cast<float>((inQn + inZeroQn) * inBeatsPerSecond * mNumPixelsPerSecond);
+    return static_cast<float>((inPosQn - inOffsetBarStart) * inSecondsPerBeat * mNumPixelsPerSecond);
 }
