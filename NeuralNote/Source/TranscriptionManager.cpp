@@ -11,6 +11,9 @@ TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor
     , mTimeQuantizeOptions(inProcessor)
     , mThreadPool(1)
 {
+    auto* file_logger = FileLogger::createDefaultAppLogger("/tmp/NeuralNote", "log.txt", "YO! \n");
+    Logger::setCurrentLogger(file_logger);
+
     mJobLambda = [this]() { _runModel(); };
 
     auto& apvts = mProcessor->getAPVTS();

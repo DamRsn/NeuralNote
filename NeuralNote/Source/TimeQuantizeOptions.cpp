@@ -31,13 +31,20 @@ void TimeQuantizeOptions::processBlock(int inNumSamples)
             auto playhead_info = mProcessor->getPlayHead()->getPosition();
             _setInfo(playhead_info);
             mWasPlaying = isPlayheadPlaying(playhead_info);
+            mNumPlayingProcessBlock = 0;
 
         } else if (!mWasPlaying) {
             auto playhead_info = mProcessor->getPlayHead()->getPosition();
 
             if (isPlayheadPlaying(playhead_info)) {
-                _setInfo(playhead_info);
-                mWasPlaying = true;
+                // Don't use first processBlock after playing to set info.
+                // Bug in Logic Pro, playhead position incorrect.
+                if (mNumPlayingProcessBlock < mNumPlayingProcessBlockBeforeSetInfo) {
+                    mNumPlayingProcessBlock += 1;
+                } else {
+                    _setInfo(playhead_info);
+                    mWasPlaying = true;
+                }
             }
         }
 
@@ -97,6 +104,19 @@ void TimeQuantizeOptions::_setInfo(const Optional<AudioPlayHead::PositionInfo>& 
         }
     }
 
+    // Write full info struct to string and then log
+    String to_log = "_setInfo: ";
+    to_log += "\nBPM: " + String(mTimeQuantizeInfo.bpm) + " ";
+    to_log += "\nTime signature: " + String(mTimeQuantizeInfo.timeSignatureNum) + "/"
+              + String(mTimeQuantizeInfo.timeSignatureDenom) + " ";
+    to_log += "\nRef pos QN: " + String(mTimeQuantizeInfo.refPositionQn) + " ";
+    to_log += "\nRef last bar QN: " + String(mTimeQuantizeInfo.refLastBarQn) + " ";
+    to_log += "\nRef pos sec: " + String(mTimeQuantizeInfo.refPositionSeconds) + " ";
+    to_log += "\nStart QN: " + String(mTimeQuantizeInfo.getStartQn()) + " ";
+    to_log += "\nStart last bar QN: " + String(mTimeQuantizeInfo.getStartLastBarQn()) + "\n\n\n";
+
+    Logger::writeToLog(to_log);
+
     mInfoUpdated = true;
 }
 
@@ -119,7 +139,7 @@ std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes:
 
     const double bpm = mTimeQuantizeInfo.bpm;
     // Offset from previous bar start
-    const double start_pos_qn = mTimeQuantizeInfo.getStartLastBarQn();
+    const double start_pos_qn = mTimeQuantizeInfo.getStartQn() - mTimeQuantizeInfo.getStartLastBarQn();
 
     const double time_division = TimeQuantizeUtils::TimeDivisionsDouble.at(static_cast<size_t>(mParameters.division));
 

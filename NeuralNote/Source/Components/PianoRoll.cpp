@@ -50,8 +50,8 @@ void PianoRoll::paint(Graphics& g)
 
                 g.setColour(fill_colour);
 
-                auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(i);
-                g.fillRect(0.0f, note_y_start_n_height.first, rect_width, note_y_start_n_height.second);
+                auto [note_y_start, note_height] = _getNoteHeightAndWidthPianoRoll(i);
+                g.fillRect(0.0f, note_y_start, rect_width, note_height);
             }
         }
 
@@ -62,9 +62,7 @@ void PianoRoll::paint(Graphics& g)
 
         // Draw notes
         for (auto& note_event: mProcessor->getTranscriptionManager()->getNoteEventVector()) {
-            auto note_y_start_n_height = _getNoteHeightAndWidthPianoRoll(note_event.pitch);
-            auto note_y_start = note_y_start_n_height.first;
-            auto note_height = note_y_start_n_height.second;
+            auto [note_y_start, note_height] = _getNoteHeightAndWidthPianoRoll(note_event.pitch);
             auto start = static_cast<float>(note_event.startTime);
             auto end = static_cast<float>(note_event.endTime);
 
@@ -79,7 +77,7 @@ void PianoRoll::paint(Graphics& g)
 
             // Draw pitch bend
             if (static_cast<PitchBendModes>(
-                    (int) std::round(mProcessor->getParameterValue(ParameterHelpers::PitchBendModeId)))
+                    static_cast<int>(std::round(mProcessor->getParameterValue(ParameterHelpers::PitchBendModeId))))
                 == SinglePitchBend) {
                 const auto& bends = note_event.bends;
 
@@ -91,10 +89,11 @@ void PianoRoll::paint(Graphics& g)
                     p.startNewSubPath(_timeToPixel(start), y_ref_pb);
 
                     for (size_t i = 0; i < bends.size(); i++) {
-                        p.lineTo(_timeToPixel(float(start + double(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
-                                 y_ref_pb - float(bends[i]) * note_height / 3.0f);
+                        p.lineTo(_timeToPixel(static_cast<float>(
+                                     start + static_cast<double>(i) * FFT_HOP / BASIC_PITCH_SAMPLE_RATE)),
+                                 y_ref_pb - static_cast<float>(bends[i]) * note_height / 3.0f);
                     }
-                    p.lineTo(_timeToPixel(float(note_event.endTime)), y_ref_pb);
+                    p.lineTo(_timeToPixel(static_cast<float>(note_event.endTime)), y_ref_pb);
 
                     g.setColour(WHITE_SOLID);
                     g.strokePath(p, path_stroke_type);
@@ -118,7 +117,7 @@ void PianoRoll::changeListenerCallback(ChangeBroadcaster* source)
 
 void PianoRoll::mouseDown(const MouseEvent& event)
 {
-    mPlayhead.setPlayheadTime(_pixelToTime((float) event.x));
+    mPlayhead.setPlayheadTime(_pixelToTime(static_cast<float>(event.x)));
 }
 
 void PianoRoll::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
@@ -202,6 +201,9 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g) const
     g.drawText("Start bar qn: " + String(start_bar_qn), 10, 10, 200, 20, Justification::left);
     g.drawText("Start time qn: " + String(start_time_qn), 10, 30, 200, 20, Justification::left);
     g.drawText("Beat Pixel 0 : " + String(beat_pixel), 10, 50, 200, 20, Justification::left);
+    g.drawText("Ref pos qn: " + String(tq_info.refPositionQn), 10, 70, 200, 20, Justification::left);
+    g.drawText("Ref pos sec: " + String(tq_info.refPositionSeconds), 10, 90, 200, 20, Justification::left);
+    g.drawText("Ref last bar qn: " + String(tq_info.refLastBarQn), 10, 110, 200, 20, Justification::left);
 
     auto width = static_cast<float>(getWidth());
     auto height = static_cast<float>(getHeight());

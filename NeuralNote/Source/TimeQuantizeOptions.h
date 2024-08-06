@@ -126,6 +126,8 @@ private:
 
     bool mWasRecording = false;
     bool mWasPlaying = false;
+    int mNumPlayingProcessBlock = 0;
+    static constexpr int mNumPlayingProcessBlockBeforeSetInfo = 2;
 
     // To signal that the info has been updated for the timer on main thread
     std::atomic<bool> mInfoUpdated = false;
