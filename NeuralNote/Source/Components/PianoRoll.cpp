@@ -197,14 +197,6 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g) const
     double beat_pos_qn = 0;
     float beat_pixel = _beatPosQnToPixel(beat_pos_qn, offset_bar_start, seconds_per_beat);
 
-    g.setColour(WHITE_SOLID);
-    g.drawText("Start bar qn: " + String(start_bar_qn), 10, 10, 200, 20, Justification::left);
-    g.drawText("Start time qn: " + String(start_time_qn), 10, 30, 200, 20, Justification::left);
-    g.drawText("Beat Pixel 0 : " + String(beat_pixel), 10, 50, 200, 20, Justification::left);
-    g.drawText("Ref pos qn: " + String(tq_info.refPositionQn), 10, 70, 200, 20, Justification::left);
-    g.drawText("Ref pos sec: " + String(tq_info.refPositionSeconds), 10, 90, 200, 20, Justification::left);
-    g.drawText("Ref last bar qn: " + String(tq_info.refLastBarQn), 10, 110, 200, 20, Justification::left);
-
     auto width = static_cast<float>(getWidth());
     auto height = static_cast<float>(getHeight());
 
