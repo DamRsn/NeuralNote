@@ -4,9 +4,14 @@
 
 #include "NoteOptions.h"
 
-void NoteOptions::setParameters(
-    RootNote inRootNote, ScaleType inScaleType, SnapMode inSnapMode, int inMinMidiNote, int inMaxMidiNote)
+void NoteOptions::setParameters(bool inEnable,
+                                RootNote inRootNote,
+                                ScaleType inScaleType,
+                                SnapMode inSnapMode,
+                                int inMinMidiNote,
+                                int inMaxMidiNote)
 {
+    mEnable = inEnable;
     mRootNote = inRootNote;
     mScaleType = inScaleType;
     mSnapMode = inSnapMode;
@@ -16,6 +21,10 @@ void NoteOptions::setParameters(
 
 std::vector<Notes::Event> NoteOptions::process(const std::vector<Notes::Event>& inNoteEvents)
 {
+    if (!mEnable) {
+        return inNoteEvents;
+    }
+
     std::vector<Notes::Event> processed_note_events;
 
     auto keyVector = _createKeyVector(mRootNote, mScaleType);
@@ -52,7 +61,7 @@ bool NoteOptions::_isInKey(int inMidiNote, const std::vector<int>& inKeyArray)
 {
     auto note_index = _midiToNoteIndex(inMidiNote);
 
-    for (auto &inKey : inKeyArray) {
+    for (auto& inKey: inKeyArray) {
         if (note_index == inKey)
             return true;
     }

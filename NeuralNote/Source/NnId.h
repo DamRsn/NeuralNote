@@ -27,24 +27,33 @@ inline static Identifier PlayheadPositionSecId = "PLAYHEAD_POSITION_SEC";
 
 inline static Identifier PlayheadCenteredId = "PLAYHEAD_CENTERED";
 
-// --------------- Time quantizations ----------------
-// inline static Identifier TempoId = "TEMPO";
-//
-// inline static Identifier TimeSignatureNumeratorId = "TIME_SIGNATURE_NUMERATOR";
-//
-// inline static Identifier TimeSignatureDenominatorId = "TIME_SIGNATURE_DENOMINATOR";
-//
-// inline static Identifier ExportTempoId = "EXPORT_TEMPO";
+// --------------- Time quantization ----------------
+inline static Identifier TempoId = "TEMPO";
+
+inline static Identifier TimeSignatureNumeratorId = "TIME_SIGNATURE_NUMERATOR";
+
+inline static Identifier TimeSignatureDenominatorId = "TIME_SIGNATURE_DENOMINATOR";
+
+inline static Identifier TimeQuantizeRefPosQnId = "TIME_QUANTIZE_REF_POS_QN";
+
+inline static Identifier TimeQuantizeRefLastBarQnId = "TIME_QUANTIZE_REF_LAST_BAR_QN";
+
+inline static Identifier TimeQuantizeRefPosSec = "TIME_QUANTIZE_REF_POS_SECONDS";
+
+inline static Identifier ExportTempoId = "EXPORT_TEMPO";
 
 // To be set in this specific order
 const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault = {
-    // {TempoId, 120.0},
-    // {TimeSignatureNumeratorId, 4},
-    // {TimeSignatureDenominatorId, 4},
+    {TempoId, 120.0},
+    {ExportTempoId, 120.0},
+    {TimeSignatureNumeratorId, 4},
+    {TimeSignatureDenominatorId, 4},
+    {TimeQuantizeRefPosQnId, 0.0},
+    {TimeQuantizeRefLastBarQnId, 0.0},
+    {TimeQuantizeRefPosSec, 0.0},
     {SourceAudioNativeSrPathId, String()},
     {PlayheadPositionSecId, 0.0},
     {PlayheadCenteredId, true}};
-    // {ExportTempoId, 120.0}};
 } // namespace NnId
 
 #endif //NNID_H

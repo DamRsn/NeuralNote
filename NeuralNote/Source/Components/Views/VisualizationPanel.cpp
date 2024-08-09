@@ -18,33 +18,21 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mAudioMidiViewport.setScrollBarsShown(false, true, false, false);
     addChildComponent(mMidiFileDrag);
 
-    mFileTempo = std::make_unique<juce::TextEditor>();
-    mFileTempo->setInputRestrictions(6, "0123456789.");
-    mFileTempo->setMultiLine(false, false);
-    mFileTempo->setReadOnly(false);
+    auto tempo_str_validator = [](const String& tempo_str) {
+        if (tempo_str.isEmpty()) {
+            return false;
+        }
 
-    mFileTempo->setFont(LABEL_FONT);
-    mFileTempo->setJustification(juce::Justification::centred);
-
-    mFileTempo->setColour(TextEditor::backgroundColourId, juce::Colours::transparentWhite);
-    mFileTempo->setColour(TextEditor::textColourId, BLACK);
-    mFileTempo->setColour(TextEditor::outlineColourId, juce::Colours::lightgrey);
-    mFileTempo->setColour(TextEditor::focusedOutlineColourId, juce::Colours::grey);
-    mFileTempo->onReturnKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
-    mFileTempo->onEscapeKey = [this]() { mFileTempo->giveAwayKeyboardFocus(); };
-    mFileTempo->onFocusLost = [this]() {
-        double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
-        String correct_tempo_str = String(tempo);
-        correct_tempo_str = correct_tempo_str.substring(0, jmin(correct_tempo_str.length(), 6));
-        mFileTempo->setText(correct_tempo_str);
-        mProcessor->getTranscriptionManager()->setMidiFileTempo(tempo);
-    };
-    mFileTempo->onTextChange = [this]() {
-        double tempo = jlimit(5.0, 900.0, mFileTempo->getText().getDoubleValue());
-        mProcessor->getTranscriptionManager()->setMidiFileTempo(tempo);
+        float tempo = tempo_str.getFloatValue();
+        return tempo >= 20.0f && tempo <= 999.0f;
     };
 
-    mFileTempo->setText(String(mProcessor->getTranscriptionManager()->getMidiFileTempo()));
+    auto tempo_str_corrector = [](const String& tempo_str) {
+        return tempo_str.isEmpty() ? String("120") : String(jlimit(20.0f, 999.0f, tempo_str.getFloatValue()));
+    };
+
+    mFileTempo = std::make_unique<NumericTextEditor<double>>(
+        mProcessor, NnId::ExportTempoId, 6, 120.0, Justification::centred, tempo_str_validator, tempo_str_corrector);
     addChildComponent(*mFileTempo);
 
     mAudioGainSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
@@ -89,7 +77,7 @@ void VisualizationPanel::resized()
     mCombinedAudioMidiRegion.changeListenerCallback(mProcessor->getSourceAudioManager()->getAudioThumbnail());
 
     mMidiFileDrag.setBounds(0, mCombinedAudioMidiRegion.mPianoRollY - 13, getWidth(), 13);
-    mFileTempo->setBounds(6, 55, 40, 17);
+    mFileTempo->setBounds(6, 55, 40, 14);
 
     mAudioGainSlider.setBounds(getWidth() - 205, 3, 200, 20);
     mMidiGainSlider.setBounds(getWidth() - 205, mCombinedAudioMidiRegion.mPianoRollY + 3, 200, 20);
@@ -111,8 +99,7 @@ void VisualizationPanel::paint(Graphics& g)
 
         g.setColour(BLACK);
         g.setFont(LABEL_FONT);
-        g.drawFittedText(
-            "MIDI\nFILE\nTEMPO", Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55), juce::Justification::centred, 3);
+        g.drawFittedText("MIDI\nFILE\nTEMPO", Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55), Justification::centred, 3);
     }
 }
 
@@ -131,8 +118,6 @@ void VisualizationPanel::repaintPianoRoll()
 void VisualizationPanel::setMidiFileDragComponentVisible()
 {
     mMidiFileDrag.setVisible(true);
-
-    mFileTempo->setText(String(mProcessor->getTranscriptionManager()->getMidiFileTempo()), sendNotification);
     mFileTempo->setVisible(true);
 }
 
