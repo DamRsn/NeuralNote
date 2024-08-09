@@ -4,6 +4,9 @@
 NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     : mAPVTS(*this, nullptr, NnId::ParametersId, ParameterHelpers::createParameterLayout())
 {
+    mLogger.reset(FileLogger::createDefaultAppLogger("/tmp/NeuralNote", "log.txt", "YO! \n"));
+    Logger::setCurrentLogger(mLogger.get());
+
     for (size_t i = 0; i < mParams.size(); i++) {
         auto pid = static_cast<ParameterHelpers::ParamIdEnum>(i);
         mParams[i] = mAPVTS.getParameter(ParameterHelpers::getIdStr(pid));
@@ -12,6 +15,11 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     mSourceAudioManager = std::make_unique<SourceAudioManager>(this);
     mPlayer = std::make_unique<Player>(this);
     mTranscriptionManager = std::make_unique<TranscriptionManager>(this);
+}
+
+NeuralNoteAudioProcessor::~NeuralNoteAudioProcessor()
+{
+    Logger::setCurrentLogger(nullptr);
 }
 
 void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)

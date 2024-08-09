@@ -53,6 +53,7 @@ public:
             int num_bars = 0;
             double new_pos_qn = refLastBarQn;
 
+            // TODO: don't use while loop
             while (new_pos_qn > getStartQn()) {
                 new_pos_qn -= bar_duration_qn;
                 num_bars++;
@@ -78,7 +79,9 @@ public:
             const double last_bar_seconds = refPositionSeconds - qnToSec(refPositionQn - refLastBarQn, bpm);
 
             double first_start_bar_sec = last_bar_seconds;
-            while (refPositionSeconds > 0) {
+
+            // TODO: don't use while loop
+            while (first_start_bar_sec > 0) {
                 first_start_bar_sec -= bar_duration_sec;
             }
 
