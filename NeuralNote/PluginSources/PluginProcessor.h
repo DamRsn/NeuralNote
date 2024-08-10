@@ -25,7 +25,7 @@ class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
 public:
     NeuralNoteAudioProcessor();
 
-    ~NeuralNoteAudioProcessor();
+    ~NeuralNoteAudioProcessor() override;
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
 

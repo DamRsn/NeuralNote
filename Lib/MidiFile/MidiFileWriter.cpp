@@ -12,8 +12,6 @@ bool MidiFileWriter::writeMidiFile(const std::vector<Notes::Event>& inNoteEvents
 {
     // Compute offset to start at beginning of the previous bar
     const double start_offset = - inInfo.getStartLastBarSec();
-    String log_message = String("Start Offset: ") + String(start_offset);
-    Logger::writeToLog(log_message);
     jassert(start_offset >= 0.0);
 
     MidiMessageSequence message_sequence;

@@ -104,19 +104,6 @@ void TimeQuantizeOptions::_setInfo(const Optional<AudioPlayHead::PositionInfo>& 
         }
     }
 
-    // Write full info struct to string and then log
-    String to_log = "_setInfo: ";
-    to_log += "\nBPM: " + String(mTimeQuantizeInfo.bpm) + " ";
-    to_log += "\nTime signature: " + String(mTimeQuantizeInfo.timeSignatureNum) + "/"
-              + String(mTimeQuantizeInfo.timeSignatureDenom) + " ";
-    to_log += "\nRef pos QN: " + String(mTimeQuantizeInfo.refPositionQn) + " ";
-    to_log += "\nRef last bar QN: " + String(mTimeQuantizeInfo.refLastBarQn) + " ";
-    to_log += "\nRef pos sec: " + String(mTimeQuantizeInfo.refPositionSeconds) + " ";
-    to_log += "\nStart QN: " + String(mTimeQuantizeInfo.getStartQn()) + " ";
-    to_log += "\nStart last bar QN: " + String(mTimeQuantizeInfo.getStartLastBarQn()) + "\n\n\n";
-
-    Logger::writeToLog(to_log);
-
     mInfoUpdated = true;
 }
 
