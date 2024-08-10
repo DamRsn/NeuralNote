@@ -40,20 +40,22 @@ void MidiFileDrag::mouseDown(const MouseEvent& event)
         }
     }
 
-    std::string filename = mProcessor->getSourceAudioManager()->getDroppedFilename();
+    String filename = mProcessor->getSourceAudioManager()->getDroppedFilename();
 
-    if (filename.empty())
+    if (filename.isEmpty())
         filename = "NNTranscription.mid";
     else
         filename += "_NNTranscription.mid";
 
     auto out_file = mTempDirectory.getChildFile(filename);
 
+    double export_bpm = mProcessor->getValueTree().getProperty(NnId::ExportTempoId, 120.0);
+
     auto success_midi_file_creation = mMidiFileWriter.writeMidiFile(
         mProcessor->getTranscriptionManager()->getNoteEventVector(),
         out_file,
-        mProcessor->getPlayheadInfoOnRecordStart(),
-        mProcessor->getTranscriptionManager()->getMidiFileTempo(),
+        mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getTimeQuantizeInfo(),
+        export_bpm,
         static_cast<PitchBendModes>(mProcessor->getParameterValue(ParameterHelpers::PitchBendModeId)));
 
     if (!success_midi_file_creation) {

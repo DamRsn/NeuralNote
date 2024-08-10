@@ -1,6 +1,6 @@
 #pragma once
 
-#include "atomic"
+#include <atomic>
 #include <JuceHeader.h>
 
 #include "Resampler.h"
@@ -8,7 +8,7 @@
 #include "BasicPitch.h"
 #include "NoteOptions.h"
 #include "MidiFileWriter.h"
-#include "RhythmOptions.h"
+#include "TimeQuantizeOptions.h"
 #include "Player.h"
 #include "SourceAudioManager.h"
 #include "ParameterHelpers.h"
@@ -25,13 +25,15 @@ class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
 public:
     NeuralNoteAudioProcessor();
 
+    ~NeuralNoteAudioProcessor() override;
+
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
 
-    void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void processBlock(AudioBuffer<float>&, MidiBuffer&) override;
 
-    juce::AudioProcessorEditor* createEditor() override;
+    AudioProcessorEditor* createEditor() override;
 
-    void getStateInformation(juce::MemoryBlock& destData) override;
+    void getStateInformation(MemoryBlock& destData) override;
 
     void setStateInformation(const void* data, int sizeInBytes) override;
 
@@ -45,35 +47,36 @@ public:
 
     void clear();
 
-    const juce::Optional<juce::AudioPlayHead::PositionInfo>&
-        getPlayheadInfoOnRecordStart(); // TODO: Add to timeQuantizeManager
+    SourceAudioManager* getSourceAudioManager() const;
 
-    // TODO: TimeQuantizeManager
-    bool canQuantize() const;
+    Player* getPlayer() const;
 
-    std::string getTempoStr() const;
-
-    std::string getTimeSignatureStr() const;
-
-    SourceAudioManager* getSourceAudioManager();
-
-    Player* getPlayer();
-
-    TranscriptionManager* getTranscriptionManager();
+    TranscriptionManager* getTranscriptionManager() const;
 
     std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams>& getParams();
 
     float getParameterValue(ParameterHelpers::ParamIdEnum inParamId) const;
 
-    AudioProcessorValueTreeState& getAPVTS() { return mAPVTS; }
-
     NeuralNoteMainView* getNeuralNoteMainView() const;
 
-    double getCurrentTempo() const { return mCurrentTempo.load(); }
+    AudioProcessorValueTreeState& getAPVTS();
+
+    ValueTree& getValueTree();
+
+    void addListenerToStateValueTree(ValueTree::Listener* inListener);
+
+    void removeListenerFromStateValueTree(ValueTree::Listener* inListener);
 
 private:
+    static ValueTree _createDefaultValueTree();
+
+    void _updateValueTree(const ValueTree& inNewState);
+
+    // ValueTree for general plugin state
+    ValueTree mValueTree = _createDefaultValueTree();
+
     // Value tree state to pass automatable parameters from UI
-    juce::AudioProcessorValueTreeState mAPVTS;
+    AudioProcessorValueTreeState mAPVTS;
 
     std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams> mParams {};
 
@@ -82,13 +85,5 @@ private:
     std::unique_ptr<SourceAudioManager> mSourceAudioManager;
     std::unique_ptr<Player> mPlayer;
     std::unique_ptr<TranscriptionManager> mTranscriptionManager;
-
-    bool mWasRecording = false;
-
-    std::atomic<double> mCurrentTempo = -1.0;
-    std::atomic<int> mCurrentTimeSignatureNum = -1;
-    std::atomic<int> mCurrentTimeSignatureDenom = -1;
-
-    // To quantize manager
-    juce::Optional<juce::AudioPlayHead::PositionInfo> mPlayheadInfoStartRecord;
+    std::unique_ptr<FileLogger> mLogger;
 };

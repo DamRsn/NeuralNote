@@ -11,6 +11,9 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     , mNoteOptions(processor)
     , mQuantizePanel(processor)
 {
+    mProcessor.addListenerToStateValueTree(this);
+    jassert(mProcessor.getValueTree().hasProperty(NnId::PlayheadCenteredId));
+
     mRecordButton = std::make_unique<DrawableButton>("RecordButton", DrawableButton::ButtonStyle::ImageRaw);
     mRecordButton->setClickingTogglesState(true);
     mRecordButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
@@ -38,7 +41,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
         updateEnablements();
     };
 
-    mRecordButton->setToggleState(mProcessor.getState() == Recording, juce::NotificationType::dontSendNotification);
+    mRecordButton->setToggleState(mProcessor.getState() == Recording, NotificationType::dontSendNotification);
 
     addAndMakeVisible(*mRecordButton);
 
@@ -65,7 +68,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mBackButton->setImages(back_icon_drawable.get());
     mBackButton->onClick = [this]() {
         mProcessor.getPlayer()->reset();
-        mPlayPauseButton->setToggleState(false, juce::sendNotification);
+        mPlayPauseButton->setToggleState(false, sendNotification);
         mVisualizationPanel.getAudioMidiViewport().setViewPositionProportionately(0, 0);
     };
 
@@ -106,18 +109,18 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
                              nullptr,
                              nullptr,
                              nullptr);
-    mCenterButton->onClick = [this]() {
-        mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(mCenterButton->getToggleState());
-    };
 
+    mCenterButton->getToggleStateValue().referTo(
+        mProcessor.getValueTree().getPropertyAsValue(NnId::PlayheadCenteredId, nullptr));
+    NeuralNoteMainView::valueTreePropertyChanged(mProcessor.getValueTree(), NnId::PlayheadCenteredId);
     addAndMakeVisible(*mCenterButton);
 
-    mMuteButton = std::make_unique<juce::TextButton>("MuteButton");
+    mMuteButton = std::make_unique<TextButton>("MuteButton");
     mMuteButton->setButtonText("");
     mMuteButton->setClickingTogglesState(true);
 
-    mMuteButton->setColour(juce::TextButton::buttonColourId, juce::Colours::white.withAlpha(0.2f));
-    mMuteButton->setColour(juce::TextButton::buttonOnColourId, BLACK);
+    mMuteButton->setColour(TextButton::buttonColourId, Colours::white.withAlpha(0.2f));
+    mMuteButton->setColour(TextButton::buttonOnColourId, BLACK);
 
     mMuteButtonAttachment = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
         mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::MuteId), *mMuteButton);
@@ -135,7 +138,8 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
 
 NeuralNoteMainView::~NeuralNoteMainView()
 {
-    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+    mProcessor.removeListenerFromStateValueTree(this);
+    LookAndFeel::setDefaultLookAndFeel(nullptr);
 }
 
 void NeuralNoteMainView::resized()
@@ -156,18 +160,18 @@ void NeuralNoteMainView::resized()
 
 void NeuralNoteMainView::paint(Graphics& g)
 {
-    auto background_image = juce::ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
+    auto background_image = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
 
     g.drawImage(background_image, getLocalBounds().toFloat());
     g.setFont(LABEL_FONT);
-    g.drawFittedText("MUTE OUT", juce::Rectangle<int>(939, 63, 31, 23), juce::Justification::centred, 2);
+    g.drawFittedText("MUTE OUT", Rectangle<int>(939, 63, 31, 23), Justification::centred, 2);
 }
 
 void NeuralNoteMainView::timerCallback()
 {
     auto processor_state = mProcessor.getState();
     if (mRecordButton->getToggleState() && processor_state != Recording) {
-        mRecordButton->setToggleState(false, juce::sendNotification);
+        mRecordButton->setToggleState(false, sendNotification);
         updateEnablements();
     }
 
@@ -197,39 +201,35 @@ void NeuralNoteMainView::updateEnablements()
         mPlayPauseButton->setEnabled(false);
         mBackButton->setEnabled(false);
         mCenterButton->setEnabled(false);
-        mTranscriptionOptions.setEnabled(false);
-        mNoteOptions.setEnabled(false);
-        mQuantizePanel.setEnabled(false);
     } else if (current_state == Recording) {
         mRecordButton->setEnabled(true);
         mClearButton->setEnabled(false);
         mPlayPauseButton->setEnabled(false);
         mBackButton->setEnabled(false);
         mCenterButton->setEnabled(false);
-        mTranscriptionOptions.setEnabled(false);
-        mNoteOptions.setEnabled(false);
-        mQuantizePanel.setEnabled(false);
     } else if (current_state == Processing) {
         mRecordButton->setEnabled(false);
-        // TODO: activate clear button to be able to cancel processing.
         mClearButton->setEnabled(false);
         mPlayPauseButton->setEnabled(false);
         mBackButton->setEnabled(false);
         mCenterButton->setEnabled(false);
-        mTranscriptionOptions.setEnabled(false);
-        mNoteOptions.setEnabled(false);
-        mQuantizePanel.setEnabled(false);
     } else if (current_state == PopulatedAudioAndMidiRegions) {
         mRecordButton->setEnabled(false);
         mClearButton->setEnabled(true);
         mPlayPauseButton->setEnabled(true);
         mBackButton->setEnabled(true);
         mCenterButton->setEnabled(true);
-        mTranscriptionOptions.setEnabled(true);
-        mNoteOptions.setEnabled(true);
-        mQuantizePanel.setEnabled(mProcessor.canQuantize());
         mVisualizationPanel.setMidiFileDragComponentVisible();
     }
 
     repaint();
+}
+
+void NeuralNoteMainView::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
+{
+    if (property == NnId::PlayheadCenteredId) {
+        bool should_center = treeWhosePropertyHasChanged.getProperty(property);
+        mCenterButton->setToggleState(should_center, sendNotification);
+        mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(should_center);
+    }
 }

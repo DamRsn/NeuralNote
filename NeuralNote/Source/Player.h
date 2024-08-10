@@ -12,10 +12,12 @@
 
 class NeuralNoteAudioProcessor;
 
-class Player
+class Player : public ValueTree::Listener
 {
 public:
     explicit Player(NeuralNoteAudioProcessor* inProcessor);
+
+    ~Player() override;
 
     void prepareToPlay(double inSampleRate, int inSamplesPerBlock);
 
@@ -38,9 +40,13 @@ public:
 
     SynthController* getSynthController();
 
+    void saveStateToValueTree();
+
     static constexpr int NUM_VOICES_SYNTH = 16;
 
 private:
+    void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
+
     void _setGains(float inGainAudioSourceDB, float inGainSynthDB);
 
     std::atomic<bool> mIsPlaying = false;

@@ -14,11 +14,14 @@
 #include "Playhead.h"
 
 class PianoRoll
-    : public juce::Component
-    , public juce::ChangeListener
+    : public Component
+    , public ChangeListener
+    , ValueTree::Listener
 {
 public:
     PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond);
+
+    ~PianoRoll() override;
 
     void resized() override;
 
@@ -29,6 +32,8 @@ public:
     void mouseDown(const MouseEvent& event) override;
 
 private:
+    void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
+
     float _timeToPixel(float inTime) const;
 
     float _pixelToTime(float inPixel) const;
@@ -58,13 +63,13 @@ private:
 
     float _getNoteWidth(int inNote) const;
 
-    void _drawBeatVerticalLines(Graphics& g);
+    void _drawBeatVerticalLines(Graphics& g) const;
 
-    float _qnToPixel(double inQn, double inZeroQn, double inBeatsPerSecond) const;
+    float _beatPosQnToPixel(double inPosQn, double inOffsetBarStart, double inSecondsPerBeat) const;
 
     const double mNumPixelsPerSecond;
 
-    juce::ColourGradient mNoteGradient;
+    ColourGradient mNoteGradient;
 
     Keyboard& mKeyboard;
     NeuralNoteAudioProcessor* mProcessor;
