@@ -4,6 +4,9 @@
 NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     : mAPVTS(*this, nullptr, NnId::ParametersId, ParameterHelpers::createParameterLayout())
 {
+    mLogger.reset(FileLogger::createDefaultAppLogger("/tmp/NeuralNote", "log.txt", "YO! \n"));
+    Logger::setCurrentLogger(mLogger.get());
+
     for (size_t i = 0; i < mParams.size(); i++) {
         auto pid = static_cast<ParameterHelpers::ParamIdEnum>(i);
         mParams[i] = mAPVTS.getParameter(ParameterHelpers::getIdStr(pid));
@@ -14,9 +17,15 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     mTranscriptionManager = std::make_unique<TranscriptionManager>(this);
 }
 
+NeuralNoteAudioProcessor::~NeuralNoteAudioProcessor()
+{
+    Logger::setCurrentLogger(nullptr);
+}
+
 void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     mSourceAudioManager->prepareToPlay(sampleRate, samplesPerBlock);
+    mTranscriptionManager->prepareToPlay(sampleRate);
     mPlayer->prepareToPlay(sampleRate, samplesPerBlock);
 }
 
@@ -25,7 +34,7 @@ void NeuralNoteAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuff
     ignoreUnused(midiMessages);
 
     mSourceAudioManager->processBlock(buffer);
-    mTranscriptionManager->processBlock();
+    mTranscriptionManager->processBlock(buffer.getNumSamples());
 
     auto is_mute = mParams[ParameterHelpers::MuteId]->getValue() > 0.5f;
 
@@ -56,7 +65,6 @@ void NeuralNoteAudioProcessor::getStateInformation(MemoryBlock& destData)
     // NEURAL NOTE STATE
     // Update value tree with current state
     mPlayer->saveStateToValueTree();
-    mTranscriptionManager->saveStateToValueTree();
 
     full_state_tree.appendChild(mValueTree, nullptr);
 
@@ -153,6 +161,11 @@ ValueTree& NeuralNoteAudioProcessor::getValueTree()
 void NeuralNoteAudioProcessor::addListenerToStateValueTree(ValueTree::Listener* inListener)
 {
     mValueTree.addListener(inListener);
+}
+
+void NeuralNoteAudioProcessor::removeListenerFromStateValueTree(ValueTree::Listener* inListener)
+{
+    mValueTree.removeListener(inListener);
 }
 
 ValueTree NeuralNoteAudioProcessor::_createDefaultValueTree()

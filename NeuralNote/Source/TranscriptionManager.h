@@ -23,9 +23,11 @@ public:
 
     void timerCallback() override;
 
-    void processBlock();
+    void prepareToPlay(double inSampleRate);
 
-    void setLauchNewTranscription();
+    void processBlock(int inNumSamples);
+
+    void setLaunchNewTranscription();
 
     void launchTranscribeJob();
 
@@ -38,12 +40,6 @@ public:
     TimeQuantizeOptions& getTimeQuantizeOptions();
 
     void clear();
-
-    void setMidiFileTempo(double inMidiFileTempo);
-
-    double getMidiFileTempo() const;
-
-    void saveStateToValueTree();
 
 private:
     void _runModel();
@@ -69,8 +65,6 @@ private:
 
     ThreadPool mThreadPool;
     std::function<void()> mJobLambda;
-
-    double mMidiFileTempo = 120.0;
 };
 
 #endif //TranscriptionManager_h

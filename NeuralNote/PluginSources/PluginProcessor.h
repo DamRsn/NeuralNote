@@ -25,6 +25,8 @@ class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
 public:
     NeuralNoteAudioProcessor();
 
+    ~NeuralNoteAudioProcessor();
+
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
 
     void processBlock(AudioBuffer<float>&, MidiBuffer&) override;
@@ -63,6 +65,8 @@ public:
 
     void addListenerToStateValueTree(ValueTree::Listener* inListener);
 
+    void removeListenerFromStateValueTree(ValueTree::Listener* inListener);
+
 private:
     static ValueTree _createDefaultValueTree();
 
@@ -81,4 +85,5 @@ private:
     std::unique_ptr<SourceAudioManager> mSourceAudioManager;
     std::unique_ptr<Player> mPlayer;
     std::unique_ptr<TranscriptionManager> mTranscriptionManager;
+    std::unique_ptr<FileLogger> mLogger;
 };

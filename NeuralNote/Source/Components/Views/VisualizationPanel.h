@@ -12,11 +12,14 @@
 #include "MidiFileDrag.h"
 #include "PluginProcessor.h"
 #include "VisualizationPanel.h"
+#include "NumericTextEditor.h"
 
-class VisualizationPanel : public juce::Component
+class VisualizationPanel : public Component
 {
 public:
     explicit VisualizationPanel(NeuralNoteAudioProcessor* processor);
+
+    ~VisualizationPanel() override = default;
 
     void resized() override;
 
@@ -28,9 +31,9 @@ public:
 
     void setMidiFileDragComponentVisible();
 
-    void mouseEnter(const juce::MouseEvent& event) override;
+    void mouseEnter(const MouseEvent& event) override;
 
-    void mouseExit(const juce::MouseEvent& event) override;
+    void mouseExit(const MouseEvent& event) override;
 
     Viewport& getAudioMidiViewport();
 
@@ -41,20 +44,19 @@ public:
 private:
     NeuralNoteAudioProcessor* mProcessor;
     Keyboard mKeyboard;
-    juce::Viewport mAudioMidiViewport;
+    Viewport mAudioMidiViewport;
     CombinedAudioMidiRegion mCombinedAudioMidiRegion;
     MidiFileDrag mMidiFileDrag;
 
-    juce::Slider mAudioGainSlider;
-    std::unique_ptr<juce::SliderParameterAttachment> mAudioGainSliderAttachment;
+    Slider mAudioGainSlider;
+    std::unique_ptr<SliderParameterAttachment> mAudioGainSliderAttachment;
 
-    juce::Slider mMidiGainSlider;
-    std::unique_ptr<juce::SliderParameterAttachment> mMidiGainSliderAttachment;
+    Slider mMidiGainSlider;
+    std::unique_ptr<SliderParameterAttachment> mMidiGainSliderAttachment;
 
-    juce::Rectangle<int> mAudioRegionBounds;
-    juce::Rectangle<int> mPianoRollBounds;
+    Rectangle<int> mAudioRegionBounds;
+    Rectangle<int> mPianoRollBounds;
 
-    std::unique_ptr<juce::TextEditor> mFileTempo;
+    std::unique_ptr<NumericTextEditor<double>> mFileTempo;
 };
-
 #endif // VisualizationPanel_h
