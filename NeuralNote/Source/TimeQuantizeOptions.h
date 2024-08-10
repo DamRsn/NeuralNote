@@ -30,8 +30,14 @@ public:
         double refPositionQn = 0.0;
         double refPositionSeconds = 0.0;
 
+        /**
+         * Convert a duration in quarter notes to seconds
+         */
         static double qnToSec(double inDurationQn, double inBPM) { return inDurationQn * 60.0 / inBPM; }
 
+        /**
+         * Convert a duration in seconds to quarter notes
+         */
         static double secToQn(double inDurationSeconds, double inBPM) { return inDurationSeconds * inBPM / 60.0; }
 
         /**
@@ -40,39 +46,20 @@ public:
         double getStartQn() const { return refPositionQn - secToQn(refPositionSeconds, bpm); }
 
         /**
-         * @return
+         * @return Last bar position (before recording started) in quarter notes
          */
         double getStartLastBarQn() const
         {
             const double bar_duration_qn = timeSignatureNum * 4.0 / timeSignatureDenom;
             const auto start_qn = getStartQn();
 
-            double new_pos_qn = refLastBarQn;
-
-            // TODO: don't use while loop
-            while (new_pos_qn > start_qn) {
-                new_pos_qn -= bar_duration_qn;
-            }
-
-            // // Without while loop:
-            // auto new_pos_qn_2 = std::fmod(refLastBarQn, bar_duration_qn);
-            //
-            // if (new_pos_qn_2 > start_qn) {
-            //     new_pos_qn_2 -= bar_duration_qn;
-            // }
-            //
-            // jassert(std::abs(new_pos_qn_2 - new_pos_qn) < 1e-6);
-
             double num_bars = std::ceil((refLastBarQn - start_qn) / bar_duration_qn);
-            auto start_last_bar = refLastBarQn - num_bars * bar_duration_qn;
 
-            jassert(std::abs(start_last_bar - new_pos_qn) < 1e-6);
-
-            return start_last_bar;
+            return refLastBarQn - num_bars * bar_duration_qn;
         }
 
         /**
-         * @return The time in seconds of the last bar start before recording started. Will be <= 0.
+         * @return Get the time in seconds for the last bar start before recording started. Will be <= 0.
          */
         double getStartLastBarSec() const
         {
@@ -80,28 +67,9 @@ public:
             const double bar_duration_sec = qnToSec(bar_duration_qn, bpm);
             const double ref_last_bar_seconds = refPositionSeconds - qnToSec(refPositionQn - refLastBarQn, bpm);
 
-            double first_start_bar_sec = ref_last_bar_seconds;
+            const auto num_bars = static_cast<int>(std::ceil(ref_last_bar_seconds / bar_duration_sec));
 
-            // TODO: don't use while loop
-            while (first_start_bar_sec > 0) {
-                first_start_bar_sec -= bar_duration_sec;
-            }
-
-            // TODO: what if last bar_seconds is negative
-            // Without while loop:
-            auto first_start_bar_sec_2 = std::fmod(ref_last_bar_seconds, bar_duration_sec);
-
-            if (first_start_bar_sec_2 > 0) {
-                first_start_bar_sec_2 -= bar_duration_sec;
-            }
-
-            jassert(std::abs(first_start_bar_sec - first_start_bar_sec_2) < 1e-6);
-
-            auto num_bars = static_cast<int>(std::ceil(ref_last_bar_seconds / bar_duration_sec));
-            auto first_start_bar_sec_3 = ref_last_bar_seconds - num_bars * bar_duration_sec;
-            jassert(std::abs(first_start_bar_sec - first_start_bar_sec_3) < 1e-6);
-
-            return first_start_bar_sec_3;
+            return ref_last_bar_seconds - num_bars * bar_duration_sec;
         }
     };
 
