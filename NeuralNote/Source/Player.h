@@ -38,7 +38,7 @@ public:
 
     double getPlayheadPositionSeconds() const;
 
-    SynthController* getSynthController();
+    SynthController* getSynthController() const;
 
     void saveStateToValueTree();
 
@@ -48,6 +48,8 @@ private:
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
 
     void _setGains(float inGainAudioSourceDB, float inGainSynthDB);
+
+    void _clearActiveNotesMidiOut(MidiBuffer& outMidiBuffer);
 
     std::atomic<bool> mIsPlaying = false;
     bool mWasPlaying = false;
@@ -65,6 +67,7 @@ private:
     float mGainSynth = 0;
 
     bool mShouldOutputMidi = false;
+    bool mWasOutputtingMidi = false;
 
     std::array<int, 128> mActiveNotesMidiOut {};
 };

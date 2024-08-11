@@ -69,28 +69,25 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer, MidiBuffer& outMidi
                     int increment = midi_message.isNoteOn() ? 1 : -1;
 
                     if (note_number >= 0 && note_number < 128) {
-                        mActiveNotesMidiOut[static_cast<size_t>(note_number)] += increment;
+                        auto idx = static_cast<size_t>(note_number);
+                        mActiveNotesMidiOut[idx] = std::max(mActiveNotesMidiOut[idx] + increment, 0);
                     }
                 }
             }
+
+            mWasOutputtingMidi = true;
+
+        } else if (mWasOutputtingMidi) {
+            _clearActiveNotesMidiOut(outMidiBuffer);
+            mWasOutputtingMidi = false;
         }
+
         mSynth->renderNextBlock(mInternalBuffer, midi_buffer, 0, inAudioBuffer.getNumSamples());
         mWasPlaying = true;
 
     } else {
         if (mWasPlaying && mShouldOutputMidi) {
-            for (size_t i = 0; i < mActiveNotesMidiOut.size(); i++) {
-                int active_note = mActiveNotesMidiOut[i];
-                if (active_note > 0) {
-                    // TODO: multiple note off events needed? Can it happen that active_note > 1?
-                    for (int j = 0; j < active_note; j++) {
-                        MidiMessage note_off_message = MidiMessage::noteOff(1, static_cast<int>(i));
-                        outMidiBuffer.addEvent(note_off_message, 0);
-                    }
-                }
-
-                mActiveNotesMidiOut[i] = 0;
-            }
+            _clearActiveNotesMidiOut(outMidiBuffer);
         }
 
         mWasPlaying = false;
@@ -168,7 +165,7 @@ void Player::setPlayheadPositionSeconds(double inNewPosition)
     }
 }
 
-SynthController* Player::getSynthController()
+SynthController* Player::getSynthController() const
 {
     return mSynthController.get();
 }
@@ -201,4 +198,20 @@ void Player::_setGains(float inGainAudioSourceDB, float inGainSynthDB)
 {
     mGainSourceAudio = Decibels::decibelsToGain(inGainAudioSourceDB, -36.0f);
     mGainSynth = Decibels::decibelsToGain(inGainSynthDB, -36.0f);
+}
+
+void Player::_clearActiveNotesMidiOut(MidiBuffer& outMidiBuffer)
+{
+    for (size_t i = 0; i < mActiveNotesMidiOut.size(); i++) {
+        int active_note = mActiveNotesMidiOut[i];
+        if (active_note > 0) {
+            // TODO: multiple note off events needed? Can it happen that active_note > 1?
+            for (int j = 0; j < active_note; j++) {
+                MidiMessage note_off_message = MidiMessage::noteOff(1, static_cast<int>(i));
+                outMidiBuffer.addEvent(note_off_message, 0);
+            }
+        }
+
+        mActiveNotesMidiOut[i] = 0;
+    }
 }
