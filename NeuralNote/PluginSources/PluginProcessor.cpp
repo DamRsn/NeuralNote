@@ -34,8 +34,6 @@ void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
 
 void NeuralNoteAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-    ignoreUnused(midiMessages);
-
     mSourceAudioManager->processBlock(buffer);
     mTranscriptionManager->processBlock(buffer.getNumSamples());
 
@@ -45,7 +43,7 @@ void NeuralNoteAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuff
         buffer.clear();
     }
 
-    mPlayer->processBlock(buffer);
+    mPlayer->processBlock(buffer, midiMessages);
 }
 
 AudioProcessorEditor* NeuralNoteAudioProcessor::createEditor()

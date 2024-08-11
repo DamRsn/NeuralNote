@@ -159,5 +159,5 @@ bool SynthController::_isNextOnOffEventNoteOff(int inMidiNote)
         return false;
     }
 
-    return (*iter).isNoteOff();
+    return iter->isNoteOff();
 }

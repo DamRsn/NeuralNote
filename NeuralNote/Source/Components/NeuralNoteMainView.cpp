@@ -115,6 +115,45 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     NeuralNoteMainView::valueTreePropertyChanged(mProcessor.getValueTree(), NnId::PlayheadCenteredId);
     addAndMakeVisible(*mCenterButton);
 
+    mSettingsButton = std::make_unique<DrawableButton>("SettingsButton", DrawableButton::ButtonStyle::ImageRaw);
+    mSettingsButton->setClickingTogglesState(false);
+    mSettingsButton->setColour(DrawableButton::ColourIds::backgroundColourId, TRANSPARENT);
+    mSettingsButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, BLACK);
+    auto settings_icon_drawable = Drawable::createFromImageData(BinaryData::settings_svg, BinaryData::settings_svgSize);
+    mSettingsButton->setImages(settings_icon_drawable.get());
+    addAndMakeVisible(mSettingsButton.get());
+
+    mSettingsMenu = std::make_unique<PopupMenu>();
+    auto midi_out_item = PopupMenu::Item("MIDI Out");
+    midi_out_item.setID(1);
+    midi_out_item.setEnabled(true);
+    mSettingsMenuItemsShouldBeTicked.emplace_back(
+        1, [this] { return static_cast<bool>(mProcessor.getValueTree().getProperty(NnId::MidiOut)); });
+
+    midi_out_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+    auto action = [this] {
+        bool midi_out_enabled = mProcessor.getValueTree().getProperty(NnId::MidiOut);
+        mProcessor.getValueTree().setPropertyExcludingListener(this, NnId::MidiOut, !midi_out_enabled, nullptr);
+        _updateSettingsMenuTicks();
+    };
+
+    midi_out_item = midi_out_item.setAction(action);
+
+    mSettingsMenu->addItem(midi_out_item);
+
+    mPopupMenuLookAndFeel = std::make_unique<PopupMenuLookAndFeel>();
+    mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::backgroundColourId, WHITE_SOLID.withAlpha(0.7f));
+    mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::textColourId, BLACK);
+    mSettingsMenu->setLookAndFeel(mPopupMenuLookAndFeel.get());
+
+    mSettingsButton->onClick = [this] {
+        _updateSettingsMenuTicks();
+        PopupMenu::Options options;
+        options = options.withTargetComponent(mSettingsButton.get());
+
+        mSettingsMenu->showMenuAsync(options);
+    };
+
     mMuteButton = std::make_unique<TextButton>("MuteButton");
     mMuteButton->setButtonText("");
     mMuteButton->setClickingTogglesState(true);
@@ -149,6 +188,7 @@ void NeuralNoteMainView::resized()
     mBackButton->setBounds(682, 43, 35, 35);
     mPlayPauseButton->setBounds(734, 43, 35, 35);
     mCenterButton->setBounds(786, 43, 35, 35);
+    mSettingsButton->setBounds(838, 43, 35, 35);
 
     mMuteButton->setBounds(943, 38, 24, 24);
 
@@ -231,5 +271,24 @@ void NeuralNoteMainView::valueTreePropertyChanged(ValueTree& treeWhosePropertyHa
         bool should_center = treeWhosePropertyHasChanged.getProperty(property);
         mCenterButton->setToggleState(should_center, sendNotification);
         mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(should_center);
+    }
+}
+
+void NeuralNoteMainView::_updateSettingsMenuTicks()
+{
+    std::vector<int> ticked_items;
+
+    for (auto& [item_id, should_be_ticked_lambda]: mSettingsMenuItemsShouldBeTicked) {
+        if (should_be_ticked_lambda != nullptr) {
+            if (should_be_ticked_lambda()) {
+                ticked_items.emplace_back(item_id);
+            }
+        }
+    }
+
+    for (PopupMenu::MenuItemIterator iterator(*mSettingsMenu, true); iterator.next();) {
+        auto& item = iterator.getItem();
+        bool is_ticked = std::find(ticked_items.begin(), ticked_items.end(), item.itemID) != ticked_items.end();
+        item.setTicked(is_ticked);
     }
 }

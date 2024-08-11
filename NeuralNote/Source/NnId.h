@@ -27,6 +27,8 @@ inline static Identifier PlayheadPositionSecId = "PLAYHEAD_POSITION_SEC";
 
 inline static Identifier PlayheadCenteredId = "PLAYHEAD_CENTERED";
 
+inline static Identifier MidiOut = "MIDI_OUT";
+
 // --------------- Time quantization ----------------
 inline static Identifier TempoId = "TEMPO";
 
@@ -53,7 +55,8 @@ const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault 
     {TimeQuantizeRefPosSec, 0.0},
     {SourceAudioNativeSrPathId, String()},
     {PlayheadPositionSecId, 0.0},
-    {PlayheadCenteredId, true}};
+    {PlayheadCenteredId, true},
+    {MidiOut, false}};
 } // namespace NnId
 
 #endif //NNID_H
