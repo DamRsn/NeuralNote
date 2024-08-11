@@ -142,7 +142,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mSettingsMenu->addItem(midi_out_item);
 
     mPopupMenuLookAndFeel = std::make_unique<PopupMenuLookAndFeel>();
-    mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::backgroundColourId, WHITE_SOLID.withAlpha(0.7f));
+    mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::backgroundColourId, WHITE_SOLID);
     mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::textColourId, BLACK);
     mSettingsMenu->setLookAndFeel(mPopupMenuLookAndFeel.get());
 
