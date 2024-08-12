@@ -39,6 +39,8 @@ private:
 
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
 
+    void _updateSettingsMenuTicks();
+
     NeuralNoteAudioProcessor& mProcessor;
     NeuralNoteLNF mLNF;
 
@@ -59,6 +61,17 @@ private:
     std::unique_ptr<DrawableButton> mPlayPauseButton;
     std::unique_ptr<DrawableButton> mCenterButton;
     std::unique_ptr<DrawableButton> mSettingsButton;
+
+    class PopupMenuLookAndFeel : public LookAndFeel_V4
+    {
+        Font getPopupMenuFont() override { return LABEL_FONT; }
+    };
+
+    std::unique_ptr<PopupMenuLookAndFeel> mPopupMenuLookAndFeel;
+    // Define the settings menu after the look and feel, so it is destroyed first
+    std::unique_ptr<PopupMenu> mSettingsMenu;
+
+    std::vector<std::pair<int, std::function<bool()>>> mSettingsMenuItemsShouldBeTicked;
 
     std::unique_ptr<Knob> mMinNoteSlider;
     std::unique_ptr<Knob> mMaxNoteSlider;

@@ -20,6 +20,8 @@ Player::Player(NeuralNoteAudioProcessor* inProcessor)
     mSynthController = std::make_unique<SynthController>(inProcessor, mSynth.get());
 
     setPlayheadPositionSeconds(mProcessor->getValueTree().getProperty(NnId::PlayheadPositionSecId, 0.0));
+
+    mShouldOutputMidi = mProcessor->getValueTree().getProperty(NnId::MidiOut, false);
 }
 
 Player::~Player()
@@ -35,7 +37,7 @@ void Player::prepareToPlay(double inSampleRate, int inSamplesPerBlock)
     mInternalBuffer.setSize(2, inSamplesPerBlock);
 }
 
-void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
+void Player::processBlock(AudioBuffer<float>& inAudioBuffer, MidiBuffer& outMidiBuffer)
 {
     auto old_audio_gain = mGainSourceAudio;
     auto old_synth_gain = mGainSynth;
@@ -55,8 +57,41 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer)
 
     if (is_playing) {
         auto& midi_buffer = mSynthController->generateNextMidiBuffer(inAudioBuffer.getNumSamples());
+
+        if (mShouldOutputMidi) {
+            outMidiBuffer.addEvents(midi_buffer, 0, inAudioBuffer.getNumSamples(), 0);
+
+            // Iterate over midi events and update active notes for midi out
+            for (const auto& metadata: midi_buffer) {
+                auto midi_message = metadata.getMessage();
+                if (midi_message.isNoteOn() || midi_message.isNoteOff()) {
+                    int note_number = midi_message.getNoteNumber();
+                    int increment = midi_message.isNoteOn() ? 1 : -1;
+
+                    if (note_number >= 0 && note_number < 128) {
+                        auto idx = static_cast<size_t>(note_number);
+                        mActiveNotesMidiOut[idx] = std::max(mActiveNotesMidiOut[idx] + increment, 0);
+                    }
+                }
+            }
+
+            mWasOutputtingMidi = true;
+
+        } else if (mWasOutputtingMidi) {
+            _clearActiveNotesMidiOut(outMidiBuffer);
+            mWasOutputtingMidi = false;
+        }
+
         mSynth->renderNextBlock(mInternalBuffer, midi_buffer, 0, inAudioBuffer.getNumSamples());
+        mWasPlaying = true;
+
     } else {
+        if (mWasPlaying && mShouldOutputMidi) {
+            _clearActiveNotesMidiOut(outMidiBuffer);
+        }
+
+        mWasPlaying = false;
+
         mSynth->renderNextBlock(mInternalBuffer, {}, 0, inAudioBuffer.getNumSamples());
     }
 
@@ -105,8 +140,9 @@ void Player::setPlayingState(bool inIsPlaying)
 {
     mIsPlaying.store(inIsPlaying);
 
-    if (!inIsPlaying)
+    if (!inIsPlaying) {
         mSynth->turnOffAllVoices(true);
+    }
 }
 
 void Player::reset()
@@ -129,7 +165,7 @@ void Player::setPlayheadPositionSeconds(double inNewPosition)
     }
 }
 
-SynthController* Player::getSynthController()
+SynthController* Player::getSynthController() const
 {
     return mSynthController.get();
 }
@@ -152,10 +188,30 @@ void Player::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, co
 
         setPlayheadPositionSeconds(new_position);
     }
+
+    if (property == NnId::MidiOut) {
+        mShouldOutputMidi = treeWhosePropertyHasChanged.getProperty(property);
+    }
 }
 
 void Player::_setGains(float inGainAudioSourceDB, float inGainSynthDB)
 {
     mGainSourceAudio = Decibels::decibelsToGain(inGainAudioSourceDB, -36.0f);
     mGainSynth = Decibels::decibelsToGain(inGainSynthDB, -36.0f);
+}
+
+void Player::_clearActiveNotesMidiOut(MidiBuffer& outMidiBuffer)
+{
+    for (size_t i = 0; i < mActiveNotesMidiOut.size(); i++) {
+        int active_note = mActiveNotesMidiOut[i];
+        if (active_note > 0) {
+            // TODO: multiple note off events needed? Can it happen that active_note > 1?
+            for (int j = 0; j < active_note; j++) {
+                MidiMessage note_off_message = MidiMessage::noteOff(1, static_cast<int>(i));
+                outMidiBuffer.addEvent(note_off_message, 0);
+            }
+        }
+
+        mActiveNotesMidiOut[i] = 0;
+    }
 }

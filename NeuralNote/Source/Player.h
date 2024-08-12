@@ -21,7 +21,7 @@ public:
 
     void prepareToPlay(double inSampleRate, int inSamplesPerBlock);
 
-    void processBlock(AudioBuffer<float>& inAudioBuffer);
+    void processBlock(AudioBuffer<float>& inAudioBuffer, MidiBuffer& outMidiBuffer);
 
     bool isPlaying() const;
 
@@ -38,7 +38,7 @@ public:
 
     double getPlayheadPositionSeconds() const;
 
-    SynthController* getSynthController();
+    SynthController* getSynthController() const;
 
     void saveStateToValueTree();
 
@@ -49,7 +49,10 @@ private:
 
     void _setGains(float inGainAudioSourceDB, float inGainSynthDB);
 
+    void _clearActiveNotesMidiOut(MidiBuffer& outMidiBuffer);
+
     std::atomic<bool> mIsPlaying = false;
+    bool mWasPlaying = false;
     NeuralNoteAudioProcessor* mProcessor;
 
     std::unique_ptr<SynthController> mSynthController;
@@ -62,6 +65,11 @@ private:
 
     float mGainSourceAudio = 0;
     float mGainSynth = 0;
+
+    bool mShouldOutputMidi = false;
+    bool mWasOutputtingMidi = false;
+
+    std::array<int, 128> mActiveNotesMidiOut {};
 };
 
 #endif // Player_h
