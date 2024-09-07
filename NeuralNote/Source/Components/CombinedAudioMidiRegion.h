@@ -46,6 +46,8 @@ public:
 
     void setCenterView(bool inShouldCenterView);
 
+    void mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel) override;
+
     AudioRegion* getAudioRegion();
 
     PianoRoll* getPianoRoll();
@@ -73,6 +75,10 @@ private:
     bool mShouldCenterView = false;
 
     int mBaseWidth = 0;
+
+    const float mMaxZoomLevel = 5.f;
+    const float mMinZoomLevel = 0.1f;
+    float mZoomLevel = 1.f;
 
     AudioRegion mAudioRegion;
     PianoRoll mPianoRoll;
