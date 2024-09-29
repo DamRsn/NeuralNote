@@ -39,6 +39,7 @@ juce_add_plugin("${BaseTargetName}"
         ICON_BIG "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/logo.png"
         ICON_SMALL "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/logo.png"
         COMPANY_NAME "Dr. Audio"
+        BUNDLE_ID "com.draudio.neuralnote"
         IS_SYNTH FALSE
         NEEDS_MIDI_INPUT FALSE
         NEEDS_MIDI_OUTPUT TRUE

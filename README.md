@@ -146,7 +146,7 @@ NeuralNote software and code is published under the Apache-2.0 license. See the 
 
 Here's a list of all the third party libraries used in NeuralNote and the license under which they are used.
 
-- [JUCE](https://juce.com/) (JUCE Personal)
+- [JUCE](https://juce.com/) (JUCE Starter)
 - [RTNeural](https://github.com/jatinchowdhury18/RTNeural) (BSD-3-Clause license)
 - [ONNXRuntime](https://github.com/microsoft/onnxruntime) (MIT License)
 - [ort-builder](https://github.com/olilarkin/ort-builder) (MIT License)
@@ -172,6 +172,8 @@ NeuralNote was developed by [Damien Ronssin](https://github.com/DamRsn) and [Tib
 The plugin user interface was designed by Perrine Morel.
 
 #### Contributors
+
 Many thanks to the contributors!
+
 - [jatinchowdhury18](https://github.com/jatinchowdhury18): File browser.
 - [trirpi](https://github.com/trirpi) More scale options in `SCALE QUANTIZE`.

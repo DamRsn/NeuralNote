@@ -4,8 +4,7 @@ SDKs
 
 build*
 
-cmake-build-debug
-cmake-build-release
+cmake-*
 CMakeFiles
 CMakeCache.txt
 cmake_install.cmake
