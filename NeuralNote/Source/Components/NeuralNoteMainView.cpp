@@ -184,13 +184,14 @@ NeuralNoteMainView::~NeuralNoteMainView()
 void NeuralNoteMainView::resized()
 {
     mRecordButton->setBounds(537, 43, 35, 35);
-    mClearButton->setBounds(589, 43, 35, 35);
+        mClearButton->setBounds(589, 43, 35, 35);
+
     mBackButton->setBounds(682, 43, 35, 35);
     mPlayPauseButton->setBounds(734, 43, 35, 35);
     mCenterButton->setBounds(786, 43, 35, 35);
     mSettingsButton->setBounds(838, 43, 35, 35);
 
-    mMuteButton->setBounds(943, 38, 24, 24);
+    mMuteButton->setBounds(931, 49, 24, 24);
 
     mVisualizationPanel.setBounds(328, 120, 642, 491);
     mTranscriptionOptions.setBounds(29, 120, 274, 190);
@@ -204,7 +205,7 @@ void NeuralNoteMainView::paint(Graphics& g)
 
     g.drawImage(background_image, getLocalBounds().toFloat());
     g.setFont(LABEL_FONT);
-    g.drawFittedText("MUTE OUT", Rectangle<int>(939, 63, 31, 23), Justification::centred, 2);
+    g.drawFittedText("MUTE IN", Rectangle<int>(923, 81, 40, 10), Justification::centred, 1);
 }
 
 void NeuralNoteMainView::timerCallback()
