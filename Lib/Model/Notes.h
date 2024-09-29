@@ -8,7 +8,6 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
-#include <assert.h>
 
 #include "BasicPitchConstants.h"
 #include "NoteUtils.h"
@@ -39,12 +38,12 @@ public:
         /* Confidence threshold (0.05 to 0.95, More-Less notes) */
         float frameThreshold = 0.5;
         /* Minimum note length in number of frames */
-        int minNoteLength = 11;
+        int minNoteLengthFrames = 11;
         bool inferOnsets = true;
         float maxFrequency = -1; // in Hz, -1 means unset
         float minFrequency = -1; // in Hz, -1 means unset
         bool melodiaTrick = true;
-        enum PitchBendModes pitchBend = NoPitchBend;
+        PitchBendModes pitchBend = NoPitchBend;
         int energyThreshold = 11;
     } ConvertParams;
 
