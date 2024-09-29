@@ -46,9 +46,9 @@ StringArray getSupportedAudioFileExtensions()
     supported_extensions.add(".mp3");
 
     auto audio_format_manager = createAudioFormatManager();
-    for (auto format = audio_format_manager->begin(); format != audio_format_manager->end(); ++format) {
-        StringArray file_extensions = (*format)->getFileExtensions();
-        for (auto extension: file_extensions) {
+    for (auto& format: *audio_format_manager) {
+        StringArray file_extensions = format->getFileExtensions();
+        for (auto& extension: file_extensions) {
             supported_extensions.add(extension);
         }
     }
@@ -58,7 +58,7 @@ StringArray getSupportedAudioFileExtensions()
 
 std::unique_ptr<AudioFormatManager> createAudioFormatManager()
 {
-    std::unique_ptr<AudioFormatManager> audio_format_manager = std::make_unique<AudioFormatManager>();
+    auto audio_format_manager = std::make_unique<AudioFormatManager>();
     audio_format_manager->registerFormat(new juce::WavAudioFormat, true);
     audio_format_manager->registerFormat(new juce::AiffAudioFormat, false);
     audio_format_manager->registerFormat(new juce::FlacAudioFormat, false);
