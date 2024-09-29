@@ -184,7 +184,7 @@ NeuralNoteMainView::~NeuralNoteMainView()
 void NeuralNoteMainView::resized()
 {
     mRecordButton->setBounds(537, 43, 35, 35);
-        mClearButton->setBounds(589, 43, 35, 35);
+    mClearButton->setBounds(589, 43, 35, 35);
 
     mBackButton->setBounds(682, 43, 35, 35);
     mPlayPauseButton->setBounds(734, 43, 35, 35);
