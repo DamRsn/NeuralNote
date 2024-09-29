@@ -33,7 +33,8 @@ void SourceAudioManager::prepareToPlay(double inSampleRate, int inSamplesPerBloc
     mInternalDownsampledBuffer.setSize(
         1, static_cast<int>(std::ceil(BASIC_PITCH_SAMPLE_RATE / inSampleRate * inSamplesPerBlock)) + 5);
 
-    if (mProcessor->getState() == PopulatedAudioAndMidiRegions && mSampleRate != mSourceAudioSampleRate) {
+    auto state = mProcessor->getState();
+    if ((state == PopulatedAudioAndMidiRegions || state == Processing) && mSampleRate != mSourceAudioSampleRate) {
         AudioBuffer<float> tmp_buffer;
         AudioUtils::resampleBuffer(mSourceAudio, tmp_buffer, mSourceAudioSampleRate, mSampleRate);
         mSourceAudio = std::move(tmp_buffer);
