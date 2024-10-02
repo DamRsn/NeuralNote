@@ -57,6 +57,9 @@ private:
 
     std::vector<Notes::Event> mNoteEvents;
 
+    std::vector<std::vector<float>> mRemainingEnergy;
+    std::vector<Notes::_pg_index> mRemainingEnergyIndex;
+
     Notes::ConvertParams mParams;
 
     size_t mNumFrames = 0;

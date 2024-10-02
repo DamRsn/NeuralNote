@@ -47,18 +47,27 @@ public:
         int energyThreshold = 11;
     } ConvertParams;
 
+    struct _pg_index {
+        float* value;
+        int frameIdx;
+        int noteIdx;
+    };
+
     /**
      * Create note events based on postegriorgram inputs
      * @param inNotesPG Note posteriorgrams
      * @param inOnsetsPG Onset posteriorgrams
      * @param inContoursPG Contour posteriorgrams
+     * @param inRemainingEnergyIndex
      * @param inParams input parameters
      * @return
      */
     std::vector<Notes::Event> convert(const std::vector<std::vector<float>>& inNotesPG,
                                       const std::vector<std::vector<float>>& inOnsetsPG,
                                       const std::vector<std::vector<float>>& inContoursPG,
-                                      ConvertParams inParams);
+                                      std::vector<std::vector<float>>& inRemainingEnergy,
+                                      std::vector<_pg_index>& inRemainingEnergyIndex,
+                                      const ConvertParams& inParams);
 
     /**
      * Inplace sort of note events.
@@ -121,12 +130,6 @@ public:
     }
 
 private:
-    typedef struct {
-        float* value;
-        int frameIdx;
-        int noteIdx;
-    } _pg_index;
-
     /**
      * Add pitch bend vector to note events.
      * @param inOutEvents event vector (input and output)
