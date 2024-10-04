@@ -14,23 +14,25 @@ bool Notes::Event::operator==(const Notes::Event& other) const
 std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& inNotesPG,
                                          const std::vector<std::vector<float>>& inOnsetsPG,
                                          const std::vector<std::vector<float>>& inContoursPG,
-                                         std::vector<std::vector<float>>& inRemainingEnergy,
-                                         std::vector<_pg_index>& inRemainingEnergyIndex,
-                                         const ConvertParams& inParams)
+                                         const ConvertParams& inParams,
+                                         bool inNewAudio)
 {
-    std::vector<Notes::Event> events;
+    // Convert start
+    auto start_fn = std::chrono::high_resolution_clock::now();
+
+    std::vector<Event> events;
     events.reserve(1024);
 
-    auto n_frames = inNotesPG.size();
+    auto n_frames = static_cast<int>(inNotesPG.size());
     if (n_frames == 0) {
         return events;
     }
 
-    auto n_notes = inNotesPG[0].size();
+    auto n_notes = static_cast<int>(inNotesPG[0].size());
     assert(n_frames == inOnsetsPG.size());
     assert(n_frames == inContoursPG.size());
     assert(n_notes == inOnsetsPG[0].size());
-    assert(n_frames == NUM_FREQ_OUT);
+    assert(n_notes == NUM_FREQ_OUT);
 
     std::vector<std::vector<float>> inferred_onsets;
     auto onsets_ptr = &inOnsetsPG;
@@ -40,29 +42,44 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
     }
     auto& onsets = *onsets_ptr;
 
-    // auto remaining_energy = inNotesPG;
+    if (inParams.melodiaTrick) {
+        if (inNewAudio) {
+            // Copy
+            mRemainingEnergy = inNotesPG;
 
-    // Copy without changing the location of the original data
-    for (size_t f = 0; f < n_frames; f++) {
-        assert(inNotesPG[f].size() == NUM_FREQ_OUT);
-        assert(inRemainingEnergy[f].size() == NUM_FREQ_OUT);
+            // Fill mRemainingEnergyIndex
+            mRemainingEnergyIndex.clear();
+            mRemainingEnergyIndex.reserve(static_cast<size_t>(n_frames * NUM_FREQ_OUT));
 
-        std::copy(inNotesPG[f].begin(), inNotesPG[f].end(), inRemainingEnergy[f].begin());
+            for (int frame_idx = 0; frame_idx < n_frames; frame_idx++) {
+                for (int freq_idx = 0; freq_idx < NUM_FREQ_OUT; freq_idx++) {
+                    mRemainingEnergyIndex.push_back(
+                        {&mRemainingEnergy[static_cast<size_t>(frame_idx)][static_cast<size_t>(freq_idx)],
+                         frame_idx,
+                         freq_idx});
+                }
+            }
+
+            mRemainingEnergyIndex.shrink_to_fit();
+        } else {
+            // Copy without changing the location of the original data
+            assert(mRemainingEnergy.size() == n_frames);
+            for (size_t f = 0; f < n_frames; f++) {
+                assert(inNotesPG[f].size() == NUM_FREQ_OUT);
+                assert(mRemainingEnergy[f].size() == NUM_FREQ_OUT);
+
+                std::copy(inNotesPG[f].begin(), inNotesPG[f].end(), mRemainingEnergy[f].begin());
+            }
+        }
     }
 
-    // // to-be-sorted index of remaining_energy
-    // std::vector<_pg_index> remaining_energy_index;
-    // if (inParams.melodiaTrick) {
-    //     remaining_energy_index.reserve(n_frames * n_notes);
-    // }
-
-    auto frame_threshold = inParams.frameThreshold;
+    const auto frame_threshold = inParams.frameThreshold;
     // TODO: infer frame_threshold if < 0, can be merged with inferredOnsets.
 
     // constrain frequencies
     auto max_note_idx =
-        (inParams.maxFrequency < 0) ? n_notes - 1 : ((NoteUtils::hzToMidi(inParams.maxFrequency) - MIDI_OFFSET));
-    auto min_note_idx = (inParams.minFrequency < 0) ? 0 : ((NoteUtils::hzToMidi(inParams.minFrequency) - MIDI_OFFSET));
+        inParams.maxFrequency < 0 ? n_notes - 1 : NoteUtils::hzToMidi(inParams.maxFrequency) - MIDI_OFFSET;
+    auto min_note_idx = (inParams.minFrequency < 0) ? 0 : NoteUtils::hzToMidi(inParams.minFrequency) - MIDI_OFFSET;
 
     // stop 1 frame early to prevent edge case
     // as per https://github.com/spotify/basic-pitch/blob/f85a8e9ade1f297b8adb39b155c483e2312e1aca/basic_pitch/note_creation.py#L399
@@ -73,18 +90,11 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
         for (int note_idx = max_note_idx; note_idx >= min_note_idx; note_idx--) {
             auto onset = onsets[frame_idx][note_idx];
 
-            // if (inParams.melodiaTrick) {
-            //     remaining_energy_index.emplace_back(
-            //         // _pg_index {&remaining_energy[frame_idx][note_idx], frame_idx, note_idx});
-            //         // _pg_index {frame_idx, note_idx});
-            //         _pg_index {0, frame_idx, note_idx});
-            // }
-
             // equivalent to argrelmax logic
-            auto prev = (frame_idx <= 0) ? onset : onsets[frame_idx - 1][note_idx];
-            auto next = (frame_idx >= last_frame) ? onset : onsets[frame_idx + 1][note_idx];
+            auto prev = frame_idx <= 0 ? onset : onsets[frame_idx - 1][note_idx];
+            auto next = frame_idx >= last_frame ? onset : onsets[frame_idx + 1][note_idx];
 
-            if ((onset < inParams.onsetThreshold) || (onset < prev) || (onset < next)) {
+            if (onset < inParams.onsetThreshold || onset < prev || onset < next) {
                 continue;
             }
 
@@ -92,7 +102,7 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
             int i = frame_idx + 1;
             int k = 0; // number of frames since energy dropped below threshold
             while (i < last_frame && k < inParams.energyThreshold) {
-                if (inRemainingEnergy[i][note_idx] < frame_threshold) {
+                if (mRemainingEnergy[i][note_idx] < frame_threshold) {
                     k++;
                 } else {
                     k = 0;
@@ -103,25 +113,26 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
             i -= k; // go back to frame above threshold
 
             // if the note is too short, skip it
-            if ((i - frame_idx) <= inParams.minNoteLengthFrames) {
+            if (i - frame_idx <= inParams.minNoteLengthFrames) {
                 continue;
             }
 
             double amplitude = 0.0;
             for (int f = frame_idx; f < i; f++) {
-                amplitude += inRemainingEnergy[f][note_idx];
-                inRemainingEnergy[f][note_idx] = 0;
+                amplitude += mRemainingEnergy[f][note_idx];
+                mRemainingEnergy[f][note_idx] = 0;
 
                 if (note_idx < MAX_NOTE_IDX) {
-                    inRemainingEnergy[f][note_idx + 1] = 0;
+                    mRemainingEnergy[f][note_idx + 1] = 0;
                 }
                 if (note_idx > 0) {
-                    inRemainingEnergy[f][note_idx - 1] = 0;
+                    mRemainingEnergy[f][note_idx - 1] = 0;
                 }
             }
+
             amplitude /= (i - frame_idx);
 
-            events.push_back(Notes::Event {
+            events.push_back(Event {
                 _modelFrameToTime(frame_idx) /* startTime */,
                 _modelFrameToTime(i) /* endTime */,
                 frame_idx /* startFrame */,
@@ -133,35 +144,23 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
     }
 
     if (inParams.melodiaTrick) {
-        // std::cout << "Remaining energy index size: " << remaining_energy_index.size() << std::endl;
         auto start = std::chrono::high_resolution_clock::now();
 
-        // for (auto& [val, frame_idx, note_idx]: remaining_energy_index) {
-        //     val = remaining_energy[frame_idx][note_idx];
-        // }
-
-        std::sort(
-            inRemainingEnergyIndex.begin(), inRemainingEnergyIndex.end(), [](const _pg_index& a, const _pg_index& b) {
-                // return remaining_energy[a.frameIdx][a.noteIdx] > remaining_energy[b.frameIdx][b.noteIdx];
-                return *a.value > *b.value;
-            });
+        std::sort(mRemainingEnergyIndex.begin(),
+                  mRemainingEnergyIndex.end(),
+                  [](const _pg_index& a, const _pg_index& b) { return *a.value > *b.value; });
 
         auto end = std::chrono::high_resolution_clock::now();
         std::cout << "Sort time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"
                   << std::endl;
+
         // loop through each remaining note probability in descending order
         // until reaching frame_threshold.
-        for (auto& [energy_ptr, frame_idx, note_idx]: inRemainingEnergyIndex) {
-            // auto rei = remaining_energy_index[r];
-            // auto& frame_idx = rei.frameIdx;
-            // auto& note_idx = rei.noteIdx;
-            // // auto& energy = *rei.value;
-            // auto& energy = remaining_energy[frame_idx][note_idx];
-
+        for (auto& [energy_ptr, frame_idx, note_idx]: mRemainingEnergyIndex) {
             auto& energy = *energy_ptr;
 
             // skip those that have already been zeroed
-            if (energy == 0) {
+            if (energy == 0.0f) {
                 continue;
             }
 
@@ -172,43 +171,42 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
 
             // this inhibit function zeroes out neighbor notes and keeps track (with k)
             // on how many consecutive frames were below frame_threshold.
-            auto inhibit =
-                [](std::vector<std::vector<float>>& pg, int frame_idx, int note_idx, float frame_threshold, int k) {
-                    if (pg[frame_idx][note_idx] < frame_threshold) {
-                        k++;
-                    } else {
-                        k = 0;
-                    }
+            auto inhibit = [frame_threshold](std::vector<std::vector<float>>& pg, int frame_i, int note_i, int k) {
+                if (pg[frame_i][note_i] < frame_threshold) {
+                    k++;
+                } else {
+                    k = 0;
+                }
 
-                    pg[frame_idx][note_idx] = 0;
-                    if (note_idx < MAX_NOTE_IDX) {
-                        pg[frame_idx][note_idx + 1] = 0;
-                    }
-                    if (note_idx > 0) {
-                        pg[frame_idx][note_idx - 1] = 0;
-                    }
-                    return k;
-                };
+                pg[frame_i][note_i] = 0;
+                if (note_i < MAX_NOTE_IDX) {
+                    pg[frame_i][note_i + 1] = 0;
+                }
+                if (note_i > 0) {
+                    pg[frame_i][note_i - 1] = 0;
+                }
+                return k;
+            };
 
             // forward pass
             int i = frame_idx + 1;
             int k = 0;
             while (i < last_frame && k < inParams.energyThreshold) {
-                k = inhibit(inRemainingEnergy, i, note_idx, frame_threshold, k);
+                k = inhibit(mRemainingEnergy, i, note_idx, k);
                 i++;
             }
 
-            auto i_end = i - 1 - k;
+            const auto i_end = i - 1 - k;
 
             // backward pass
             i = frame_idx - 1;
             k = 0;
             while (i > 0 && k < inParams.energyThreshold) {
-                k = inhibit(inRemainingEnergy, i, note_idx, frame_threshold, k);
+                k = inhibit(mRemainingEnergy, i, note_idx, k);
                 i--;
             }
 
-            auto i_start = i + 1 + k;
+            const auto i_start = i + 1 + k;
 
             // if the note is too short, skip it
             if (i_end - i_start <= inParams.minNoteLengthFrames) {
@@ -216,12 +214,12 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
             }
 
             double amplitude = 0.0;
-            for (int i = i_start; i < i_end; i++) {
+            for (i = i_start; i < i_end; i++) {
                 amplitude += inNotesPG[i][note_idx];
             }
             amplitude /= (i_end - i_start);
 
-            events.push_back(Notes::Event {
+            events.push_back(Event {
                 _modelFrameToTime(i_start /* startTime */),
                 _modelFrameToTime(i_end) /* endTime */,
                 i_start /* startFrame */,
@@ -241,37 +239,53 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
         }
     }
 
+    // end
+    auto end_fn = std::chrono::high_resolution_clock::now();
+    std::cout << "Convert time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_fn - start_fn).count()
+              << "ms" << std::endl;
+
     return events;
 }
 
-void Notes::_addPitchBends(std::vector<Notes::Event>& inOutEvents,
+void Notes::clear()
+{
+    mRemainingEnergy.clear();
+    mRemainingEnergy.shrink_to_fit();
+
+    mRemainingEnergyIndex.clear();
+    mRemainingEnergyIndex.shrink_to_fit();
+}
+
+void Notes::_addPitchBends(std::vector<Event>& inOutEvents,
                            const std::vector<std::vector<float>>& inContoursPG,
                            int inNumBinsTolerance)
 {
-    auto window_length = inNumBinsTolerance * 2 + 1;
     for (auto& event: inOutEvents) {
         // midi_pitch_to_contour_bin
-        int note_idx = CONTOURS_BINS_PER_SEMITONE
-                       * (event.pitch - 69 + 12 * std::round(std::log2(440.0 / ANNOTATIONS_BASE_FREQUENCY)));
+        int note_idx =
+            CONTOURS_BINS_PER_SEMITONE
+            * (event.pitch - 69 + 12 * static_cast<int>(std::round(std::log2(440.0f / ANNOTATIONS_BASE_FREQUENCY))));
 
         static constexpr int N_FREQ_BINS_CONTOURS = NUM_FREQ_OUT * CONTOURS_BINS_PER_SEMITONE;
         int note_start_idx = std::max(note_idx - inNumBinsTolerance, 0);
         int note_end_idx = std::min(N_FREQ_BINS_CONTOURS, note_idx + inNumBinsTolerance + 1);
 
-        int gauss_start = std::max(0, inNumBinsTolerance - note_idx);
-        auto pb_shift = inNumBinsTolerance - std::max(0, inNumBinsTolerance - note_idx);
+        const auto gauss_start = static_cast<float>(std::max(0, inNumBinsTolerance - note_idx));
+        const auto pb_shift = inNumBinsTolerance - std::max(0, inNumBinsTolerance - note_idx);
 
         for (int i = event.startFrame; i < event.endFrame; i++) {
             int bend = 0;
             float max = 0;
             for (int j = note_start_idx; j < note_end_idx; j++) {
                 int k = j - note_start_idx;
-                float x = gauss_start + k;
-                float n = x - inNumBinsTolerance;
-                static constexpr float std = 5.0;
+                float x = gauss_start + static_cast<float>(k);
+                float n = x - static_cast<float>(inNumBinsTolerance);
+
+                static constexpr float std = 5.0f;
+
                 // Gaussian
-                float w = std::exp(-(n * n) / (2.0 * std * std));
-                w *= inContoursPG[i][j];
+                float w = std::exp(-(n * n) / (2.0f * std * std)) * inContoursPG[i][j];
+
                 if (w > max) {
                     bend = k;
                     max = w;

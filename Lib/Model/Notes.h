@@ -47,27 +47,28 @@ public:
         int energyThreshold = 11;
     } ConvertParams;
 
-    struct _pg_index {
-        float* value;
-        int frameIdx;
-        int noteIdx;
-    };
-
     /**
      * Create note events based on postegriorgram inputs
+     *
+     *
      * @param inNotesPG Note posteriorgrams
      * @param inOnsetsPG Onset posteriorgrams
      * @param inContoursPG Contour posteriorgrams
-     * @param inRemainingEnergyIndex
      * @param inParams input parameters
+     * @param inNewAudio True: first time calling this function with this audio (these inNotesPG, inOnsetsPG, inContoursPG).
+     *  False if same audio as last time with updated parameters.
      * @return
      */
-    std::vector<Notes::Event> convert(const std::vector<std::vector<float>>& inNotesPG,
-                                      const std::vector<std::vector<float>>& inOnsetsPG,
-                                      const std::vector<std::vector<float>>& inContoursPG,
-                                      std::vector<std::vector<float>>& inRemainingEnergy,
-                                      std::vector<_pg_index>& inRemainingEnergyIndex,
-                                      const ConvertParams& inParams);
+    std::vector<Event> convert(const std::vector<std::vector<float>>& inNotesPG,
+                               const std::vector<std::vector<float>>& inOnsetsPG,
+                               const std::vector<std::vector<float>>& inContoursPG,
+                               const ConvertParams& inParams,
+                               bool inNewAudio);
+
+    /**
+     * Release any memory allocated by the class.
+     */
+    void clear();
 
     /**
      * Inplace sort of note events.
@@ -136,9 +137,9 @@ private:
      * @param inContoursPG Contour posteriorgram matrix
      * @param inNumBinsTolerance
      */
-    void _addPitchBends(std::vector<Notes::Event>& inOutEvents,
-                        const std::vector<std::vector<float>>& inContoursPG,
-                        int inNumBinsTolerance = 25);
+    static void _addPitchBends(std::vector<Notes::Event>& inOutEvents,
+                               const std::vector<std::vector<float>>& inContoursPG,
+                               int inNumBinsTolerance = 25);
 
     /**
      * Get time in seconds given frame index.
@@ -252,6 +253,15 @@ private:
 
         return notes_diff;
     }
+
+    struct _pg_index {
+        float* value;
+        int frameIdx;
+        int noteIdx;
+    };
+
+    std::vector<std::vector<float>> mRemainingEnergy;
+    std::vector<_pg_index> mRemainingEnergyIndex;
 };
 
 #endif // Notes_h
