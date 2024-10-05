@@ -17,18 +17,15 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
                                          const ConvertParams& inParams,
                                          bool inNewAudio)
 {
-    // Convert start
-    auto start_fn = std::chrono::high_resolution_clock::now();
-
     std::vector<Event> events;
     events.reserve(1024);
 
-    auto n_frames = static_cast<int>(inNotesPG.size());
+    const auto n_frames = static_cast<int>(inNotesPG.size());
     if (n_frames == 0) {
         return events;
     }
 
-    auto n_notes = static_cast<int>(inNotesPG[0].size());
+    const auto n_notes = static_cast<int>(inNotesPG[0].size());
     assert(n_frames == inOnsetsPG.size());
     assert(n_frames == inContoursPG.size());
     assert(n_notes == inOnsetsPG[0].size());
@@ -49,7 +46,7 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
 
             // Fill mRemainingEnergyIndex
             mRemainingEnergyIndex.clear();
-            mRemainingEnergyIndex.reserve(static_cast<size_t>(n_frames * NUM_FREQ_OUT));
+            mRemainingEnergyIndex.reserve(static_cast<size_t>(n_frames) * static_cast<size_t>(NUM_FREQ_OUT));
 
             for (int frame_idx = 0; frame_idx < n_frames; frame_idx++) {
                 for (int freq_idx = 0; freq_idx < NUM_FREQ_OUT; freq_idx++) {
@@ -77,13 +74,13 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
     // TODO: infer frame_threshold if < 0, can be merged with inferredOnsets.
 
     // constrain frequencies
-    auto max_note_idx =
+    const auto max_note_idx =
         inParams.maxFrequency < 0 ? n_notes - 1 : NoteUtils::hzToMidi(inParams.maxFrequency) - MIDI_OFFSET;
-    auto min_note_idx = (inParams.minFrequency < 0) ? 0 : NoteUtils::hzToMidi(inParams.minFrequency) - MIDI_OFFSET;
+    const auto min_note_idx = inParams.minFrequency < 0 ? 0 : NoteUtils::hzToMidi(inParams.minFrequency) - MIDI_OFFSET;
 
     // stop 1 frame early to prevent edge case
     // as per https://github.com/spotify/basic-pitch/blob/f85a8e9ade1f297b8adb39b155c483e2312e1aca/basic_pitch/note_creation.py#L399
-    int last_frame = n_frames - 1;
+    const int last_frame = n_frames - 1;
 
     // Go backwards in time
     for (int frame_idx = last_frame - 1; frame_idx >= 0; frame_idx--) {
@@ -144,15 +141,9 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
     }
 
     if (inParams.melodiaTrick) {
-        auto start = std::chrono::high_resolution_clock::now();
-
         std::sort(mRemainingEnergyIndex.begin(),
                   mRemainingEnergyIndex.end(),
                   [](const _pg_index& a, const _pg_index& b) { return *a.value > *b.value; });
-
-        auto end = std::chrono::high_resolution_clock::now();
-        std::cout << "Sort time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"
-                  << std::endl;
 
         // loop through each remaining note probability in descending order
         // until reaching frame_threshold.
@@ -238,11 +229,6 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
             dropOverlappingPitchBends(events);
         }
     }
-
-    // end
-    auto end_fn = std::chrono::high_resolution_clock::now();
-    std::cout << "Convert time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_fn - start_fn).count()
-              << "ms" << std::endl;
 
     return events;
 }
