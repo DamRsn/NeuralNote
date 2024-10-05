@@ -49,8 +49,6 @@ public:
 
     /**
      * Create note events based on postegriorgram inputs
-     *
-     *
      * @param inNotesPG Note posteriorgrams
      * @param inOnsetsPG Onset posteriorgrams
      * @param inContoursPG Contour posteriorgrams
