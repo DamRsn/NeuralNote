@@ -7,10 +7,16 @@
 void BasicPitch::reset()
 {
     mBasicPitchCNN.reset();
+    mNotesCreator.clear();
+
     mContoursPG.clear();
+    mContoursPG.shrink_to_fit();
     mNotesPG.clear();
+    mNotesPG.shrink_to_fit();
     mOnsetsPG.clear();
+    mOnsetsPG.shrink_to_fit();
     mNoteEvents.clear();
+    mNoteEvents.shrink_to_fit();
 
     mNumFrames = 0;
 }
@@ -56,6 +62,10 @@ void BasicPitch::transcribeToMIDI(float* inAudio, int inNumSamples)
     mNotesPG.resize(mNumFrames, std::vector<float>(NUM_FREQ_OUT, 0.0f));
     mContoursPG.resize(mNumFrames, std::vector<float>(NUM_FREQ_IN, 0.0f));
 
+    mOnsetsPG.shrink_to_fit();
+    mNotesPG.shrink_to_fit();
+    mContoursPG.shrink_to_fit();
+
     mBasicPitchCNN.reset();
 
     const size_t num_lh_frames = BasicPitchCNN::getNumFramesLookahead();
@@ -89,12 +99,12 @@ void BasicPitch::transcribeToMIDI(float* inAudio, int inNumSamples)
                                       mOnsetsPG[frame_idx - num_lh_frames]);
     }
 
-    mNoteEvents = mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams);
+    mNoteEvents = mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams, true);
 }
 
 void BasicPitch::updateMIDI()
 {
-    mNoteEvents = mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams);
+    mNoteEvents = mNotesCreator.convert(mNotesPG, mOnsetsPG, mContoursPG, mParams, false);
 }
 
 const std::vector<Notes::Event>& BasicPitch::getNoteEvents() const
