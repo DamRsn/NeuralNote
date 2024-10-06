@@ -1,5 +1,6 @@
 NeuralNote is licensed under the Apache-2.0 License.
 Source code is available at: https://github.com/DamRsn/NeuralNote
+Copyright 2024 Damien Ronssin
 
 
                                  Apache License
