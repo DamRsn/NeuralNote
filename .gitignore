@@ -25,3 +25,5 @@ Makefile
 *.ort
 onnxruntime*.tar.gz
 ThirdParty/onnxruntime
+
+sign_dir

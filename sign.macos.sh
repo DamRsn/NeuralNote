@@ -9,7 +9,7 @@ for dir in NeuralNote.{app,component,vst3}; do
 	fi
 done
 
-signingID=$(security find-identity -v -p codesigning | head -1 | cut -d'"' -f2)
+signingID=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | cut -d'"' -f2)
 if test -z "$signingID"; then
 	>&2 echo "No signing certificates found in keychain. You need to import the Apple generated .p12 certificates into Keychain"
 	exit 1
