@@ -40,8 +40,7 @@ mv Installers/Mac/build/NeuralNote.pkg Installers/Mac/build/NeuralNote_unsigned.
 
 # Sign installer
 echo "Signing installer"
-product_sign_ID=$(echo "$signingID" | sed 's/Application/Installer/')
-#productsignID=$(security find-identity -v -p basic | grep "Developer ID Installer" | head -1 | cut -d'"' -f2)
+product_sign_ID=$(security find-identity -v -p basic | grep "Developer ID Installer" | head -1 | cut -d'"' -f2)
 productsign --sign "$product_sign_ID" Installers/Mac/build/NeuralNote_unsigned.pkg Installers/Mac/build/NeuralNote.pkg
 rm Installers/Mac/build/NeuralNote_unsigned.pkg
 
