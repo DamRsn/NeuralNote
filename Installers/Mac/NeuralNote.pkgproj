@@ -38,9 +38,9 @@
 									<key>GID</key>
 									<integer>80</integer>
 									<key>PATH</key>
-									<string>../../cmake-build-release/NeuralNote_artefacts/Release/Standalone/NeuralNote.app</string>
+									<string>Standalone/NeuralNote.app</string>
 									<key>PATH_TYPE</key>
-									<integer>1</integer>
+									<integer>3</integer>
 									<key>PERMISSIONS</key>
 									<integer>493</integer>
 									<key>TYPE</key>
@@ -582,9 +582,9 @@
 															<key>GID</key>
 															<integer>0</integer>
 															<key>PATH</key>
-															<string>../../cmake-build-release/NeuralNote_artefacts/Release/VST3/NeuralNote.vst3</string>
+															<string>VST3/NeuralNote.vst3</string>
 															<key>PATH_TYPE</key>
-															<integer>1</integer>
+															<integer>3</integer>
 															<key>PERMISSIONS</key>
 															<integer>493</integer>
 															<key>TYPE</key>
@@ -1150,9 +1150,9 @@
 															<key>GID</key>
 															<integer>0</integer>
 															<key>PATH</key>
-															<string>../../cmake-build-release/NeuralNote_artefacts/Release/AU/NeuralNote.component</string>
+															<string>AU/NeuralNote.component</string>
 															<key>PATH_TYPE</key>
-															<integer>1</integer>
+															<integer>3</integer>
 															<key>PERMISSIONS</key>
 															<integer>493</integer>
 															<key>TYPE</key>
@@ -2067,6 +2067,8 @@
 			<string>NeuralNote</string>
 			<key>PAYLOAD_ONLY</key>
 			<false/>
+			<key>REFERENCE_FOLDER_PATH</key>
+			<string>/Users/damienronssin/Projects/NeuralNote/cmake-build-release/NeuralNote_artefacts/Release</string>
 			<key>TREAT_MISSING_PRESENTATION_DOCUMENTS_AS_WARNING</key>
 			<false/>
 		</dict>
