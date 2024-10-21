@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# First argument gives the path to the dir containing the .app, .component and .vst3.
+# First argument gives the path to the dir containing the Standalone, AU and VST3 subdirectories.
 # Typically cmake-build-release/NeuralNote_artefacts/Release or build/NeuralNote_artefacts/Release
 PLUG_DIR=$1
 
