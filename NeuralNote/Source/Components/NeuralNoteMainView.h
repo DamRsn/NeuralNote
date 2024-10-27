@@ -62,6 +62,8 @@ private:
     std::unique_ptr<DrawableButton> mCenterButton;
     std::unique_ptr<DrawableButton> mSettingsButton;
 
+    std::unique_ptr<TooltipWindow> mTooltipWindow;
+
     class PopupMenuLookAndFeel : public LookAndFeel_V4
     {
         Font getPopupMenuFont() override { return LABEL_FONT; }

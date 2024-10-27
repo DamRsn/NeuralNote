@@ -165,10 +165,18 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mMuteButton->setImages(
         mute_off_drawable.get(), nullptr, nullptr, nullptr, mute_on_drawable.get(), nullptr, nullptr);
     mMuteButton->setClickingTogglesState(true);
+    mMuteButton->onStateChange = [this]() {
+        if (mMuteButton->getToggleState()) {
+            mMuteButton->setTooltip("Unmute input");
+        } else {
+            mMuteButton->setTooltip("Mute input");
+        }
+    };
 
     mMuteButtonAttachment = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
         mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::MuteId), *mMuteButton);
     addAndMakeVisible(*mMuteButton);
+    mMuteButton->onStateChange();
 
     addAndMakeVisible(mVisualizationPanel);
     addAndMakeVisible(mTranscriptionOptions);
@@ -178,9 +186,10 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mBackgroundImage = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize)
                            .rescaled(1000, 640, Graphics::ResamplingQuality::highResamplingQuality);
 
-    startTimerHz(30);
+    mTooltipWindow = std::make_unique<TooltipWindow>(this, 1000);
 
     updateEnablements();
+    startTimerHz(30);
 }
 
 NeuralNoteMainView::~NeuralNoteMainView()
