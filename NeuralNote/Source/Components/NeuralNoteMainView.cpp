@@ -154,12 +154,17 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
         mSettingsMenu->showMenuAsync(options);
     };
 
-    mMuteButton = std::make_unique<TextButton>("MuteButton");
-    mMuteButton->setButtonText("");
+    mMuteButton = std::make_unique<DrawableButton>("MuteButton", DrawableButton::ButtonStyle::ImageRaw);
     mMuteButton->setClickingTogglesState(true);
+    mMuteButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
+    mMuteButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
 
-    mMuteButton->setColour(TextButton::buttonColourId, Colours::white.withAlpha(0.2f));
-    mMuteButton->setColour(TextButton::buttonOnColourId, BLACK);
+    auto mute_on_drawable = Drawable::createFromImageData(BinaryData::mute_svg, BinaryData::mute_svgSize);
+    auto mute_off_drawable = Drawable::createFromImageData(BinaryData::unmute_svg, BinaryData::unmute_svgSize);
+
+    mMuteButton->setImages(
+        mute_off_drawable.get(), nullptr, nullptr, nullptr, mute_on_drawable.get(), nullptr, nullptr);
+    mMuteButton->setClickingTogglesState(true);
 
     mMuteButtonAttachment = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
         mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::MuteId), *mMuteButton);
@@ -169,6 +174,9 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     addAndMakeVisible(mTranscriptionOptions);
     addAndMakeVisible(mNoteOptions);
     addAndMakeVisible(mQuantizePanel);
+
+    mBackgroundImage = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize)
+                           .rescaled(1000, 640, Graphics::ResamplingQuality::highResamplingQuality);
 
     startTimerHz(30);
 
@@ -191,7 +199,7 @@ void NeuralNoteMainView::resized()
     mCenterButton->setBounds(786, 43, 35, 35);
     mSettingsButton->setBounds(838, 43, 35, 35);
 
-    mMuteButton->setBounds(931, 49, 24, 24);
+    mMuteButton->setBounds(931, 43, 35, 35);
 
     mVisualizationPanel.setBounds(328, 120, 642, 491);
     mTranscriptionOptions.setBounds(29, 120, 274, 190);
@@ -201,11 +209,7 @@ void NeuralNoteMainView::resized()
 
 void NeuralNoteMainView::paint(Graphics& g)
 {
-    auto background_image = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
-
-    g.drawImage(background_image, getLocalBounds().toFloat());
-    g.setFont(LABEL_FONT);
-    g.drawFittedText("MUTE IN", Rectangle<int>(923, 81, 40, 10), Justification::centred, 1);
+    g.drawImageAt(mBackgroundImage, 0, 0);
 }
 
 void NeuralNoteMainView::timerCallback()

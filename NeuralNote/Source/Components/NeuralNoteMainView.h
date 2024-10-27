@@ -51,7 +51,7 @@ private:
     NoteOptionsView mNoteOptions;
     TimeQuantizeOptionsView mQuantizePanel;
 
-    std::unique_ptr<TextButton> mMuteButton;
+    std::unique_ptr<DrawableButton> mMuteButton;
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> mMuteButtonAttachment;
 
     std::unique_ptr<DrawableButton> mRecordButton;
@@ -78,6 +78,8 @@ private:
 
     std::unique_ptr<ComboBox> mKey; // C, C#, D, D# ...
     std::unique_ptr<ComboBox> mMode; // Major, Minor, Chromatic
+
+    Image mBackgroundImage;
 
     int mNumCallbacksStuckInProcessingState = 0;
 };
