@@ -93,7 +93,22 @@ public:
         return {};
     }
 
-    static String numberToStr(T number) { return String(number); }
+    static String numberToStr(T number)
+    {
+        if constexpr (std::is_same_v<T, int>) {
+            return String(number);
+        }
+
+        if constexpr (std::is_same_v<T, double>) {
+            if (juce::approximatelyEqual(number, std::round(number))) {
+                return String(number, 0);
+            }
+
+            return String(number, 2);
+        }
+
+        return {};
+    }
 
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override
     {
