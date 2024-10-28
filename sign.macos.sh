@@ -4,7 +4,11 @@ set -euo pipefail
 
 # First argument gives the path to the dir containing the Standalone, AU and VST3 subdirectories.
 # Typically cmake-build-release/NeuralNote_artefacts/Release or build/NeuralNote_artefacts/Release
-PLUG_DIR=$1
+PLUG_DIR=${1:-}
+
+if [[ $# -eq 0 ]]; then
+	>&2 echo "usage: $0 <release_dir>"; exit 1
+fi
 
 for dir in "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3}; do
 	if ! test -d "$dir"; then
@@ -24,7 +28,7 @@ APPLE_TEAMID=$(echo "$signingID" | cut -d'(' -f2 | cut -d')' -f1)
 if test -z "$APPLE_TEAMID"; then
 	read -p "Enter your Apple Team ID: " APPLE_TEAMID
 fi
-read -s -p "Enter your Apple ID password: " APPLE_PASSWORD
+read -s -p "Enter your Apple ID password (App specific): " APPLE_PASSWORD
 echo
 
 chmod +x "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3}/Contents/MacOS/NeuralNote
@@ -32,6 +36,16 @@ chmod +x "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/Neu
 echo "Signing Standalone, AU and VST3"
 codesign --remove-signature "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3} || true
 codesign --entitlements entitlements.plist --options=runtime -s "$signingID" "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3}
+
+# Check signature
+printf "\nVerifying signature app\n"
+codesign -dv --verbose=4 "$PLUG_DIR"/Standalone/NeuralNote.app
+
+printf "\nVerifying signature VST3\n"
+codesign -dv --verbose=4 "$PLUG_DIR"/VST3/NeuralNote.vst3
+
+printf "\nVerifying signature AU\n"
+codesign -dv --verbose=4 "$PLUG_DIR"/AU/NeuralNote.component
 
 # Build installer
 echo "Building installer"
