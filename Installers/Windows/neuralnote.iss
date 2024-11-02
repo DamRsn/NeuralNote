@@ -5,6 +5,7 @@
 [Setup]
 AppName=NeuralNote
 AppVersion=1.0.0
+OutputBaseFilename=NeuralNoteInstaller
 DefaultDirName={pf}\NeuralNote
 DefaultGroupName=NeuralNote
 InfoBeforeFile=..\readme.txt
@@ -16,6 +17,8 @@ AppUpdatesURL=https://github.com/DamRsn/NeuralNote
 AlwaysShowComponentsList=yes
 Compression=lzma
 SolidCompression=yes
+Uninstallable=no
+DisableDirPage=yes
 AppCopyright=Copyright (c) 2024 Damien Ronssin
 
 [Types]
