@@ -15,10 +15,9 @@ your favorite Digital Audio Workstation.
 Download the latest release for your platform [here](https://github.com/DamRsn/NeuralNote/releases) (Windows and macOS (
 Universal) supported)!
 
-Currently, only the raw `.vst3`, `.component` (Audio Unit), `.app` and `.exe` (Standalone) files are provided.
-Installers will be created soon. In the meantime, you can manually copy the plugin/app file in the appropriate
-directory. The code is signed on macOS, but not on Windows, so you might have to perform few extra steps in order to be
-able to use NeuralNote on Windows.
+Installers are available for both Windows and Mac, including Standalone, VST3, and AU (Mac only) versions. The
+installers allow users to select which format(s) they want to install. On macOS, the code is signed, while on Windows,
+it is not. This means you may need to take a few additional steps to use NeuralNote on Windows.
 
 ## Usage
 
@@ -123,11 +122,10 @@ The original basic-pitch CNN was split in 4 sequential models wired together, so
 ## Roadmap
 
 - Improve stability
-- Save plugin internal state properly, so it can be loaded back when reentering a session. Make parameters visible to
-  the DAW.
+- UX improvements (zoom in/out, play/pause with spacebar, etc.)
 - Add tooltips
 - Make internal synth support pitch bends
-- Send MIDI out of the plugin to be routed to another instrument
+- Linux support
 
 ## Bug reports and feature requests
 
