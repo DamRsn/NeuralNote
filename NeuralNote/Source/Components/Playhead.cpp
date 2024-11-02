@@ -18,18 +18,19 @@ void Playhead::resized()
 void Playhead::paint(Graphics& g)
 {
     if (mAudioSampleDuration > 0 && mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        auto playhead_x = static_cast<float>(computePlayheadPositionPixel(
-            mCurrentPlayerPlayheadTime, mAudioSampleDuration, mNumPixelsPerSecond, getWidth()));
+        auto playhead_x = static_cast<int>(std::round(computePlayheadPositionPixel(
+            mCurrentPlayerPlayheadTime, mAudioSampleDuration, mNumPixelsPerSecond, getWidth())));
 
         g.setColour(juce::Colours::white);
-        g.drawLine(playhead_x, 0, playhead_x, (float) getHeight(), 1);
+        g.drawVerticalLine(playhead_x, 0, static_cast<float>(getHeight()));
 
+        auto playhead_center_x = static_cast<float>(playhead_x) + 0.5f;
         Path triangle;
-        triangle.addTriangle(jmax(0.0f, playhead_x - mTriangleSide / 2.0f),
+        triangle.addTriangle(jmax(0.0f, playhead_center_x - mTriangleSide / 2.0f),
                              0,
-                             jmin(playhead_x + mTriangleSide / 2.0f, (float) getWidth()),
+                             jmin(playhead_center_x + mTriangleSide / 2.0f, static_cast<float>(getWidth())),
                              0,
-                             playhead_x,
+                             playhead_center_x,
                              mTriangleHeight);
         g.fillPath(triangle);
     }
