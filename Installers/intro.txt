@@ -1,0 +1,4 @@
+This installer lets you install NeuralNote in the following formats:
+- VST3
+- Audio Unit (AU, Mac only)
+- Standalone (Application)
