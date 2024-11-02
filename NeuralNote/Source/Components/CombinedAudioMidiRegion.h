@@ -61,7 +61,7 @@ private:
 
     void _centerViewOnPlayhead();
 
-    bool _isFileTypeSupported(const String& filename);
+    bool _isFileTypeSupported(const String& filename) const;
 
     NeuralNoteAudioProcessor* mProcessor;
 

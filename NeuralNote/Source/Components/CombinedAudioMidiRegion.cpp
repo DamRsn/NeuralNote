@@ -157,8 +157,9 @@ void CombinedAudioMidiRegion::_centerViewOnPlayhead()
         int visible_width = mViewportPtr->getWidth();
         int half_visible_width = visible_width / 2;
 
-        auto pixel_offset = (int) std::round(
-            std::max(0.0, std::min(playhead_position, (double) full_width) - (double) half_visible_width));
+        auto pixel_offset = static_cast<int>(std::round(std::max(
+            0.0,
+            std::min(playhead_position, static_cast<double>(full_width)) - static_cast<double>(half_visible_width))));
         auto prev_pixel_offset = mViewportPtr->getViewPositionX();
 
         if (pixel_offset != prev_pixel_offset)
@@ -166,7 +167,7 @@ void CombinedAudioMidiRegion::_centerViewOnPlayhead()
     }
 }
 
-bool CombinedAudioMidiRegion::_isFileTypeSupported(const String& filename)
+bool CombinedAudioMidiRegion::_isFileTypeSupported(const String& filename) const
 {
     return std::find_if(mSupportedAudioFileExtensions.begin(),
                         mSupportedAudioFileExtensions.end(),
