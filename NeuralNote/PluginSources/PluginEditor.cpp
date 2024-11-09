@@ -9,7 +9,7 @@ NeuralNoteEditor::NeuralNoteEditor(NeuralNoteAudioProcessor& p)
     addAndMakeVisible(*mMainView);
     setSize(1000, 640);
 
-    getLookAndFeel().setDefaultSansSerifTypeface(MONTSERRAT_REGULAR);
+    getLookAndFeel().setDefaultSansSerifTypeface(UIFonts::get().MONTSERRAT_REGULAR());
 
     mMainView->setLookAndFeel(&mNeuralNoteLnF);
 }

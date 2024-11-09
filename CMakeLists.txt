@@ -7,6 +7,7 @@ enable_language(CXX)
 
 #Compile commands, useful for some IDEs like VS-Code
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 #Minimum MacOS target, set globally
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version" FORCE)
@@ -130,21 +131,37 @@ elseif (WIN32)
             MAP_IMPORTED_CONFIG_MINSIZEREL Release
             MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
     )
+elseif (UNIX)
+    set_property(TARGET onnxruntime PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/lib/libonnxruntime.a)
 endif ()
 
 
 target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/include)
 
-target_link_libraries(${BaseTargetName}
-        PRIVATE
-        juce::juce_audio_utils
-        juce::juce_dsp
-        BasicPitchCNN
-        onnxruntime
-        bin_data
-        PUBLIC
-        juce_recommended_config_flags
-        juce_recommended_lto_flags)
+if (UNIX AND NOT APPLE)
+	target_link_libraries(${BaseTargetName}
+	      PRIVATE
+	    juce::juce_audio_utils
+	  juce::juce_dsp
+	        BasicPitchCNN
+	      onnxruntime
+	    bin_data
+	  PUBLIC
+		juce_recommended_config_flags
+		)
+else ()
+	target_link_libraries(${BaseTargetName}
+	      PRIVATE
+	    juce::juce_audio_utils
+	  juce::juce_dsp
+	        BasicPitchCNN
+	      onnxruntime
+	    bin_data
+	  PUBLIC
+		juce_recommended_config_flags
+					juce_recommended_lto_flags
+		)
+endif ()
 # juce_recommended_warning_flags)
 
 if (BUILD_UNIT_TESTS)

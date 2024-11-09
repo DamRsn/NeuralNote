@@ -38,7 +38,7 @@ void Knob::paint(Graphics& g)
 
     mSlider.setAlpha(alpha);
     g.setColour(juce::Colours::black.withAlpha(alpha));
-    g.setFont(LABEL_FONT);
+    g.setFont(UIFonts::get().LABEL_FONT());
 
     if (!mIsMouseOver || !isEnabled()) {
         g.drawMultiLineText(mLabel, 0, 73, 66, juce::Justification::centred, 0.0f);
