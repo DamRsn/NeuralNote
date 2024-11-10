@@ -188,6 +188,8 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
 
     mTooltipWindow = std::make_unique<TooltipWindow>(this, 1000);
 
+    _checkNeuralNoteUpdateAvailable();
+
     updateEnablements();
     startTimerHz(30);
 }
@@ -305,4 +307,37 @@ void NeuralNoteMainView::_updateSettingsMenuTicks()
         bool is_ticked = std::find(ticked_items.begin(), ticked_items.end(), item.itemID) != ticked_items.end();
         item.setTicked(is_ticked);
     }
+}
+
+void NeuralNoteMainView::_checkNeuralNoteUpdateAvailable()
+{
+    Thread::launch([this] {
+        URL url("https://api.github.com/repos/DamRsn/NeuralNote/releases/latest");
+
+        auto result = url.readEntireTextStream();
+
+        if (result.isEmpty()) {
+            MessageManager::callAsync([] { std::cout << "Failed to check for updates" << std::endl; });
+            return;
+        }
+
+        auto json = JSON::parse(result);
+
+        if (json.isObject()) {
+            const auto current_version_str = String("v") + String(JucePlugin_VersionString).trim();
+            auto latest_version = json.getProperty("tag_name", "unknown").toString().trim();
+
+            MessageManager::callAsync([current_version_str, latest_version] {
+                std::cout << "Current version: " << current_version_str << std::endl;
+                std::cout << "Latest version: " << latest_version << std::endl;
+                if (!current_version_str.equalsIgnoreCase(latest_version)) {
+                    std::cout << "New version available" << std::endl;
+                } else {
+                    std::cout << "On latest version" << std::endl;
+                }
+            });
+        } else {
+            MessageManager::callAsync([] { std::cout << "Failed to parse JSON" << std::endl; });
+        }
+    });
 }

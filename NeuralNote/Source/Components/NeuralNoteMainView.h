@@ -41,6 +41,8 @@ private:
 
     void _updateSettingsMenuTicks();
 
+    void _checkNeuralNoteUpdateAvailable();
+
     NeuralNoteAudioProcessor& mProcessor;
     NeuralNoteLNF mLNF;
 
