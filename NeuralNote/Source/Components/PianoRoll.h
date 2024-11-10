@@ -19,7 +19,7 @@ class PianoRoll
     , ValueTree::Listener
 {
 public:
-    PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond);
+    PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, double inBaseNumPixelsPerSecond);
 
     ~PianoRoll() override;
 
@@ -31,7 +31,7 @@ public:
 
     void mouseDown(const MouseEvent& event) override;
 
-    void setZoomLevel(float zoomLevel);
+    void setZoomLevel(double inZoomLevel);
 
 private:
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
@@ -67,9 +67,10 @@ private:
 
     void _drawBeatVerticalLines(Graphics& g) const;
 
-    float _beatPosQnToPixel(double inPosQn, double inOffsetBarStart, double inSecondsPerBeat) const;
+    double _beatPosQnToPixel(double inPosQn, double inOffsetBarStart, double inSecondsPerBeat) const;
 
-    const double mNumPixelsPerSecond;
+    const double mBaseNumPixelsPerSecond;
+    double mZoomLevel = 1.0;
 
     ColourGradient mNoteGradient;
 
@@ -77,8 +78,6 @@ private:
     NeuralNoteAudioProcessor* mProcessor;
 
     Playhead mPlayhead;
-
-    float mZoomLevel = 1.f;
 };
 
 #endif // PianoRoll_h

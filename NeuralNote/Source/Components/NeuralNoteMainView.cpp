@@ -124,22 +124,32 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     addAndMakeVisible(mSettingsButton.get());
 
     mSettingsMenu = std::make_unique<PopupMenu>();
+
+    // Midi out
     auto midi_out_item = PopupMenu::Item("MIDI Out");
     midi_out_item.setID(1);
     midi_out_item.setEnabled(true);
-    mSettingsMenuItemsShouldBeTicked.emplace_back(
-        1, [this] { return static_cast<bool>(mProcessor.getValueTree().getProperty(NnId::MidiOut)); });
+    mSettingsMenuItemsShouldBeTicked.emplace_back(midi_out_item.itemID, [this] {
+        return static_cast<bool>(mProcessor.getValueTree().getProperty(NnId::MidiOut));
+    });
 
     midi_out_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
-    auto action = [this] {
+    auto midi_out_action = [this] {
         bool midi_out_enabled = mProcessor.getValueTree().getProperty(NnId::MidiOut);
         mProcessor.getValueTree().setPropertyExcludingListener(this, NnId::MidiOut, !midi_out_enabled, nullptr);
         _updateSettingsMenuTicks();
     };
 
-    midi_out_item = midi_out_item.setAction(action);
-
+    midi_out_item = midi_out_item.setAction(midi_out_action);
     mSettingsMenu->addItem(midi_out_item);
+
+    // Reset zoom
+    auto reset_zoom_item = PopupMenu::Item("Reset Zoom");
+    reset_zoom_item.setID(2);
+    reset_zoom_item.setTicked(false);
+    auto reset_zoom_action = [this] { mProcessor.getValueTree().setProperty(NnId::ZoomLevelId, 1.0, nullptr); };
+    reset_zoom_item.setAction(reset_zoom_action);
+    mSettingsMenu->addItem(reset_zoom_item);
 
     mPopupMenuLookAndFeel = std::make_unique<PopupMenuLookAndFeel>();
     mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::backgroundColourId, WHITE_SOLID);

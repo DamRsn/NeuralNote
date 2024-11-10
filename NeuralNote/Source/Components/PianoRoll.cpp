@@ -4,11 +4,11 @@
 
 #include "PianoRoll.h"
 
-PianoRoll::PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, double inNumPixelsPerSecond)
-    : mProcessor(inProcessor)
-    , mKeyboard(keyboard)
-    , mNumPixelsPerSecond(inNumPixelsPerSecond)
-    , mPlayhead(inProcessor, inNumPixelsPerSecond)
+PianoRoll::PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, double inBaseNumPixelsPerSecond)
+    : mBaseNumPixelsPerSecond(inBaseNumPixelsPerSecond)
+      , mKeyboard(keyboard)
+      , mProcessor(inProcessor)
+      , mPlayhead(inProcessor, inBaseNumPixelsPerSecond)
 {
     mKeyboard.addChangeListener(this);
 
@@ -31,8 +31,11 @@ void PianoRoll::resized()
     mPlayhead.setSize(getWidth(), getHeight());
 }
 
-void PianoRoll::setZoomLevel(float zoomLevel) {
-    mZoomLevel = zoomLevel;
+void PianoRoll::setZoomLevel(double inZoomLevel)
+{
+    mZoomLevel = inZoomLevel;
+    mPlayhead.setZoomLevel(inZoomLevel);
+    repaint();
 }
 
 void PianoRoll::paint(Graphics& g)
@@ -135,12 +138,12 @@ void PianoRoll::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged,
 
 float PianoRoll::_timeToPixel(float inTime) const
 {
-    return inTime * static_cast<float>(mNumPixelsPerSecond) * mZoomLevel;
+    return inTime * static_cast<float>(mBaseNumPixelsPerSecond * mZoomLevel);
 }
 
 float PianoRoll::_pixelToTime(float inPixel) const
 {
-    return inPixel / static_cast<float>(mNumPixelsPerSecond) / mZoomLevel;
+    return inPixel / static_cast<float>(mBaseNumPixelsPerSecond * mZoomLevel);
 }
 
 std::pair<float, float> PianoRoll::_getNoteHeightAndWidthPianoRoll(int inNote) const
@@ -186,8 +189,8 @@ float PianoRoll::_getNoteWidth(int inNote) const
 
 void PianoRoll::_drawBeatVerticalLines(Graphics& g) const
 {
-    auto tq_info = mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getTimeQuantizeInfo();
-    double seconds_per_beat = 60.0 / tq_info.bpm;
+    const auto tq_info = mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getTimeQuantizeInfo();
+    const double seconds_per_beat = 60.0 / tq_info.bpm;
 
     const double start_bar_qn = tq_info.getStartLastBarQn();
     const double start_time_qn = tq_info.getStartQn();
@@ -199,18 +202,18 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g) const
 
     // Beat number in quarter notes
     double beat_pos_qn = 0;
-    float beat_pixel = _beatPosQnToPixel(beat_pos_qn, offset_bar_start, seconds_per_beat);
+    double beat_pixel = _beatPosQnToPixel(beat_pos_qn, offset_bar_start, seconds_per_beat);
 
-    auto width = static_cast<float>(getWidth());
-    auto height = static_cast<float>(getHeight());
+    const auto width = static_cast<float>(getWidth());
+    const auto height = static_cast<float>(getHeight());
 
     g.setColour(WHITE_SOLID);
 
     while (beat_pixel < width) {
         if (beat_pixel >= 0) {
-            float thickness =
+            const float thickness =
                 std::abs(std::fmod(beat_pos_qn, static_cast<double>(tq_info.timeSignatureNum))) < 1e-6 ? 1.0f : 0.5f;
-            g.drawLine(beat_pixel, 0, beat_pixel, height, thickness);
+            g.fillRect(Rectangle<float>(static_cast<float>(beat_pixel) - thickness / 2.0f, 0, thickness, height));
         }
 
         beat_pos_qn += beat_increments;
@@ -218,7 +221,7 @@ void PianoRoll::_drawBeatVerticalLines(Graphics& g) const
     }
 }
 
-float PianoRoll::_beatPosQnToPixel(double inPosQn, double inOffsetBarStart, double inSecondsPerBeat) const
+double PianoRoll::_beatPosQnToPixel(double inPosQn, double inOffsetBarStart, double inSecondsPerBeat) const
 {
-    return static_cast<float>((inPosQn - inOffsetBarStart) * inSecondsPerBeat * mNumPixelsPerSecond);
+    return static_cast<float>((inPosQn - inOffsetBarStart) * inSecondsPerBeat * mBaseNumPixelsPerSecond * mZoomLevel);
 }
