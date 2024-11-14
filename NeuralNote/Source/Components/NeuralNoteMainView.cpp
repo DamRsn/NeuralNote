@@ -115,6 +115,8 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     NeuralNoteMainView::valueTreePropertyChanged(mProcessor.getValueTree(), NnId::PlayheadCenteredId);
     addAndMakeVisible(*mCenterButton);
 
+    mUpdateCheck = std::make_unique<UpdateCheck>();
+
     mSettingsButton = std::make_unique<DrawableButton>("SettingsButton", DrawableButton::ButtonStyle::ImageRaw);
     mSettingsButton->setClickingTogglesState(false);
     mSettingsButton->setColour(DrawableButton::ColourIds::backgroundColourId, TRANSPARENT);
@@ -140,6 +142,14 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     midi_out_item = midi_out_item.setAction(action);
 
     mSettingsMenu->addItem(midi_out_item);
+
+    auto check_updates_item = PopupMenu::Item("Check for updates");
+    check_updates_item.setID(2);
+    check_updates_item.setEnabled(true);
+    check_updates_item.setTicked(false);
+    check_updates_item.setAction([this] { mUpdateCheck->checkForUpdate(true); });
+    mSettingsMenu->addSeparator();
+    mSettingsMenu->addItem(check_updates_item);
 
     mPopupMenuLookAndFeel = std::make_unique<PopupMenuLookAndFeel>();
     mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::backgroundColourId, WHITE_SOLID);
@@ -188,9 +198,11 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
 
     mTooltipWindow = std::make_unique<TooltipWindow>(this, 1000);
 
-    _checkNeuralNoteUpdateAvailable();
-
     updateEnablements();
+
+    addChildComponent(mUpdateCheck.get());
+    mUpdateCheck->checkForUpdate(false);
+
     startTimerHz(30);
 }
 
@@ -216,6 +228,8 @@ void NeuralNoteMainView::resized()
     mTranscriptionOptions.setBounds(29, 120, 274, 190);
     mNoteOptions.setBounds(29, 334, 274, 133);
     mQuantizePanel.setBounds(29, 491, 274, 120);
+
+    mUpdateCheck->setBounds(685, 615, 285, 20);
 }
 
 void NeuralNoteMainView::paint(Graphics& g)
@@ -307,37 +321,4 @@ void NeuralNoteMainView::_updateSettingsMenuTicks()
         bool is_ticked = std::find(ticked_items.begin(), ticked_items.end(), item.itemID) != ticked_items.end();
         item.setTicked(is_ticked);
     }
-}
-
-void NeuralNoteMainView::_checkNeuralNoteUpdateAvailable()
-{
-    Thread::launch([this] {
-        URL url("https://api.github.com/repos/DamRsn/NeuralNote/releases/latest");
-
-        auto result = url.readEntireTextStream();
-
-        if (result.isEmpty()) {
-            MessageManager::callAsync([] { std::cout << "Failed to check for updates" << std::endl; });
-            return;
-        }
-
-        auto json = JSON::parse(result);
-
-        if (json.isObject()) {
-            const auto current_version_str = String("v") + String(JucePlugin_VersionString).trim();
-            auto latest_version = json.getProperty("tag_name", "unknown").toString().trim();
-
-            MessageManager::callAsync([current_version_str, latest_version] {
-                std::cout << "Current version: " << current_version_str << std::endl;
-                std::cout << "Latest version: " << latest_version << std::endl;
-                if (!current_version_str.equalsIgnoreCase(latest_version)) {
-                    std::cout << "New version available" << std::endl;
-                } else {
-                    std::cout << "On latest version" << std::endl;
-                }
-            });
-        } else {
-            MessageManager::callAsync([] { std::cout << "Failed to parse JSON" << std::endl; });
-        }
-    });
 }
