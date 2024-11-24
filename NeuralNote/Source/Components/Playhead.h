@@ -21,8 +21,11 @@ public:
 
     static double computePlayheadPositionPixel(double inPlayheadPositionSeconds,
                                                double inSampleDuration,
-                                               double inNumPixelPerSecond,
+                                               double inBaseNumPixelPerSecond,
+                                               double inZoomLevel,
                                                int inWidth);
+
+    void setZoomLevel(double inZoomLevel);
 
 private:
     void _onVBlankCallback();
@@ -32,7 +35,8 @@ private:
 
     double mCurrentPlayerPlayheadTime = 0;
     double mAudioSampleDuration = 0;
-    const double mNumPixelsPerSecond;
+    double mZoomLevel = 1.0;
+    const double mBaseNumPixelsPerSecond;
 
     static constexpr float mTriangleSide = 8.0f;
     static constexpr float mTriangleHeight = 0.86602540378 * mTriangleSide; // Sqrt(3) / 2

@@ -13,6 +13,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment ve
 
 option(UniversalBinary "Build universal binary for mac" OFF)
 option(RTNeural_Release "When CMAKE_BUILD_TYPE=Debug, overwrite it to Release for RTNeural only" OFF)
+option(LTO "Enable Link Time Optimization" ON)
 
 if (UniversalBinary)
     set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
@@ -143,9 +144,12 @@ target_link_libraries(${BaseTargetName}
         onnxruntime
         bin_data
         PUBLIC
-        juce_recommended_config_flags
-        juce_recommended_lto_flags)
+        juce_recommended_config_flags)
 # juce_recommended_warning_flags)
+
+if (${LTO})
+    target_link_libraries(${BaseTargetName} PUBLIC juce_recommended_lto_flags)
+endif ()
 
 if (BUILD_UNIT_TESTS)
     add_subdirectory(Tests)
