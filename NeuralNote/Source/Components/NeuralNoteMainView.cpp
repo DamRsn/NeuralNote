@@ -153,6 +153,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     reset_zoom_item.setAction(reset_zoom_action);
     mSettingsMenu->addItem(reset_zoom_item);
 
+    // Check for updates
     auto check_updates_item = PopupMenu::Item("Check for updates");
     check_updates_item.setID(3);
     check_updates_item.setEnabled(true);
