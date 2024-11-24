@@ -18,27 +18,42 @@ UpdateCheck::UpdateCheck()
 
 void UpdateCheck::resized()
 {
-    mUrlButton.setBounds(215, 0, 70, getHeight());
+    mUrlButton.setBounds(getWidth() - 65 - mPadding, 0, 65, getHeight());
 }
 
 void UpdateCheck::paint(Graphics& g)
 {
-    auto left_offset = mUpdateAvailable ? 0 : 48;
     g.setColour(WHITE_SOLID);
-    g.fillRoundedRectangle(getLocalBounds().toFloat().withLeft(static_cast<float>(left_offset)), 4.0f);
-
-    g.setColour(BLACK);
     g.setFont(LABEL_FONT);
 
+    String text;
     if (mUpdateAvailable) {
-        g.drawText("A new version of NeuralNote is available:",
-                   Rectangle<int>({5 + left_offset, 0, 210, getHeight()}),
-                   Justification::centredLeft);
+        text = "A new version of NeuralNote is available:";
     } else {
-        g.drawText("You are on the latest version of NeuralNote!",
-                   Rectangle<int>({5 + left_offset, 0, 250, getHeight()}),
-                   Justification::centredLeft);
+        text = "You are on the latest version of NeuralNote!";
     }
+
+    AttributedString attributed_string(text);
+    attributed_string.setFont(LABEL_FONT);
+    attributed_string.setJustification(Justification::centred);
+
+    TextLayout text_layout;
+    text_layout.createLayout(attributed_string, static_cast<float>(getWidth()), static_cast<float>(getHeight()));
+    float text_width = text_layout.getWidth();
+    float rectangle_width = text_width + 2 * mPadding;
+
+    if (mUpdateAvailable) {
+        rectangle_width += static_cast<float>(mUrlButton.getWidth());
+    }
+
+    int rect_x_start = getWidth() - static_cast<int>(rectangle_width);
+
+    g.fillRoundedRectangle(getLocalBounds().toFloat().withLeft(static_cast<float>(rect_x_start)), 4.0f);
+
+    g.setColour(BLACK);
+    text_layout.draw(
+        g,
+        Rectangle<float>(static_cast<float>(rect_x_start + mPadding), 0, text_width, static_cast<float>(getHeight())));
 }
 
 void UpdateCheck::timerCallback()

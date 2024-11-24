@@ -35,6 +35,8 @@ private:
 
     Time mHideTime;
 
+    static constexpr int mPadding = 5;
+
     static constexpr double mNotificationDurationSeconds = 10.0f;
     static constexpr double mTimeIncrementOnMouseOverSeconds = 3.0f;
 
