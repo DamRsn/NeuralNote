@@ -6,18 +6,21 @@
 
 CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor* processor, Keyboard& keyboard)
     : mProcessor(processor)
-    , mAudioRegion(processor, mNumPixelsPerSecond)
-    , mPianoRoll(processor, keyboard, mNumPixelsPerSecond)
     , mVBlankAttachment(this, [this]() { _onVBlankCallback(); })
     , mSupportedAudioFileExtensions(AudioUtils::getSupportedAudioFileExtensions())
+    , mAudioRegion(processor, mBaseNumPixelsPerSecond)
+    , mPianoRoll(processor, keyboard, mBaseNumPixelsPerSecond)
 {
+    mProcessor->addListenerToStateValueTree(this);
     addAndMakeVisible(mAudioRegion);
     addAndMakeVisible(mPianoRoll);
     mProcessor->getSourceAudioManager()->getAudioThumbnail()->addChangeListener(this);
+    _setZoomLevel(mProcessor->getValueTree().getProperty(NnId::ZoomLevelId, 1.0));
 }
 
 CombinedAudioMidiRegion::~CombinedAudioMidiRegion()
 {
+    mProcessor->removeListenerFromStateValueTree(this);
     mProcessor->getSourceAudioManager()->getAudioThumbnail()->removeChangeListener(this);
 }
 
@@ -34,6 +37,28 @@ void CombinedAudioMidiRegion::paint(Graphics& g)
 bool CombinedAudioMidiRegion::isInterestedInFileDrag(const StringArray& files)
 {
     return mProcessor->getState() == EmptyAudioAndMidiRegions || mProcessor->getState() == PopulatedAudioAndMidiRegions;
+}
+
+void CombinedAudioMidiRegion::mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel)
+{
+    if (event.mods.isCommandDown()) {
+        auto time_start_view = mViewportPtr->getViewPositionX() / (mBaseNumPixelsPerSecond * mZoomLevel);
+        _setZoomLevel(mZoomLevel + wheel.deltaY);
+        mViewportPtr->setViewPosition(roundToInt(time_start_view * mBaseNumPixelsPerSecond * mZoomLevel), 0);
+        repaint();
+    } else {
+        if (!(mShouldCenterView && mProcessor->getState() == PopulatedAudioAndMidiRegions
+              && mProcessor->getPlayer()->isPlaying())) {
+            Component::mouseWheelMove(event, wheel);
+        }
+    }
+}
+void CombinedAudioMidiRegion::mouseMagnify(const MouseEvent& event, float scaleFactor)
+{
+    auto time_start_view = mViewportPtr->getViewPositionX() / (mBaseNumPixelsPerSecond * mZoomLevel);
+    _setZoomLevel(mZoomLevel * scaleFactor);
+    mViewportPtr->setViewPosition(roundToInt(time_start_view * mBaseNumPixelsPerSecond * mZoomLevel), 0);
+    repaint();
 }
 
 void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int y)
@@ -87,14 +112,13 @@ void CombinedAudioMidiRegion::repaintPianoRoll()
 
 void CombinedAudioMidiRegion::resizeAccordingToNumSamplesAvailable()
 {
-    int num_samples_available = mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired();
+    const double duration_available =
+        mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired() / BASIC_PITCH_SAMPLE_RATE;
 
-    int thumbnail_width =
-        static_cast<int>(std::round((num_samples_available * mNumPixelsPerSecond) / BASIC_PITCH_SAMPLE_RATE));
+    int thumbnail_width = static_cast<int>(std::round(mZoomLevel * mBaseNumPixelsPerSecond * duration_available));
+    mAudioRegion.setThumbnailWidth(thumbnail_width);
 
     int new_width = std::max(mBaseWidth, thumbnail_width);
-
-    mAudioRegion.setThumbnailWidth(thumbnail_width);
 
     if (new_width != getWidth()) {
         setSize(new_width, getHeight());
@@ -150,7 +174,8 @@ void CombinedAudioMidiRegion::_centerViewOnPlayhead()
         double playhead_position =
             Playhead::computePlayheadPositionPixel(mProcessor->getPlayer()->getPlayheadPositionSeconds(),
                                                    mProcessor->getSourceAudioManager()->getAudioSampleDuration(),
-                                                   mNumPixelsPerSecond,
+                                                   mBaseNumPixelsPerSecond,
+                                                   mZoomLevel,
                                                    mAudioRegion.getWidth());
 
         int full_width = mAudioRegion.getWidth();
@@ -173,4 +198,21 @@ bool CombinedAudioMidiRegion::_isFileTypeSupported(const String& filename) const
                         mSupportedAudioFileExtensions.end(),
                         [filename](const String& extension) { return filename.endsWith(extension); })
            != mSupportedAudioFileExtensions.end();
+}
+
+void CombinedAudioMidiRegion::_setZoomLevel(double inZoomLevel)
+{
+    mZoomLevel = std::clamp(inZoomLevel, mMinZoomLevel, mMaxZoomLevel);
+    mPianoRoll.setZoomLevel(mZoomLevel);
+    mAudioRegion.setZoomLevel(mZoomLevel);
+    mProcessor->getValueTree().setPropertyExcludingListener(this, NnId::ZoomLevelId, mZoomLevel, nullptr);
+    resizeAccordingToNumSamplesAvailable();
+}
+
+void CombinedAudioMidiRegion::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged,
+                                                       const Identifier& property)
+{
+    if (property == NnId::ZoomLevelId) {
+        _setZoomLevel(treeWhosePropertyHasChanged.getProperty(property));
+    }
 }

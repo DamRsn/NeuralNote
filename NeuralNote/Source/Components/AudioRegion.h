@@ -17,7 +17,7 @@ class CombinedAudioMidiRegion;
 class AudioRegion : public Component
 {
 public:
-    AudioRegion(NeuralNoteAudioProcessor* processor, double inNumPixelsPerSecond);
+    AudioRegion(NeuralNoteAudioProcessor* processor, double inBaseNumPixelsPerSecond);
 
     void resized() override;
 
@@ -29,6 +29,8 @@ public:
 
     void mouseDown(const juce::MouseEvent& e) override;
 
+    void setZoomLevel(double inZoomLevel);
+
 private:
     NeuralNoteAudioProcessor* mProcessor;
 
@@ -38,7 +40,8 @@ private:
 
     std::shared_ptr<juce::FileChooser> mFileChooser;
 
-    const double mNumPixelsPerSecond;
+    const double mBaseNumPixelsPerSecond;
+    double mZoomLevel = 1.0;
 
     int mThumbnailWidth = 0;
     bool mIsFileOver = false;

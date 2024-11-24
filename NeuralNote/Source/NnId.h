@@ -44,6 +44,8 @@ inline static Identifier TimeQuantizeRefPosSec = "TIME_QUANTIZE_REF_POS_SECONDS"
 
 inline static Identifier ExportTempoId = "EXPORT_TEMPO";
 
+inline static Identifier ZoomLevelId = "ZOOM_LEVEL";
+
 // To be set in this specific order
 const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault = {
     {TempoId, 120.0},
@@ -56,6 +58,7 @@ const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault 
     {SourceAudioNativeSrPathId, String()},
     {PlayheadPositionSecId, 0.0},
     {PlayheadCenteredId, true},
+    {ZoomLevelId, 1.0},
     {MidiOut, false}};
 } // namespace NnId
 
