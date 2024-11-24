@@ -73,9 +73,9 @@ void UpdateCheck::timerCallback()
 void UpdateCheck::checkForUpdate(bool inShowNotificationOnLatestVersion)
 {
     Thread::launch([this, inShowNotificationOnLatestVersion] {
-        URL url("https://api.github.com/repos/DamRsn/NeuralNote/releases/latest");
+        const URL url("https://api.github.com/repos/DamRsn/NeuralNote/releases/latest");
 
-        auto result = url.readEntireTextStream();
+        const auto result = url.readEntireTextStream();
 
         if (result.isEmpty()) {
             return;
@@ -85,8 +85,11 @@ void UpdateCheck::checkForUpdate(bool inShowNotificationOnLatestVersion)
 
         if (json.isObject()) {
             const auto current_version_str = String("v") + String(JucePlugin_VersionString).trim();
+
+            // Uncomment this line to test the new version available notification
             // const auto current_version_str = String("v0.0.1");
-            auto latest_version = json.getProperty("tag_name", "unknown").toString().trim();
+
+            const auto latest_version = json.getProperty("tag_name", "unknown").toString().trim();
 
             MessageManager::callAsync([current_version_str, latest_version, inShowNotificationOnLatestVersion, this] {
                 if (!current_version_str.equalsIgnoreCase(latest_version)) {
