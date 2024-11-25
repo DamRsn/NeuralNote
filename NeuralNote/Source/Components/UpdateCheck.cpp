@@ -72,35 +72,39 @@ void UpdateCheck::timerCallback()
 
 void UpdateCheck::checkForUpdate(bool inShowNotificationOnLatestVersion)
 {
-    Thread::launch([this, inShowNotificationOnLatestVersion] {
-        const URL url("https://api.github.com/repos/DamRsn/NeuralNote/releases/latest");
+    // Call async because of issue on Windows with spinning cursor.
+    MessageManager::callAsync([this, inShowNotificationOnLatestVersion] {
+        Thread::launch([this,inShowNotificationOnLatestVersion] {
+            const URL url("https://api.github.com/repos/DamRsn/NeuralNote/releases/latest");
 
-        const auto result = url.readEntireTextStream();
+            const auto result = url.readEntireTextStream();
 
-        if (result.isEmpty()) {
-            return;
-        }
+            if (result.isEmpty()) {
+                return;
+            }
 
-        auto json = JSON::parse(result);
+            auto json = JSON::parse(result);
 
-        if (json.isObject()) {
-            const auto current_version_str = String("v") + String(JucePlugin_VersionString).trim();
+            if (json.isObject()) {
+                const auto current_version_str = String("v") + String(JucePlugin_VersionString).trim();
 
-            // Uncomment this line to test the new version available notification
-            // const auto current_version_str = String("v0.0.1");
+                // Uncomment this line to test the new version available notification
+                // const auto current_version_str = String("v0.0.1");
 
-            const auto latest_version = json.getProperty("tag_name", "unknown").toString().trim();
+                const auto latest_version = json.getProperty("tag_name", "unknown").toString().trim();
 
-            MessageManager::callAsync([current_version_str, latest_version, inShowNotificationOnLatestVersion, this] {
-                if (!current_version_str.equalsIgnoreCase(latest_version)) {
-                    _showNewVersionAvailableNotification();
-                } else if (inShowNotificationOnLatestVersion) {
-                    _showOnLatestVersionNotification();
-                }
-            });
-        } else {
-            jassertfalse;
-        }
+                MessageManager::callAsync(
+                    [current_version_str, latest_version, inShowNotificationOnLatestVersion, this] {
+                        if (!current_version_str.equalsIgnoreCase(latest_version)) {
+                            _showNewVersionAvailableNotification();
+                        } else if (inShowNotificationOnLatestVersion) {
+                            _showOnLatestVersionNotification();
+                        }
+                    });
+            } else {
+                jassertfalse;
+            }
+        });
     });
 }
 
