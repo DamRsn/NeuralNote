@@ -213,6 +213,8 @@ void CombinedAudioMidiRegion::valueTreePropertyChanged(ValueTree& treeWhosePrope
                                                        const Identifier& property)
 {
     if (property == NnId::ZoomLevelId) {
+        auto time_start_view = mViewportPtr->getViewPositionX() / (mBaseNumPixelsPerSecond * mZoomLevel);
         _setZoomLevel(treeWhosePropertyHasChanged.getProperty(property));
+        mViewportPtr->setViewPosition(roundToInt(time_start_view * mBaseNumPixelsPerSecond * mZoomLevel), 0);
     }
 }

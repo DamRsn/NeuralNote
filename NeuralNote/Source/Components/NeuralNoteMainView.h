@@ -15,6 +15,7 @@
 #include "VisualizationPanel.h"
 #include "NeuralNoteLNF.h"
 #include "NnId.h"
+#include "UpdateCheck.h"
 
 class NeuralNoteMainView
     : public Component
@@ -84,6 +85,8 @@ private:
     Image mBackgroundImage;
 
     int mNumCallbacksStuckInProcessingState = 0;
+
+    std::unique_ptr<UpdateCheck> mUpdateCheck;
 };
 
 #endif // PluginMainView_h
