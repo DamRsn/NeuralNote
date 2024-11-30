@@ -35,6 +35,8 @@ public:
 
     void repaintPianoRoll();
 
+    bool keyPressed(const KeyPress& key) override;
+
 private:
     void updateEnablements();
 
