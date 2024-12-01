@@ -65,3 +65,8 @@ void Knob::mouseExit(const MouseEvent& event)
         repaint();
     }
 }
+
+void Knob::setTooltip(const String& inTooltip)
+{
+    mSlider.setTooltip(inTooltip);
+}

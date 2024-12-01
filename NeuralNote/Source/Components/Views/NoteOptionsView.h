@@ -12,6 +12,7 @@
 #include "UIDefines.h"
 #include "NoteUtils.h"
 #include "MinMaxNoteSlider.h"
+#include "NeuralNoteTooltips.h"
 
 class NeuralNoteMainView;
 
@@ -43,7 +44,7 @@ private:
 
     std::unique_ptr<MinMaxNoteSlider> mMinMaxNoteSlider;
 
-    std::unique_ptr<ComboBox> mKeyDropdown;
+    std::unique_ptr<ComboBox> mRootNoteDropdown;
     std::unique_ptr<ComboBoxParameterAttachment> mKeyAttachment;
 
     std::unique_ptr<ComboBox> mKeyType;

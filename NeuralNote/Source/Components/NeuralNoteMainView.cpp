@@ -18,7 +18,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mRecordButton->setClickingTogglesState(true);
     mRecordButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
     mRecordButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
-    mRecordButton->setTooltip("Record -- 'r'");
+    mRecordButton->setTooltip(NeuralNoteTooltips::record);
 
     auto record_off_drawable =
         Drawable::createFromImageData(BinaryData::recordingoff_svg, BinaryData::recordingoff_svgSize);
@@ -50,7 +50,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mClearButton->setClickingTogglesState(false);
     mClearButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
     mClearButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
-    mClearButton->setTooltip("Clear audio and midi. -- Shift + Backspace");
+    mClearButton->setTooltip(NeuralNoteTooltips::clear);
 
     auto bin_drawable = Drawable::createFromImageData(BinaryData::deleteicon_svg, BinaryData::deleteicon_svgSize);
     mClearButton->setImages(bin_drawable.get());
@@ -73,7 +73,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
         mPlayPauseButton->setToggleState(false, sendNotification);
         mVisualizationPanel.getAudioMidiViewport().setViewPositionProportionately(0, 0);
     };
-    mBackButton->setTooltip("Go to start -- Shift + Space");
+    mBackButton->setTooltip(NeuralNoteTooltips::back);
     addAndMakeVisible(*mBackButton);
 
     mPlayPauseButton = std::make_unique<DrawableButton>("PlayPauseButton", DrawableButton::ButtonStyle::ImageRaw);
@@ -92,7 +92,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
             mPlayPauseButton->setToggleState(false, sendNotification);
         }
     };
-    mPlayPauseButton->setTooltip("Play/Pause -- Space");
+    mPlayPauseButton->setTooltip(NeuralNoteTooltips::play_pause);
 
     addAndMakeVisible(*mPlayPauseButton);
 
@@ -112,7 +112,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
                              nullptr,
                              nullptr,
                              nullptr);
-    mCenterButton->setTooltip("Center playhead -- 'c'");
+    mCenterButton->setTooltip(NeuralNoteTooltips::center);
 
     mCenterButton->getToggleStateValue().referTo(
         mProcessor.getValueTree().getPropertyAsValue(NnId::PlayheadCenteredId, nullptr));
@@ -191,7 +191,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mMuteButton->setImages(
         mute_off_drawable.get(), nullptr, nullptr, nullptr, mute_on_drawable.get(), nullptr, nullptr);
     mMuteButton->setClickingTogglesState(true);
-    mMuteButton->setTooltip("Mute/Unmute input. -- 'm'");
+    mMuteButton->setTooltip(NeuralNoteTooltips::mute);
 
     mMuteButtonAttachment = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
         mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::MuteId), *mMuteButton);
@@ -206,6 +206,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
                            .rescaled(1000, 640, Graphics::ResamplingQuality::highResamplingQuality);
 
     mTooltipWindow = std::make_unique<TooltipWindow>(this, 1000);
+    mTooltipWindow->setOpaque(false);
 
     setWantsKeyboardFocus(true);
     mPlayPauseButton->setWantsKeyboardFocus(false);
@@ -213,6 +214,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mRecordButton->setWantsKeyboardFocus(false);
     mCenterButton->setWantsKeyboardFocus(false);
     mSettingsButton->setWantsKeyboardFocus(false);
+    mSettingsButton->setTooltip(NeuralNoteTooltips::settings);
 
     updateEnablements();
 

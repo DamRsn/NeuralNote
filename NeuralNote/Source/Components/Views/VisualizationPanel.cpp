@@ -4,6 +4,8 @@
 
 #include "VisualizationPanel.h"
 
+#include <NeuralNoteTooltips.h>
+
 VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     : mProcessor(processor)
     , mCombinedAudioMidiRegion(processor, mKeyboard)
@@ -33,6 +35,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
 
     mFileTempo = std::make_unique<NumericTextEditor<double>>(
         mProcessor, NnId::ExportTempoId, 6, 120.0, Justification::centred, tempo_str_validator, tempo_str_corrector);
+    mFileTempo->setTooltip(NeuralNoteTooltips::export_tempo);
     addChildComponent(*mFileTempo);
 
     mAudioGainSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);

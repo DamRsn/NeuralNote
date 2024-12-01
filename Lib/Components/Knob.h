@@ -27,6 +27,8 @@ public:
 
     Slider& getSlider() { return mSlider; }
 
+    void setTooltip(const String& inTooltip);
+
 private:
     juce::Slider mSlider;
     std::unique_ptr<juce::SliderParameterAttachment> mSliderParameterAttachment;

@@ -11,6 +11,7 @@ TimeQuantizeOptionsView::TimeQuantizeOptionsView(NeuralNoteAudioProcessor& proce
     mEnableButton = std::make_unique<TextButton>("EnableTimeQuantizeOptionsButton");
     mEnableButton->setButtonText("");
     mEnableButton->setClickingTogglesState(true);
+    mEnableButton->setTooltip(NeuralNoteTooltips::tq_enable);
 
     mEnableButton->setColour(TextButton::buttonColourId, Colours::white.withAlpha(0.2f));
     mEnableButton->setColour(TextButton::buttonOnColourId, BLACK);
@@ -23,12 +24,14 @@ TimeQuantizeOptionsView::TimeQuantizeOptionsView(NeuralNoteAudioProcessor& proce
     mTimeDivisionDropdown->setEditableText(false);
     mTimeDivisionDropdown->setJustificationType(Justification::centredRight);
     mTimeDivisionDropdown->addItemList(TimeQuantizeUtils::TimeDivisionsStr, 1);
+    mTimeDivisionDropdown->setTooltip(NeuralNoteTooltips::tq_time_division);
     mTimeDivisionAttachment = std::make_unique<ComboBoxParameterAttachment>(
         *mProcessor.getParams()[ParameterHelpers::TimeDivisionId], *mTimeDivisionDropdown);
     addAndMakeVisible(*mTimeDivisionDropdown);
 
     mQuantizationForceSlider =
         std::make_unique<QuantizeForceSlider>(*mProcessor.getParams()[ParameterHelpers::QuantizationForceId]);
+    mQuantizationForceSlider->setTooltip(NeuralNoteTooltips::tq_quantization_force);
 
     addAndMakeVisible(*mQuantizationForceSlider);
 
@@ -129,6 +132,7 @@ void TimeQuantizeOptionsView::_setupTempoEditor()
     mTempoEditor = std::make_unique<NumericTextEditor<double>>(
         &mProcessor, NnId::TempoId, 6, 120.0, Justification::centredLeft, tempo_str_validator, tempo_str_corrector);
 
+    mTempoEditor->setTooltip(NeuralNoteTooltips::tq_tempo);
     addAndMakeVisible(mTempoEditor.get());
 }
 
@@ -155,6 +159,7 @@ void TimeQuantizeOptionsView::_setupTSEditors()
                                                                        Justification::centredRight,
                                                                        numerator_validator,
                                                                        numerator_corrector);
+    mTimeSignatureNumEditor->setTooltip(NeuralNoteTooltips::tq_numerator);
 
     addAndMakeVisible(mTimeSignatureNumEditor.get());
 
@@ -190,6 +195,7 @@ void TimeQuantizeOptionsView::_setupTSEditors()
                                                                          Justification::centredLeft,
                                                                          denominator_validator,
                                                                          denominator_corrector);
+    mTimeSignatureDenomEditor->setTooltip(NeuralNoteTooltips::tq_denominator);
 
     addAndMakeVisible(mTimeSignatureDenomEditor.get());
 }
