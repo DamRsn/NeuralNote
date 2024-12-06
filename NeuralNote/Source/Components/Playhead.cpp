@@ -6,7 +6,7 @@
 Playhead::Playhead(NeuralNoteAudioProcessor* inProcessor, double inNumPixelsPerSecond)
     : mProcessor(inProcessor)
     , mVBlankAttachment(this, [this]() { _onVBlankCallback(); })
-    , mNumPixelsPerSecond(inNumPixelsPerSecond)
+    , mBaseNumPixelsPerSecond(inNumPixelsPerSecond)
 {
     setInterceptsMouseClicks(false, false);
 }
@@ -19,7 +19,7 @@ void Playhead::paint(Graphics& g)
 {
     if (mAudioSampleDuration > 0 && mProcessor->getState() == PopulatedAudioAndMidiRegions) {
         auto playhead_x = static_cast<int>(std::round(computePlayheadPositionPixel(
-            mCurrentPlayerPlayheadTime, mAudioSampleDuration, mNumPixelsPerSecond, getWidth())));
+            mCurrentPlayerPlayheadTime, mAudioSampleDuration, mBaseNumPixelsPerSecond, mZoomLevel, getWidth())));
 
         g.setColour(juce::Colours::white);
         g.drawVerticalLine(playhead_x, 0, static_cast<float>(getHeight()));
@@ -43,12 +43,19 @@ void Playhead::setPlayheadTime(double inNewTime)
 
 double Playhead::computePlayheadPositionPixel(double inPlayheadPositionSeconds,
                                               double inSampleDuration,
-                                              double inNumPixelPerSecond,
+                                              double inBaseNumPixelPerSecond,
+                                              double inZoomLevel,
                                               int inWidth)
 {
-    auto playhead_pos = inPlayheadPositionSeconds / inSampleDuration
-                        * std::min(inNumPixelPerSecond * inSampleDuration, static_cast<double>(inWidth));
+    auto playhead_pos =
+        inPlayheadPositionSeconds / inSampleDuration
+        * std::min(inBaseNumPixelPerSecond * inZoomLevel * inSampleDuration, static_cast<double>(inWidth));
     return jlimit(0.0, static_cast<double>(inWidth), playhead_pos);
+}
+
+void Playhead::setZoomLevel(double inZoomLevel)
+{
+    mZoomLevel = inZoomLevel;
 }
 
 void Playhead::_onVBlankCallback()

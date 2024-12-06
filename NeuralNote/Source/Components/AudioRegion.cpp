@@ -5,10 +5,10 @@
 #include "AudioRegion.h"
 #include "CombinedAudioMidiRegion.h"
 
-AudioRegion::AudioRegion(NeuralNoteAudioProcessor* processor, double inNumPixelsPerSecond)
+AudioRegion::AudioRegion(NeuralNoteAudioProcessor* processor, double inBaseNumPixelsPerSecond)
     : mProcessor(processor)
-    , mPlayhead(processor, inNumPixelsPerSecond)
-    , mNumPixelsPerSecond(inNumPixelsPerSecond)
+    , mPlayhead(processor, inBaseNumPixelsPerSecond)
+    , mBaseNumPixelsPerSecond(inBaseNumPixelsPerSecond)
 {
     addAndMakeVisible(mPlayhead);
 }
@@ -86,11 +86,18 @@ void AudioRegion::mouseDown(const juce::MouseEvent& e)
                                       }
                                   });
     } else if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        mPlayhead.setPlayheadTime(_pixelToTime((float) e.x));
+        mPlayhead.setPlayheadTime(_pixelToTime(static_cast<float>(e.x)));
     }
+}
+
+void AudioRegion::setZoomLevel(double inZoomLevel)
+{
+    mZoomLevel = inZoomLevel;
+    mPlayhead.setZoomLevel(inZoomLevel);
+    repaint();
 }
 
 float AudioRegion::_pixelToTime(float inPixel) const
 {
-    return inPixel / static_cast<float>(mNumPixelsPerSecond);
+    return inPixel / static_cast<float>(mBaseNumPixelsPerSecond * mZoomLevel);
 }

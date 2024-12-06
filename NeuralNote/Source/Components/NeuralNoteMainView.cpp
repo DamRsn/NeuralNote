@@ -115,6 +115,8 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     NeuralNoteMainView::valueTreePropertyChanged(mProcessor.getValueTree(), NnId::PlayheadCenteredId);
     addAndMakeVisible(*mCenterButton);
 
+    mUpdateCheck = std::make_unique<UpdateCheck>();
+
     mSettingsButton = std::make_unique<DrawableButton>("SettingsButton", DrawableButton::ButtonStyle::ImageRaw);
     mSettingsButton->setClickingTogglesState(false);
     mSettingsButton->setColour(DrawableButton::ColourIds::backgroundColourId, TRANSPARENT);
@@ -124,22 +126,42 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     addAndMakeVisible(mSettingsButton.get());
 
     mSettingsMenu = std::make_unique<PopupMenu>();
+
+    // Midi out
+    int item_id = 0;
     auto midi_out_item = PopupMenu::Item("MIDI Out");
-    midi_out_item.setID(1);
+    midi_out_item.setID(++item_id);
     midi_out_item.setEnabled(true);
-    mSettingsMenuItemsShouldBeTicked.emplace_back(
-        1, [this] { return static_cast<bool>(mProcessor.getValueTree().getProperty(NnId::MidiOut)); });
+    mSettingsMenuItemsShouldBeTicked.emplace_back(midi_out_item.itemID, [this] {
+        return static_cast<bool>(mProcessor.getValueTree().getProperty(NnId::MidiOut));
+    });
 
     midi_out_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
-    auto action = [this] {
+    auto midi_out_action = [this] {
         bool midi_out_enabled = mProcessor.getValueTree().getProperty(NnId::MidiOut);
         mProcessor.getValueTree().setPropertyExcludingListener(this, NnId::MidiOut, !midi_out_enabled, nullptr);
         _updateSettingsMenuTicks();
     };
 
-    midi_out_item = midi_out_item.setAction(action);
-
+    midi_out_item = midi_out_item.setAction(midi_out_action);
     mSettingsMenu->addItem(midi_out_item);
+
+    // Reset zoom
+    auto reset_zoom_item = PopupMenu::Item("Reset Zoom");
+    reset_zoom_item.setID(++item_id);
+    reset_zoom_item.setTicked(false);
+    auto reset_zoom_action = [this] { mProcessor.getValueTree().setProperty(NnId::ZoomLevelId, 1.0, nullptr); };
+    reset_zoom_item.setAction(reset_zoom_action);
+    mSettingsMenu->addItem(reset_zoom_item);
+
+    // Check for updates
+    auto check_updates_item = PopupMenu::Item("Check for updates");
+    check_updates_item.setID(++item_id);
+    check_updates_item.setEnabled(true);
+    check_updates_item.setTicked(false);
+    check_updates_item.setAction([this] { mUpdateCheck->checkForUpdate(true); });
+    mSettingsMenu->addSeparator();
+    mSettingsMenu->addItem(check_updates_item);
 
     mPopupMenuLookAndFeel = std::make_unique<PopupMenuLookAndFeel>();
     mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::backgroundColourId, WHITE_SOLID);
@@ -189,6 +211,10 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mTooltipWindow = std::make_unique<TooltipWindow>(this, 1000);
 
     updateEnablements();
+
+    addChildComponent(mUpdateCheck.get());
+    mUpdateCheck->checkForUpdate(false);
+
     startTimerHz(30);
 }
 
@@ -214,6 +240,8 @@ void NeuralNoteMainView::resized()
     mTranscriptionOptions.setBounds(29, 120, 274, 190);
     mNoteOptions.setBounds(29, 334, 274, 133);
     mQuantizePanel.setBounds(29, 491, 274, 120);
+
+    mUpdateCheck->setBounds(680, 615, 290, 20);
 }
 
 void NeuralNoteMainView::paint(Graphics& g)

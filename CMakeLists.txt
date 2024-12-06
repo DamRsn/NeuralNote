@@ -14,6 +14,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment ve
 
 option(UniversalBinary "Build universal binary for mac" OFF)
 option(RTNeural_Release "When CMAKE_BUILD_TYPE=Debug, overwrite it to Release for RTNeural only" OFF)
+option(LTO "Enable Link Time Optimization" ON)
 
 if (UniversalBinary)
     set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
@@ -138,31 +139,20 @@ endif ()
 
 target_include_directories("${BaseTargetName}" PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ThirdParty/onnxruntime/include)
 
-if (UNIX AND NOT APPLE)
-	target_link_libraries(${BaseTargetName}
-	      PRIVATE
-	    juce::juce_audio_utils
-	  juce::juce_dsp
-	        BasicPitchCNN
-	      onnxruntime
-	    bin_data
-	  PUBLIC
-		juce_recommended_config_flags
-		)
-else ()
-	target_link_libraries(${BaseTargetName}
-	      PRIVATE
-	    juce::juce_audio_utils
-	  juce::juce_dsp
-	        BasicPitchCNN
-	      onnxruntime
-	    bin_data
-	  PUBLIC
-		juce_recommended_config_flags
-					juce_recommended_lto_flags
-		)
+
+target_link_libraries(${BaseTargetName}
+        PRIVATE
+        juce::juce_audio_utils
+        juce::juce_dsp
+        BasicPitchCNN
+        onnxruntime
+        bin_data
+        PUBLIC
+        juce_recommended_config_flags)
+
+if (${LTO})
+    target_link_libraries(${BaseTargetName} PUBLIC juce_recommended_lto_flags)
 endif ()
-# juce_recommended_warning_flags)
 
 if (BUILD_UNIT_TESTS)
     add_subdirectory(Tests)
