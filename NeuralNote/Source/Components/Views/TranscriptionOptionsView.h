@@ -10,6 +10,7 @@
 #include "PluginProcessor.h"
 #include "Knob.h"
 #include "UIDefines.h"
+#include "NeuralNoteTooltips.h"
 
 class NeuralNoteMainView;
 

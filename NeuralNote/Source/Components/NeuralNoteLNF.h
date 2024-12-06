@@ -30,6 +30,8 @@ public:
                           float rotaryStartAngle,
                           float rotaryEndAngle,
                           Slider&) override;
+
+    void drawTooltip(Graphics&, const String&, int, int) override;
 };
 
 #endif // NeuralNoteLNF_h

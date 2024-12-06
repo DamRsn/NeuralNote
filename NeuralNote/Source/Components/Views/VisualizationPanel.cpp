@@ -4,6 +4,8 @@
 
 #include "VisualizationPanel.h"
 
+#include <NeuralNoteTooltips.h>
+
 VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     : mProcessor(processor)
     , mCombinedAudioMidiRegion(processor, mKeyboard)
@@ -33,6 +35,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
 
     mFileTempo = std::make_unique<NumericTextEditor<double>>(
         mProcessor, NnId::ExportTempoId, 6, 120.0, Justification::centred, tempo_str_validator, tempo_str_corrector);
+    mFileTempo->setTooltip(NeuralNoteTooltips::export_tempo);
     addChildComponent(*mFileTempo);
 
     mAudioGainSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
@@ -42,6 +45,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mAudioGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
     // To also receive mouseExit callback from this slider
     mAudioGainSlider.addMouseListener(this, true);
+    mAudioGainSlider.setTooltip(NeuralNoteTooltips::source_audio_level);
     mAudioGainSliderAttachment = std::make_unique<SliderParameterAttachment>(
         *mProcessor->getParams()[ParameterHelpers::AudioPlayerGainId], mAudioGainSlider);
 
@@ -54,6 +58,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mMidiGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
     // To also receive mouseExit callback from this slider
     mMidiGainSlider.addMouseListener(this, true);
+    mMidiGainSlider.setTooltip(NeuralNoteTooltips::internal_synth_level);
 
     mMidiGainSliderAttachment = std::make_unique<SliderParameterAttachment>(
         *mProcessor->getParams()[ParameterHelpers::MidiPlayerGainId], mMidiGainSlider);

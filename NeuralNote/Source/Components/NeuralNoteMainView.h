@@ -35,12 +35,16 @@ public:
 
     void repaintPianoRoll();
 
+    bool keyPressed(const KeyPress& key) override;
+
 private:
     void updateEnablements();
 
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
 
     void _updateSettingsMenuTicks();
+
+    void _updateTooltipVisibility();
 
     NeuralNoteAudioProcessor& mProcessor;
     NeuralNoteLNF mLNF;

@@ -14,6 +14,7 @@ NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
 
     mEnableButton->setColour(TextButton::buttonColourId, Colours::white.withAlpha(0.2f));
     mEnableButton->setColour(TextButton::buttonOnColourId, BLACK);
+    mEnableButton->setTooltip(NeuralNoteTooltips::sq_enable);
 
     mEnableAttachment = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
         mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::EnableNoteQuantizationId), *mEnableButton);
@@ -21,20 +22,23 @@ NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
 
     mMinMaxNoteSlider = std::make_unique<MinMaxNoteSlider>(*mProcessor.getParams()[ParameterHelpers::MinMidiNoteId],
                                                            *mProcessor.getParams()[ParameterHelpers::MaxMidiNoteId]);
+    mMinMaxNoteSlider->setTooltip(NeuralNoteTooltips::sq_note_range);
     addAndMakeVisible(mMinMaxNoteSlider.get());
 
-    mKeyDropdown = std::make_unique<ComboBox>("KeyRootNoteDropDown");
-    mKeyDropdown->setEditableText(false);
-    mKeyDropdown->setJustificationType(Justification::centredLeft);
-    mKeyDropdown->addItemList(NoteUtils::RootNotesSharpStr, 1);
+    mRootNoteDropdown = std::make_unique<ComboBox>("KeyRootNoteDropDown");
+    mRootNoteDropdown->setEditableText(false);
+    mRootNoteDropdown->setJustificationType(Justification::centredLeft);
+    mRootNoteDropdown->addItemList(NoteUtils::RootNotesSharpStr, 1);
+    mRootNoteDropdown->setTooltip(NeuralNoteTooltips::sq_root_note);
     mKeyAttachment = std::make_unique<ComboBoxParameterAttachment>(
-        *mProcessor.getParams()[ParameterHelpers::KeyRootNoteId], *mKeyDropdown);
-    addAndMakeVisible(mKeyDropdown.get());
+        *mProcessor.getParams()[ParameterHelpers::KeyRootNoteId], *mRootNoteDropdown);
+    addAndMakeVisible(mRootNoteDropdown.get());
 
     mKeyType = std::make_unique<ComboBox>("ScaleTypeDropDown");
     mKeyType->setEditableText(false);
     mKeyType->setJustificationType(Justification::centredLeft);
     mKeyType->addItemList(NoteUtils::ScaleTypesStr, 1);
+    mKeyType->setTooltip(NeuralNoteTooltips::sq_scale_type);
     mKeyTypeAttachment =
         std::make_unique<ComboBoxParameterAttachment>(*mProcessor.getParams()[ParameterHelpers::KeyTypeId], *mKeyType);
     addAndMakeVisible(mKeyType.get());
@@ -43,6 +47,7 @@ NoteOptionsView::NoteOptionsView(NeuralNoteAudioProcessor& processor)
     mSnapMode->setEditableText(false);
     mSnapMode->setJustificationType(Justification::centredLeft);
     mSnapMode->addItemList(NoteUtils::SnapModesStr, 1);
+    mSnapMode->setTooltip(NeuralNoteTooltips::sq_snap_mode);
     mSnapModeAttachment = std::make_unique<ComboBoxParameterAttachment>(
         *mProcessor.getParams()[ParameterHelpers::KeySnapModeId], *mSnapMode);
     addAndMakeVisible(mSnapMode.get());
@@ -64,7 +69,7 @@ void NoteOptionsView::resized()
 {
     mEnableButton->setBounds(0, 0, 18, 18);
     mMinMaxNoteSlider->setBounds(64, 17 + LEFT_SECTIONS_TOP_PAD, 189, 17);
-    mKeyDropdown->setBounds(64, LEFT_SECTIONS_TOP_PAD + 46, 55, 17);
+    mRootNoteDropdown->setBounds(64, LEFT_SECTIONS_TOP_PAD + 46, 55, 17);
     mKeyType->setBounds(124, LEFT_SECTIONS_TOP_PAD + 46, 129, 17);
     mSnapMode->setBounds(100, LEFT_SECTIONS_TOP_PAD + 75, 154, 17);
 }
@@ -89,7 +94,7 @@ void NoteOptionsView::paint(Graphics& g)
     g.setFont(LABEL_FONT);
     g.drawText("RANGE", Rectangle<int>(19, mMinMaxNoteSlider->getY(), 80, 17), Justification::centredLeft);
 
-    g.drawText("KEY", Rectangle<int>(19, mKeyDropdown->getY(), 80, 17), Justification::centredLeft);
+    g.drawText("KEY", Rectangle<int>(19, mRootNoteDropdown->getY(), 80, 17), Justification::centredLeft);
 
     g.drawText("SNAP MODE", Rectangle<int>(19, mSnapMode->getY(), 80, 17), Justification::centredLeft);
 }
@@ -111,7 +116,7 @@ void NoteOptionsView::_enableView(bool inEnable)
 {
     mIsViewEnabled = inEnable;
     mMinMaxNoteSlider->setEnabled(inEnable);
-    mKeyDropdown->setEnabled(inEnable);
+    mRootNoteDropdown->setEnabled(inEnable);
     mKeyType->setEnabled(inEnable);
     mSnapMode->setEnabled(inEnable);
     repaint();

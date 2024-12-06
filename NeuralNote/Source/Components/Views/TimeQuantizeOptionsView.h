@@ -12,6 +12,7 @@
 #include "TimeQuantizeUtils.h"
 #include "QuantizeForceSlider.h"
 #include "NumericTextEditor.h"
+#include "NeuralNoteTooltips.h"
 
 class NeuralNoteMainView;
 

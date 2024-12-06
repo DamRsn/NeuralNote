@@ -28,7 +28,12 @@ void QuantizeForceSlider::paint(Graphics& g)
     g.setColour(juce::Colours::black);
     g.setFont(DROPDOWN_FONT);
 
-    g.drawText(std::to_string((int) std::round(mSlider.getValue() * 100.0f)),
+    g.drawText(std::to_string(static_cast<int>(std::round(mSlider.getValue() * 100.0f))),
                Rectangle<int>(133, 0, 23, 17),
                juce::Justification::centredRight);
+}
+
+void QuantizeForceSlider::setTooltip(const String& inTooltip)
+{
+    mSlider.setTooltip(inTooltip);
 }

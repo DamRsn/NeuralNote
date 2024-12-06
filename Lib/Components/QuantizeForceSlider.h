@@ -19,6 +19,8 @@ public:
 
     void paint(Graphics& g) override;
 
+    void setTooltip(const String& inTooltip);
+
 private:
     juce::Slider mSlider;
     std::unique_ptr<juce::SliderParameterAttachment> mAttachment;

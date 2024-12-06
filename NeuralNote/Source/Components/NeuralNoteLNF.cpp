@@ -61,3 +61,17 @@ void NeuralNoteLNF::drawRotarySlider(Graphics& g,
 
     g.drawEllipse(bounds.getCentreX() - 16, bounds.getCentreY() - 16, 32, 32, 0.5f);
 }
+
+void NeuralNoteLNF::drawTooltip(Graphics& g, const String& text, int width, int height)
+{
+    g.setColour(WHITE_SOLID.darker(0.0f));
+    g.fillRoundedRectangle(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height), 5.0f);
+
+    g.setColour(BLACK);
+    g.setFont(LABEL_FONT);
+
+    auto text_std = text.toStdString();
+    int num_line_breaks = static_cast<int>(std::count(text_std.begin(), text_std.end(), '\n'));
+
+    g.drawFittedText(text, 0, 0, width, height, Justification::centred, num_line_breaks + 1);
+}

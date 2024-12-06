@@ -10,20 +10,24 @@ TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& pro
 {
     mNoteSensibility =
         std::make_unique<Knob>(*mProcessor.getParams()[ParameterHelpers::NoteSensibilityId], "NOTE SENSIBILITY", false);
+    mNoteSensibility->setTooltip(NeuralNoteTooltips::to_note_sensibility);
     addAndMakeVisible(*mNoteSensibility);
 
     mSplitSensibility = std::make_unique<Knob>(
         *mProcessor.getParams()[ParameterHelpers::SplitSensibilityId], "SPLIT SENSIBILITY", false);
+    mSplitSensibility->setTooltip(NeuralNoteTooltips::to_split_sensibility);
     addAndMakeVisible(*mSplitSensibility);
 
     mMinNoteDuration = std::make_unique<Knob>(
         *mProcessor.getParams()[ParameterHelpers::MinimumNoteDurationId], "MIN NOTE DURATION", false, " ms");
+    mMinNoteDuration->setTooltip(NeuralNoteTooltips::to_min_note_duration);
     addAndMakeVisible(*mMinNoteDuration);
 
     mPitchBendDropDown = std::make_unique<juce::ComboBox>("PITCH BEND");
     mPitchBendDropDown->setEditableText(false);
     mPitchBendDropDown->setJustificationType(juce::Justification::centredLeft);
     mPitchBendDropDown->addItemList({"No Pitch Bend", "Single Pitch Bend"}, 1);
+    mPitchBendDropDown->setTooltip(NeuralNoteTooltips::to_pitch_bend);
     mPitchBendDropDownParameterAttachment = std::make_unique<ComboBoxParameterAttachment>(
         *mProcessor.getParams()[ParameterHelpers::PitchBendModeId], *mPitchBendDropDown);
 

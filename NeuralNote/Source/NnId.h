@@ -29,6 +29,12 @@ inline static Identifier PlayheadCenteredId = "PLAYHEAD_CENTERED";
 
 inline static Identifier MidiOut = "MIDI_OUT";
 
+inline static Identifier ExportTempoId = "EXPORT_TEMPO";
+
+inline static Identifier ZoomLevelId = "ZOOM_LEVEL";
+
+inline static Identifier TooltipVisibleId = "TOOLTIP_VISIBLE";
+
 // --------------- Time quantization ----------------
 inline static Identifier TempoId = "TEMPO";
 
@@ -41,10 +47,6 @@ inline static Identifier TimeQuantizeRefPosQnId = "TIME_QUANTIZE_REF_POS_QN";
 inline static Identifier TimeQuantizeRefLastBarQnId = "TIME_QUANTIZE_REF_LAST_BAR_QN";
 
 inline static Identifier TimeQuantizeRefPosSec = "TIME_QUANTIZE_REF_POS_SECONDS";
-
-inline static Identifier ExportTempoId = "EXPORT_TEMPO";
-
-inline static Identifier ZoomLevelId = "ZOOM_LEVEL";
 
 // To be set in this specific order
 const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault = {
@@ -59,7 +61,9 @@ const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault 
     {PlayheadPositionSecId, 0.0},
     {PlayheadCenteredId, true},
     {ZoomLevelId, 1.0},
-    {MidiOut, false}};
+    {MidiOut, false},
+    {TooltipVisibleId, true}};
+
 } // namespace NnId
 
 #endif //NNID_H

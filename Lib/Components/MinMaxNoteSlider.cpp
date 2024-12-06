@@ -35,3 +35,8 @@ void MinMaxNoteSlider::paint(Graphics& g)
                Rectangle<int>(168, 0, 22, 12),
                juce::Justification::centredRight);
 }
+
+void MinMaxNoteSlider::setTooltip(const String& inTooltip)
+{
+    mSlider.setTooltip(inTooltip);
+}
