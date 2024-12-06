@@ -44,6 +44,8 @@ private:
 
     void _updateSettingsMenuTicks();
 
+    void _updateTooltipVisibility();
+
     NeuralNoteAudioProcessor& mProcessor;
     NeuralNoteLNF mLNF;
 

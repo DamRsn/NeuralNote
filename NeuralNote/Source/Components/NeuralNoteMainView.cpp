@@ -143,7 +143,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     midi_out_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
     auto midi_out_action = [this] {
         bool midi_out_enabled = mProcessor.getValueTree().getProperty(NnId::MidiOut);
-        mProcessor.getValueTree().setPropertyExcludingListener(this, NnId::MidiOut, !midi_out_enabled, nullptr);
+        mProcessor.getValueTree().setProperty(NnId::MidiOut, !midi_out_enabled, nullptr);
         _updateSettingsMenuTicks();
     };
 
@@ -157,6 +157,25 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     auto reset_zoom_action = [this] { mProcessor.getValueTree().setProperty(NnId::ZoomLevelId, 1.0, nullptr); };
     reset_zoom_item.setAction(reset_zoom_action);
     mSettingsMenu->addItem(reset_zoom_item);
+
+    // Tooltip visibility
+    auto tooltip_visibility_item = PopupMenu::Item("Show Tooltips");
+    tooltip_visibility_item.setID(++item_id);
+    tooltip_visibility_item.setEnabled(true);
+    mSettingsMenuItemsShouldBeTicked.emplace_back(tooltip_visibility_item.itemID, [this] {
+        return static_cast<bool>(mProcessor.getValueTree().getProperty(NnId::TooltipVisibleId));
+    });
+
+    tooltip_visibility_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+    auto tooltip_visibility_action = [this] {
+        bool tooltip_visibility = mProcessor.getValueTree().getProperty(NnId::TooltipVisibleId);
+        mProcessor.getValueTree().setPropertyExcludingListener(
+            this, NnId::TooltipVisibleId, !tooltip_visibility, nullptr);
+        _updateTooltipVisibility();
+        _updateSettingsMenuTicks();
+    };
+    tooltip_visibility_item.setAction(tooltip_visibility_action);
+    mSettingsMenu->addItem(tooltip_visibility_item);
 
     // Check for updates
     auto check_updates_item = PopupMenu::Item("Check for updates");
@@ -205,8 +224,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     mBackgroundImage = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize)
                            .rescaled(1000, 640, Graphics::ResamplingQuality::highResamplingQuality);
 
-    mTooltipWindow = std::make_unique<TooltipWindow>(this, 1000);
-    mTooltipWindow->setOpaque(false);
+    _updateTooltipVisibility();
 
     setWantsKeyboardFocus(true);
     mPlayPauseButton->setWantsKeyboardFocus(false);
@@ -355,6 +373,10 @@ void NeuralNoteMainView::valueTreePropertyChanged(ValueTree& treeWhosePropertyHa
         mCenterButton->setToggleState(should_center, sendNotification);
         mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(should_center);
     }
+
+    if (property == NnId::TooltipVisibleId) {
+        _updateTooltipVisibility();
+    }
 }
 
 void NeuralNoteMainView::_updateSettingsMenuTicks()
@@ -373,5 +395,17 @@ void NeuralNoteMainView::_updateSettingsMenuTicks()
         auto& item = iterator.getItem();
         bool is_ticked = std::find(ticked_items.begin(), ticked_items.end(), item.itemID) != ticked_items.end();
         item.setTicked(is_ticked);
+    }
+}
+
+void NeuralNoteMainView::_updateTooltipVisibility()
+{
+    if (mProcessor.getValueTree().getProperty(NnId::TooltipVisibleId, true)) {
+        if (mTooltipWindow == nullptr) {
+            mTooltipWindow = std::make_unique<TooltipWindow>(this, 800);
+            mTooltipWindow->setOpaque(false);
+        }
+    } else {
+        mTooltipWindow = nullptr;
     }
 }

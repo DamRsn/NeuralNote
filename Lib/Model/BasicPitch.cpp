@@ -58,9 +58,9 @@ void BasicPitch::transcribeToMIDI(float* inAudio, int inNumSamples)
 
     const float* stacked_cqt = mFeaturesCalculator.computeFeatures(inAudio, inNumSamples, mNumFrames);
 
-    mOnsetsPG.resize(mNumFrames, std::vector<float>(NUM_FREQ_OUT, 0.0f));
-    mNotesPG.resize(mNumFrames, std::vector<float>(NUM_FREQ_OUT, 0.0f));
-    mContoursPG.resize(mNumFrames, std::vector<float>(NUM_FREQ_IN, 0.0f));
+    mOnsetsPG.resize(mNumFrames, std::vector<float>(static_cast<size_t>(NUM_FREQ_OUT), 0.0f));
+    mNotesPG.resize(mNumFrames, std::vector<float>(static_cast<size_t>(NUM_FREQ_OUT), 0.0f));
+    mContoursPG.resize(mNumFrames, std::vector<float>(static_cast<size_t>(NUM_FREQ_IN), 0.0f));
 
     mOnsetsPG.shrink_to_fit();
     mNotesPG.shrink_to_fit();
