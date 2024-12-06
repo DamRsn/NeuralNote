@@ -12,52 +12,52 @@ namespace UIDefines
 {
 inline Typeface::Ptr MONTSERRAT_REGULAR()
 {
-    static auto font =
+    static const auto font =
         Typeface::createSystemTypefaceFor(BinaryData::MontserratRegular_ttf, BinaryData::MontserratRegular_ttfSize);
     return font;
 }
 
 inline Typeface::Ptr MONTSERRAT_SEMIBOLD()
 {
-    static auto font =
+    static const auto font =
         Typeface::createSystemTypefaceFor(BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize);
     return font;
 }
 
 inline Typeface::Ptr MONTSERRAT_BOLD()
 {
-    static auto font =
+    static const auto font =
         Typeface::createSystemTypefaceFor(BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize);
     return font;
 }
 
 inline Font TITLE_FONT()
 {
-    static auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(18.0f);
+    static const auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(18.0f);
     return font;
 }
 
 inline Font LARGE_FONT()
 {
-    static auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(20.0f);
+    static const auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(20.0f);
     return font;
 }
 
 inline Font LABEL_FONT()
 {
-    static auto font = Font(FontOptions(MONTSERRAT_SEMIBOLD())).withPointHeight(10.0f);
+    static const auto font = Font(FontOptions(MONTSERRAT_SEMIBOLD())).withPointHeight(10.0f);
     return font;
 }
 
 inline Font DROPDOWN_FONT()
 {
-    static auto font = Font(FontOptions(MONTSERRAT_REGULAR())).withPointHeight(10.0f);
+    static const auto font = Font(FontOptions(MONTSERRAT_REGULAR())).withPointHeight(10.0f);
     return font;
 }
 
 inline Font BUTTON_FONT()
 {
-    static auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(12.0f);
+    static const auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(12.0f);
     return font;
 }
 } // namespace Fonts
