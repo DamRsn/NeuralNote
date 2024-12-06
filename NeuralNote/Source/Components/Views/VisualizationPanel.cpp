@@ -45,6 +45,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mAudioGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
     // To also receive mouseExit callback from this slider
     mAudioGainSlider.addMouseListener(this, true);
+    mAudioGainSlider.setTooltip(NeuralNoteTooltips::source_audio_level);
     mAudioGainSliderAttachment = std::make_unique<SliderParameterAttachment>(
         *mProcessor->getParams()[ParameterHelpers::AudioPlayerGainId], mAudioGainSlider);
 
@@ -57,6 +58,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mMidiGainSlider.setColour(Slider::ColourIds::textBoxOutlineColourId, Colours::transparentWhite);
     // To also receive mouseExit callback from this slider
     mMidiGainSlider.addMouseListener(this, true);
+    mMidiGainSlider.setTooltip(NeuralNoteTooltips::internal_synth_level);
 
     mMidiGainSliderAttachment = std::make_unique<SliderParameterAttachment>(
         *mProcessor->getParams()[ParameterHelpers::MidiPlayerGainId], mMidiGainSlider);

@@ -65,6 +65,10 @@ const String mute = "Mute / Unmute input | m";
 
 const String export_tempo = "Set export tempo for midi file";
 
+const String source_audio_level = "Set source audio level";
+
+const String internal_synth_level = "Set internal synth level";
+
 } // namespace NeuralNoteTooltips
 
 #endif //NEURALNOTETOOLTIPS_H
