@@ -52,7 +52,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
     float alpha = isEnabled() ? 1.0f : 0.5f;
 
     g.setColour(BLACK.withAlpha(alpha));
-    g.setFont(UIFonts::get().TITLE_FONT());
+    g.setFont(UIDefines::TITLE_FONT());
     g.drawText("TRANSCRIPTION", Rectangle<int>(24, 0, 250, 17), juce::Justification::centredLeft);
 
     auto enable_rectangle = juce::Rectangle<int>(0, 0, 17, 17);
@@ -61,7 +61,7 @@ void TranscriptionOptionsView::paint(Graphics& g)
     else
         g.drawRoundedRectangle(enable_rectangle.toFloat(), 4.0f, 1.0f);
 
-    g.setFont(UIFonts::get().LABEL_FONT());
+    g.setFont(UIDefines::LABEL_FONT());
     g.drawText(
         "PITCH BEND", juce::Rectangle<int>(19, mPitchBendDropDown->getY(), 67, 17), juce::Justification::centredLeft);
 }

@@ -33,7 +33,7 @@ public:
         setColour(focusedOutlineColourId, TRANSPARENT);
         setColour(outlineColourId, TRANSPARENT);
         setColour(shadowColourId, TRANSPARENT);
-        setFont(UIFonts::get().LABEL_FONT());
+        setFont(UIDefines::LABEL_FONT());
         setJustification(inJustification);
         setReadOnly(false);
 

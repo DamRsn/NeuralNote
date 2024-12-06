@@ -66,7 +66,7 @@ private:
 
     class PopupMenuLookAndFeel : public LookAndFeel_V4
     {
-        Font getPopupMenuFont() override { return UIFonts::get().LABEL_FONT(); }
+        Font getPopupMenuFont() override { return UIDefines::LABEL_FONT(); }
     };
 
     std::unique_ptr<PopupMenuLookAndFeel> mPopupMenuLookAndFeel;

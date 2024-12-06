@@ -68,10 +68,10 @@ void TimeQuantizeOptionsView::paint(Graphics& g)
 
     mQuantizationForceSlider->setAlpha(alpha);
     g.setColour(BLACK.withAlpha(alpha));
-    g.setFont(UIFonts::get().TITLE_FONT());
+    g.setFont(UIDefines::TITLE_FONT());
     g.drawText("TIME QUANTIZE", Rectangle<int>(24, 0, 210, 17), Justification::centredLeft);
 
-    g.setFont(UIFonts::get().LABEL_FONT());
+    g.setFont(UIDefines::LABEL_FONT());
     g.drawText("TEMPO", Rectangle<int>(19, LEFT_SECTIONS_TOP_PAD + 45, 50, 14), Justification::centredLeft);
 
     g.drawText("TIME SIGNATURE", Rectangle<int>(110, LEFT_SECTIONS_TOP_PAD + 45, 100, 14), Justification::centredRight);

@@ -98,7 +98,7 @@ void VisualizationPanel::paint(Graphics& g)
             Rectangle<int>(0, 0, KEYBOARD_WIDTH, mCombinedAudioMidiRegion.mAudioRegionHeight).toFloat(), 4);
 
         g.setColour(BLACK);
-        g.setFont(UIFonts::get().LABEL_FONT());
+        g.setFont(UIDefines::LABEL_FONT());
         g.drawFittedText("MIDI\nFILE\nTEMPO", Rectangle<int>(0, 0, KEYBOARD_WIDTH, 55), Justification::centred, 3);
     }
 }

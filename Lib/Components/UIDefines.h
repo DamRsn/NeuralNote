@@ -8,42 +8,60 @@
 #include <JuceHeader.h>
 #include "BinaryData.h"
 
-// Fonts
-const Typeface::Ptr MONTSERRAT_BOLD =
-    Typeface::createSystemTypefaceFor(BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize);
+namespace UIDefines
+{
+inline Typeface::Ptr MONTSERRAT_REGULAR()
+{
+    static auto font =
+        Typeface::createSystemTypefaceFor(BinaryData::MontserratRegular_ttf, BinaryData::MontserratRegular_ttfSize);
+    return font;
+}
 
-const Typeface::Ptr MONTSERRAT_SEMIBOLD =
-    Typeface::createSystemTypefaceFor(BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize);
+inline Typeface::Ptr MONTSERRAT_SEMIBOLD()
+{
+    static auto font =
+        Typeface::createSystemTypefaceFor(BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize);
+    return font;
+}
 
-const Typeface::Ptr MONTSERRAT_REGULAR =
-    Typeface::createSystemTypefaceFor(BinaryData::MontserratRegular_ttf, BinaryData::MontserratRegular_ttfSize);
+inline Typeface::Ptr MONTSERRAT_BOLD()
+{
+    static auto font =
+        Typeface::createSystemTypefaceFor(BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize);
+    return font;
+}
 
-class UIFonts {
-public:
-    static UIFonts& get();
+inline Font TITLE_FONT()
+{
+    static auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(18.0f);
+    return font;
+}
 
-    Font TITLE_FONT() { return Font(FontOptions(pMONTSERRAT_BOLD)).withPointHeight(18.0f); }
-    Font LARGE_FONT() { return Font(FontOptions(pMONTSERRAT_BOLD)).withPointHeight(20.0f); }
-    Font LABEL_FONT() { return Font(FontOptions(pMONTSERRAT_SEMIBOLD)).withPointHeight(10.0f); }
-    Font DROPDOWN_FONT() { return Font(FontOptions(pMONTSERRAT_REGULAR)).withPointHeight(10.0f); }
-    Font BUTTON_FONT() { return Font(FontOptions(pMONTSERRAT_BOLD)).withPointHeight(12.0f); }
-    Typeface::Ptr MONTSERRAT_BOLD() { return pMONTSERRAT_BOLD; }
-    Typeface::Ptr MONTSERRAT_SEMIBOLD() { return pMONTSERRAT_SEMIBOLD; }
-    Typeface::Ptr MONTSERRAT_REGULAR() { return pMONTSERRAT_REGULAR; }
-protected:
-    UIFonts() :
-        pMONTSERRAT_BOLD(Typeface::createSystemTypefaceFor(BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize)),
-        pMONTSERRAT_SEMIBOLD(Typeface::createSystemTypefaceFor(BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize)),
-        pMONTSERRAT_REGULAR(Typeface::createSystemTypefaceFor(BinaryData::MontserratRegular_ttf, BinaryData::MontserratRegular_ttfSize))
-    { }
-    static UIFonts* fts;
+inline Font LARGE_FONT()
+{
+    static auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(20.0f);
+    return font;
+}
 
-private:
-    Typeface::Ptr pMONTSERRAT_BOLD;
-    Typeface::Ptr pMONTSERRAT_SEMIBOLD;
-    Typeface::Ptr pMONTSERRAT_REGULAR;
-};
- 
+inline Font LABEL_FONT()
+{
+    static auto font = Font(FontOptions(MONTSERRAT_SEMIBOLD())).withPointHeight(10.0f);
+    return font;
+}
+
+inline Font DROPDOWN_FONT()
+{
+    static auto font = Font(FontOptions(MONTSERRAT_REGULAR())).withPointHeight(10.0f);
+    return font;
+}
+
+inline Font BUTTON_FONT()
+{
+    static auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(12.0f);
+    return font;
+}
+} // namespace Fonts
+
 // Colors
 static const Colour BLACK(static_cast<uint8>(14), static_cast<uint8>(14), static_cast<uint8>(14));
 static const Colour WHITE_TRANSPARENT(static_cast<uint8>(255), static_cast<uint8>(253), static_cast<uint8>(246), 0.7f);

@@ -26,7 +26,7 @@ void QuantizeForceSlider::resized()
 void QuantizeForceSlider::paint(Graphics& g)
 {
     g.setColour(juce::Colours::black);
-    g.setFont(UIFonts::get().DROPDOWN_FONT());
+    g.setFont(UIDefines::DROPDOWN_FONT());
 
     g.drawText(std::to_string((int) std::round(mSlider.getValue() * 100.0f)),
                Rectangle<int>(133, 0, 23, 17),
