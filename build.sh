@@ -5,6 +5,8 @@ os=windows
 arch="$(uname -m)"
 file=onnxruntime.lib
 version=v1.14.1-neuralnote.1
+test_enabled=ON
+
 if test "$(uname -s)" = "Darwin"; then
 	os=macOS
 	arch=universal
@@ -12,8 +14,20 @@ if test "$(uname -s)" = "Darwin"; then
 	# To remove warnings about minimum macOS target versions
 	version=v1.14.1-neuralnote.2
 fi
+if test "$(uname -s)" = "Linux"; then
+	os=linux
+	arch="$(uname -m)"
+	file=libonnxruntime.lib
+	# To remove warnings about minimum macOS target versions
+	version=v1.14.1-neuralnote.0
+	test_enabled=OFF
+fi
 dir="onnxruntime-${version}-${os}-${arch}"
 archive="$dir.tar.gz"
+
+if test "$(uname -s)" = "Linux"; then
+	cp ../libonnxruntime-neuralnote/$archive .
+fi
 
 # If either the library or the ort model is missing or if an archive was found
 # then fetch ort model and library again.
@@ -31,8 +45,15 @@ fi
 ncpus="$(getconf _NPROCESSORS_ONLN || echo 1)"
 
 config=Release
-cmake -S . -B build -DCMAKE_BUILD_TYPE="${config}" -DBUILD_UNIT_TESTS=ON && cmake --build build -j "${ncpus}"
+cmake -S . -B build -DCMAKE_BUILD_TYPE="${config}" -DBUILD_UNIT_TESTS="${test_enabled}" && cmake --build build -j "${ncpus}"
 
-./build/Tests/UnitTests_artefacts/Release/UnitTests
+if [[ "$test_enabled" = "ON" ]]; then
+	./build/Tests/UnitTests_artefacts/Release/UnitTests
+fi
+
 echo
-echo "Run: ./build/NeuralNote_artefacts/Release/Standalone/NeuralNote.app/Contents/MacOS/NeuralNote"
+if test "$(uname -s)" = "Linux"; then
+	echo "Run: ./build/NeuralNote_artefacts/Release/Standalone/NeuralNote"
+else
+	echo "Run: ./build/NeuralNote_artefacts/Release/Standalone/NeuralNote.app/Contents/MacOS/NeuralNote"
+fi

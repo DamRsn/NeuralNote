@@ -25,7 +25,7 @@ void MinMaxNoteSlider::resized()
 void MinMaxNoteSlider::paint(Graphics& g)
 {
     g.setColour(juce::Colours::black);
-    g.setFont(DROPDOWN_FONT);
+    g.setFont(UIDefines::DROPDOWN_FONT());
 
     g.drawText(NoteUtils::midiNoteToStr(int(mSlider.getMinValue())),
                Rectangle<int>(0, 0, 22, 12),

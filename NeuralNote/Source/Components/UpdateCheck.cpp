@@ -10,7 +10,7 @@ UpdateCheck::UpdateCheck()
 {
     mUrlButton.setButtonText("See update");
     mUrlButton.setURL(mLatestReleaseUrl);
-    mUrlButton.setFont(LABEL_FONT, false);
+    mUrlButton.setFont(UIDefines::LABEL_FONT(), false);
     mUrlButton.setJustificationType(Justification::centred);
     mUrlButton.setColour(HyperlinkButton::ColourIds::textColourId, Colours::blue);
     addAndMakeVisible(mUrlButton);
@@ -24,7 +24,7 @@ void UpdateCheck::resized()
 void UpdateCheck::paint(Graphics& g)
 {
     g.setColour(WHITE_SOLID);
-    g.setFont(LABEL_FONT);
+    g.setFont(UIDefines::LABEL_FONT());
 
     String text;
     if (mUpdateAvailable) {
@@ -34,7 +34,7 @@ void UpdateCheck::paint(Graphics& g)
     }
 
     AttributedString attributed_string(text);
-    attributed_string.setFont(LABEL_FONT);
+    attributed_string.setFont(UIDefines::LABEL_FONT());
     attributed_string.setJustification(Justification::centred);
 
     TextLayout text_layout;

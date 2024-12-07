@@ -8,21 +8,59 @@
 #include <JuceHeader.h>
 #include "BinaryData.h"
 
-// Fonts
-const Typeface::Ptr MONTSERRAT_BOLD =
-    Typeface::createSystemTypefaceFor(BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize);
+namespace UIDefines
+{
+inline Typeface::Ptr MONTSERRAT_REGULAR()
+{
+    static const auto font =
+        Typeface::createSystemTypefaceFor(BinaryData::MontserratRegular_ttf, BinaryData::MontserratRegular_ttfSize);
+    return font;
+}
 
-const Typeface::Ptr MONTSERRAT_SEMIBOLD =
-    Typeface::createSystemTypefaceFor(BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize);
+inline Typeface::Ptr MONTSERRAT_SEMIBOLD()
+{
+    static const auto font =
+        Typeface::createSystemTypefaceFor(BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize);
+    return font;
+}
 
-const Typeface::Ptr MONTSERRAT_REGULAR =
-    Typeface::createSystemTypefaceFor(BinaryData::MontserratRegular_ttf, BinaryData::MontserratRegular_ttfSize);
+inline Typeface::Ptr MONTSERRAT_BOLD()
+{
+    static const auto font =
+        Typeface::createSystemTypefaceFor(BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize);
+    return font;
+}
 
-const Font TITLE_FONT = Font(FontOptions(MONTSERRAT_BOLD)).withPointHeight(18.0f);
-const Font LARGE_FONT = Font(FontOptions(MONTSERRAT_BOLD)).withPointHeight(20.0f);
-const Font LABEL_FONT = Font(FontOptions(MONTSERRAT_SEMIBOLD)).withPointHeight(10.0f);
-const Font DROPDOWN_FONT = Font(FontOptions(MONTSERRAT_REGULAR)).withPointHeight(10.0f);
-const Font BUTTON_FONT = Font(FontOptions(MONTSERRAT_BOLD)).withPointHeight(12.0f);
+inline Font TITLE_FONT()
+{
+    static const auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(18.0f);
+    return font;
+}
+
+inline Font LARGE_FONT()
+{
+    static const auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(20.0f);
+    return font;
+}
+
+inline Font LABEL_FONT()
+{
+    static const auto font = Font(FontOptions(MONTSERRAT_SEMIBOLD())).withPointHeight(10.0f);
+    return font;
+}
+
+inline Font DROPDOWN_FONT()
+{
+    static const auto font = Font(FontOptions(MONTSERRAT_REGULAR())).withPointHeight(10.0f);
+    return font;
+}
+
+inline Font BUTTON_FONT()
+{
+    static const auto font = Font(FontOptions(MONTSERRAT_BOLD())).withPointHeight(12.0f);
+    return font;
+}
+} // namespace Fonts
 
 // Colors
 static const Colour BLACK(static_cast<uint8>(14), static_cast<uint8>(14), static_cast<uint8>(14));

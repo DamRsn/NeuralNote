@@ -88,10 +88,10 @@ void NoteOptionsView::paint(Graphics& g)
     mMinMaxNoteSlider->setAlpha(alpha);
     g.setColour(BLACK.withAlpha(alpha));
 
-    g.setFont(TITLE_FONT);
+    g.setFont(UIDefines::TITLE_FONT());
     g.drawText("SCALE QUANTIZE", Rectangle<int>(24, 0, 274, 17), Justification::centredLeft);
 
-    g.setFont(LABEL_FONT);
+    g.setFont(UIDefines::LABEL_FONT());
     g.drawText("RANGE", Rectangle<int>(19, mMinMaxNoteSlider->getY(), 80, 17), Justification::centredLeft);
 
     g.drawText("KEY", Rectangle<int>(19, mRootNoteDropdown->getY(), 80, 17), Justification::centredLeft);
