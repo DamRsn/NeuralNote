@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(NeuralNotePlugin VERSION 1.0.0)
+project(NeuralNotePlugin VERSION 1.1.0)
 
 # C++ settings
 set(CMAKE_CXX_STANDARD 17)
@@ -152,6 +152,7 @@ target_link_libraries(${BaseTargetName}
 
 if (${LTO})
     target_link_libraries(${BaseTargetName} PUBLIC juce_recommended_lto_flags)
+    message(STATUS "Link Time Optimization (LTO) enabled")
 endif ()
 
 if (BUILD_UNIT_TESTS)

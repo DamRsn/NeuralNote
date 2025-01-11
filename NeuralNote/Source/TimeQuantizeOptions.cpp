@@ -148,7 +148,10 @@ std::vector<Notes::Event> TimeQuantizeOptions::quantize(const std::vector<Notes:
 
 void TimeQuantizeOptions::clear()
 {
-    mTimeQuantizeInfo = TimeQuantizeInfo();
+    // Kepp bpm and time signature, reset ref positions
+    mTimeQuantizeInfo.refPositionQn = 0;
+    mTimeQuantizeInfo.refLastBarQn = 0;
+    mTimeQuantizeInfo.refPositionSeconds = 0;
     mWasRecording = false;
     mWasPlaying = false;
     mNumRecordedSamples = 0;

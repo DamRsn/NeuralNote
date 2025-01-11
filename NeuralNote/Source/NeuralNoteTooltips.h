@@ -10,10 +10,10 @@
 namespace NeuralNoteTooltips
 {
 // Transcription options
-const String to_note_sensibility = "Set note sensibility\n"
+const String to_note_sensitivity = "Set note sensitivity\n"
                                    "Higher values will detect more notes";
 
-const String to_split_sensibility = "Set split sensibility\n"
+const String to_split_sensitivity = "Set split sensitivity\n"
                                     "Higher values result in more splits\nLower values results in longer held notes";
 
 const String to_min_note_duration = "Set minimum note duration\n"

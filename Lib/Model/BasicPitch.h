@@ -25,11 +25,11 @@ public:
 
     /**
      * Set parameters for next transcription or midi update.
-     * @param inNoteSensibility Note sensibility threshold (0.05, 0.95). Higher gives more notes.
-     * @param inSplitSensibility Split sensibility threshold (0.05, 0.95). Higher will split note more, lower will merge close notes with same pitch
+     * @param inNoteSensitivity Note sensitivity threshold (0.05, 0.95). Higher gives more notes.
+     * @param inSplitSensitivity Split sensitivity threshold (0.05, 0.95). Higher will split note more, lower will merge close notes with same pitch
      * @param inMinNoteDurationMs Minimum note duration to keep in ms.
      */
-    void setParameters(float inNoteSensibility, float inSplitSensibility, float inMinNoteDurationMs);
+    void setParameters(float inNoteSensitivity, float inSplitSensitivity, float inMinNoteDurationMs);
 
     /**
      * Transcribe the input audio. The note event vector can be obtained after this with getNoteEvents

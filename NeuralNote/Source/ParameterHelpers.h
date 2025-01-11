@@ -13,12 +13,12 @@
 namespace ParameterHelpers
 {
 
-static constexpr int versionHint = 1;
+static constexpr int versionHint = 2;
 
 enum ParamIdEnum {
     MuteId = 0,
-    NoteSensibilityId,
-    SplitSensibilityId,
+    NoteSensitivityId,
+    SplitSensitivityId,
     MinimumNoteDurationId,
     PitchBendModeId,
     AudioPlayerGainId,
@@ -36,8 +36,8 @@ enum ParamIdEnum {
 };
 
 static const StringArray ParamIdStr {"MUTE",
-                                     "NOTE_SENSIBILITY",
-                                     "SPLIT_SENSIBILITY",
+                                     "NOTE_SENSITIVITY",
+                                     "SPLIT_SENSITIVITY",
                                      "MINIMUM_NOTE_DURATION",
                                      "PITCH_BEND_MODE",
                                      "AUDIO_PLAYER_GAIN",
@@ -57,10 +57,10 @@ inline String toName(ParamIdEnum id)
     switch (id) {
         case MuteId:
             return "Mute";
-        case NoteSensibilityId:
-            return "Note Sensibility";
-        case SplitSensibilityId:
-            return "Split Sensibility";
+        case NoteSensitivityId:
+            return "Note Sensitivity";
+        case SplitSensitivityId:
+            return "Split Sensitivity";
         case MinimumNoteDurationId:
             return "Min Note Duration";
         case PitchBendModeId:
@@ -95,7 +95,7 @@ inline String toName(ParamIdEnum id)
 
 inline const String& getIdStr(ParamIdEnum id)
 {
-    return ParamIdStr[id];
+    return ParamIdStr[static_cast<int>(id)];
 }
 
 inline ParameterID toJuceParameterID(ParamIdEnum id)
@@ -113,10 +113,10 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
     switch (id) {
         case MuteId:
             return std::make_unique<AudioParameterBool>(toJuceParameterID(id), toName(id), false);
-        case NoteSensibilityId:
+        case NoteSensitivityId:
             return std::make_unique<AudioParameterFloat>(
                 toJuceParameterID(id), toName(id), NormalisableRange<float>(0.05f, 0.95f, 0.01f), 0.7f);
-        case SplitSensibilityId:
+        case SplitSensitivityId:
             return std::make_unique<AudioParameterFloat>(
                 toJuceParameterID(id), toName(id), NormalisableRange<float>(0.05f, 0.95f, 0.01f), 0.5f);
         case MinimumNoteDurationId:
@@ -171,6 +171,19 @@ inline AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
     return {params.begin(), params.end()};
 }
 
+/**
+ * Migration from version hint 1 to 2 (for version >= v1.1.0). Changed "sensibility" to "sensitivity".
+ * @param inParamId The potentially old parameter id, modified in place if necessary.
+ */
+inline void _migrationVersionHint1To2(String& inParamId)
+{
+    if (inParamId == "NOTE_SENSIBILITY") {
+        inParamId = getIdStr(NoteSensitivityId);
+    } else if (inParamId == "SPLIT_SENSIBILITY") {
+        inParamId = getIdStr(SplitSensitivityId);
+    }
+}
+
 inline void updateParametersFromState(const ValueTree& inParameterTree,
                                       std::array<RangedAudioParameter*, TotalNumParams>& inParams)
 {
@@ -182,7 +195,10 @@ inline void updateParametersFromState(const ValueTree& inParameterTree,
             if (child.isValid() && child.hasProperty(NnId::IdId) && child.hasProperty(NnId::ValueId)) {
                 auto param_id = child.getProperty(NnId::IdId).toString();
 
-                int index = ParameterHelpers::ParamIdStr.indexOf(param_id);
+                // Migration from hint 1 to 2 (sensibility to sensitivity)
+                _migrationVersionHint1To2(param_id);
+
+                int index = ParamIdStr.indexOf(param_id);
 
                 if (index >= 0) {
                     auto* param = inParams[index];
@@ -197,6 +213,7 @@ inline void updateParametersFromState(const ValueTree& inParameterTree,
         }
     }
 }
+
 } // namespace ParameterHelpers
 
 #endif //ParameterHelpers_h

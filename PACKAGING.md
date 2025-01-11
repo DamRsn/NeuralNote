@@ -1,6 +1,7 @@
 # Package NeuralNote for macOS
 
-- Build the app, VST3 and AU in Release mode.
+- Build the app, VST3 and AU in Release mode (don't forget to turn on universal binary (`-DUniversalBinary=ON`) and
+  LTO (`-DLTO=ON`).
 - Install [Packages](http://s.sudre.free.fr/Software/Packages/about.html) if you don't have it already.
 - Set up an Apple Developer certificate and load it into Keychain (for both the app and the installer).
 - Run the `sign_and_package_neuralnote_macos.sh` script to sign the 3 artifacts and package them into a an
