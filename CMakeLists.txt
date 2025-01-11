@@ -152,6 +152,7 @@ target_link_libraries(${BaseTargetName}
 
 if (${LTO})
     target_link_libraries(${BaseTargetName} PUBLIC juce_recommended_lto_flags)
+    message(STATUS "Link Time Optimization (LTO) enabled")
 endif ()
 
 if (BUILD_UNIT_TESTS)
