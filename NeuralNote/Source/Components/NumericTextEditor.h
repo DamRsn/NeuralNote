@@ -68,7 +68,7 @@ public:
             Desktop::getInstance().removeGlobalMouseListener(this);
         };
 
-        setText(numberToStr(mProcessor->getValueTree().getProperty(inPropIdentifier)), false);
+        setText(numberToStr(mProcessor->getValueTree().getProperty(mIdentifier)), false);
 
         mProcessor->addListenerToStateValueTree(this);
     }
