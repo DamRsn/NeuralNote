@@ -12,12 +12,15 @@ your favorite Digital Audio Workstation.
 
 ## Install NeuralNote
 
-Download the latest release for your platform [here](https://github.com/DamRsn/NeuralNote/releases) (Windows and macOS (
-Universal) supported)!
+Download the latest release for your platform [here](https://github.com/DamRsn/NeuralNote/releases) (Windows, macOS (
+Universal) and Linux supported)!
 
 Installers are available for both Windows and Mac, including Standalone, VST3, and AU (Mac only) versions. The
 installers allow users to select which format(s) they want to install. On macOS, the code is signed, while on Windows,
 it is not. This means you may need to take a few additional steps to use NeuralNote on Windows.
+
+For Linux, raw binaries are provided for VST3 and Standalone. You can install them by copying the files to the
+appropriate locations.
 
 ## Usage
 
@@ -119,14 +122,6 @@ But here's a description of the process we followed to create those files:
 
 The original basic-pitch CNN was split in 4 sequential models wired together, so they can be run with RTNeural.
 
-## Roadmap
-
-- Improve stability
-- UX improvements (zoom in/out, play/pause with spacebar, etc.)
-- Add tooltips
-- Make internal synth support pitch bends
-- Linux support
-
 ## Bug reports and feature requests
 
 If you have any request/suggestion concerning the plugin or encounter a bug, please file a GitHub issue.
@@ -177,3 +172,4 @@ Many thanks to the contributors!
 - [trirpi](https://github.com/trirpi)
     - More scale options in `SCALE QUANTIZE`.
     - Horizontal zoom for the audio waveform and the piano roll.
+- [polygon](https://github.com/polygon) and [SamuMazzi](https://github.com/SamuMazzi): Linux support.
