@@ -21,10 +21,10 @@ void BasicPitch::reset()
     mNumFrames = 0;
 }
 
-void BasicPitch::setParameters(float inNoteSensibility, float inSplitSensibility, float inMinNoteDurationMs)
+void BasicPitch::setParameters(float inNoteSensitivity, float inSplitSensitivity, float inMinNoteDurationMs)
 {
-    mParams.frameThreshold = 1.0f - inNoteSensibility;
-    mParams.onsetThreshold = 1.0f - inSplitSensibility;
+    mParams.frameThreshold = 1.0f - inNoteSensitivity;
+    mParams.onsetThreshold = 1.0f - inSplitSensitivity;
 
     mParams.minNoteLengthFrames =
         static_cast<int>(std::round(inMinNoteDurationMs / 1000.0f / (FFT_HOP / BASIC_PITCH_SAMPLE_RATE)));

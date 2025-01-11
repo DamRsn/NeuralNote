@@ -15,8 +15,8 @@ TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor
 
     auto& apvts = mProcessor->getAPVTS();
 
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::NoteSensibilityId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::SplitSensibilityId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::NoteSensitivityId), this);
+    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::SplitSensitivityId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MinimumNoteDurationId), this);
     apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::PitchBendModeId), this);
 
@@ -73,8 +73,8 @@ void TranscriptionManager::setLaunchNewTranscription()
 void TranscriptionManager::parameterChanged(const String& parameterID, float newValue)
 {
     if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::NoteSensibilityId)
-            || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::SplitSensibilityId)
+        if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::NoteSensitivityId)
+            || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::SplitSensitivityId)
             || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::MinimumNoteDurationId)) {
             mProcessor->getAPVTS().getRawParameterValue(parameterID)->store(newValue);
             mShouldUpdateTranscription = true;
@@ -99,8 +99,8 @@ void TranscriptionManager::parameterChanged(const String& parameterID, float new
 
 void TranscriptionManager::_runModel()
 {
-    mBasicPitch.setParameters(mProcessor->getParameterValue(ParameterHelpers::NoteSensibilityId),
-                              mProcessor->getParameterValue(ParameterHelpers::SplitSensibilityId),
+    mBasicPitch.setParameters(mProcessor->getParameterValue(ParameterHelpers::NoteSensitivityId),
+                              mProcessor->getParameterValue(ParameterHelpers::SplitSensitivityId),
                               mProcessor->getParameterValue(ParameterHelpers::MinimumNoteDurationId));
     mBasicPitch.transcribeToMIDI(
         mProcessor->getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
@@ -138,8 +138,8 @@ void TranscriptionManager::_updateTranscription()
     jassert(mProcessor->getState() == PopulatedAudioAndMidiRegions);
 
     if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        mBasicPitch.setParameters(mProcessor->getParameterValue(ParameterHelpers::NoteSensibilityId),
-                                  mProcessor->getParameterValue(ParameterHelpers::SplitSensibilityId),
+        mBasicPitch.setParameters(mProcessor->getParameterValue(ParameterHelpers::NoteSensitivityId),
+                                  mProcessor->getParameterValue(ParameterHelpers::SplitSensitivityId),
                                   mProcessor->getParameterValue(ParameterHelpers::MinimumNoteDurationId));
 
         mBasicPitch.updateMIDI();
