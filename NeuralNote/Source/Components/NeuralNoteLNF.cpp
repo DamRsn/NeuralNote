@@ -68,7 +68,7 @@ void NeuralNoteLNF::drawTooltip(Graphics& g, const String& text, int width, int 
     g.fillRoundedRectangle(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height), 5.0f);
 
     g.setColour(BLACK);
-    g.setFont(LABEL_FONT);
+    g.setFont(UIDefines::LABEL_FONT());
 
     auto text_std = text.toStdString();
     int num_line_breaks = static_cast<int>(std::count(text_std.begin(), text_std.end(), '\n'));
