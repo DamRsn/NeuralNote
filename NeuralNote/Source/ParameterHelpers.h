@@ -95,7 +95,7 @@ inline String toName(ParamIdEnum id)
 
 inline const String& getIdStr(ParamIdEnum id)
 {
-    return ParamIdStr[id];
+    return ParamIdStr[static_cast<int>(id)];
 }
 
 inline ParameterID toJuceParameterID(ParamIdEnum id)
@@ -178,11 +178,9 @@ inline AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
 inline void _migrationVersionHint1To2(String& inParamId)
 {
     if (inParamId == "NOTE_SENSIBILITY") {
-        inParamId = ParamIdStr[NoteSensitivityId];
-    }
-
-    if (inParamId == "SPLIT_SENSIBILITY") {
-        inParamId = ParamIdStr[SplitSensitivityId];
+        inParamId = getIdStr(NoteSensitivityId);
+    } else if (inParamId == "SPLIT_SENSIBILITY") {
+        inParamId = getIdStr(SplitSensitivityId);
     }
 }
 
