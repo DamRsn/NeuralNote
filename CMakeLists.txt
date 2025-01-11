@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(NeuralNotePlugin VERSION 1.0.0)
+project(NeuralNotePlugin VERSION 1.1.0)
 
 # C++ settings
 set(CMAKE_CXX_STANDARD 17)
