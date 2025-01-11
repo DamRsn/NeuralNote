@@ -26,8 +26,8 @@ public:
 private:
     NeuralNoteAudioProcessor& mProcessor;
 
-    std::unique_ptr<Knob> mNoteSensibility;
-    std::unique_ptr<Knob> mSplitSensibility;
+    std::unique_ptr<Knob> mNoteSensitivity;
+    std::unique_ptr<Knob> mSplitSensitivity;
     std::unique_ptr<Knob> mMinNoteDuration;
 
     std::unique_ptr<juce::ComboBox> mPitchBendDropDown;

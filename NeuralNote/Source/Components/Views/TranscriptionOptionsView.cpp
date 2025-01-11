@@ -8,15 +8,15 @@
 TranscriptionOptionsView::TranscriptionOptionsView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
 {
-    mNoteSensibility =
-        std::make_unique<Knob>(*mProcessor.getParams()[ParameterHelpers::NoteSensibilityId], "NOTE SENSIBILITY", false);
-    mNoteSensibility->setTooltip(NeuralNoteTooltips::to_note_sensibility);
-    addAndMakeVisible(*mNoteSensibility);
+    mNoteSensitivity =
+        std::make_unique<Knob>(*mProcessor.getParams()[ParameterHelpers::NoteSensitivityId], "NOTE SENSITIVITY", false);
+    mNoteSensitivity->setTooltip(NeuralNoteTooltips::to_note_sensitivity);
+    addAndMakeVisible(*mNoteSensitivity);
 
-    mSplitSensibility = std::make_unique<Knob>(
-        *mProcessor.getParams()[ParameterHelpers::SplitSensibilityId], "SPLIT SENSIBILITY", false);
-    mSplitSensibility->setTooltip(NeuralNoteTooltips::to_split_sensibility);
-    addAndMakeVisible(*mSplitSensibility);
+    mSplitSensitivity = std::make_unique<Knob>(
+        *mProcessor.getParams()[ParameterHelpers::SplitSensitivityId], "SPLIT SENSITIVITY", false);
+    mSplitSensitivity->setTooltip(NeuralNoteTooltips::to_split_sensitivity);
+    addAndMakeVisible(*mSplitSensitivity);
 
     mMinNoteDuration = std::make_unique<Knob>(
         *mProcessor.getParams()[ParameterHelpers::MinimumNoteDurationId], "MIN NOTE DURATION", false, " ms");
@@ -38,8 +38,8 @@ void TranscriptionOptionsView::resized()
 {
     int button_y_start = 40;
 
-    mNoteSensibility->setBounds(18, button_y_start, 66, 89);
-    mSplitSensibility->setBounds(106, button_y_start, 66, 89);
+    mNoteSensitivity->setBounds(18, button_y_start, 66, 89);
+    mSplitSensitivity->setBounds(106, button_y_start, 66, 89);
     mMinNoteDuration->setBounds(193, button_y_start, 66, 89);
     mPitchBendDropDown->setBounds(100, 129 + LEFT_SECTIONS_TOP_PAD, 154, 17);
 }
