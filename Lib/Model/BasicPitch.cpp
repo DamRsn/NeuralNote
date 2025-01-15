@@ -26,7 +26,7 @@ void BasicPitch::setParameters(float inNoteSensitivity, float inSplitSensitivity
     mParams.frameThreshold = 1.0f - inNoteSensitivity;
     mParams.onsetThreshold = 1.0f - inSplitSensitivity;
 
-    mParams.minNoteLengthFrames =
+    mParams.minNoteLength =
         static_cast<int>(std::round(inMinNoteDurationMs / 1000.0f / (FFT_HOP / BASIC_PITCH_SAMPLE_RATE)));
 
     mParams.pitchBend = MultiPitchBend;

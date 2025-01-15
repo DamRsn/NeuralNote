@@ -38,7 +38,7 @@ public:
         /* Confidence threshold (0.05 to 0.95, More-Less notes) */
         float frameThreshold = 0.5;
         /* Minimum note length in number of frames */
-        int minNoteLengthFrames = 11;
+        int minNoteLength = 11;
         bool inferOnsets = true;
         float maxFrequency = -1; // in Hz, -1 means unset
         float minFrequency = -1; // in Hz, -1 means unset

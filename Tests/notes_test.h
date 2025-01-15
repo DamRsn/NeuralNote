@@ -69,7 +69,7 @@ bool notes_test()
         auto expected = all_expected[i];
         std::cout << "  Case " << i << ": ";
         auto start_time = std::chrono::high_resolution_clock::now();
-        auto note_events = n.convert(notes_pg, onsets_pg, contours_pg, params);
+        auto note_events = n.convert(notes_pg, onsets_pg, contours_pg, params, true);
         auto stop_time = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> duration = stop_time - start_time;
         std::cout << "done in " << duration.count() << " seconds" << std::endl;
