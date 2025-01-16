@@ -1,4 +1,4 @@
-project(UnitTests VERSION 0.1)
+project(UnitTests VERSION 1.0)
 
 juce_add_console_app(${PROJECT_NAME} PRODUCT_NAME "Unit Tests")
 
@@ -41,7 +41,7 @@ target_compile_definitions(${PROJECT_NAME}
         PRIVATE
         TEST_DATA_DIR="${CMAKE_CURRENT_LIST_DIR}/test_data"
         USE_TEST_NOTE_FRAME_TO_TIME=1
-        )
+)
 
 
 

@@ -74,7 +74,7 @@ void UpdateCheck::checkForUpdate(bool inShowNotificationOnLatestVersion)
 {
     // Call async because of issue on Windows with spinning cursor.
     MessageManager::callAsync([this, inShowNotificationOnLatestVersion] {
-        Thread::launch([this,inShowNotificationOnLatestVersion] {
+        Thread::launch([this, inShowNotificationOnLatestVersion] {
             const URL url("https://api.github.com/repos/DamRsn/NeuralNote/releases/latest");
 
             const auto result = url.readEntireTextStream();

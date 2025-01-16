@@ -9,7 +9,6 @@
 #include "NoteUtils.h"
 #include "BasicPitchConstants.h"
 #include "UIDefines.h"
-#include "ParameterHelpers.h"
 
 class TwoValueAttachment : Slider::Listener
 {

@@ -39,11 +39,21 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
     }
     auto& onsets = *onsets_ptr;
 
+    if (inNewAudio) {
+        mRemainingEnergy = inNotesPG;
+    } else {
+        // Copy without changing the location of the original data
+        assert(mRemainingEnergy.size() == n_frames);
+        for (size_t f = 0; f < n_frames; f++) {
+            assert(inNotesPG[f].size() == NUM_FREQ_OUT);
+            assert(mRemainingEnergy[f].size() == NUM_FREQ_OUT);
+
+            std::copy(inNotesPG[f].begin(), inNotesPG[f].end(), mRemainingEnergy[f].begin());
+        }
+    }
+
     if (inParams.melodiaTrick) {
         if (inNewAudio) {
-            // Copy
-            mRemainingEnergy = inNotesPG;
-
             // Fill mRemainingEnergyIndex
             mRemainingEnergyIndex.clear();
             mRemainingEnergyIndex.reserve(static_cast<size_t>(n_frames) * static_cast<size_t>(NUM_FREQ_OUT));
@@ -58,15 +68,6 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
             }
 
             mRemainingEnergyIndex.shrink_to_fit();
-        } else {
-            // Copy without changing the location of the original data
-            assert(mRemainingEnergy.size() == n_frames);
-            for (size_t f = 0; f < n_frames; f++) {
-                assert(inNotesPG[f].size() == NUM_FREQ_OUT);
-                assert(mRemainingEnergy[f].size() == NUM_FREQ_OUT);
-
-                std::copy(inNotesPG[f].begin(), inNotesPG[f].end(), mRemainingEnergy[f].begin());
-            }
         }
     }
 
@@ -110,7 +111,7 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
             i -= k; // go back to frame above threshold
 
             // if the note is too short, skip it
-            if (i - frame_idx <= inParams.minNoteLengthFrames) {
+            if (i - frame_idx <= inParams.minNoteLength) {
                 continue;
             }
 
@@ -200,7 +201,7 @@ std::vector<Notes::Event> Notes::convert(const std::vector<std::vector<float>>& 
             const auto i_start = i + 1 + k;
 
             // if the note is too short, skip it
-            if (i_end - i_start <= inParams.minNoteLengthFrames) {
+            if (i_end - i_start <= inParams.minNoteLength) {
                 continue;
             }
 
