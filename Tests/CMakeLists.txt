@@ -9,9 +9,6 @@ file(GLOB_RECURSE HEADERS_TESTS ${CMAKE_CURRENT_LIST_DIR}/../Lib/*.h)
 
 target_sources(${PROJECT_NAME} PRIVATE Tests.cpp ${SOURCES_TESTS} ${HEADERS_TESTS})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../ThirdParty/ONNXRuntime/${ONNXRUNTIME_DIRNAME}/include)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../ThirdParty/minimp3)
-
 file(GLOB_RECURSE lib_sources LIST_DIRECTORIES true ${CMAKE_CURRENT_LIST_DIR}/../Lib/*)
 
 foreach (dir ${lib_sources})
@@ -28,20 +25,17 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         juce::juce_audio_utils
+        juce::juce_cryptography
         juce::juce_dsp
-        onnxruntime
-        BasicPitchCNN
+        muscriptor_ggml
+        tinysoundfont
+        minimp3
         bin_data
+        soundfont_data
         PUBLIC
         juce_recommended_config_flags
-        juce_recommended_lto_flags)
-#juce_recommended_warning_flags
-
-target_compile_definitions(${PROJECT_NAME}
-        PRIVATE
-        TEST_DATA_DIR="${CMAKE_CURRENT_LIST_DIR}/test_data"
-        USE_TEST_NOTE_FRAME_TO_TIME=1
-)
+        juce_recommended_lto_flags
+        juce_recommended_warning_flags)
 
 
 

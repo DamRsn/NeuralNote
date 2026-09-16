@@ -7,15 +7,13 @@
 
 #include <JuceHeader.h>
 
-#include "PluginProcessor.h"
-#include "Knob.h"
-#include "NoteOptionsView.h"
-#include "TimeQuantizeOptionsView.h"
-#include "TranscriptionOptionsView.h"
-#include "VisualizationPanel.h"
-#include "NeuralNoteLNF.h"
+#include "InstrumentMenu.h"
 #include "NnId.h"
+#include "PluginProcessor.h"
+#include "Sidebar.h"
+#include "TopBar.h"
 #include "UpdateCheck.h"
+#include "VisualizationPanel.h"
 
 class NeuralNoteMainView
     : public Component
@@ -35,6 +33,12 @@ public:
 
     void repaintPianoRoll();
 
+    /**
+     * Resets the view to its empty state. Called by the processor from every path that clears,
+     * so it must stay idempotent.
+     */
+    void clear();
+
     bool keyPressed(const KeyPress& key) override;
 
 private:
@@ -42,53 +46,37 @@ private:
 
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
 
-    void _updateSettingsMenuTicks();
+    void _buildSettingsMenu();
+
+    /** Re-evaluates every tick and enablement predicate. The menu is built once, so this is what
+        keeps it in step with settings another instance may have changed. */
+    void _refreshSettingsMenu();
 
     void _updateTooltipVisibility();
 
+    /** Shows or hides the instrument picker, and lights the "+" to match. */
+    void _setInstrumentMenuOpen(bool inIsOpen);
+
     NeuralNoteAudioProcessor& mProcessor;
-    NeuralNoteLNF mLNF;
 
     State mPrevState = EmptyAudioAndMidiRegions;
 
+    TopBar mTopBar;
+    Sidebar mSidebar;
     VisualizationPanel mVisualizationPanel;
-    TranscriptionOptionsView mTranscriptionOptions;
-    NoteOptionsView mNoteOptions;
-    TimeQuantizeOptionsView mQuantizePanel;
-
-    std::unique_ptr<DrawableButton> mMuteButton;
-    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> mMuteButtonAttachment;
-
-    std::unique_ptr<DrawableButton> mRecordButton;
-    std::unique_ptr<DrawableButton> mClearButton;
-
-    std::unique_ptr<DrawableButton> mBackButton;
-    std::unique_ptr<DrawableButton> mPlayPauseButton;
-    std::unique_ptr<DrawableButton> mCenterButton;
-    std::unique_ptr<DrawableButton> mSettingsButton;
 
     std::unique_ptr<TooltipWindow> mTooltipWindow;
 
-    class PopupMenuLookAndFeel : public LookAndFeel_V4
-    {
-        Font getPopupMenuFont() override { return UIDefines::LABEL_FONT(); }
-    };
+    // A child of the main view rather than of the sidebar: its scrim covers the whole editor, and
+    // its shadow falls outside the sidebar's bounds.
+    InstrumentMenu mInstrumentMenu;
 
-    std::unique_ptr<PopupMenuLookAndFeel> mPopupMenuLookAndFeel;
-    // Define the settings menu after the look and feel, so it is destroyed first
     std::unique_ptr<PopupMenu> mSettingsMenu;
 
     std::vector<std::pair<int, std::function<bool()>>> mSettingsMenuItemsShouldBeTicked;
 
-    std::unique_ptr<Knob> mMinNoteSlider;
-    std::unique_ptr<Knob> mMaxNoteSlider;
-
-    std::unique_ptr<ComboBox> mKey; // C, C#, D, D# ...
-    std::unique_ptr<ComboBox> mMode; // Major, Minor, Chromatic
-
-    Image mBackgroundImage;
-
-    int mNumCallbacksStuckInProcessingState = 0;
+    // Items absent from this one stay enabled.
+    std::vector<std::pair<int, std::function<bool()>>> mSettingsMenuItemsShouldBeEnabled;
 
     std::unique_ptr<UpdateCheck> mUpdateCheck;
 };

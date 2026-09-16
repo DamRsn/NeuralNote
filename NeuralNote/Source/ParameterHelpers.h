@@ -6,87 +6,31 @@
 #define ParameterHelpers_h
 
 #include <JuceHeader.h>
-#include "NoteUtils.h"
-#include "TimeQuantizeUtils.h"
+#include "GainConstants.h"
 #include "NnId.h"
 
 namespace ParameterHelpers
 {
 
-static constexpr int versionHint = 2;
-
 enum ParamIdEnum {
     MuteId = 0,
-    NoteSensitivityId,
-    SplitSensitivityId,
-    MinimumNoteDurationId,
-    PitchBendModeId,
-    AudioPlayerGainId,
-    MidiPlayerGainId,
-    EnableNoteQuantizationId,
-    MinMidiNoteId,
-    MaxMidiNoteId,
-    KeyRootNoteId,
-    KeyTypeId,
-    KeySnapModeId,
-    EnableTimeQuantizationId,
-    TimeDivisionId,
-    QuantizationForceId,
+    MixId,
+    MasterGainId,
     TotalNumParams
 };
 
-static const StringArray ParamIdStr {"MUTE",
-                                     "NOTE_SENSITIVITY",
-                                     "SPLIT_SENSITIVITY",
-                                     "MINIMUM_NOTE_DURATION",
-                                     "PITCH_BEND_MODE",
-                                     "AUDIO_PLAYER_GAIN",
-                                     "MIDI_PLAYER_GAIN",
-                                     "ENABLE_NOTE_QUANTIZATION",
-                                     "MIN_MIDI_NOTE",
-                                     "MAX_MIDI_NOTE",
-                                     "KEY_ROOT_NOTE",
-                                     "KEY_TYPE",
-                                     "KEY_SNAP_MODE",
-                                     "ENABLE_TIME_QUANTIZATION",
-                                     "TIME_DIVISION",
-                                     "QUANTIZATION_FORCE"};
+static const StringArray ParamIdStr {"MUTE", "MIX", "MASTER_GAIN"};
 
 inline String toName(ParamIdEnum id)
 {
     switch (id) {
         case MuteId:
             return "Mute";
-        case NoteSensitivityId:
-            return "Note Sensitivity";
-        case SplitSensitivityId:
-            return "Split Sensitivity";
-        case MinimumNoteDurationId:
-            return "Min Note Duration";
-        case PitchBendModeId:
-            return "Pitch Bend Mode";
-        case AudioPlayerGainId:
-            return "Audio Level";
-        case EnableNoteQuantizationId:
-            return "Enable Note Quantization";
-        case MidiPlayerGainId:
-            return "Midi Level";
-        case MinMidiNoteId:
-            return "Min Midi Note";
-        case MaxMidiNoteId:
-            return "Max Midi Note";
-        case KeyRootNoteId:
-            return "Key Root Note";
-        case KeyTypeId:
-            return "Key Type";
-        case KeySnapModeId:
-            return "Key Snap Mode";
-        case EnableTimeQuantizationId:
-            return "Enable Time Quantization";
-        case TimeDivisionId:
-            return "Time Division";
-        case QuantizationForceId:
-            return "Quantization Force";
+        case MixId:
+            return "Mix";
+        case MasterGainId:
+            return "Master Gain";
+        case TotalNumParams:
         default:
             jassertfalse;
             return "Unknown";
@@ -98,9 +42,28 @@ inline const String& getIdStr(ParamIdEnum id)
     return ParamIdStr[static_cast<int>(id)];
 }
 
+/**
+ * The plugin version a parameter was introduced in. JUCE orders the Audio Unit parameter list by
+ * it, so moving an existing one costs Logic and GarageBand the automation they saved.
+ */
+inline int toVersionHint(ParamIdEnum id)
+{
+    switch (id) {
+        case MuteId:
+            return 2;
+        case MixId:
+        case MasterGainId:
+            return 3;
+        case TotalNumParams:
+        default:
+            jassertfalse;
+            return 1;
+    }
+}
+
 inline ParameterID toJuceParameterID(ParamIdEnum id)
 {
-    return {getIdStr(id), versionHint};
+    return {getIdStr(id), toVersionHint(id)};
 }
 
 inline float getUnmappedParamValue(RangedAudioParameter* inParam)
@@ -113,46 +76,13 @@ inline std::unique_ptr<RangedAudioParameter> getRangedAudioParamForID(ParamIdEnu
     switch (id) {
         case MuteId:
             return std::make_unique<AudioParameterBool>(toJuceParameterID(id), toName(id), false);
-        case NoteSensitivityId:
+        case MixId:
             return std::make_unique<AudioParameterFloat>(
-                toJuceParameterID(id), toName(id), NormalisableRange<float>(0.05f, 0.95f, 0.01f), 0.7f);
-        case SplitSensitivityId:
+                toJuceParameterID(id), toName(id), NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.5f);
+        case MasterGainId:
             return std::make_unique<AudioParameterFloat>(
-                toJuceParameterID(id), toName(id), NormalisableRange<float>(0.05f, 0.95f, 0.01f), 0.5f);
-        case MinimumNoteDurationId:
-            return std::make_unique<AudioParameterFloat>(
-                toJuceParameterID(id), toName(id), NormalisableRange<float>(35.0f, 580.0f, 1.0f), 125.0f);
-        case PitchBendModeId:
-            return std::make_unique<AudioParameterChoice>(
-                toJuceParameterID(id), toName(id), StringArray {"No Pitch Bend", "Single Pitch Bend"}, 0);
-        case AudioPlayerGainId:
-        case MidiPlayerGainId:
-            return std::make_unique<AudioParameterFloat>(
-                toJuceParameterID(id), toName(id), NormalisableRange<float>(-36.f, 6.0f, 1.0f), 0.0f);
-        case EnableNoteQuantizationId:
-            return std::make_unique<AudioParameterBool>(toJuceParameterID(id), toName(id), false);
-        case MinMidiNoteId:
-            return std::make_unique<AudioParameterInt>(
-                toJuceParameterID(id), toName(id), MIN_MIDI_NOTE, MAX_MIDI_NOTE, MIN_MIDI_NOTE);
-        case MaxMidiNoteId:
-            return std::make_unique<AudioParameterInt>(
-                toJuceParameterID(id), toName(id), MIN_MIDI_NOTE, MAX_MIDI_NOTE, MAX_MIDI_NOTE);
-        case KeyRootNoteId:
-            return std::make_unique<AudioParameterInt>(toJuceParameterID(id), toName(id), 0, 11, 3);
-        case KeyTypeId:
-            return std::make_unique<AudioParameterChoice>(
-                toJuceParameterID(id), toName(id), NoteUtils::ScaleTypesStr, 0);
-        case KeySnapModeId:
-            return std::make_unique<AudioParameterChoice>(
-                toJuceParameterID(id), toName(id), NoteUtils::SnapModesStr, 0);
-        case EnableTimeQuantizationId:
-            return std::make_unique<AudioParameterBool>(toJuceParameterID(id), toName(id), false);
-        case TimeDivisionId:
-            return std::make_unique<AudioParameterChoice>(
-                toJuceParameterID(id), toName(id), TimeQuantizeUtils::TimeDivisionsStr, 5);
-        case QuantizationForceId:
-            return std::make_unique<AudioParameterFloat>(toJuceParameterID(id), toName(id), 0.0f, 1.0f, 0.f);
-
+                toJuceParameterID(id), toName(id), NormalisableRange<float>(MIN_INF_GAIN_DB, MAX_GAIN_DB, 0.1f), 0.0f);
+        case TotalNumParams:
         default:
             jassertfalse;
             return nullptr;
@@ -171,19 +101,6 @@ inline AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
     return {params.begin(), params.end()};
 }
 
-/**
- * Migration from version hint 1 to 2 (for version >= v1.1.0). Changed "sensibility" to "sensitivity".
- * @param inParamId The potentially old parameter id, modified in place if necessary.
- */
-inline void _migrationVersionHint1To2(String& inParamId)
-{
-    if (inParamId == "NOTE_SENSIBILITY") {
-        inParamId = getIdStr(NoteSensitivityId);
-    } else if (inParamId == "SPLIT_SENSIBILITY") {
-        inParamId = getIdStr(SplitSensitivityId);
-    }
-}
-
 inline void updateParametersFromState(const ValueTree& inParameterTree,
                                       std::array<RangedAudioParameter*, TotalNumParams>& inParams)
 {
@@ -195,13 +112,10 @@ inline void updateParametersFromState(const ValueTree& inParameterTree,
             if (child.isValid() && child.hasProperty(NnId::IdId) && child.hasProperty(NnId::ValueId)) {
                 auto param_id = child.getProperty(NnId::IdId).toString();
 
-                // Migration from hint 1 to 2 (sensibility to sensitivity)
-                _migrationVersionHint1To2(param_id);
-
                 int index = ParamIdStr.indexOf(param_id);
 
                 if (index >= 0) {
-                    auto* param = inParams[index];
+                    auto* param = inParams[static_cast<size_t>(index)];
                     auto value = jlimit(param->getNormalisableRange().start,
                                         param->getNormalisableRange().end,
                                         static_cast<float>(child.getProperty(NnId::ValueId)));

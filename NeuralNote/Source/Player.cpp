@@ -10,14 +10,8 @@ Player::Player(NeuralNoteAudioProcessor* inProcessor)
 {
     mProcessor->addListenerToStateValueTree(this);
 
-    mSynth = std::make_unique<MPESynthesiser>();
-    mSynth->setCurrentPlaybackSampleRate(44100);
-
-    for (int i = 0; i < NUM_VOICES_SYNTH; i++) {
-        mSynth->addVoice(new SynthVoice());
-    }
-
-    mSynthController = std::make_unique<SynthController>(inProcessor, mSynth.get());
+    mSynth = std::make_unique<InstrumentSynth>();
+    mSynthController = std::make_unique<SynthController>(inProcessor);
 
     setPlayheadPositionSeconds(mProcessor->getValueTree().getProperty(NnId::PlayheadPositionSecId, 0.0));
 
@@ -31,77 +25,73 @@ Player::~Player()
 
 void Player::prepareToPlay(double inSampleRate, int inSamplesPerBlock)
 {
-    mSynth->setCurrentPlaybackSampleRate(inSampleRate);
+    mSynth->prepareToPlay(inSampleRate, inSamplesPerBlock);
     mSynthController->setSampleRate(inSampleRate);
     mSampleRate = inSampleRate;
-    mInternalBuffer.setSize(2, inSamplesPerBlock);
+
+    // Sized to what actually goes out, not always to two: the synth renders real stereo now -- the
+    // soundfont pans instruments across the field -- and a mono host would otherwise be handed only
+    // the left channel and quietly lose whatever sits on the right. At one channel the synth folds.
+    mInternalBuffer.setSize(jlimit(1, 2, mProcessor->getTotalNumOutputChannels()), inSamplesPerBlock);
+
+    mMasterMeter.prepare(inSampleRate, METER_WINDOW_SECONDS);
+    mMasterMeanSquare.store(0.0f, std::memory_order_relaxed);
 }
 
 void Player::processBlock(AudioBuffer<float>& inAudioBuffer, MidiBuffer& outMidiBuffer)
 {
     auto old_audio_gain = mGainSourceAudio;
-    auto old_synth_gain = mGainSynth;
+    auto old_master_gain = mMasterGain;
 
     int playhead_index = static_cast<int>(std::round(mPlayheadTime * mSampleRate));
 
-    float audio_gain_db = mProcessor->getParameterValue(ParameterHelpers::AudioPlayerGainId);
-    float synth_gain_db = mProcessor->getParameterValue(ParameterHelpers::MidiPlayerGainId);
-
-    _setGains(audio_gain_db, synth_gain_db);
+    _setGains(mProcessor->getParameterValue(ParameterHelpers::MixId),
+              mProcessor->getParameterValue(ParameterHelpers::MasterGainId));
 
     bool is_playing = mIsPlaying.load();
     mInternalBuffer.clear();
 
-    int num_out_channels = mProcessor->getTotalNumOutputChannels();
+    // Clamped to what mInternalBuffer was actually sized for at prepareToPlay: a host that reports a
+    // different channel count now must not send these loops past the end of it.
+    int num_out_channels = std::min(mProcessor->getTotalNumOutputChannels(), mInternalBuffer.getNumChannels());
     jassert(num_out_channels > 0 && num_out_channels <= 2);
 
-    if (is_playing) {
-        auto& midi_buffer = mSynthController->generateNextMidiBuffer(inAudioBuffer.getNumSamples());
-
-        if (mShouldOutputMidi) {
-            outMidiBuffer.addEvents(midi_buffer, 0, inAudioBuffer.getNumSamples(), 0);
-
-            // Iterate over midi events and update active notes for midi out
-            for (const auto& metadata: midi_buffer) {
-                auto midi_message = metadata.getMessage();
-                if (midi_message.isNoteOn() || midi_message.isNoteOff()) {
-                    int note_number = midi_message.getNoteNumber();
-                    int increment = midi_message.isNoteOn() ? 1 : -1;
-
-                    if (note_number >= 0 && note_number < 128) {
-                        auto idx = static_cast<size_t>(note_number);
-                        mActiveNotesMidiOut[idx] = std::max(mActiveNotesMidiOut[idx] + increment, 0);
-                    }
-                }
-            }
-
-            mWasOutputtingMidi = true;
-
-        } else if (mWasOutputtingMidi) {
-            _clearActiveNotesMidiOut(outMidiBuffer);
-            mWasOutputtingMidi = false;
-        }
-
-        mSynth->renderNextBlock(mInternalBuffer, midi_buffer, 0, inAudioBuffer.getNumSamples());
-        mWasPlaying = true;
-
-    } else {
-        if (mWasPlaying && mShouldOutputMidi) {
-            _clearActiveNotesMidiOut(outMidiBuffer);
-        }
-
-        mWasPlaying = false;
-
-        mSynth->renderNextBlock(mInternalBuffer, {}, 0, inAudioBuffer.getNumSamples());
+    // Before the block is generated, not after: what the host is still holding was started in an
+    // earlier block, so it is exactly what is active right now. A note ending inside this block
+    // would be gone from that set by the end of it, with its note-off reaching only the synth.
+    if (!mShouldOutputMidi && mWasOutputtingMidi) {
+        // The host stops seeing this buffer from here on, so whatever it is holding has to be
+        // released now. The synth keeps its notes; only this consumer is being disconnected.
+        mSynthController->emitActiveNotesOffTo(outMidiBuffer);
+        mWasOutputtingMidi = false;
     }
 
-    mInternalBuffer.applyGainRamp(0, 0, inAudioBuffer.getNumSamples(), old_synth_gain, mGainSynth);
+    // Every block, playing or not: a stopped transport, a seek and a swapped note list all leave
+    // note-offs to deliver, and this is the only thing that delivers them.
+    auto& midi_buffer = mSynthController->generateNextMidiBuffer(inAudioBuffer.getNumSamples(), is_playing);
 
-    for (int ch = 1; ch < num_out_channels; ch++) {
-        mInternalBuffer.copyFrom(ch, 0, mInternalBuffer, 0, 0, inAudioBuffer.getNumSamples());
+    if (mShouldOutputMidi) {
+        outMidiBuffer.addEvents(midi_buffer, 0, inAudioBuffer.getNumSamples(), 0);
+        mWasOutputtingMidi = true;
     }
 
-    if (is_playing && mProcessor->getState() == PopulatedAudioAndMidiRegions) {
+    if (mShouldSilenceSynth.exchange(false)) {
+        // The scheduler's note-offs are not enough on their own: the synth deliberately ignores
+        // them for drums, because a General MIDI kit is one-shot and honouring a note-off 10 ms
+        // after the hit would choke every cymbal. So a stop or a seek has to say so directly, or a
+        // crash rings on through it.
+        mSynth->allNotesOff();
+    }
+
+    // The synth is driven by the scheduler's own event list rather than by midi_buffer: a
+    // transcription can name 35 instruments and MIDI has 16 channels, so the buffer the host sees
+    // is the flattened rendering of the same decisions, not the full one.
+    //
+    // The gain ramp lives inside the synth, which needs a per-instrument one anyway.
+    mSynth->processBlock(
+        mInternalBuffer, mSynthController->getSynthEvents(), inAudioBuffer.getNumSamples(), mGainSynth);
+
+    if (is_playing && mProcessor->canPlay()) {
         const auto& source_buffer = mProcessor->getSourceAudioManager()->getSourceAudioForPlayback();
         int num_samples = std::min(inAudioBuffer.getNumSamples(), source_buffer.getNumSamples() - playhead_index);
 
@@ -126,6 +116,26 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer, MidiBuffer& outMidi
         mPlayheadTime = static_cast<double>(playhead_index) / mSampleRate;
     }
 
+    // Ramped across the block, like the source gain above.
+    for (int ch = 0; ch < num_out_channels; ch++) {
+        mInternalBuffer.applyGainRamp(ch, 0, inAudioBuffer.getNumSamples(), old_master_gain, mMasterGain);
+    }
+
+    // Metered here rather than on the host's buffer, and after the fader: this is what comes out
+    // of NeuralNote. Whatever the host sent in is passing through and is not ours to show.
+    {
+        const int num_metered = std::min(inAudioBuffer.getNumSamples(), mInternalBuffer.getNumSamples());
+        const float* const left = mInternalBuffer.getReadPointer(0);
+        const float* const right = mInternalBuffer.getNumChannels() > 1 ? mInternalBuffer.getReadPointer(1) : left;
+
+        for (int i = 0; i < num_metered; i++) {
+            mMasterMeter.push((left[i] + right[i]) * 0.5f);
+        }
+
+        mMasterMeanSquare.store(static_cast<float>(mMasterMeter.getMeanSquare()), std::memory_order_relaxed);
+        mMeterFrame.fetch_add(1, std::memory_order_relaxed);
+    }
+
     for (int ch = 0; ch < num_out_channels; ch++) {
         inAudioBuffer.addFrom(ch, 0, mInternalBuffer, ch, 0, inAudioBuffer.getNumSamples());
     }
@@ -141,8 +151,16 @@ void Player::setPlayingState(bool inIsPlaying)
     mIsPlaying.store(inIsPlaying);
 
     if (!inIsPlaying) {
-        mSynth->turnOffAllVoices(true);
+        // Through the scheduler, so the same note-offs also reach the MIDI output port.
+        mSynthController->stopAllNotes();
+        mShouldSilenceSynth = true;
     }
+}
+
+void Player::returnToStart()
+{
+    setPlayingState(false);
+    setPlayheadPositionSeconds(0.0);
 }
 
 void Player::reset()
@@ -150,6 +168,15 @@ void Player::reset()
     mSynthController->reset();
     setPlayingState(false);
     mPlayheadTime = 0;
+
+    // The published value only, not the window behind it: this runs without the callback lock, so
+    // the audio thread may be inside push(). The window drains itself over the next few blocks.
+    mMasterMeanSquare.store(0.0f, std::memory_order_relaxed);
+}
+
+InstrumentSynth* Player::getInstrumentSynth() const
+{
+    return mSynth.get();
 }
 
 double Player::getPlayheadPositionSeconds() const
@@ -162,6 +189,10 @@ void Player::setPlayheadPositionSeconds(double inNewPosition)
     if (inNewPosition >= 0 && inNewPosition < mProcessor->getSourceAudioManager()->getAudioSampleDuration()) {
         mSynthController->setNewTimeSeconds(inNewPosition);
         mPlayheadTime = inNewPosition;
+
+        // A drum hit that started before the seek has no note-off the synth will act on, so it
+        // would otherwise carry across the jump.
+        mShouldSilenceSynth = true;
     }
 }
 
@@ -194,24 +225,16 @@ void Player::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, co
     }
 }
 
-void Player::_setGains(float inGainAudioSourceDB, float inGainSynthDB)
+void Player::_setGains(float inMix, float inMasterGainDb)
 {
-    mGainSourceAudio = Decibels::decibelsToGain(inGainAudioSourceDB, -36.0f);
-    mGainSynth = Decibels::decibelsToGain(inGainSynthDB, -36.0f);
-}
+    // With no notes the synth side is silence, so a mix towards MIDI would only fade the source
+    // out for nothing.
+    const float mix = mSynthController->hasNotes() ? inMix : 0.0f;
 
-void Player::_clearActiveNotesMidiOut(MidiBuffer& outMidiBuffer)
-{
-    for (size_t i = 0; i < mActiveNotesMidiOut.size(); i++) {
-        int active_note = mActiveNotesMidiOut[i];
-        if (active_note > 0) {
-            // TODO: multiple note off events needed? Can it happen that active_note > 1?
-            for (int j = 0; j < active_note; j++) {
-                MidiMessage note_off_message = MidiMessage::noteOff(1, static_cast<int>(i));
-                outMidiBuffer.addEvent(note_off_message, 0);
-            }
-        }
+    // Equal power, so the two are both 3 dB down at the midpoint rather than summing to a bump.
+    const float angle = mix * MathConstants<float>::halfPi;
 
-        mActiveNotesMidiOut[i] = 0;
-    }
+    mGainSourceAudio = std::cos(angle);
+    mGainSynth = std::sin(angle);
+    mMasterGain = Decibels::decibelsToGain(inMasterGainDb, MIN_INF_GAIN_DB);
 }

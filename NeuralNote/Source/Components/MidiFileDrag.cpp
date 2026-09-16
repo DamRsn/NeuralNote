@@ -4,9 +4,26 @@
 
 #include "MidiFileDrag.h"
 
-MidiFileDrag::MidiFileDrag(NeuralNoteAudioProcessor* processor)
-    : mProcessor(processor)
+#include "NnFonts.h"
+#include "NnIcons.h"
+#include "NnLook.h"
+
+MidiFileDrag::MidiFileDrag(NeuralNoteAudioProcessor* inProcessor)
+    : NnFlatButton("DragMidiOut")
+    , mProcessor(inProcessor)
 {
+    setIcon(nn::icons::downloadStroked, IconStyle::stroked, 13.0f);
+    setLabel("Drag MIDI out", nn::fonts::buttonLabel());
+    setPadding(12, 12, 7);
+
+    // The one accent-outlined control in the window: this is the primary way a transcription
+    // leaves the plugin.
+    setColour(backgroundColourId, nn::colours::accentFillButton());
+    setColour(outlineColourId, nn::colours::accent);
+    setColour(iconColourId, nn::colours::accentText);
+    setColour(textColourId, nn::colours::accentText);
+
+    setTooltip("Drag the transcribed MIDI into your DAW");
 }
 
 MidiFileDrag::~MidiFileDrag()
@@ -16,64 +33,54 @@ MidiFileDrag::~MidiFileDrag()
     }
 }
 
-void MidiFileDrag::resized()
+void MidiFileDrag::mouseDown(const juce::MouseEvent& inEvent)
 {
-}
+    NnFlatButton::mouseDown(inEvent);
 
-void MidiFileDrag::paint(Graphics& g)
-{
-    g.setColour(WHITE_TRANSPARENT);
-    g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
-
-    g.setColour(BLACK);
-    g.setFont(UIDefines::LABEL_FONT());
-    g.drawText("DRAG THE MIDI FILE FROM HERE", getLocalBounds(), juce::Justification::centred);
-}
-
-void MidiFileDrag::mouseDown(const MouseEvent& event)
-{
-    if (!mTempDirectory.isDirectory()) {
-        auto result = mTempDirectory.createDirectory();
-        if (result.failed()) {
-            NativeMessageBox::showMessageBoxAsync(
-                juce::MessageBoxIconType::NoIcon, "Error", "Temporary directory for midi file failed.");
-        }
+    if (!isEnabled()) {
+        return;
     }
 
-    String filename = mProcessor->getSourceAudioManager()->getDroppedFilename();
+    if (!NNFileUtils::ensureDirectoryExists(mTempDirectory)) {
+        juce::NativeMessageBox::showMessageBoxAsync(
+            juce::MessageBoxIconType::NoIcon, "Error", "Temporary directory for midi file failed.");
+        return;
+    }
 
-    if (filename.isEmpty())
-        filename = "NNTranscription.mid";
-    else
-        filename += "_NNTranscription.mid";
+    const auto out_file = mTempDirectory.getChildFile(
+        NNFileUtils::getMidiExportFileName(mProcessor->getSourceAudioManager()->getDroppedFilename()));
+    const double export_bpm = mProcessor->getValueTree().getProperty(NnId::ExportTempoId, 120.0);
+    const auto overflow_mode = static_cast<MidiOverflowMode>(static_cast<int>(mProcessor->getValueTree().getProperty(
+        NnId::MidiOverflowModeId, static_cast<int>(MidiOverflowMode::ReuseChannels))));
 
-    auto out_file = mTempDirectory.getChildFile(filename);
-
-    double export_bpm = mProcessor->getValueTree().getProperty(NnId::ExportTempoId, 120.0);
-
-    auto success_midi_file_creation = mMidiFileWriter.writeMidiFile(
+    const bool success = mMidiFileWriter.writeMidiFile(
         mProcessor->getTranscriptionManager()->getNoteEventVector(),
         out_file,
-        mProcessor->getTranscriptionManager()->getTimeQuantizeOptions().getTimeQuantizeInfo(),
         export_bpm,
-        static_cast<PitchBendModes>(mProcessor->getParameterValue(ParameterHelpers::PitchBendModeId)));
+        mProcessor->getSourceAudioManager()->getExportStartOffsetSeconds(),
+        overflow_mode);
 
-    if (!success_midi_file_creation) {
-        NativeMessageBox::showMessageBoxAsync(
+    if (!success) {
+        juce::NativeMessageBox::showMessageBoxAsync(
             juce::MessageBoxIconType::NoIcon, "Error", "Could not create the midi file.");
+        return;
     }
 
-    StringArray out_files = {out_file.getFullPathName()};
+    juce::DragAndDropContainer::performExternalDragDropOfFiles({out_file.getFullPathName()}, false, this);
 
-    DragAndDropContainer::performExternalDragDropOfFiles(out_files, false, this);
+    // The drag runs a nested event loop, so the mouse-up that would normally clear the pressed
+    // state never reaches this button.
+    setState(buttonNormal);
 }
 
-void MidiFileDrag::mouseEnter(const MouseEvent& event)
+void MidiFileDrag::mouseEnter(const juce::MouseEvent& inEvent)
 {
-    setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+    NnFlatButton::mouseEnter(inEvent);
+    setMouseCursor(isEnabled() ? juce::MouseCursor::DraggingHandCursor : juce::MouseCursor::NormalCursor);
 }
 
-void MidiFileDrag::mouseExit(const MouseEvent& event)
+void MidiFileDrag::mouseExit(const juce::MouseEvent& inEvent)
 {
+    NnFlatButton::mouseExit(inEvent);
     setMouseCursor(juce::MouseCursor::ParentCursor);
 }

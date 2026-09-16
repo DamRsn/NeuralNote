@@ -1,5 +1,5 @@
 #ifndef ReleaseDir
-#define ReleaseDir "cmake-build-release-visual-studio/NeuralNote_artefacts/Release"
+#define ReleaseDir "cmake-build-release/NeuralNote_artefacts/Release"
 #endif
 
 [Setup]

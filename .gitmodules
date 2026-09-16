@@ -1,6 +1,7 @@
 [submodule "JUCE"]
 	path = ThirdParty/JUCE
 	url = https://github.com/juce-framework/JUCE.git
-[submodule "RTNeural"]
-	path = ThirdParty/RTNeural
-	url = https://github.com/jatinchowdhury18/RTNeural.git
+[submodule "muscriptor.cpp"]
+	path = ThirdParty/muscriptor.cpp
+	url = https://github.com/DamRsn/muscriptor.cpp.git
+	branch = main

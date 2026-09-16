@@ -6,13 +6,21 @@
 #define SourceAudioManager_h
 
 #include <JuceHeader.h>
-#include "BasicPitchConstants.h"
+#include "TranscriptionConstants.h"
 #include "Resampler.h"
 #include "AudioUtils.h"
+#include "NNFileUtils.h"
+#include "WaveformPeaks.h"
 
 class NeuralNoteAudioProcessor;
 
-class SourceAudioManager : public ValueTree::Listener
+/**
+ * Broadcasts a change whenever the source audio grows or goes away, which is what the waveform
+ * listens to in order to resize and redraw.
+ */
+class SourceAudioManager
+    : public ValueTree::Listener
+    , public juce::ChangeBroadcaster
 {
 public:
     explicit SourceAudioManager(NeuralNoteAudioProcessor* inProcessor);
@@ -58,6 +66,10 @@ public:
 
     /**
      * To call only when the recording/file loading is fully completed, otherwise you'll get and empty buffer.
+     *
+     * Always single channel: the model takes one signal, and it has to be the whole mix. Both the
+     * recording and the file-drop path average the input channels while resampling.
+     *
      * @return A reference to the downsampled source audio.
      */
     AudioBuffer<float>& getDownsampledSourceAudioForTranscription();
@@ -89,12 +101,50 @@ public:
     double getAudioSampleDuration() const;
 
     /**
-     * @return Pointer to source audio thumbnail
+     * Seconds to add to every note time on export so that time zero of the MIDI file is a bar
+     * line, letting the file be dropped on a bar in the host and land where it was played.
+     *
+     * Zero unless the take was recorded against a running transport. Message thread.
      */
-    AudioThumbnail* getAudioThumbnail();
+    double getExportStartOffsetSeconds() const { return mExportStartOffsetSeconds.load(); }
+
+    /**
+     * Min/max peaks over the downsampled source audio, for drawing the waveform.
+     * Read through WaveformPeaks::Reader: it is appended to from the writer thread while recording.
+     */
+    const WaveformPeaks& getWaveformPeaks() const;
 
 private:
+    /**
+     * Takes the downsampled audio straight off the writer's FIFO while recording, so the peaks grow
+     * with the take. The file being written alongside is not read back until recording stops.
+     */
+    class PeaksReceiver : public AudioFormatWriter::ThreadedWriter::IncomingDataReceiver
+    {
+    public:
+        explicit PeaksReceiver(SourceAudioManager& inOwner)
+            : mOwner(inOwner)
+        {
+        }
+
+        void reset(int numChannels, double sampleRate, int64 totalSamplesInSource) override;
+
+        void addBlock(int64 sampleNumberInSource,
+                      const AudioBuffer<float>& newData,
+                      int startOffsetInBuffer,
+                      int numSamples) override;
+
+    private:
+        SourceAudioManager& mOwner;
+    };
+
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
+
+    /**
+     * Reads the host timeline once per take, the first time the transport is seen rolling, and
+     * reduces it to the export offset and the tempo. Audio thread, while recording.
+     */
+    void _tryCaptureHostTimeline();
 
     void _deleteFilesToDelete();
 
@@ -109,13 +159,10 @@ private:
 
     Resampler mDownSampler = {};
 
-    const int mSourceSamplesPerThumbnailSample = 128;
-    juce::AudioFormatManager mThumbnailFormatManager;
-    juce::AudioThumbnailCache mThumbnailCache;
-    juce::AudioThumbnail mThumbnail;
+    WaveformPeaks mWaveformPeaks;
+    PeaksReceiver mPeaksReceiver {*this};
 
-    const File mNeuralNoteDir =
-        File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("NeuralNote");
+    const File mRecordingsDir = NNFileUtils::getRecordingsDirectory();
     File mSourceFile;
     File mRecordedFileDown;
 
@@ -129,13 +176,23 @@ private:
 
     double mSampleRate = 44100;
 
-    unsigned long long mNumSamplesAcquired = 0;
-    unsigned long long mNumSamplesAcquiredDown = 0;
-    double mDuration = 0.0;
+    // Captured on the audio thread while recording, read on the message thread at export. Both
+    // stay zero for a take made with the transport stopped, and for a dropped file.
+    std::atomic<double> mExportStartOffsetSeconds = 0.0;
+    std::atomic<double> mHostBpm = 0.0;
+
+    // Audio thread only, reset by startRecording before mIsRecording goes true.
+    bool mCapturedHostTimeline = false;
+    int mNumPlayingBlocks = 0;
+
+    // Written on the audio thread while recording, read on the message thread to size the
+    // waveform and drive the time displays.
+    std::atomic<unsigned long long> mNumSamplesAcquired = 0;
+    std::atomic<unsigned long long> mNumSamplesAcquiredDown = 0;
+    std::atomic<double> mDuration = 0.0;
 
     String mDroppedFilename;
 
-    AudioBuffer<float> mInternalMonoBuffer;
     AudioBuffer<float> mInternalDownsampledBuffer;
 
     std::atomic<bool> mIsRecording = false;

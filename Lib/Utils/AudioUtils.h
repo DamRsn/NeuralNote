@@ -13,7 +13,7 @@
 #include <JuceHeader.h>
 
 #include "Resampler.h"
-#include "BasicPitchConstants.h"
+#include "TranscriptionConstants.h"
 
 namespace AudioUtils
 {
@@ -54,6 +54,24 @@ void resampleBuffer(const AudioBuffer<float>& inBuffer,
                     double inTargetSampleRate);
 
 /**
+ * Resample an audio buffer to a single channel, averaging the input channels as part of the same
+ * pass. Filters are applied if needed to prevent any aliasing.
+ *
+ * This is what the transcription model is fed. It has to be one channel, and it has to be the whole
+ * mix: anything panned away from centre is attenuated or absent in a single source channel, and the
+ * model transcribes what it hears.
+ *
+ * @param inBuffer Audio buffer to resample, any number of channels.
+ * @param outBuffer Where to store the result. Resized to one channel.
+ * @param inSourceSampleRate Sample rate of inBuffer.
+ * @param inTargetSampleRate Target sample rate.
+ */
+void resampleBufferToMono(const AudioBuffer<float>& inBuffer,
+                          AudioBuffer<float>& outBuffer,
+                          double inSourceSampleRate,
+                          double inTargetSampleRate);
+
+/**
  * Load an mp3 file
  * @param filename path to mp3 file to read
  * @param outBuffer output buffer on which to read the data
@@ -62,6 +80,6 @@ void resampleBuffer(const AudioBuffer<float>& inBuffer,
  */
 bool _loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuffer, double& outSampleRate);
 
-}; // namespace AudioUtils
+} // namespace AudioUtils
 
 #endif // AudioUtils_h
