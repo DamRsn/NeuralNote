@@ -4,65 +4,126 @@
 
 #include "UpdateCheck.h"
 
-#include "UIDefines.h"
+#include "NnFonts.h"
+#include "NnIcons.h"
+#include "NnLook.h"
+
+namespace
+{
+/** Between the message, the button and the cross. */
+constexpr int CONTENT_GAP = 9;
+
+constexpr int BUTTON_HEIGHT = 24;
+
+/** Compares dotted versions numerically, ignoring a leading "v"; missing components count as 0. */
+bool isNewerVersion(const juce::String& inCandidate, const juce::String& inCurrent)
+{
+    const auto components = [](const juce::String& inVersion) {
+        return juce::StringArray::fromTokens(inVersion.trim().trimCharactersAtStart("vV"), ".", "");
+    };
+
+    const auto candidate = components(inCandidate);
+    const auto current = components(inCurrent);
+
+    for (int i = 0; i < juce::jmax(candidate.size(), current.size()); ++i) {
+        const int a = candidate[i].getIntValue();
+        const int b = current[i].getIntValue();
+
+        if (a != b) {
+            return a > b;
+        }
+    }
+
+    return false;
+}
+} // namespace
 
 UpdateCheck::UpdateCheck()
 {
-    mUrlButton.setButtonText("See update");
-    mUrlButton.setURL(mLatestReleaseUrl);
-    mUrlButton.setFont(UIDefines::LABEL_FONT(), false);
-    mUrlButton.setJustificationType(Justification::centred);
-    mUrlButton.setColour(HyperlinkButton::ColourIds::textColourId, Colours::blue);
-    addAndMakeVisible(mUrlButton);
+    mSeeUpdateButton.setLabel("See update", nn::fonts::buttonLabel());
+    mSeeUpdateButton.setPadding(12, 12, 0);
+
+    // Accent-outlined, like Drag MIDI out: it is the one thing this notification is asking for.
+    mSeeUpdateButton.setColour(NnFlatButton::backgroundColourId, nn::colours::accentFillButton());
+    mSeeUpdateButton.setColour(NnFlatButton::outlineColourId, nn::colours::accent);
+    mSeeUpdateButton.setColour(NnFlatButton::textColourId, nn::colours::accentText);
+    mSeeUpdateButton.setWantsKeyboardFocus(false);
+    mSeeUpdateButton.onClick = [this] { mLatestReleaseUrl.launchInDefaultBrowser(); };
+    addChildComponent(mSeeUpdateButton);
+
+    // The same cross the status bar cancels a transcription with, for the same reason: the ten
+    // second timer is generous, and there is no reason to wait it out.
+    mDismissButton.setIcon(nn::icons::crossStroked, NnFlatButton::IconStyle::stroked, nn::metrics::cancelGlyphSize);
+    mDismissButton.setCornerRadius(4.0f);
+    mDismissButton.setTooltip("Dismiss");
+    mDismissButton.setWantsKeyboardFocus(false);
+    mDismissButton.onClick = [this] { _hideNotification(); };
+    addAndMakeVisible(mDismissButton);
+}
+
+juce::String UpdateCheck::_message() const
+{
+    return mUpdateAvailable ? "A new version of NeuralNote is available"
+                            : "You are on the latest version of NeuralNote";
+}
+
+juce::Rectangle<int> UpdateCheck::_panelBounds() const
+{
+    int width = 2 * nn::metrics::menuPadX + juce::GlyphArrangement::getStringWidthInt(nn::fonts::menuItem(), _message())
+                + CONTENT_GAP + nn::metrics::cancelHitSize;
+
+    if (mUpdateAvailable) {
+        width += CONTENT_GAP + mSeeUpdateButton.getIdealWidth();
+    }
+
+    return getLocalBounds().removeFromRight(juce::jmin(width, getWidth()));
 }
 
 void UpdateCheck::resized()
 {
-    mUrlButton.setBounds(getWidth() - 65 - mPadding, 0, 65, getHeight());
+    mPanel = _panelBounds();
+
+    auto row = mPanel.reduced(nn::metrics::menuPadX, 0);
+
+    mDismissButton.setBounds(
+        row.removeFromRight(nn::metrics::cancelHitSize)
+            .withSizeKeepingCentre(nn::metrics::cancelHitSize, nn::metrics::cancelHitSize));
+
+    if (mUpdateAvailable) {
+        row.removeFromRight(CONTENT_GAP);
+
+        const int button_width = mSeeUpdateButton.getIdealWidth();
+        mSeeUpdateButton.setBounds(
+            row.removeFromRight(button_width).withSizeKeepingCentre(button_width, BUTTON_HEIGHT));
+    }
+
+    // What the buttons left behind, so a long message ellipsises rather than running under them.
+    mTextArea = row.withTrimmedRight(CONTENT_GAP);
 }
 
-void UpdateCheck::paint(Graphics& g)
+bool UpdateCheck::hitTest(int inX, int inY)
 {
-    g.setColour(WHITE_SOLID);
-    g.setFont(UIDefines::LABEL_FONT());
+    // The component is given more room than the panel fills, so that the panel can size itself to
+    // its message. Without this the empty part of it would swallow clicks meant for the piano roll.
+    return mPanel.contains(inX, inY);
+}
 
-    String text;
-    if (mUpdateAvailable) {
-        text = "A new version of NeuralNote is available:";
-    } else {
-        text = "You are on the latest version of NeuralNote!";
-    }
+void UpdateCheck::paint(juce::Graphics& g)
+{
+    nn::drawPopupSurface(g, mPanel.toFloat());
 
-    AttributedString attributed_string(text);
-    attributed_string.setFont(UIDefines::LABEL_FONT());
-    attributed_string.setJustification(Justification::centred);
-
-    TextLayout text_layout;
-    text_layout.createLayout(attributed_string, static_cast<float>(getWidth()), static_cast<float>(getHeight()));
-    float text_width = text_layout.getWidth();
-    float rectangle_width = text_width + 2 * mPadding;
-
-    if (mUpdateAvailable) {
-        rectangle_width += static_cast<float>(mUrlButton.getWidth());
-    }
-
-    int rect_x_start = getWidth() - static_cast<int>(rectangle_width);
-
-    g.fillRoundedRectangle(getLocalBounds().toFloat().withLeft(static_cast<float>(rect_x_start)), 4.0f);
-
-    g.setColour(BLACK);
-    text_layout.draw(
-        g,
-        Rectangle<float>(static_cast<float>(rect_x_start + mPadding), 0, text_width, static_cast<float>(getHeight())));
+    g.setColour(nn::colours::popupItem);
+    g.setFont(nn::fonts::menuItem());
+    g.drawText(_message(), mTextArea, juce::Justification::centredLeft, true);
 }
 
 void UpdateCheck::timerCallback()
 {
-    auto current_time = Time::getCurrentTime();
+    auto current_time = juce::Time::getCurrentTime();
     auto mouse_over = isMouseOver(true);
 
     if (mouse_over) {
-        mHideTime = std::max(current_time + RelativeTime::seconds(mTimeIncrementOnMouseOverSeconds), mHideTime);
+        mHideTime = std::max(current_time + juce::RelativeTime::seconds(mTimeIncrementOnMouseOverSeconds), mHideTime);
     }
 
     if (current_time >= mHideTime) {
@@ -72,10 +133,18 @@ void UpdateCheck::timerCallback()
 
 void UpdateCheck::checkForUpdate(bool inShowNotificationOnLatestVersion)
 {
+    // Nothing here can be cancelled, and the editor can close mid-request: every hop back to the
+    // message thread has to check the component is still there.
+    const juce::Component::SafePointer<UpdateCheck> safe_this(this);
+
     // Call async because of issue on Windows with spinning cursor.
-    MessageManager::callAsync([this, inShowNotificationOnLatestVersion] {
-        Thread::launch([this, inShowNotificationOnLatestVersion] {
-            const URL url("https://api.github.com/repos/DamRsn/NeuralNote/releases/latest");
+    juce::MessageManager::callAsync([safe_this, inShowNotificationOnLatestVersion] {
+        if (safe_this == nullptr) {
+            return;
+        }
+
+        juce::Thread::launch([safe_this, inShowNotificationOnLatestVersion] {
+            const juce::URL url("https://api.github.com/repos/DamRsn/NeuralNote/releases/latest");
 
             const auto result = url.readEntireTextStream();
 
@@ -83,22 +152,26 @@ void UpdateCheck::checkForUpdate(bool inShowNotificationOnLatestVersion)
                 return;
             }
 
-            auto json = JSON::parse(result);
+            auto json = juce::JSON::parse(result);
 
             if (json.isObject()) {
-                const auto current_version_str = String("v") + String(JucePlugin_VersionString).trim();
+                const auto current_version = juce::String(JucePlugin_VersionString);
 
                 // Uncomment this line to test the new version available notification
-                // const auto current_version_str = String("v0.0.1");
+                // const auto current_version = juce::String("0.0.1");
 
-                const auto latest_version = json.getProperty("tag_name", "unknown").toString().trim();
+                const auto latest_version = json.getProperty("tag_name", {}).toString();
 
-                MessageManager::callAsync(
-                    [current_version_str, latest_version, inShowNotificationOnLatestVersion, this] {
-                        if (!current_version_str.equalsIgnoreCase(latest_version)) {
-                            _showNewVersionAvailableNotification();
+                juce::MessageManager::callAsync(
+                    [current_version, latest_version, inShowNotificationOnLatestVersion, safe_this] {
+                        if (safe_this == nullptr) {
+                            return;
+                        }
+
+                        if (isNewerVersion(latest_version, current_version)) {
+                            safe_this->_showNewVersionAvailableNotification();
                         } else if (inShowNotificationOnLatestVersion) {
-                            _showOnLatestVersionNotification();
+                            safe_this->_showOnLatestVersionNotification();
                         }
                     });
             } else {
@@ -112,8 +185,11 @@ void UpdateCheck::_showNewVersionAvailableNotification()
 {
     mUpdateAvailable = true;
     setVisible(true);
-    mUrlButton.setVisible(true);
-    mHideTime = Time::getCurrentTime() + RelativeTime::seconds(mNotificationDurationSeconds);
+    mSeeUpdateButton.setVisible(true);
+    mHideTime = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(mNotificationDurationSeconds);
+
+    // The panel is sized to its contents, and it just gained a button.
+    resized();
 
     startTimerHz(5);
 }
@@ -122,8 +198,10 @@ void UpdateCheck::_showOnLatestVersionNotification()
 {
     mUpdateAvailable = false;
     setVisible(true);
-    mUrlButton.setVisible(false);
-    mHideTime = Time::getCurrentTime() + RelativeTime::seconds(mNotificationDurationSeconds);
+    mSeeUpdateButton.setVisible(false);
+    mHideTime = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(mNotificationDurationSeconds);
+
+    resized();
 
     startTimerHz(5);
 }
@@ -131,6 +209,6 @@ void UpdateCheck::_showOnLatestVersionNotification()
 void UpdateCheck::_hideNotification()
 {
     stopTimer();
-    mUrlButton.setVisible(false);
+    mSeeUpdateButton.setVisible(false);
     setVisible(false);
 }

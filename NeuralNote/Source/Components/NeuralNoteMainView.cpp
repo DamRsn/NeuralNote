@@ -4,286 +4,133 @@
 
 #include "NeuralNoteMainView.h"
 
+#include "MidiFileWriter.h"
+#include "NeuralNoteTooltips.h"
+#include "NNFileUtils.h"
+#include "NnFonts.h"
+#include "NnGlobalSettings.h"
+#include "NnLook.h"
+#include "PluginEditor.h"
+
+namespace
+{
+/** Between the update notification and the status bar below it. */
+constexpr int UPDATE_NOTIFICATION_GAP = 10;
+} // namespace
+
 NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     : mProcessor(processor)
+    , mTopBar(processor)
+    , mSidebar(processor)
     , mVisualizationPanel(&processor)
-    , mTranscriptionOptions(processor)
-    , mNoteOptions(processor)
-    , mQuantizePanel(processor)
+    , mInstrumentMenu(processor)
 {
     mProcessor.addListenerToStateValueTree(this);
     jassert(mProcessor.getValueTree().hasProperty(NnId::PlayheadCenteredId));
 
-    mRecordButton = std::make_unique<DrawableButton>("RecordButton", DrawableButton::ButtonStyle::ImageRaw);
-    mRecordButton->setClickingTogglesState(true);
-    mRecordButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
-    mRecordButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
-    mRecordButton->setTooltip(NeuralNoteTooltips::record);
+    addAndMakeVisible(mTopBar);
+    addAndMakeVisible(mSidebar);
+    addAndMakeVisible(mVisualizationPanel);
 
-    auto record_off_drawable =
-        Drawable::createFromImageData(BinaryData::recordingoff_svg, BinaryData::recordingoff_svgSize);
-    auto record_on_drawable =
-        Drawable::createFromImageData(BinaryData::recordingon_svg, BinaryData::recordingon_svgSize);
+    addChildComponent(mInstrumentMenu);
+    mInstrumentMenu.onDismiss = [this] { _setInstrumentMenuOpen(false); };
 
-    mRecordButton->setImages(
-        record_off_drawable.get(), nullptr, nullptr, nullptr, record_on_drawable.get(), nullptr, nullptr);
-
-    mRecordButton->onClick = [this]() {
-        bool is_on = mRecordButton->getToggleState();
-
-        // Recording started
-        if (is_on) {
-            mProcessor.getSourceAudioManager()->startRecording();
-        } else {
-            // Recording has ended, set processor state to processing
-            mProcessor.getSourceAudioManager()->stopRecording();
-        }
-
-        updateEnablements();
-    };
-
-    mRecordButton->setToggleState(mProcessor.getState() == Recording, NotificationType::dontSendNotification);
-
-    addAndMakeVisible(*mRecordButton);
-
-    mClearButton = std::make_unique<DrawableButton>("ClearButton", DrawableButton::ButtonStyle::ImageRaw);
-    mClearButton->setClickingTogglesState(false);
-    mClearButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
-    mClearButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
-    mClearButton->setTooltip(NeuralNoteTooltips::clear);
-
-    auto bin_drawable = Drawable::createFromImageData(BinaryData::deleteicon_svg, BinaryData::deleteicon_svgSize);
-    mClearButton->setImages(bin_drawable.get());
-
-    mClearButton->onClick = [this]() {
-        mProcessor.clear();
-        mVisualizationPanel.clear();
-        updateEnablements();
-    };
-    addAndMakeVisible(*mClearButton);
-
-    mBackButton = std::make_unique<DrawableButton>("BackButton", DrawableButton::ButtonStyle::ImageRaw);
-    mBackButton->setClickingTogglesState(false);
-    mBackButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
-    mBackButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
-    auto back_icon_drawable = Drawable::createFromImageData(BinaryData::back_svg, BinaryData::back_svgSize);
-    mBackButton->setImages(back_icon_drawable.get());
-    mBackButton->onClick = [this]() {
-        mProcessor.getPlayer()->reset();
-        mPlayPauseButton->setToggleState(false, sendNotification);
-        mVisualizationPanel.getAudioMidiViewport().setViewPositionProportionately(0, 0);
-    };
-    mBackButton->setTooltip(NeuralNoteTooltips::back);
-    addAndMakeVisible(*mBackButton);
-
-    mPlayPauseButton = std::make_unique<DrawableButton>("PlayPauseButton", DrawableButton::ButtonStyle::ImageRaw);
-    mPlayPauseButton->setClickingTogglesState(true);
-    mPlayPauseButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
-    mPlayPauseButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
-    auto play_icon_drawable = Drawable::createFromImageData(BinaryData::play_svg, BinaryData::play_svgSize);
-    auto pause_icon_drawable = Drawable::createFromImageData(BinaryData::pause_svg, BinaryData::pause_svgSize);
-    mPlayPauseButton->setImages(
-        play_icon_drawable.get(), nullptr, nullptr, nullptr, pause_icon_drawable.get(), nullptr, nullptr, nullptr);
-
-    mPlayPauseButton->onClick = [this]() {
-        if (mProcessor.getState() == PopulatedAudioAndMidiRegions) {
-            mProcessor.getPlayer()->setPlayingState(mPlayPauseButton->getToggleState());
-        } else {
-            mPlayPauseButton->setToggleState(false, sendNotification);
-        }
-    };
-    mPlayPauseButton->setTooltip(NeuralNoteTooltips::play_pause);
-
-    addAndMakeVisible(*mPlayPauseButton);
-
-    mCenterButton = std::make_unique<DrawableButton>("PlayPauseButton", DrawableButton::ButtonStyle::ImageRaw);
-    mCenterButton->setClickingTogglesState(true);
-    mCenterButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
-    mCenterButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
-    auto center_icon_drawable_off =
-        Drawable::createFromImageData(BinaryData::center_off_svg, BinaryData::center_off_svgSize);
-    auto center_icon_drawable_on =
-        Drawable::createFromImageData(BinaryData::center_on_svg, BinaryData::center_on_svgSize);
-    mCenterButton->setImages(center_icon_drawable_off.get(),
-                             nullptr,
-                             nullptr,
-                             nullptr,
-                             center_icon_drawable_on.get(),
-                             nullptr,
-                             nullptr,
-                             nullptr);
-    mCenterButton->setTooltip(NeuralNoteTooltips::center);
-
-    mCenterButton->getToggleStateValue().referTo(
-        mProcessor.getValueTree().getPropertyAsValue(NnId::PlayheadCenteredId, nullptr));
-    NeuralNoteMainView::valueTreePropertyChanged(mProcessor.getValueTree(), NnId::PlayheadCenteredId);
-    addAndMakeVisible(*mCenterButton);
+    // Only ever opens: while the menu is up its scrim covers the "+" as well, so a second click
+    // there is the click that closes it.
+    mSidebar.onAddInstrument = [this] { _setInstrumentMenuOpen(true); };
 
     mUpdateCheck = std::make_unique<UpdateCheck>();
 
-    mSettingsButton = std::make_unique<DrawableButton>("SettingsButton", DrawableButton::ButtonStyle::ImageRaw);
-    mSettingsButton->setClickingTogglesState(false);
-    mSettingsButton->setColour(DrawableButton::ColourIds::backgroundColourId, TRANSPARENT);
-    mSettingsButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, BLACK);
-    auto settings_icon_drawable = Drawable::createFromImageData(BinaryData::settings_svg, BinaryData::settings_svgSize);
-    mSettingsButton->setImages(settings_icon_drawable.get());
-    addAndMakeVisible(mSettingsButton.get());
+    _buildSettingsMenu();
 
-    mSettingsMenu = std::make_unique<PopupMenu>();
-
-    // Midi out
-    int item_id = 0;
-    auto midi_out_item = PopupMenu::Item("MIDI Out");
-    midi_out_item.setID(++item_id);
-    midi_out_item.setEnabled(true);
-    mSettingsMenuItemsShouldBeTicked.emplace_back(midi_out_item.itemID, [this] {
-        return static_cast<bool>(mProcessor.getValueTree().getProperty(NnId::MidiOut));
-    });
-
-    midi_out_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
-    auto midi_out_action = [this] {
-        bool midi_out_enabled = mProcessor.getValueTree().getProperty(NnId::MidiOut);
-        mProcessor.getValueTree().setProperty(NnId::MidiOut, !midi_out_enabled, nullptr);
-        _updateSettingsMenuTicks();
+    mTopBar.getModelButton().onClick = [this] {
+        mVisualizationPanel.setModelPanelOpen(!mVisualizationPanel.isModelPanelVisible());
+        mTopBar.syncModelButton(mVisualizationPanel.isModelPanelVisible());
     };
 
-    midi_out_item = midi_out_item.setAction(midi_out_action);
-    mSettingsMenu->addItem(midi_out_item);
-
-    // Reset zoom
-    auto reset_zoom_item = PopupMenu::Item("Reset Zoom");
-    reset_zoom_item.setID(++item_id);
-    reset_zoom_item.setTicked(false);
-    auto reset_zoom_action = [this] { mProcessor.getValueTree().setProperty(NnId::ZoomLevelId, 1.0, nullptr); };
-    reset_zoom_item.setAction(reset_zoom_action);
-    mSettingsMenu->addItem(reset_zoom_item);
-
-    // Tooltip visibility
-    auto tooltip_visibility_item = PopupMenu::Item("Show Tooltips");
-    tooltip_visibility_item.setID(++item_id);
-    tooltip_visibility_item.setEnabled(true);
-    mSettingsMenuItemsShouldBeTicked.emplace_back(tooltip_visibility_item.itemID, [this] {
-        return static_cast<bool>(mProcessor.getValueTree().getProperty(NnId::TooltipVisibleId));
-    });
-
-    tooltip_visibility_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
-    auto tooltip_visibility_action = [this] {
-        bool tooltip_visibility = mProcessor.getValueTree().getProperty(NnId::TooltipVisibleId);
-        mProcessor.getValueTree().setPropertyExcludingListener(
-            this, NnId::TooltipVisibleId, !tooltip_visibility, nullptr);
-        _updateTooltipVisibility();
-        _updateSettingsMenuTicks();
-    };
-    tooltip_visibility_item.setAction(tooltip_visibility_action);
-    mSettingsMenu->addItem(tooltip_visibility_item);
-
-    // Check for updates
-    auto check_updates_item = PopupMenu::Item("Check for updates");
-    check_updates_item.setID(++item_id);
-    check_updates_item.setEnabled(true);
-    check_updates_item.setTicked(false);
-    check_updates_item.setAction([this] { mUpdateCheck->checkForUpdate(true); });
-    mSettingsMenu->addSeparator();
-    mSettingsMenu->addItem(check_updates_item);
-
-    mPopupMenuLookAndFeel = std::make_unique<PopupMenuLookAndFeel>();
-    mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::backgroundColourId, WHITE_SOLID);
-    mPopupMenuLookAndFeel->setColour(PopupMenu::ColourIds::textColourId, BLACK);
-    mSettingsMenu->setLookAndFeel(mPopupMenuLookAndFeel.get());
-
-    mSettingsButton->onClick = [this] {
-        _updateSettingsMenuTicks();
-        PopupMenu::Options options;
-        options = options.withTargetComponent(mSettingsButton.get());
-
-        mSettingsMenu->showMenuAsync(options);
+    mTopBar.getSettingsButton().onClick = [this] {
+        _refreshSettingsMenu();
+        mSettingsMenu->showMenuAsync(PopupMenu::Options().withTargetComponent(&mTopBar.getSettingsButton()));
     };
 
-    mMuteButton = std::make_unique<DrawableButton>("MuteButton", DrawableButton::ButtonStyle::ImageRaw);
-    mMuteButton->setClickingTogglesState(true);
-    mMuteButton->setColour(DrawableButton::ColourIds::backgroundColourId, Colours::transparentBlack);
-    mMuteButton->setColour(DrawableButton::ColourIds::backgroundOnColourId, Colours::transparentBlack);
+    mTopBar.getFollowButton().getToggleStateValue().referTo(
+        mProcessor.getValueTree().getPropertyAsValue(NnId::PlayheadCenteredId, nullptr));
+    NeuralNoteMainView::valueTreePropertyChanged(mProcessor.getValueTree(), NnId::PlayheadCenteredId);
 
-    auto mute_on_drawable = Drawable::createFromImageData(BinaryData::mute_svg, BinaryData::mute_svgSize);
-    auto mute_off_drawable = Drawable::createFromImageData(BinaryData::unmute_svg, BinaryData::unmute_svgSize);
-
-    mMuteButton->setImages(
-        mute_off_drawable.get(), nullptr, nullptr, nullptr, mute_on_drawable.get(), nullptr, nullptr);
-    mMuteButton->setClickingTogglesState(true);
-    mMuteButton->setTooltip(NeuralNoteTooltips::mute);
-
-    mMuteButtonAttachment = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(
-        mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::MuteId), *mMuteButton);
-    addAndMakeVisible(*mMuteButton);
-
-    addAndMakeVisible(mVisualizationPanel);
-    addAndMakeVisible(mTranscriptionOptions);
-    addAndMakeVisible(mNoteOptions);
-    addAndMakeVisible(mQuantizePanel);
-
-    mBackgroundImage = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize)
-                           .rescaled(1000, 640, Graphics::ResamplingQuality::highResamplingQuality);
+    mTopBar.getBackButton().onClick = [this] {
+        mProcessor.getPlayer()->returnToStart();
+        mTopBar.syncTransportToggles();
+        mVisualizationPanel.getAudioMidiViewport().setViewPositionProportionately(0, 0);
+    };
 
     _updateTooltipVisibility();
 
     setWantsKeyboardFocus(true);
-    mPlayPauseButton->setWantsKeyboardFocus(false);
-    mBackButton->setWantsKeyboardFocus(false);
-    mRecordButton->setWantsKeyboardFocus(false);
-    mCenterButton->setWantsKeyboardFocus(false);
-    mSettingsButton->setWantsKeyboardFocus(false);
-    mSettingsButton->setTooltip(NeuralNoteTooltips::settings);
 
     updateEnablements();
 
     addChildComponent(mUpdateCheck.get());
     mUpdateCheck->checkForUpdate(false);
 
-    startTimerHz(30);
+    // Only to notice the processor state and the transport changing under the UI. Nothing here
+    // repaints unconditionally: everything that moves per frame is on a vblank callback of its own.
+    startTimerHz(20);
 }
 
 NeuralNoteMainView::~NeuralNoteMainView()
 {
     mProcessor.removeListenerFromStateValueTree(this);
-    LookAndFeel::setDefaultLookAndFeel(nullptr);
 }
 
 void NeuralNoteMainView::resized()
 {
-    mRecordButton->setBounds(537, 43, 35, 35);
-    mClearButton->setBounds(589, 43, 35, 35);
+    auto bounds = getLocalBounds();
 
-    mBackButton->setBounds(682, 43, 35, 35);
-    mPlayPauseButton->setBounds(734, 43, 35, 35);
-    mCenterButton->setBounds(786, 43, 35, 35);
-    mSettingsButton->setBounds(838, 43, 35, 35);
+    mTopBar.setBounds(bounds.removeFromTop(nn::metrics::topBarHeight));
+    mSidebar.setBounds(bounds.removeFromLeft(nn::metrics::sidebarWidth));
+    mVisualizationPanel.setBounds(bounds);
 
-    mMuteButton->setBounds(931, 43, 35, 35);
+    // Just above the status bar. Wider than the panel needs -- it sizes itself to its message and
+    // pins itself to the right of this, so what is set here is the room it has to grow into.
+    mUpdateCheck->setBounds(bounds.getRight() - 460,
+                            bounds.getBottom() - nn::metrics::statusBarHeight - UPDATE_NOTIFICATION_GAP
+                                - nn::metrics::menuRowHeight,
+                            460 - nn::metrics::menuPadX,
+                            nn::metrics::menuRowHeight);
 
-    mVisualizationPanel.setBounds(328, 120, 642, 491);
-    mTranscriptionOptions.setBounds(29, 120, 274, 190);
-    mNoteOptions.setBounds(29, 334, 274, 133);
-    mQuantizePanel.setBounds(29, 491, 274, 120);
+    mInstrumentMenu.setBounds(getLocalBounds());
+    mInstrumentMenu.setPanelAnchor(mSidebar.getPosition() + mSidebar.getMenuAnchor());
+}
 
-    mUpdateCheck->setBounds(680, 615, 290, 20);
+void NeuralNoteMainView::_setInstrumentMenuOpen(bool inIsOpen)
+{
+    mInstrumentMenu.setVisible(inIsOpen);
+    mSidebar.setMenuOpen(inIsOpen);
+
+    if (inIsOpen) {
+        // Above the update notification, which is added after it and would otherwise sit on top.
+        mInstrumentMenu.toFront(false);
+    }
+
+    if (!inIsOpen) {
+        // The transport shortcuts live here, and the menu took the focus to hear Escape.
+        grabKeyboardFocus();
+    }
 }
 
 void NeuralNoteMainView::paint(Graphics& g)
 {
-    g.drawImageAt(mBackgroundImage, 0, 0);
+    g.fillAll(nn::colours::bgRoot);
 }
 
 void NeuralNoteMainView::timerCallback()
 {
-    auto processor_state = mProcessor.getState();
-    if (mRecordButton->getToggleState() && processor_state != Recording) {
-        mRecordButton->setToggleState(false, sendNotification);
-        updateEnablements();
-    }
+    mTopBar.syncTransportToggles();
 
-    if (mPlayPauseButton->getToggleState() != mProcessor.getPlayer()->isPlaying()) {
-        mPlayPauseButton->setToggleState(mProcessor.getPlayer()->isPlaying(), sendNotification);
-    }
+    // The model panel changes what the button shows -- its cross, its selection -- without telling it.
+    mTopBar.syncModelButton(mVisualizationPanel.isModelPanelVisible());
+
+    const State processor_state = mProcessor.getState();
 
     if (mPrevState != processor_state) {
         mPrevState = processor_state;
@@ -296,35 +143,51 @@ void NeuralNoteMainView::repaintPianoRoll()
     mVisualizationPanel.repaintPianoRoll();
 }
 
+void NeuralNoteMainView::clear()
+{
+    jassert(MessageManager::getInstance()->isThisTheMessageThread());
+
+    mVisualizationPanel.clear();
+    updateEnablements();
+}
+
 bool NeuralNoteMainView::keyPressed(const KeyPress& key)
 {
     if (key == KeyPress(KeyPress::spaceKey, ModifierKeys::shiftModifier, 0)) {
-        mBackButton->triggerClick();
+        mTopBar.getBackButton().triggerClick();
         return true;
     }
 
     if (key == KeyPress::spaceKey) {
-        mPlayPauseButton->triggerClick();
+        mTopBar.getPlayPauseButton().triggerClick();
         return true;
     }
 
     if (key == KeyPress(KeyPress::backspaceKey, ModifierKeys::shiftModifier, 0)) {
-        mClearButton->triggerClick();
+        // Same states as the toolbar's bin (NnToolbar::updateEnablements). Recording is excluded:
+        // clearing mid-record stops the recording behind the record button's back, and the toggle
+        // sync then stops it a second time.
+        const State state = mProcessor.getState();
+
+        if (state == AudioLoaded || state == PopulatedAudioAndMidiRegions) {
+            mProcessor.clear();
+        }
+
         return true;
     }
 
     if (key == KeyPress('r', juce::ModifierKeys::noModifiers, 0)) {
-        mRecordButton->triggerClick();
+        mTopBar.getRecordButton().triggerClick();
         return true;
     }
 
     if (key == KeyPress('m', juce::ModifierKeys::noModifiers, 0)) {
-        mMuteButton->triggerClick();
+        mTopBar.getMuteButton().triggerClick();
         return true;
     }
 
     if (key == KeyPress('c', juce::ModifierKeys::noModifiers, 0)) {
-        mCenterButton->triggerClick();
+        mTopBar.getFollowButton().triggerClick();
         return true;
     }
 
@@ -333,74 +196,148 @@ bool NeuralNoteMainView::keyPressed(const KeyPress& key)
 
 void NeuralNoteMainView::updateEnablements()
 {
-    auto current_state = mProcessor.getState();
-    mPrevState = current_state;
+    mPrevState = mProcessor.getState();
 
-    if (current_state == EmptyAudioAndMidiRegions) {
-        mRecordButton->setEnabled(true);
-        mClearButton->setEnabled(false);
-        mPlayPauseButton->setEnabled(false);
-        mBackButton->setEnabled(false);
-        mCenterButton->setEnabled(false);
-    } else if (current_state == Recording) {
-        mRecordButton->setEnabled(true);
-        mClearButton->setEnabled(false);
-        mPlayPauseButton->setEnabled(false);
-        mBackButton->setEnabled(false);
-        mCenterButton->setEnabled(false);
-    } else if (current_state == Processing) {
-        mRecordButton->setEnabled(false);
-        mClearButton->setEnabled(false);
-        mPlayPauseButton->setEnabled(false);
-        mBackButton->setEnabled(false);
-        mCenterButton->setEnabled(false);
-    } else if (current_state == PopulatedAudioAndMidiRegions) {
-        mRecordButton->setEnabled(false);
-        mClearButton->setEnabled(true);
-        mPlayPauseButton->setEnabled(true);
-        mBackButton->setEnabled(true);
-        mCenterButton->setEnabled(true);
-        mVisualizationPanel.setMidiFileDragComponentVisible();
+    mTopBar.updateEnablements();
+    mTopBar.syncTransportToggles();
+    mSidebar.updateEnablements();
+    mVisualizationPanel.updateEnablements();
+
+    // The selection is fixed once a transcription exists, and the "+" goes away with it. A menu
+    // left open over that would be offering a choice that no longer applies.
+    if (mProcessor.hasTranscription() && mInstrumentMenu.isVisible()) {
+        _setInstrumentMenuOpen(false);
     }
-
-    repaint();
 }
 
 void NeuralNoteMainView::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
 {
     if (property == NnId::PlayheadCenteredId) {
-        bool should_center = treeWhosePropertyHasChanged.getProperty(property);
-        mCenterButton->setToggleState(should_center, sendNotification);
+        const bool should_center = treeWhosePropertyHasChanged.getProperty(property);
+        mTopBar.getFollowButton().setToggleState(should_center, sendNotification);
         mVisualizationPanel.getCombinedAudioMidiRegion().setCenterView(should_center);
     }
 
-    if (property == NnId::TooltipVisibleId) {
-        _updateTooltipVisibility();
+    if (property == NnId::SelectedInstrumentGroupsId) {
+        // The transcribe button names how many instruments it is about to look for.
+        mVisualizationPanel.updateEnablements();
     }
 }
 
-void NeuralNoteMainView::_updateSettingsMenuTicks()
+void NeuralNoteMainView::_buildSettingsMenu()
 {
-    std::vector<int> ticked_items;
+    mSettingsMenu = std::make_unique<PopupMenu>();
 
-    for (auto& [item_id, should_be_ticked_lambda]: mSettingsMenuItemsShouldBeTicked) {
-        if (should_be_ticked_lambda != nullptr) {
-            if (should_be_ticked_lambda()) {
-                ticked_items.emplace_back(item_id);
-            }
-        }
+    int item_id = 0;
+
+    auto reset_zoom_item = PopupMenu::Item("Reset Zoom");
+    reset_zoom_item.setID(++item_id);
+    reset_zoom_item.setTicked(false);
+    reset_zoom_item.setAction([this] {
+        mProcessor.getValueTree().setProperty(NnId::ZoomLevelId, 1.0, nullptr);
+
+        // Negative returns the vertical zoom to fitting itself to the transcription, which is what
+        // it does before the slider is ever touched.
+        mProcessor.getValueTree().setProperty(NnId::VerticalZoomId, -1.0, nullptr);
+    });
+    mSettingsMenu->addItem(reset_zoom_item);
+
+    auto tooltip_visibility_item = PopupMenu::Item("Show Tooltips");
+    tooltip_visibility_item.setID(++item_id);
+    tooltip_visibility_item.setEnabled(true);
+    mSettingsMenuItemsShouldBeTicked.emplace_back(tooltip_visibility_item.itemID,
+                                                  [] { return NnGlobalSettings::getTooltipsVisible(); });
+    tooltip_visibility_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+    tooltip_visibility_item.setAction([this] {
+        NnGlobalSettings::setTooltipsVisible(!NnGlobalSettings::getTooltipsVisible());
+        _updateTooltipVisibility();
+        _refreshSettingsMenu();
+    });
+    mSettingsMenu->addItem(tooltip_visibility_item);
+
+    // A dense mix can name more instruments than MIDI has channels; see MidiOverflowMode.
+    PopupMenu overflow_menu;
+
+    for (const auto& [mode, label]:
+         {std::pair {MidiOverflowMode::ReuseChannels, "Reuse the last channels"},
+          std::pair {MidiOverflowMode::DropExtraInstruments, "Drop the extra instruments"}}) {
+        auto overflow_item = PopupMenu::Item(label);
+        overflow_item.setID(++item_id);
+        overflow_item.setEnabled(true);
+        mSettingsMenuItemsShouldBeTicked.emplace_back(overflow_item.itemID, [this, item_mode = mode] {
+            return static_cast<int>(mProcessor.getValueTree().getProperty(
+                       NnId::MidiOverflowModeId, static_cast<int>(MidiOverflowMode::ReuseChannels)))
+                   == static_cast<int>(item_mode);
+        });
+        overflow_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+        overflow_item.setAction([this, item_mode = mode] {
+            mProcessor.getValueTree().setProperty(NnId::MidiOverflowModeId, static_cast<int>(item_mode), nullptr);
+            _refreshSettingsMenu();
+        });
+        overflow_menu.addItem(overflow_item);
     }
+
+    mSettingsMenu->addSubMenu("MIDI export: too many instruments", overflow_menu);
+
+    // The editor applies this factor, clamped to what the display can hold, and writes back the
+    // one it used -- so a preset too large for the screen ends up unticked.
+    PopupMenu scale_menu;
+
+    for (const double scale: {0.5, 0.75, 1.0, 1.25, 1.5, 2.0}) {
+        auto scale_item = PopupMenu::Item(String(roundToInt(scale * 100.0)) + "%");
+        scale_item.setID(++item_id);
+        scale_item.setEnabled(true);
+        mSettingsMenuItemsShouldBeTicked.emplace_back(scale_item.itemID, [this, item_scale = scale] {
+            auto* editor = findParentComponentOfClass<NeuralNoteEditor>();
+            return editor != nullptr && std::abs(editor->getAppliedScale() - item_scale) < 0.005;
+        });
+        scale_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+        scale_item.setAction([this, item_scale = scale] {
+            // applyScale stores what it settled on, by the same path a resize drag takes.
+            if (auto* editor = findParentComponentOfClass<NeuralNoteEditor>()) {
+                editor->applyScale(item_scale);
+            }
+
+            _refreshSettingsMenu();
+        });
+        scale_menu.addItem(scale_item);
+    }
+
+    mSettingsMenu->addSubMenu("Window size", scale_menu);
+
+    auto check_updates_item = PopupMenu::Item("Check for updates");
+    check_updates_item.setID(++item_id);
+    check_updates_item.setEnabled(true);
+    check_updates_item.setTicked(false);
+    check_updates_item.setAction([this] { mUpdateCheck->checkForUpdate(true); });
+    mSettingsMenu->addSeparator();
+    mSettingsMenu->addItem(check_updates_item);
+}
+
+void NeuralNoteMainView::_refreshSettingsMenu()
+{
+    // An item with no predicate of its own falls back to inDefault: unticked, and enabled.
+    const auto evaluate =
+        [](const std::vector<std::pair<int, std::function<bool()>>>& inPredicates, int inItemId, bool inDefault) {
+            for (const auto& [item_id, predicate]: inPredicates) {
+                if (item_id == inItemId && predicate != nullptr) {
+                    return predicate();
+                }
+            }
+
+            return inDefault;
+        };
 
     for (PopupMenu::MenuItemIterator iterator(*mSettingsMenu, true); iterator.next();) {
         auto& item = iterator.getItem();
-        bool is_ticked = std::find(ticked_items.begin(), ticked_items.end(), item.itemID) != ticked_items.end();
-        item.setTicked(is_ticked);
+        item.setTicked(evaluate(mSettingsMenuItemsShouldBeTicked, item.itemID, false));
+        item.setEnabled(evaluate(mSettingsMenuItemsShouldBeEnabled, item.itemID, true));
     }
 }
 
 void NeuralNoteMainView::_updateTooltipVisibility()
 {
-    if (mProcessor.getValueTree().getProperty(NnId::TooltipVisibleId, true)) {
+    if (NnGlobalSettings::getTooltipsVisible()) {
         if (mTooltipWindow == nullptr) {
             mTooltipWindow = std::make_unique<TooltipWindow>(this, 800);
             mTooltipWindow->setOpaque(false);

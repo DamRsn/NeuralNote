@@ -5,8 +5,9 @@
 #ifndef NUMERICTEXTEDITOR_H
 #define NUMERICTEXTEDITOR_H
 
+#include "NnFonts.h"
+#include "NnLook.h"
 #include "PluginProcessor.h"
-#include "UIDefines.h"
 #include <type_traits>
 
 #include <JuceHeader.h>
@@ -27,13 +28,14 @@ public:
         : mProcessor(inProcessor)
         , mIdentifier(inPropIdentifier)
     {
-        setColour(textColourId, BLACK);
-        setColour(highlightedTextColourId, BLACK);
-        setColour(backgroundColourId, TRANSPARENT);
-        setColour(focusedOutlineColourId, TRANSPARENT);
-        setColour(outlineColourId, TRANSPARENT);
-        setColour(shadowColourId, TRANSPARENT);
-        setFont(UIDefines::LABEL_FONT());
+        setColour(textColourId, nn::colours::textFile);
+        setColour(highlightedTextColourId, nn::colours::bgControlAlt);
+        setColour(highlightColourId, nn::colours::accent);
+        setColour(backgroundColourId, juce::Colours::transparentBlack);
+        setColour(focusedOutlineColourId, juce::Colours::transparentBlack);
+        setColour(outlineColourId, juce::Colours::transparentBlack);
+        setColour(shadowColourId, juce::Colours::transparentBlack);
+        setFont(nn::fonts::tempoValue());
         setJustification(inJustification);
         setReadOnly(false);
 
@@ -41,7 +43,7 @@ public:
         setInputRestrictions(inMaxLength, allowed_chars);
         setClicksOutsideDismissVirtualKeyboard(true);
         setSelectAllWhenFocused(true);
-        setTextToShowWhenEmpty(numberToStr(inDefaultValue), BLACK);
+        setTextToShowWhenEmpty(numberToStr(inDefaultValue), nn::colours::textDim);
         onReturnKey = [this] { giveAwayKeyboardFocus(); };
         onEscapeKey = [this] { giveAwayKeyboardFocus(); };
 
@@ -79,7 +81,11 @@ public:
         Desktop::getInstance().removeGlobalMouseListener(this);
     }
 
-    void focusGained(FocusChangeType cause) override { Desktop::getInstance().addGlobalMouseListener(this); }
+    void focusGained(FocusChangeType cause) override
+    {
+        ignoreUnused(cause);
+        Desktop::getInstance().addGlobalMouseListener(this);
+    }
 
     static T strToNumber(const String& text)
     {
@@ -112,6 +118,7 @@ public:
 
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override
     {
+        ignoreUnused(treeWhosePropertyHasChanged);
         if (property == mIdentifier) {
             setText(numberToStr(mProcessor->getValueTree().getProperty(mIdentifier)), false);
         }

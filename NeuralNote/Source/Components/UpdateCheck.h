@@ -7,16 +7,27 @@
 
 #include <JuceHeader.h>
 
+#include "NnFlatButton.h"
+
+/**
+ * The notification that says whether there is a newer NeuralNote, on the same panel the menus and
+ * tooltips sit on. Asks GitHub for the latest release, then shows itself for ten seconds -- longer
+ * while the pointer is over it, so it cannot expire out from under someone reading it.
+ *
+ * Sized to its own contents and pinned to the right of whatever bounds it is given.
+ */
 class UpdateCheck
-    : public Component
-    , public Timer
+    : public juce::Component
+    , public juce::Timer
 {
 public:
     UpdateCheck();
 
     void resized() override;
 
-    void paint(Graphics& g) override;
+    bool hitTest(int inX, int inY) override;
+
+    void paint(juce::Graphics& g) override;
 
     void timerCallback() override;
 
@@ -29,18 +40,25 @@ private:
 
     void _hideNotification();
 
+    juce::String _message() const;
+
+    /** The panel itself: as wide as its contents need, against the right-hand edge. */
+    juce::Rectangle<int> _panelBounds() const;
+
     bool mUpdateAvailable {false};
 
-    HyperlinkButton mUrlButton;
+    juce::Rectangle<int> mPanel;
+    juce::Rectangle<int> mTextArea;
 
-    Time mHideTime;
+    NnFlatButton mSeeUpdateButton {"SeeUpdate"};
+    NnFlatButton mDismissButton {"DismissUpdateNotification"};
 
-    static constexpr int mPadding = 5;
+    juce::Time mHideTime;
 
     static constexpr double mNotificationDurationSeconds = 10.0f;
     static constexpr double mTimeIncrementOnMouseOverSeconds = 3.0f;
 
-    const URL mLatestReleaseUrl {"https://github.com/DamRsn/NeuralNote/releases/latest"};
+    const juce::URL mLatestReleaseUrl {"https://github.com/DamRsn/NeuralNote/releases/latest"};
 };
 
 #endif //UPDATECHECK_H

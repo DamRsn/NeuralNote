@@ -18,6 +18,9 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     mSourceAudioManager = std::make_unique<SourceAudioManager>(this);
     mPlayer = std::make_unique<Player>(this);
     mTranscriptionManager = std::make_unique<TranscriptionManager>(this);
+
+    // After mPlayer: it pushes every fader it holds into that player's synth.
+    mInstrumentMixer = std::make_unique<InstrumentMixer>(this);
 }
 
 NeuralNoteAudioProcessor::~NeuralNoteAudioProcessor()
@@ -28,14 +31,12 @@ NeuralNoteAudioProcessor::~NeuralNoteAudioProcessor()
 void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     mSourceAudioManager->prepareToPlay(sampleRate, samplesPerBlock);
-    mTranscriptionManager->prepareToPlay(sampleRate);
     mPlayer->prepareToPlay(sampleRate, samplesPerBlock);
 }
 
 void NeuralNoteAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     mSourceAudioManager->processBlock(buffer);
-    mTranscriptionManager->processBlock(buffer.getNumSamples());
 
     auto is_mute = mParams[ParameterHelpers::MuteId]->getValue() > 0.5f;
 
@@ -111,6 +112,28 @@ void NeuralNoteAudioProcessor::clear()
     mTranscriptionManager->clear();
 
     mState.store(EmptyAudioAndMidiRegions);
+
+    // Every clear path has to reset the view too, not just the clear button: a cancelled or failed
+    // transcription otherwise leaves the audio region sized and scrolled for audio that is gone.
+    if (auto* main_view = getNeuralNoteMainView()) {
+        main_view->clear();
+    }
+}
+
+void NeuralNoteAudioProcessor::clearTranscription()
+{
+    mPlayer->reset();
+    mTranscriptionManager->clear();
+
+    // Falls back to Empty rather than asserting: a run that failed before any audio was acquired
+    // has nothing to go back to.
+    mState.store(mSourceAudioManager->getNumSamplesDownAcquired() > 0 ? AudioLoaded : EmptyAudioAndMidiRegions);
+
+    // Re-sizes the audio region from the current sample count, which is unchanged here -- so this
+    // is the same call as clear()'s and it leaves the waveform where it is.
+    if (auto* main_view = getNeuralNoteMainView()) {
+        main_view->clear();
+    }
 }
 
 SourceAudioManager* NeuralNoteAudioProcessor::getSourceAudioManager() const
@@ -128,9 +151,9 @@ TranscriptionManager* NeuralNoteAudioProcessor::getTranscriptionManager() const
     return mTranscriptionManager.get();
 }
 
-std::array<RangedAudioParameter*, ParameterHelpers::TotalNumParams>& NeuralNoteAudioProcessor::getParams()
+InstrumentMixer* NeuralNoteAudioProcessor::getInstrumentMixer() const
 {
-    return mParams;
+    return mInstrumentMixer.get();
 }
 
 float NeuralNoteAudioProcessor::getParameterValue(ParameterHelpers::ParamIdEnum inParamId) const
@@ -192,6 +215,14 @@ void NeuralNoteAudioProcessor::_updateValueTree(const ValueTree& inNewState)
             if (inNewState.hasProperty(prop_id)) {
                 mValueTree.setProperty(prop_id, inNewState.getProperty(prop_id), nullptr);
             }
+        }
+
+        // Children are not covered by the loop above, and the instrument mixer is one. Replaced
+        // wholesale rather than merged: the saved set of instruments is the authority, and a stale
+        // node left behind would keep muting an instrument the reloaded session no longer has.
+        if (const auto saved_mixer = inNewState.getChildWithName(NnId::InstrumentMixerId); saved_mixer.isValid()) {
+            mValueTree.removeChild(mValueTree.getChildWithName(NnId::InstrumentMixerId), nullptr);
+            mValueTree.appendChild(saved_mixer.createCopy(), nullptr);
         }
     } else {
         jassertfalse;

@@ -9,8 +9,10 @@
 
 #include "AudioRegion.h"
 #include "Keyboard.h"
+#include "NnLook.h"
 #include "PianoRoll.h"
 #include "PluginProcessor.h"
+#include "TimeRuler.h"
 
 class CombinedAudioMidiRegion
     : public Component
@@ -41,7 +43,17 @@ public:
 
     void repaintPianoRoll();
 
+    /** Re-derives what the regions show from the processor's state. */
+    void updateEnablements();
+
     void resizeAccordingToNumSamplesAvailable();
+
+    /**
+     * Resizes, and pulls the zoom back inside what the current audio length allows. Use this rather
+     * than resizeAccordingToNumSamplesAvailable() wherever the amount of audio may have changed:
+     * the lower zoom bound is derived from it.
+     */
+    void refreshForAudioLength();
 
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
@@ -57,9 +69,11 @@ public:
 
     const double mBaseNumPixelsPerSecond = 100.0;
 
-    const int mAudioRegionHeight = 85;
-    const int mHeightBetweenAudioMidi = 23;
-    const int mPianoRollY = mAudioRegionHeight + mHeightBetweenAudioMidi;
+    // The waveform, the ruler and the piano roll are stacked inside this one scrolling region, so
+    // their time axes cannot drift apart -- which is the whole reason the ruler lives here.
+    static constexpr int mAudioRegionHeight = nn::metrics::waveformHeight;
+    static constexpr int mRulerHeight = nn::metrics::rulerHeight;
+    static constexpr int mPianoRollY = mAudioRegionHeight + mRulerHeight;
 
 private:
     void _onVBlankCallback();
@@ -70,9 +84,19 @@ private:
 
     void _setZoomLevel(double inZoomLevel);
 
+    /**
+     * The furthest out the view may go: the zoom at which the audio exactly fills the viewport.
+     * Zooming past it would only add empty timeline to the right of the take.
+     */
+    double _minZoomLevel() const;
+
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
 
     NeuralNoteAudioProcessor* mProcessor;
+
+    // The pitch axis, shared with the key column outside this region: a wheel gesture that lands on
+    // the roll has to move both.
+    Keyboard& mKeyboard;
 
     juce::Viewport* mViewportPtr = nullptr;
     juce::VBlankAttachment mVBlankAttachment;
@@ -88,6 +112,7 @@ private:
     double mZoomLevel = 1.0;
 
     AudioRegion mAudioRegion;
+    TimeRuler mTimeRuler;
     PianoRoll mPianoRoll;
 };
 

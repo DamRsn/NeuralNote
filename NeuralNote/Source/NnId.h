@@ -31,38 +31,46 @@ inline static Identifier MidiOut = "MIDI_OUT";
 
 inline static Identifier ExportTempoId = "EXPORT_TEMPO";
 
+// A MidiOverflowMode, for transcriptions with more melodic instruments than there are channels.
+inline static Identifier MidiOverflowModeId = "MIDI_OVERFLOW_MODE";
+
 inline static Identifier ZoomLevelId = "ZOOM_LEVEL";
 
-inline static Identifier TooltipVisibleId = "TOOLTIP_VISIBLE";
+// The piano roll's vertical zoom, as the slider's normalised position. Negative means the view has
+// not been told what to show and picks the zoom that fits the transcription; moving the slider is
+// what takes it off that, and Reset Zoom is what puts it back.
+inline static Identifier VerticalZoomId = "VERTICAL_ZOOM";
 
-// --------------- Time quantization ----------------
-inline static Identifier TempoId = "TEMPO";
+// --------------- Instrument mixer -----------------
+// A child tree, one node per program, holding the per-instrument fader, mute and solo.
+inline static Identifier InstrumentMixerId = "INSTRUMENT_MIXER";
 
-inline static Identifier TimeSignatureNumeratorId = "TIME_SIGNATURE_NUMERATOR";
+inline static Identifier InstrumentId = "INSTRUMENT";
 
-inline static Identifier TimeSignatureDenominatorId = "TIME_SIGNATURE_DENOMINATOR";
+inline static Identifier ProgramId = "PROGRAM";
 
-inline static Identifier TimeQuantizeRefPosQnId = "TIME_QUANTIZE_REF_POS_QN";
+inline static Identifier GainDbId = "GAIN_DB";
 
-inline static Identifier TimeQuantizeRefLastBarQnId = "TIME_QUANTIZE_REF_LAST_BAR_QN";
+inline static Identifier MutedId = "MUTED";
 
-inline static Identifier TimeQuantizeRefPosSec = "TIME_QUANTIZE_REF_POS_SECONDS";
+inline static Identifier SoloedId = "SOLOED";
+
+// --------------- Instrument selection -------------
+// Which instruments the next transcription should look for, as comma-separated msl group ids.
+// Empty lets the model choose. A flat property rather than a child tree, so it rides along with
+// every other property through save, restore and defaulting.
+inline static Identifier SelectedInstrumentGroupsId = "SELECTED_INSTRUMENT_GROUPS";
 
 // To be set in this specific order
 const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault = {
-    {TempoId, 120.0},
     {ExportTempoId, 120.0},
-    {TimeSignatureNumeratorId, 4},
-    {TimeSignatureDenominatorId, 4},
-    {TimeQuantizeRefPosQnId, 0.0},
-    {TimeQuantizeRefLastBarQnId, 0.0},
-    {TimeQuantizeRefPosSec, 0.0},
+    {MidiOverflowModeId, 0}, // MidiOverflowMode::ReuseChannels
     {SourceAudioNativeSrPathId, String()},
     {PlayheadPositionSecId, 0.0},
     {PlayheadCenteredId, true},
     {ZoomLevelId, 1.0},
-    {MidiOut, false},
-    {TooltipVisibleId, true}};
+    {VerticalZoomId, -1.0},
+    {SelectedInstrumentGroupsId, String()}};
 
 } // namespace NnId
 

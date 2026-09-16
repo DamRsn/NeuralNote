@@ -4,7 +4,8 @@
 
 #include "AudioUtils.h"
 
-#define MINIMP3_IMPLEMENTATION
+// Declarations only: the implementation lives in the minimp3 target, so its
+// warnings do not land on this file. See ThirdParty/minimp3/CMakeLists.txt.
 #include "minimp3.h"
 #include "minimp3_ex.h"
 
@@ -64,7 +65,7 @@ std::unique_ptr<AudioFormatManager> createAudioFormatManager()
     audio_format_manager->registerFormat(new juce::FlacAudioFormat, false);
     audio_format_manager->registerFormat(new juce::OggVorbisAudioFormat, false);
 
-    return std::move(audio_format_manager);
+    return audio_format_manager;
 }
 
 void resampleBuffer(const AudioBuffer<float>& inBuffer,
@@ -72,7 +73,7 @@ void resampleBuffer(const AudioBuffer<float>& inBuffer,
                     double inSourceSampleRate,
                     double inTargetSampleRate)
 {
-    if (inSourceSampleRate == inTargetSampleRate) {
+    if (juce::exactlyEqual(inSourceSampleRate, inTargetSampleRate)) {
         outBuffer.makeCopyOf(inBuffer);
         return;
     }
@@ -92,6 +93,45 @@ void resampleBuffer(const AudioBuffer<float>& inBuffer,
     }
 }
 
+void resampleBufferToMono(const AudioBuffer<float>& inBuffer,
+                          AudioBuffer<float>& outBuffer,
+                          double inSourceSampleRate,
+                          double inTargetSampleRate)
+{
+    const int num_channels = inBuffer.getNumChannels();
+
+    if (num_channels < 1) {
+        // Nothing to average. Caught here rather than left to divide by zero downstream.
+        jassertfalse;
+        outBuffer.setSize(1, 0);
+        return;
+    }
+
+    if (juce::exactlyEqual(inSourceSampleRate, inTargetSampleRate)) {
+        outBuffer.setSize(1, inBuffer.getNumSamples());
+        outBuffer.copyFrom(0, 0, inBuffer, 0, 0, inBuffer.getNumSamples());
+
+        for (int ch = 1; ch < num_channels; ch++) {
+            outBuffer.addFrom(0, 0, inBuffer, ch, 0, inBuffer.getNumSamples());
+        }
+
+        outBuffer.applyGain(1.0f / static_cast<float>(num_channels));
+        return;
+    }
+
+    Resampler resampler;
+    resampler.prepareToPlay(inSourceSampleRate, inBuffer.getNumSamples(), inTargetSampleRate);
+    const auto num_expected_samples_after_resample =
+        resampler.getNumOutSamplesOnNextProcessBlock(inBuffer.getNumSamples());
+
+    outBuffer.setSize(1, num_expected_samples_after_resample);
+
+    // One pass over the whole thing, channels folded in as they are read.
+    const int num_samples_after_resample = resampler.processBlock(
+        inBuffer.getArrayOfReadPointers(), num_channels, outBuffer.getWritePointer(0), inBuffer.getNumSamples());
+    jassertquiet(num_samples_after_resample == num_expected_samples_after_resample);
+}
+
 bool _loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuffer, double& outSampleRate)
 {
     mp3dec_t mp3d;
@@ -102,11 +142,13 @@ bool _loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuff
         return false;
     }
 
-    outBuffer.setSize(info.channels, static_cast<int>(info.samples / info.channels));
+    const auto num_channels = static_cast<size_t>(info.channels);
+
+    outBuffer.setSize(info.channels, static_cast<int>(info.samples / num_channels));
 
     for (size_t i = 0; i < info.samples; ++i) {
-        size_t channel = i % info.channels;
-        outBuffer.setSample((int) channel, static_cast<int>(i / info.channels), (float) info.buffer[i] / 32768.0f);
+        size_t channel = i % num_channels;
+        outBuffer.setSample((int) channel, static_cast<int>(i / num_channels), (float) info.buffer[i] / 32768.0f);
     }
 
     outSampleRate = static_cast<double>(info.hz);

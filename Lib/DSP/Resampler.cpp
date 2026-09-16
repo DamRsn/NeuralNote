@@ -42,10 +42,29 @@ void Resampler::reset()
 
 int Resampler::processBlock(const float* inBuffer, float* outBuffer, int inNumSamples)
 {
-    jassert(mNumInputSamplesAvailable + inNumSamples <= mInternalBuffer.getNumSamples());
+    return processBlock(&inBuffer, 1, outBuffer, inNumSamples);
+}
 
-    mInternalBuffer.copyFrom(0, mNumInputSamplesAvailable, inBuffer, inNumSamples);
+int Resampler::processBlock(const float* const* inChannels, int inNumChannels, float* outBuffer, int inNumSamples)
+{
+    jassert(mNumInputSamplesAvailable + inNumSamples <= mInternalBuffer.getNumSamples());
+    jassert(inNumChannels >= 1);
+
     float* internal_buffer_ptr = mInternalBuffer.getWritePointer(0);
+
+    // Averaged, not summed: a downmix that can exceed the input's peak would clip a hot master, and
+    // the model is sensitive to level.
+    const float scale = 1.0f / static_cast<float>(inNumChannels);
+
+    for (int i = 0; i < inNumSamples; i++) {
+        float sum = 0.0f;
+
+        for (int ch = 0; ch < inNumChannels; ch++) {
+            sum += inChannels[ch][i];
+        }
+
+        internal_buffer_ptr[mNumInputSamplesAvailable + i] = sum * scale;
+    }
 
     // Lowpass filter if necessary
     if (mTargetSampleRate < mSourceSampleRate) {

@@ -7,16 +7,14 @@
 
 #include <JuceHeader.h>
 
-#include "BasicPitchConstants.h"
 #include "Keyboard.h"
-#include "PluginProcessor.h"
-#include "UIDefines.h"
 #include "Playhead.h"
+#include "PluginProcessor.h"
+#include "TranscriptionConstants.h"
 
 class PianoRoll
     : public Component
     , public ChangeListener
-    , ValueTree::Listener
 {
 public:
     PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, double inBaseNumPixelsPerSecond);
@@ -33,8 +31,12 @@ public:
 
     void setZoomLevel(double inZoomLevel);
 
+    /** Hides the playhead while the transcribe button is the thing to look at. */
+    void updateEnablements();
+
 private:
-    void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
+    /** Repaints only the sliver the playhead swept, for the same reason AudioRegion does. */
+    void _onVBlankCallback();
 
     float _timeToPixel(float inTime) const;
 
@@ -65,19 +67,24 @@ private:
 
     float _getNoteWidth(int inNote) const;
 
-    void _drawBeatVerticalLines(Graphics& g) const;
+    void _drawLanes(Graphics& g) const;
 
-    double _beatPosQnToPixel(double inPosQn, double inOffsetBarStart, double inSecondsPerBeat) const;
+    void _drawNotes(Graphics& g) const;
+
+    /** Shades the stretch a running transcription has not reached yet. Nothing while idle. */
+    void _drawTranscriptionFrontier(Graphics& g) const;
 
     const double mBaseNumPixelsPerSecond;
     double mZoomLevel = 1.0;
-
-    ColourGradient mNoteGradient;
 
     Keyboard& mKeyboard;
     NeuralNoteAudioProcessor* mProcessor;
 
     Playhead mPlayhead;
+
+    VBlankAttachment mVBlankAttachment;
+
+    int mLastPlayheadX = 0;
 };
 
 #endif // PianoRoll_h

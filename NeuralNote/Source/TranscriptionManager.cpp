@@ -5,227 +5,284 @@
 #include "TranscriptionManager.h"
 #include "PluginProcessor.h"
 #include "NeuralNoteMainView.h"
+#include "InstrumentSelection.h"
+#include "NNFileUtils.h"
+#include "NnGlobalSettings.h"
+#include "TranscriptionConstants.h"
 
 TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
-    , mTimeQuantizeOptions(inProcessor)
     , mThreadPool(1)
 {
     mJobLambda = [this] { _runModel(); };
 
-    auto& apvts = mProcessor->getAPVTS();
-
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::NoteSensitivityId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::SplitSensitivityId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MinimumNoteDurationId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::PitchBendModeId), this);
-
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::EnableNoteQuantizationId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::KeyRootNoteId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::KeyTypeId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::KeySnapModeId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MinMidiNoteId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::MaxMidiNoteId), this);
-
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::EnableTimeQuantizationId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::TimeDivisionId), this);
-    apvts.addParameterListener(ParameterHelpers::getIdStr(ParameterHelpers::QuantizationForceId), this);
-
     startTimerHz(30);
+}
+
+TranscriptionManager::~TranscriptionManager()
+{
+    stopTimer();
+
+    // ~ThreadPool waits 5 s and then kills the thread by force, which a transcription easily
+    // outlasts. Cancel and wait here instead, long enough for a cold model load or a chunk.
+    mMuscriptorEngine.cancel();
+
+    const bool jobs_finished = mThreadPool.removeAllJobs(true, 30000);
+    jassertquiet(jobs_finished);
 }
 
 void TranscriptionManager::timerCallback()
 {
-    if (mTimeQuantizeOptions.checkInfoUpdated()) {
-        mTimeQuantizeOptions.saveStateToValueTree(true);
+    _catchUpSynthInstrumentsOnceFontReady();
+
+    const auto finished_job_outcome = mFinishedJobOutcome.exchange(JobOutcome::None);
+
+    if (finished_job_outcome != JobOutcome::None) {
+        _handleFinishedJob(finished_job_outcome);
+        return;
     }
 
-    if (mShouldRunNewTranscription) {
-        launchTranscribeJob();
-        _repaintPianoRoll();
-    } else if (mShouldUpdateTranscription) {
-        _updateTranscription();
-        _repaintPianoRoll();
-    } else if (mShouldUpdatePostProcessing) {
+    if (mJobActive && mMuscriptorEngine.drainNewNotes(mRawNotes, mFinalizedThrough)) {
+        // A chunk landed. Gated on the drain having something, so this runs at the model's pace --
+        // once per 5 s of audio -- rather than at the timer's.
         _updatePostProcessing();
         _repaintPianoRoll();
-    } else if (mShouldRepaintPianoRoll) {
-        _repaintPianoRoll();
-    }
-}
-void TranscriptionManager::prepareToPlay(double inSampleRate)
-{
-    mTimeQuantizeOptions.prepareToPlay(inSampleRate);
-}
-
-void TranscriptionManager::processBlock(int inNumSamples)
-{
-    mTimeQuantizeOptions.processBlock(inNumSamples);
-}
-
-void TranscriptionManager::setLaunchNewTranscription()
-{
-    mShouldRunNewTranscription = true;
-    mShouldUpdateTranscription = false;
-    mShouldUpdatePostProcessing = false;
-}
-
-void TranscriptionManager::parameterChanged(const String& parameterID, float newValue)
-{
-    if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::NoteSensitivityId)
-            || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::SplitSensitivityId)
-            || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::MinimumNoteDurationId)) {
-            mProcessor->getAPVTS().getRawParameterValue(parameterID)->store(newValue);
-            mShouldUpdateTranscription = true;
-
-        } else if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::EnableNoteQuantizationId)
-                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeyRootNoteId)
-                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeyTypeId)
-                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::KeySnapModeId)
-                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::MinMidiNoteId)
-                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::MaxMidiNoteId)
-                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::EnableTimeQuantizationId)
-                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::TimeDivisionId)
-                   || parameterID == ParameterHelpers::getIdStr(ParameterHelpers::QuantizationForceId)) {
-            mProcessor->getAPVTS().getRawParameterValue(parameterID)->store(newValue);
-            mShouldUpdatePostProcessing = true;
-        } else if (parameterID == ParameterHelpers::getIdStr(ParameterHelpers::PitchBendModeId)) {
-            mProcessor->getAPVTS().getRawParameterValue(parameterID)->store(newValue);
-            mShouldRepaintPianoRoll = true;
-        }
     }
 }
 
 void TranscriptionManager::_runModel()
 {
-    mBasicPitch.setParameters(mProcessor->getParameterValue(ParameterHelpers::NoteSensitivityId),
-                              mProcessor->getParameterValue(ParameterHelpers::SplitSensitivityId),
-                              mProcessor->getParameterValue(ParameterHelpers::MinimumNoteDurationId));
-    mBasicPitch.transcribeToMIDI(
+    const auto outcome = mMuscriptorEngine.transcribeToMIDI(
+        mJobModelSize,
         mProcessor->getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
-        mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired());
+        mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired(),
+        mJobInstruments);
 
-    mNoteOptions.setParameters(
-        mProcessor->getParameterValue(ParameterHelpers::EnableNoteQuantizationId) > 0.5f,
-        static_cast<NoteUtils::RootNote>(mProcessor->getParameterValue(ParameterHelpers::KeyRootNoteId)),
-        static_cast<NoteUtils::ScaleType>(mProcessor->getParameterValue(ParameterHelpers::KeyTypeId)),
-        static_cast<NoteUtils::SnapMode>(mProcessor->getParameterValue(ParameterHelpers::KeySnapModeId)),
-        static_cast<int>(mProcessor->getParameterValue(ParameterHelpers::MinMidiNoteId)),
-        static_cast<int>(mProcessor->getParameterValue(ParameterHelpers::MaxMidiNoteId)));
-
-    auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
-
-    mTimeQuantizeOptions.setParameters(
-        mProcessor->getParameterValue(ParameterHelpers::EnableTimeQuantizationId) > 0.5f,
-        static_cast<TimeQuantizeUtils::TimeDivisions>(mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
-        mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
-
-    mPostProcessedNotes = mTimeQuantizeOptions.quantize(post_processed_notes);
-
-    Notes::dropOverlappingPitchBends(mPostProcessedNotes);
-    Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
-
-    // For the synth
-    auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
-    mProcessor->getPlayer()->getSynthController()->setNewMidiEventsVectorToUse(single_events);
-
-    mProcessor->setStateToPopulatedAudioAndMidiRegions();
-}
-
-void TranscriptionManager::_updateTranscription()
-{
-    jassert(mProcessor->getState() == PopulatedAudioAndMidiRegions);
-
-    if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        mBasicPitch.setParameters(mProcessor->getParameterValue(ParameterHelpers::NoteSensitivityId),
-                                  mProcessor->getParameterValue(ParameterHelpers::SplitSensitivityId),
-                                  mProcessor->getParameterValue(ParameterHelpers::MinimumNoteDurationId));
-
-        mBasicPitch.updateMIDI();
-        _updatePostProcessing();
+    if (outcome != MuscriptorEngine::Outcome::Success) {
+        mFinishedJobOutcome =
+            outcome == MuscriptorEngine::Outcome::Cancelled ? JobOutcome::Cancelled : JobOutcome::Failed;
+        return;
     }
 
-    mShouldUpdateTranscription = false;
-    mShouldUpdatePostProcessing = false;
+    // Post-processing and the synth handoff belong to the message thread, which has been doing
+    // both per chunk while this ran. All that is left here is to say so.
+    //
+    // Published last: the message thread treats this as the signal that the job is done with
+    // everything it owns, and clearing while a job is in flight would race with it.
+    mFinishedJobOutcome = JobOutcome::Success;
+}
+
+void TranscriptionManager::_handleFinishedJob(JobOutcome inOutcome)
+{
+    jassert(MessageManager::getInstance()->isThisTheMessageThread());
+
+    // The job published its outcome as its last act, so nothing on the pool thread can touch the
+    // state this manager owns from here on. Dropped before clear() runs below, which asserts it.
+    mJobActive = false;
+
+    switch (inOutcome) {
+        case JobOutcome::Success:
+            // Replaces the accumulation rather than extending it: transcribe()'s own result is
+            // authoritative, and the streamed one is missing any note the model never closed.
+            mRawNotes = mMuscriptorEngine.takeFinalNotes();
+            mFinalizedThrough = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
+            _updatePostProcessing();
+            mProcessor->setStateToPopulatedAudioAndMidiRegions();
+            _repaintPianoRoll();
+            break;
+
+        case JobOutcome::Cancelled:
+            // Back to where the transcribe button was, with the audio still loaded: cancelling a
+            // run the user misconfigured should not cost them the file as well.
+            mProcessor->clearTranscription();
+            break;
+
+        case JobOutcome::Failed: {
+            // Read before clearTranscription(), which resets the engine and with it the message.
+            // Shown rather than only pointing at the log: it is one line, and the log lives in
+            // /tmp, which is neither discoverable nor durable.
+            const auto reason = mMuscriptorEngine.getLastErrorMessage();
+
+            mProcessor->clearTranscription();
+
+            const String message = reason.empty()
+                                       ? String("The transcription model could not be loaded or run.")
+                                       : "The transcription model could not be loaded or run: " + String(reason) + ".";
+
+            NativeMessageBox::showMessageBoxAsync(MessageBoxIconType::NoIcon, "Transcription failed.", message);
+            break;
+        }
+
+        case JobOutcome::None:
+            jassertfalse;
+            break;
+    }
 }
 
 void TranscriptionManager::_updatePostProcessing()
 {
-    jassert(mProcessor->getState() == PopulatedAudioAndMidiRegions);
+    jassert(mProcessor->hasTranscription());
 
-    if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
-        mNoteOptions.setParameters(
-            mProcessor->getParameterValue(ParameterHelpers::EnableNoteQuantizationId) > 0.5f,
-            static_cast<NoteUtils::RootNote>(mProcessor->getParameterValue(ParameterHelpers::KeyRootNoteId)),
-            static_cast<NoteUtils::ScaleType>(mProcessor->getParameterValue(ParameterHelpers::KeyTypeId)),
-            static_cast<NoteUtils::SnapMode>(mProcessor->getParameterValue(ParameterHelpers::KeySnapModeId)),
-            static_cast<int>(mProcessor->getParameterValue(ParameterHelpers::MinMidiNoteId)),
-            static_cast<int>(mProcessor->getParameterValue(ParameterHelpers::MaxMidiNoteId)));
+    if (mProcessor->hasTranscription()) {
+        mPostProcessedNotes = mRawNotes;
 
-        // TODO: Make this vector a member to avoid reallocating every time
-        auto post_processed_notes = mNoteOptions.process(mBasicPitch.getNoteEvents());
+        NoteEvent::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
 
-        mTimeQuantizeOptions.setParameters(mProcessor->getParameterValue(ParameterHelpers::EnableTimeQuantizationId)
-                                               > 0.5f,
-                                           static_cast<TimeQuantizeUtils::TimeDivisions>(
-                                               mProcessor->getParameterValue(ParameterHelpers::TimeDivisionId)),
-                                           mProcessor->getParameterValue(ParameterHelpers::QuantizationForceId));
+        // Before the notes reach the scheduler, so no note can arrive at the synth for an
+        // instrument that has no player yet. Creating one allocates and touches the list the audio
+        // thread walks, so it happens here on the message thread rather than on demand.
+        _ensureSynthInstruments();
 
-        // TODO: Pass mPostProcessedNotes as reference
-        mPostProcessedNotes = mTimeQuantizeOptions.quantize(post_processed_notes);
+        // After the synth has players for them, so the faders it pushes land somewhere.
+        mProcessor->getInstrumentMixer()->rebuildFromNotes(mPostProcessedNotes);
 
-        Notes::dropOverlappingPitchBends(mPostProcessedNotes);
-        Notes::mergeOverlappingNotesWithSamePitch(mPostProcessedNotes);
+        // For the synth. A copy, because mPostProcessedNotes is what the piano roll draws and the
+        // scheduler takes ownership of what it is given.
+        auto notes_to_play = mPostProcessedNotes;
+        mProcessor->getPlayer()->getSynthController()->setNotes(notes_to_play);
+    }
+}
 
-        // For the synth
-        auto single_events = SynthController::buildMidiEventsVector(mPostProcessedNotes);
-        mProcessor->getPlayer()->getSynthController()->setNewMidiEventsVectorToUse(single_events);
+void TranscriptionManager::_ensureSynthInstruments()
+{
+    jassert(MessageManager::getInstance()->isThisTheMessageThread());
+
+    auto* synth = mProcessor->getPlayer()->getInstrumentSynth();
+
+    // A transcription streams in, so the set of instruments grows as it decodes; this runs once per
+    // chunk and adds whatever is new. Scanning the whole note list each time is a pass over
+    // something the piano roll redraws entirely anyway, and it keeps the "which instruments exist"
+    // question answerable from the notes alone rather than from a second, driftable record.
+    std::array<bool, NUM_INSTRUMENT_IDS> seen {};
+
+    for (const NoteEvent& note: mPostProcessedNotes) {
+        if (note.program >= 0 && note.program < NUM_INSTRUMENT_IDS) {
+            seen[static_cast<std::size_t>(note.program)] = true;
+        }
     }
 
-    mShouldUpdatePostProcessing = false;
+    // Under the callback lock, for the same reason setNotes takes it: this appends to the list the
+    // audio thread walks every block.
+    const ScopedLock sl(mProcessor->getCallbackLock());
+
+    for (std::size_t program = 0; program < seen.size(); program++) {
+        if (seen[program]) {
+            synth->ensureInstrument(static_cast<int>(program));
+        }
+    }
 }
 
-bool TranscriptionManager::isJobRunningOrQueued() const
+void TranscriptionManager::_catchUpSynthInstrumentsOnceFontReady()
 {
-    return mThreadPool.getNumJobs() > 0;
+    if (mDidCatchUpSynthInstruments || !mProcessor->hasTranscription()) {
+        return;
+    }
+
+    if (mProcessor->getPlayer()->getInstrumentSynth()->isReady()) {
+        // Whatever _ensureSynthInstruments has already run so far may have found the synth not
+        // ready yet and done nothing; this repeats it exactly once now that it is, for every
+        // instrument the current notes name. A no-op for any instrument that already exists.
+        _ensureSynthInstruments();
+        mDidCatchUpSynthInstruments = true;
+    }
 }
 
-const std::vector<Notes::Event>& TranscriptionManager::getNoteEventVector() const
+const std::vector<NoteEvent>& TranscriptionManager::getNoteEventVector() const
 {
     return mPostProcessedNotes;
 }
 
-TimeQuantizeOptions& TranscriptionManager::getTimeQuantizeOptions()
+float TranscriptionManager::getTranscriptionProgress() const
 {
-    return mTimeQuantizeOptions;
+    return mMuscriptorEngine.getProgress();
+}
+
+double TranscriptionManager::getFinalizedThrough() const
+{
+    return mFinalizedThrough;
+}
+
+void TranscriptionManager::cancelTranscription()
+{
+    mMuscriptorEngine.cancel();
 }
 
 void TranscriptionManager::clear()
 {
-    mBasicPitch.reset();
-    mShouldRunNewTranscription = false;
-    mShouldUpdateTranscription = false;
-    mShouldUpdatePostProcessing = false;
+    // Resets state a running job owns, so it must not be called while one is in flight. Every
+    // path here either runs before the job is launched or after _handleFinishedJob.
+    jassert(!mJobActive.load());
+
+    mMuscriptorEngine.reset();
+    mFinishedJobOutcome = JobOutcome::None;
+    mRawNotes.clear();
+    mRawNotes.shrink_to_fit();
+    mFinalizedThrough = 0.0;
     mPostProcessedNotes.clear();
-    mTimeQuantizeOptions.clear();
+    mProcessor->getInstrumentMixer()->clear();
+
+    // Otherwise the synth keeps playing the notes of the transcription that was just thrown away.
+    std::vector<NoteEvent> no_notes;
+    mProcessor->getPlayer()->getSynthController()->setNotes(no_notes);
+    mProcessor->getPlayer()->getSynthController()->stopAllNotes();
+
+    {
+        // Drops the instruments and their faders with the transcription that named them. Under the
+        // callback lock: it destroys what the audio thread renders from.
+        const ScopedLock sl(mProcessor->getCallbackLock());
+        mProcessor->getPlayer()->getInstrumentSynth()->reset();
+    }
 }
 
 void TranscriptionManager::launchTranscribeJob()
 {
     jassert(MessageManager::getInstance()->isThisTheMessageThread());
+
+    // The Transcribe button only hides on the next timer tick, so a second click can arrive while
+    // the first job is already running. Everything below writes state that job owns.
+    if (mProcessor->getState() != AudioLoaded || mJobActive.load()) {
+        return;
+    }
+
+    // The stored size is a preference: when that checkpoint is missing and another is there, the
+    // run uses the one that is there.
+    const std::optional<ModelSize> model_size = NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize());
+
+    // The checkpoint went since the button was shown. The model panel's next poll replaces the button.
+    if (!model_size.has_value()) {
+        return;
+    }
+
+    // Armed before the Processing state is published, not after: that state is what makes the
+    // cancel button live, and reset() is what clears a pending cancellation request. Doing it in
+    // this order means no click can be discarded, without having to argue about which thread
+    // observes what.
+    mMuscriptorEngine.reset();
+
+    // Nothing is transcribed yet, and the piano roll is about to start drawing what arrives.
+    mRawNotes.clear();
+    mFinalizedThrough = 0.0;
+    mPostProcessedNotes.clear();
+
+    // Read here, not in the job: the selection lives on the state tree, which belongs to this
+    // thread. The job only ever sees the copy.
+    mJobInstruments = InstrumentSelection::get(mProcessor->getValueTree());
+
+    // Every instrument this run finds is a new one, and should start at unity and unmuted rather
+    // than inherit a fader from whatever was transcribed before.
+    mProcessor->getInstrumentMixer()->resetStoredSettings();
+
+    mJobModelSize = *model_size;
+
     mProcessor->setStateToProcessing();
 
     // Have at least one second to transcribe
-    if (mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired() >= 1 * AUDIO_SAMPLE_RATE) {
+    if (mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired() >= 1 * TRANSCRIPTION_SAMPLE_RATE) {
+        mJobActive = true;
         mThreadPool.addJob(mJobLambda);
     } else {
         mProcessor->clear();
     }
-
-    mShouldRunNewTranscription = false;
-    mShouldUpdateTranscription = false;
-    mShouldUpdatePostProcessing = false;
 }
 
 void TranscriptionManager::_repaintPianoRoll()
@@ -235,6 +292,4 @@ void TranscriptionManager::_repaintPianoRoll()
     if (main_view) {
         main_view->repaintPianoRoll();
     }
-
-    mShouldRepaintPianoRoll = false;
 }

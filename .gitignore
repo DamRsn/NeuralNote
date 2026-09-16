@@ -11,6 +11,14 @@ cmake_install.cmake
 CMakeScripts
 
 .idea
+.cache/
+.claude
+.zed
+.clangd
+.env
+CMakeUserPresets.json
+.clang-tidy
+__pycache__
 
 IDEWorkspaceChecks.plist
 UserInterfaceState.xcuserstate
@@ -22,7 +30,7 @@ xcschememanagement.plist
 *.entitlements
 *.cpb
 Makefile
-*.ort
-onnxruntime*.tar.gz
-ThirdParty/onnxruntime
 /Installers/Windows/Output/
+
+# Fetched by Tools/fetch_soundfont.py, not committed
+/NeuralNote/Assets/SoundFont/

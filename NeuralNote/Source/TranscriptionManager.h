@@ -6,62 +6,109 @@
 #define TranscriptionManager_h
 
 #include <JuceHeader.h>
-#include "BasicPitch.h"
-#include "NoteOptions.h"
-#include "TimeQuantizeOptions.h"
+#include "MuscriptorEngine.h"
 
 class NeuralNoteAudioProcessor;
 class NeuralNoteMainView;
 class NeuralNoteEditor;
 
-class TranscriptionManager
-    : public Timer
-    , public AudioProcessorValueTreeState::Listener
+class TranscriptionManager : public Timer
 {
 public:
     explicit TranscriptionManager(NeuralNoteAudioProcessor* inProcessor);
 
+    ~TranscriptionManager() override;
+
     void timerCallback() override;
-
-    void prepareToPlay(double inSampleRate);
-
-    void processBlock(int inNumSamples);
-
-    void setLaunchNewTranscription();
 
     void launchTranscribeJob();
 
-    void parameterChanged(const juce::String& parameterID, float newValue) override;
+    const std::vector<NoteEvent>& getNoteEventVector() const;
 
-    bool isJobRunningOrQueued() const;
+    /**
+     * @return Progress of the current/last transcription, in [0, 1].
+     */
+    float getTranscriptionProgress() const;
 
-    const std::vector<Notes::Event>& getNoteEventVector() const;
+    /**
+     * @return Time in seconds below which the note vector is complete, not merely correct. While a
+     *         transcription runs it is the decode frontier: everything before it can be played and
+     *         drawn, and nothing is known after it. Equal to the audio duration once finished.
+     */
+    double getFinalizedThrough() const;
 
-    TimeQuantizeOptions& getTimeQuantizeOptions();
+    /**
+     * Requests that an in-flight transcription stop as soon as possible.
+     */
+    void cancelTranscription();
 
     void clear();
 
 private:
+    /**
+     * Outcome of the last transcription job, as published by the thread pool thread and consumed
+     * by the message thread. None means there is nothing left to apply.
+     */
+    enum class JobOutcome { None, Success, Cancelled, Failed };
+
     void _runModel();
 
-    void _updateTranscription();
+    /**
+     * Applies a finished job's outcome. Message thread only: everything downstream of it (the
+     * processor state, the value tree, the UI) belongs to that thread.
+     */
+    void _handleFinishedJob(JobOutcome inOutcome);
 
+    /**
+     * Re-derives the played and drawn notes from the raw ones and fans them out to the synth, the
+     * mixer and the piano roll. Runs per decoded chunk, so a partial transcription is playable.
+     */
     void _updatePostProcessing();
+
+    /** Gives the synth a player for every instrument in the current notes. Message thread. */
+    void _ensureSynthInstruments();
+
+    /**
+     * Catches up once the soundfont finishes loading, in case it was still loading the last time
+     * _ensureSynthInstruments ran. It normally is not: a transcription takes minutes and the font
+     * loads in about a second. Without this, a transcription that finishes inside that window would
+     * leave every instrument silent for good, because nothing else re-scans the note list once the
+     * font becomes ready.
+     */
+    void _catchUpSynthInstrumentsOnceFontReady();
 
     void _repaintPianoRoll();
 
     NeuralNoteAudioProcessor* mProcessor;
 
-    BasicPitch mBasicPitch;
-    NoteOptions mNoteOptions;
-    TimeQuantizeOptions mTimeQuantizeOptions;
+    MuscriptorEngine mMuscriptorEngine;
 
-    std::vector<Notes::Event> mPostProcessedNotes;
+    // What the running job was launched with. Both are written by launchTranscribeJob before the
+    // job is queued and read only by the job, so they need no synchronisation of their own.
+    std::vector<msl::InstrumentGroup> mJobInstruments;
+    ModelSize mJobModelSize = DEFAULT_MODEL_SIZE;
 
-    std::atomic<bool> mShouldRunNewTranscription = false;
-    std::atomic<bool> mShouldUpdateTranscription = false;
-    std::atomic<bool> mShouldUpdatePostProcessing = false;
-    std::atomic<bool> mShouldRepaintPianoRoll = false;
+    // The model's own output, accumulated chunk by chunk as the job decodes it. Message thread
+    // only, and owned here rather than by the engine because it has to outlive it: the engine is
+    // reset between runs, and this is what post-processing re-derives from and what a later change
+    // will persist in the plugin state.
+    std::vector<NoteEvent> mRawNotes;
+
+    // How far mRawNotes is complete; see getFinalizedThrough.
+    double mFinalizedThrough = 0.0;
+
+    std::vector<NoteEvent> mPostProcessedNotes;
+
+    std::atomic<JobOutcome> mFinishedJobOutcome = JobOutcome::None;
+
+    // True from the moment a job is queued until the message thread has applied its outcome. Only
+    // there to make clear()'s "no job may be in flight" precondition assertable: it cannot be
+    // derived from mThreadPool, which still reports the job as running when the outcome lands.
+    std::atomic<bool> mJobActive = false;
+
+    // Set once _catchUpSynthInstrumentsOnceFontReady has done its one catch-up pass, so it does not
+    // rescan the note list on every timer tick for the rest of the session.
+    bool mDidCatchUpSynthInstruments = false;
 
     ThreadPool mThreadPool;
     std::function<void()> mJobLambda;

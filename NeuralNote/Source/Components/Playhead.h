@@ -27,6 +27,13 @@ public:
 
     void setZoomLevel(double inZoomLevel);
 
+    /** The marker at the top of the line. Only the waveform shows one; the ruler and the piano
+        roll continue the same playhead and would otherwise repeat it twice more. */
+    void setDrawTriangle(bool inShouldDraw);
+
+    /** @return The playhead's x in this component, for a view that shades what has been played. */
+    double getPlayheadX() const;
+
 private:
     void _onVBlankCallback();
 
@@ -38,8 +45,14 @@ private:
     double mZoomLevel = 1.0;
     const double mBaseNumPixelsPerSecond;
 
-    static constexpr float mTriangleSide = 8.0f;
-    static constexpr float mTriangleHeight = 0.86602540378 * mTriangleSide; // Sqrt(3) / 2
+    bool mDrawTriangle = true;
+
+    // Whether the last frame drew anything, so the frame that starts or stops drawing repaints in
+    // full rather than only the sliver the line moved through.
+    bool mIsDrawing = false;
+
+    static constexpr float mTriangleSide = 9.0f;
+    static constexpr float mTriangleHeight = 0.86602540378f * mTriangleSide; // Sqrt(3) / 2
 };
 
 #endif // Playhead_h

@@ -7,48 +7,70 @@
 
 #include <JuceHeader.h>
 
-#include "SynthVoice.h"
-#include "Notes.h"
+#include "NoteEvent.h"
+#include "NoteScheduler.h"
 
 class NeuralNoteAudioProcessor;
 
+/**
+ * Wires NoteScheduler into the plugin: owns the block's MidiBuffer, keeps the audio thread out of
+ * the way while the note list is swapped, and stops the transport at the end of the audio.
+ *
+ * The scheduling itself, including the guarantee that no note is ever left hanging, is
+ * NoteScheduler's -- and deliberately knows nothing about the synth, so the buffer it produces is
+ * equally good for the MIDI output port or a sampler replacing the current one.
+ */
 class SynthController
 {
 public:
-    SynthController(NeuralNoteAudioProcessor* inProcessor, MPESynthesiser* inMPESynth);
+    explicit SynthController(NeuralNoteAudioProcessor* inProcessor);
 
     void setSampleRate(double inSampleRate);
 
-    static std::vector<MidiMessage> buildMidiEventsVector(const std::vector<Notes::Event>& inNoteEvents);
+    /**
+     * Swaps in a new note list, sorted by start time. Takes the audio callback lock, so it may be
+     * called from the message thread or a worker, but not from the audio thread.
+     */
+    void setNotes(std::vector<NoteEvent>& ioNotes);
 
-    void setNewMidiEventsVectorToUse(std::vector<MidiMessage>& inEvents);
+    /**
+     * Builds this block's MIDI. Audio thread only, and called every block whether or not the
+     * transport is running -- a stopped transport still has note-offs to deliver.
+     */
+    const MidiBuffer& generateNextMidiBuffer(int inNumSamples, bool inIsPlaying);
 
-    const MidiBuffer& generateNextMidiBuffer(int inNumSamples);
+    /**
+     * @return The same events as the buffer generateNextMidiBuffer just returned, but carrying the
+     *         instrument, for the internal synth. Valid until the next call.
+     */
+    std::span<const SynthEvent> getSynthEvents() const { return mScheduler.getSynthEvents(); }
+
+    /** Stops everything currently sounding, in the next block. Thread-safe. */
+    void stopAllNotes();
+
+    /**
+     * Emits a note-off for everything currently sounding into a caller-supplied buffer, without
+     * stopping it here. For the one consumer the shared buffer cannot serve: MIDI output switched
+     * off mid-note, after which the host stops receiving what this produces and would otherwise
+     * hold those notes forever. The internal synth carries on.
+     */
+    void emitActiveNotesOffTo(MidiBuffer& outMidiBuffer) const;
 
     void reset();
+
+    /** @return Whether there is anything to play. Audio thread safe: the list only changes under the callback lock. */
+    bool hasNotes() const { return mScheduler.hasNotes(); }
 
     void setNewTimeSeconds(double inNewTime);
 
     double getCurrentTimeSeconds() const;
 
 private:
-    void _sanitizeVoices();
-
-    void _updateCurrentEventIndex();
-
-    bool _isNextOnOffEventNoteOff(int inMidiNote);
-
     NeuralNoteAudioProcessor* mProcessor;
-    MPESynthesiser* mSynth;
+
+    NoteScheduler mScheduler;
 
     MidiBuffer mMidiBuffer;
-
-    std::vector<MidiMessage> mEvents;
-    size_t mCurrentEventIndex = 0;
-
-    unsigned long long mCurrentSampleIndex = 0;
-    std::atomic<double> mCurrentTime = 0.0;
-    double mSampleRate = 44100;
 };
 
 #endif // SynthController_h
