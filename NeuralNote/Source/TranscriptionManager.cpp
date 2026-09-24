@@ -12,6 +12,7 @@
 
 namespace
 {
+// The layout of the saved TRANSCRIPTION tree and its notes.
 constexpr int TRANSCRIPTION_FORMAT_VERSION = 1;
 
 // Note times are saved to the microsecond. JUCE trims the trailing zeros, so a time on the model's
