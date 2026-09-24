@@ -28,10 +28,8 @@ public:
 
     const std::vector<NoteEvent>& getNoteEventVector() const;
 
-    /**
-     * @return Progress of the current/last transcription, in [0, 1].
-     */
-    float getTranscriptionProgress() const;
+    /** @return Phase and progress of the current/last transcription. */
+    MuscriptorEngine::Progress getTranscriptionProgress() const;
 
     /**
      * @return Time in seconds below which the note vector is complete, not merely correct. While a

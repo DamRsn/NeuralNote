@@ -43,17 +43,27 @@ void MuscriptorEngine::reset()
     mFinalNotes.shrink_to_fit();
     mLastErrorMessage.clear();
     mCancelRequested = false;
-    mProgress = 0.f;
+    mProgress = Progress {};
 }
 
-bool MuscriptorEngine::_loadModel(ModelSize inModelSize)
+MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize)
 {
     jassert(!mTranscriber.has_value());
 
     const File model_file = NNFileUtils::getModelFile(inModelSize);
-    auto loaded = msl::Transcriber::load(NNFileUtils::toPath(model_file), {.use_gpu = true});
+
+    msl::LoadOptions options;
+    options.use_gpu = true;
+    options.should_cancel = [this] { return mCancelRequested.load(); };
+    options.on_progress = [this](float inProgress) { mProgress = Progress {Phase::LoadingModel, inProgress}; };
+
+    auto loaded = msl::Transcriber::load(NNFileUtils::toPath(model_file), std::move(options));
 
     if (!loaded.has_value()) {
+        if (loaded.error() == msl::Error::Cancelled) {
+            return Outcome::Cancelled;
+        }
+
         // A checkpoint from another release that happens to have this one's size counts as
         // installed, so this is the first place it shows. Deleting it is what makes it downloadable.
         mLastErrorMessage = loaded.error() == msl::Error::UnsupportedCheckpointVersion
@@ -63,14 +73,14 @@ bool MuscriptorEngine::_loadModel(ModelSize inModelSize)
                                 : std::string(msl::describe(loaded.error()));
         Logger::writeToLog("MuscriptorEngine: failed to load " + model_file.getFullPathName() + ": "
                            + String(mLastErrorMessage));
-        return false;
+        return Outcome::Failed;
     }
 
     mTranscriber = std::move(*loaded);
 
     Logger::writeToLog("MuscriptorEngine: model loaded, backend: " + String(mTranscriber->backendName()));
 
-    return true;
+    return Outcome::Success;
 }
 
 MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSize,
@@ -85,8 +95,8 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
     mFinalNotes.clear();
     mLastErrorMessage.clear();
 
-    if (!_loadModel(inModelSize)) {
-        return Outcome::Failed;
+    if (const Outcome loaded = _loadModel(inModelSize); loaded != Outcome::Success) {
+        return loaded;
     }
 
     // Unload on every path out, including cancellation and failure: holding a gigabyte of weights
@@ -94,11 +104,7 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
     // warm reload costs.
     const ScopeGuard unload_model {[this] { mTranscriber.reset(); }};
 
-    // Loading is the one stretch with no callback to observe cancellation from, and it is ~10 s
-    // cold. Check on the way out of it rather than making the user wait for the first chunk too.
-    if (mCancelRequested.load()) {
-        return Outcome::Cancelled;
-    }
+    mProgress = Progress {Phase::Transcribing, 0.f};
 
     const std::span<const float> samples(inAudio, static_cast<size_t>(inNumSamples));
 
@@ -116,11 +122,15 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
             mFinalizedThrough = inUpdate.finalized_through;
         }
 
-        mProgress = inUpdate.progress;
-        return !mCancelRequested.load();
+        mProgress = Progress {Phase::Transcribing, inUpdate.progress};
+        return true;
     };
 
-    auto result = mTranscriber->transcribe(samples, {.instruments = inInstruments}, callback);
+    msl::TranscribeOptions options;
+    options.instruments = inInstruments;
+    options.should_cancel = [this] { return mCancelRequested.load(); };
+
+    auto result = mTranscriber->transcribe(samples, options, callback);
 
     if (!result.has_value()) {
         if (result.error() == msl::Error::Cancelled) {
@@ -138,7 +148,7 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
         mFinalNotes.push_back(toNoteEvent(note));
     }
 
-    mProgress = 1.f;
+    mProgress = Progress {Phase::Transcribing, 1.f};
 
     return Outcome::Success;
 }
@@ -175,7 +185,7 @@ void MuscriptorEngine::cancel()
     mCancelRequested = true;
 }
 
-float MuscriptorEngine::getProgress() const
+MuscriptorEngine::Progress MuscriptorEngine::getProgress() const
 {
     return mProgress.load();
 }

@@ -81,8 +81,9 @@ TranscriptionManager::~TranscriptionManager()
 {
     stopTimer();
 
-    // ~ThreadPool waits 5 s and then kills the thread by force, which a transcription easily
-    // outlasts. Cancel and wait here instead, long enough for a cold model load or a chunk.
+    // ~ThreadPool waits 5 s and then kills the thread by force. Cancel and wait here instead, long
+    // enough for GPU backend initialisation, which cannot be interrupted and took about 20 s on
+    // the first run after a new build.
     mMuscriptorEngine.cancel();
 
     const bool jobs_finished = mThreadPool.removeAllJobs(true, 30000);
@@ -251,7 +252,7 @@ const std::vector<NoteEvent>& TranscriptionManager::getNoteEventVector() const
     return mPostProcessedNotes;
 }
 
-float TranscriptionManager::getTranscriptionProgress() const
+MuscriptorEngine::Progress TranscriptionManager::getTranscriptionProgress() const
 {
     return mMuscriptorEngine.getProgress();
 }

@@ -6,6 +6,7 @@
 #define MuscriptorEngine_h
 
 #include <atomic>
+#include <cstdint>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -27,8 +28,8 @@
  *
  * The model does not outlive the transcription that loaded it: weights plus KV cache are over a
  * gigabyte resident at medium/F16, which is not something a plugin should hold while sitting idle
- * in a DAW. Reloading is cheap by comparison once the file is in the OS page cache (~0.3 s against
- * ~10 s cold), and negligible next to a transcription that runs slower than real time.
+ * in a DAW. Reloading takes about 0.3 s at medium, negligible next to a transcription that runs
+ * slower than real time.
  */
 class MuscriptorEngine
 {
@@ -38,6 +39,16 @@ public:
      * want different handling: one is the user's own doing, the other is worth reporting.
      */
     enum class Outcome { Success, Cancelled, Failed };
+
+    enum class Phase : std::uint8_t { LoadingModel, Transcribing };
+
+    /** Where a transcribeToMIDI call is, as one value so the two fields are always read together. */
+    struct Progress {
+        Phase phase = Phase::LoadingModel;
+        // In [0, 1] within the phase, or negative while the phase has nothing to measure yet: GPU
+        // initialisation comes before the first weight is read, and can take many seconds.
+        float fraction = -1.0f;
+    };
 
     MuscriptorEngine() = default;
 
@@ -112,13 +123,12 @@ public:
      */
     void cancel();
 
-    /**
-     * @return Progress of the current/last transcription, in [0, 1]. Thread-safe.
-     */
-    float getProgress() const;
+    /** @return Progress of the current/last transcribeToMIDI call. Thread-safe. */
+    Progress getProgress() const;
 
 private:
-    bool _loadModel(ModelSize inModelSize);
+    /** @return Success with mTranscriber set, or why not; Failed also sets mLastErrorMessage. */
+    Outcome _loadModel(ModelSize inModelSize);
 
     // Only holds a value for the duration of a transcribeToMIDI call.
     std::optional<msl::Transcriber> mTranscriber;
@@ -137,7 +147,7 @@ private:
     std::string mLastErrorMessage;
 
     std::atomic<bool> mCancelRequested {false};
-    std::atomic<float> mProgress {0.f};
+    std::atomic<Progress> mProgress {Progress {}};
 };
 
 #endif // MuscriptorEngine_h

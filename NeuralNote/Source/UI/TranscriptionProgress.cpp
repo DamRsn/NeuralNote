@@ -12,15 +12,27 @@
 
 namespace
 {
-const juce::String CAPTION = "TRANSCRIBING";
+const juce::String LOADING_CAPTION = "LOADING MODEL";
+const juce::String TRANSCRIBING_CAPTION = "TRANSCRIBING";
 constexpr float CAPTION_TRACKING = 0.06f;
 
 constexpr float BAR_CORNER = 2.0f;
 
-// One breath in and out. The caption says the same thing throughout -- what it is for is to say
-// that something is still happening between two percentage ticks, which can be seconds apart.
+// One breath in and out. The pulse shows that something is still happening between two
+// percentage ticks, which can be seconds apart.
 constexpr double PULSE_PERIOD_MS = 1600.0;
 constexpr float PULSE_MIN = 0.55f;
+
+int captionWidth(const juce::String& inCaption)
+{
+    return static_cast<int>(std::ceil(nn::trackedTextWidth(inCaption, nn::fonts::statusBar(), CAPTION_TRACKING)));
+}
+
+/** Room for the wider caption, so the group does not change size when the phase does. */
+int captionSlotWidth()
+{
+    return std::max(captionWidth(LOADING_CAPTION), captionWidth(TRANSCRIBING_CAPTION));
+}
 
 /** Rounded to a hundredth, so a pulse that has barely moved does not force a repaint. */
 float pulseAt(double inMilliseconds)
@@ -56,11 +68,8 @@ TranscriptionProgress::TranscriptionProgress(NeuralNoteAudioProcessor& inProcess
 
 int TranscriptionProgress::getIdealWidth()
 {
-    const auto caption_width =
-        static_cast<int>(std::ceil(nn::trackedTextWidth(CAPTION, nn::fonts::statusBar(), CAPTION_TRACKING)));
-
-    return caption_width + nn::metrics::progressBarWidth + nn::metrics::progressPctWidth + nn::metrics::cancelHitSize
-           + 3 * nn::metrics::progressGap;
+    return captionSlotWidth() + nn::metrics::progressBarWidth + nn::metrics::progressPctWidth
+           + nn::metrics::cancelHitSize + 3 * nn::metrics::progressGap;
 }
 
 void TranscriptionProgress::resized()
@@ -75,18 +84,17 @@ void TranscriptionProgress::paint(juce::Graphics& g)
     auto row = getLocalBounds();
     row.removeFromRight(nn::metrics::cancelHitSize + nn::metrics::progressGap);
 
-    const auto caption_width =
-        static_cast<int>(std::ceil(nn::trackedTextWidth(CAPTION, nn::fonts::statusBar(), CAPTION_TRACKING)));
+    const bool loading = mDisplayedPhase == MuscriptorEngine::Phase::LoadingModel;
 
-    // Dimmed rather than relabelled once cancelling: the run is still going until the engine reaches
-    // a chunk boundary, and saying otherwise would be a lie for as long as that takes.
+    // Dimmed rather than relabelled once cancelling: the run is still going until the engine next
+    // checks, and saying otherwise would be a lie for as long as that takes.
     const float alpha = mIsCancelling ? nn::DISABLED_ALPHA : mPulse;
 
     g.setColour(nn::colours::progressText.withMultipliedAlpha(alpha));
     nn::drawTrackedText(g,
-                        CAPTION,
+                        loading ? LOADING_CAPTION : TRANSCRIBING_CAPTION,
                         nn::fonts::statusBar(),
-                        row.removeFromLeft(caption_width).toFloat(),
+                        row.removeFromLeft(captionSlotWidth()).toFloat(),
                         juce::Justification::centredLeft,
                         CAPTION_TRACKING);
 
@@ -98,6 +106,11 @@ void TranscriptionProgress::paint(juce::Graphics& g)
 
     g.setColour(nn::colours::progressTrack);
     g.fillRoundedRectangle(bar, BAR_CORNER);
+
+    // Nothing to measure yet: the pulsing caption alone says the run is alive.
+    if (mDisplayedPercent < 0) {
+        return;
+    }
 
     const float filled = bar.getWidth() * static_cast<float>(mDisplayedPercent) / 100.0f;
 
@@ -120,18 +133,21 @@ void TranscriptionProgress::_onVBlankCallback()
     if (mProcessor.getState() != Processing) {
         // The run is over: drop the latch, the progress and the pulse, so the next one starts fresh.
         mIsCancelling = false;
-        mDisplayedPercent = 0;
+        mDisplayedPhase = MuscriptorEngine::Phase::LoadingModel;
+        mDisplayedPercent = -1;
         mPulse = 1.0f;
         return;
     }
 
-    const int percent = juce::roundToInt(100.0f * mProcessor.getTranscriptionManager()->getTranscriptionProgress());
+    const auto progress = mProcessor.getTranscriptionManager()->getTranscriptionProgress();
+    const int percent = progress.fraction < 0.0f ? -1 : juce::roundToInt(100.0f * progress.fraction);
     const float pulse = pulseAt(static_cast<double>(juce::Time::getMillisecondCounter()));
 
-    if (percent == mDisplayedPercent && juce::approximatelyEqual(pulse, mPulse)) {
+    if (progress.phase == mDisplayedPhase && percent == mDisplayedPercent && juce::approximatelyEqual(pulse, mPulse)) {
         return;
     }
 
+    mDisplayedPhase = progress.phase;
     mDisplayedPercent = percent;
     mPulse = pulse;
     repaint();
