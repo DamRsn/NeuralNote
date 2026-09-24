@@ -7,6 +7,7 @@
 
 #include <JuceHeader.h>
 
+#include "MuscriptorEngine.h"
 #include "NnFlatButton.h"
 
 class NeuralNoteAudioProcessor;
@@ -30,7 +31,7 @@ public:
     void paint(juce::Graphics& g) override;
 
 private:
-    /** Polls the engine's progress; only repaints when the percentage or the pulse moved. */
+    /** Polls the engine's progress; only repaints when the phase, the percentage or the pulse moved. */
     void _onVBlankCallback();
 
     NeuralNoteAudioProcessor& mProcessor;
@@ -39,11 +40,13 @@ private:
 
     juce::VBlankAttachment mVBlankAttachment;
 
-    // Latched so a second click does not read as the first one having done nothing. Cancellation is
-    // observed at a chunk boundary, which can be seconds away.
+    // Latched so a second click does not read as the first one having done nothing. Cancellation
+    // cannot interrupt GPU initialisation, which can take seconds.
     bool mIsCancelling = false;
 
-    int mDisplayedPercent = 0;
+    MuscriptorEngine::Phase mDisplayedPhase = MuscriptorEngine::Phase::LoadingModel;
+    // Negative while the phase has no measurable progress yet.
+    int mDisplayedPercent = -1;
     float mPulse = 1.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TranscriptionProgress)
