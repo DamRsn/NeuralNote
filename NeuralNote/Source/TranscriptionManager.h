@@ -52,7 +52,7 @@ public:
 
     /**
      * @return The finished transcription as an NnId::TranscriptionId tree, or an invalid tree when
-     *         there is none. A fresh tree on every call, so any thread may call it.
+     *         there is none. Safe from any thread: reads only the pre-serialised notes, under a lock.
      */
     ValueTree createStateTree() const;
 
@@ -124,7 +124,7 @@ private:
     // createStateTree because hosts can ask for the state from any thread, and often.
     struct SavedNotes {
         String notesJson;
-        ModelSize modelSize = DEFAULT_MODEL_SIZE;
+        ModelSize modelSize;
     };
 
     std::optional<SavedNotes> mSavedNotes;

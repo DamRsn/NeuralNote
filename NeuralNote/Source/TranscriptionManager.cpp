@@ -19,19 +19,12 @@ constexpr int TRANSCRIPTION_FORMAT_VERSION = 1;
 // 10 ms grid is written as e.g. "0.33".
 constexpr int SAVED_TIME_DECIMAL_PLACES = 6;
 
-std::optional<ModelSize> parseModelSize(const String& inName)
-{
-    for (const ModelSize size: ALL_MODEL_SIZES) {
-        if (inName == modelSizeToString(size)) {
-            return size;
-        }
-    }
-
-    return std::nullopt;
-}
-
-/** Reads what _updateSavedNotes wrote. Any malformed or out-of-range entry rejects the whole list. */
-std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson)
+/**
+ * Reads what _updateSavedNotes wrote. Any malformed entry rejects the whole list; a note starting
+ * outside [0, inDuration] is dropped. The end is not bounded: a note left open at the end of the
+ * audio ends 10 ms after its onset, which can be past the last sample.
+ */
+std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson, double inDuration)
 {
     const var parsed = JSON::parse(inJson);
     const Array<var>* entries = parsed.getArray();
@@ -57,8 +50,8 @@ std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson)
         note.program = fields->getReference(3);
         note.amplitude = FIXED_NOTE_AMPLITUDE;
 
-        const bool valid_times = std::isfinite(note.startTime) && std::isfinite(note.endTime) && note.startTime >= 0.0
-                                 && note.endTime >= note.startTime;
+        const bool valid_times =
+            std::isfinite(note.startTime) && std::isfinite(note.endTime) && note.endTime >= note.startTime;
         const bool valid_pitch = note.pitch >= MIN_MIDI_NOTE && note.pitch <= MAX_MIDI_NOTE;
         const bool valid_program = note.program >= 0 && note.program < NUM_INSTRUMENT_IDS;
 
@@ -66,7 +59,9 @@ std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson)
             return std::nullopt;
         }
 
-        notes.push_back(note);
+        if (note.startTime >= 0.0 && note.startTime <= inDuration) {
+            notes.push_back(note);
+        }
     }
 
     return notes;
@@ -379,8 +374,6 @@ ValueTree TranscriptionManager::createStateTree() const
 
 void TranscriptionManager::restoreFromStateTree(const ValueTree& inTree)
 {
-    jassert(MessageManager::getInstance()->isThisTheMessageThread());
-
     if (mJobActive.load()) {
         return;
     }
@@ -396,16 +389,17 @@ void TranscriptionManager::restoreFromStateTree(const ValueTree& inTree)
         return;
     }
 
-    const auto model_size = parseModelSize(inTree.getProperty(NnId::TranscriptionModelSizeId).toString());
-    auto notes = parseNotes(inTree.getProperty(NnId::TranscriptionNotesId).toString());
+    const double duration = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
+    auto notes = parseNotes(inTree.getProperty(NnId::TranscriptionNotesId).toString(), duration);
 
-    if (!model_size.has_value() || !notes.has_value()) {
+    if (!notes.has_value()) {
         return;
     }
 
     mRawNotes = std::move(*notes);
-    mFinalizedThrough = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
-    mTranscriptionModelSize = model_size;
+    mFinalizedThrough = duration;
+    mTranscriptionModelSize = modelSizeFromString(
+        inTree.getProperty(NnId::TranscriptionModelSizeId).toString().toStdString(), DEFAULT_MODEL_SIZE);
     _updateSavedNotes();
 
     // Before post-processing, which only runs on a transcription the processor says it has.
@@ -429,7 +423,7 @@ void TranscriptionManager::_updateSavedNotes()
     const auto format =
         JSON::FormatOptions {}.withSpacing(JSON::Spacing::none).withMaxDecimalPlaces(SAVED_TIME_DECIMAL_PLACES);
 
-    SavedNotes saved {JSON::toString(entries, format), mTranscriptionModelSize.value_or(DEFAULT_MODEL_SIZE)};
+    SavedNotes saved {JSON::toString(entries, format), *mTranscriptionModelSize};
 
     const ScopedLock sl(mSavedNotesLock);
     mSavedNotes = std::move(saved);
