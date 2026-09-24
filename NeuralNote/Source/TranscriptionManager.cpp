@@ -23,13 +23,12 @@ TranscriptionManager::~TranscriptionManager()
 {
     stopTimer();
 
-    // A cancelled job returns within a fraction of a second, except inside GPU backend
-    // initialisation, which nothing can interrupt and which can take tens of seconds when the
-    // shader cache is cold. If this wait expires, ~ThreadPool waits another 5 s and then kills the
-    // thread by force.
+    // ~ThreadPool waits 5 s and then kills the thread by force. Cancel and wait here instead, long
+    // enough for GPU backend initialisation, which cannot be interrupted and took about 20 s on
+    // the first run after a new build.
     mMuscriptorEngine.cancel();
 
-    const bool jobs_finished = mThreadPool.removeAllJobs(true, 5000);
+    const bool jobs_finished = mThreadPool.removeAllJobs(true, 30000);
     jassertquiet(jobs_finished);
 }
 

@@ -18,8 +18,8 @@ constexpr float CAPTION_TRACKING = 0.06f;
 
 constexpr float BAR_CORNER = 2.0f;
 
-// One breath in and out. The caption says the same thing throughout -- what it is for is to say
-// that something is still happening between two percentage ticks, which can be seconds apart.
+// One breath in and out. The pulse shows that something is still happening between two
+// percentage ticks, which can be seconds apart.
 constexpr double PULSE_PERIOD_MS = 1600.0;
 constexpr float PULSE_MIN = 0.55f;
 
