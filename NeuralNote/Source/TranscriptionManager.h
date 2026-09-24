@@ -5,8 +5,11 @@
 #ifndef TranscriptionManager_h
 #define TranscriptionManager_h
 
+#include <optional>
+
 #include <JuceHeader.h>
 #include "MuscriptorEngine.h"
+#include "TranscriptionConstants.h"
 
 class NeuralNoteAudioProcessor;
 class NeuralNoteMainView;
@@ -44,6 +47,22 @@ public:
 
     void clear();
 
+    /** @return The checkpoint the current transcription is from, running or finished. Message thread. */
+    std::optional<ModelSize> getTranscriptionModelSize() const;
+
+    /**
+     * @return The finished transcription as an NnId::TranscriptionId tree, or an invalid tree when
+     *         there is none. A fresh tree on every call, so any thread may call it.
+     */
+    ValueTree createStateTree() const;
+
+    /**
+     * Makes inTree the current transcription, landing in PopulatedAudioAndMidiRegions without going
+     * through Processing. An invalid or unreadable tree leaves no transcription. Expects the audio it
+     * was made from to be loaded already, and does nothing while a job is running. Message thread.
+     */
+    void restoreFromStateTree(const ValueTree& inTree);
+
 private:
     /**
      * Outcome of the last transcription job, as published by the thread pool thread and consumed
@@ -79,6 +98,9 @@ private:
 
     void _repaintPianoRoll();
 
+    /** Serialises mRawNotes for createStateTree. Message thread, once per finished transcription. */
+    void _updateSavedNotes();
+
     NeuralNoteAudioProcessor* mProcessor;
 
     MuscriptorEngine mMuscriptorEngine;
@@ -90,9 +112,23 @@ private:
 
     // The model's own output, accumulated chunk by chunk as the job decodes it. Message thread
     // only, and owned here rather than by the engine because it has to outlive it: the engine is
-    // reset between runs, and this is what post-processing re-derives from and what a later change
-    // will persist in the plugin state.
+    // reset between runs, and this is what post-processing re-derives from and what the plugin
+    // state persists.
     std::vector<NoteEvent> mRawNotes;
+
+    // Message thread only. Set from the moment a job is launched, so it names a partial transcription too.
+    std::optional<ModelSize> mTranscriptionModelSize;
+
+    // mRawNotes as NnId::TranscriptionNotesId stores them, with the model that produced them. Only
+    // set once a transcription has finished. Serialised ahead of time rather than in
+    // createStateTree because hosts can ask for the state from any thread, and often.
+    struct SavedNotes {
+        String notesJson;
+        ModelSize modelSize = DEFAULT_MODEL_SIZE;
+    };
+
+    std::optional<SavedNotes> mSavedNotes;
+    mutable CriticalSection mSavedNotesLock;
 
     // How far mRawNotes is complete; see getFinalizedThrough.
     double mFinalizedThrough = 0.0;
