@@ -12,6 +12,11 @@
 // Double, not int: most uses divide a sample count by it to get seconds.
 static constexpr double TRANSCRIPTION_SAMPLE_RATE = 16000.0;
 
+// msl::Note carries no velocity (the model only emits onset/offset/pitch), so every note gets this
+// fixed synthetic one, mirroring the reference implementation's own convention of hardcoding a
+// velocity rather than fabricating one that would look like real data.
+static constexpr double FIXED_NOTE_AMPLITUDE = 100.0 / 127.0;
+
 static constexpr int MIN_MIDI_NOTE = 0;
 static constexpr int MAX_MIDI_NOTE = 127;
 

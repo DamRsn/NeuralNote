@@ -79,6 +79,9 @@ void StatusBar::setVerticalZoom(float inNorm)
 void StatusBar::updateEnablements()
 {
     mProgress.setVisible(mProcessor.getState() == Processing);
+
+    // The model segment follows the processor state, which the mixer does not announce.
+    repaint();
 }
 
 void StatusBar::resized()
@@ -111,6 +114,12 @@ void StatusBar::paint(juce::Graphics& g)
 
     juce::StringArray segments {juce::String(num_instruments) + (num_instruments == 1 ? " instrument" : " instruments"),
                                 juce::String(mixer->getTotalNoteCount()) + " notes"};
+
+    // The model that produced these notes, which need not be the one selected now.
+    if (const auto model_size = mProcessor.getTranscriptionManager()->getTranscriptionModelSize();
+        mProcessor.hasTranscription() && model_size.has_value()) {
+        segments.add(juce::String(modelSizeToDisplayName(*model_size)) + " model");
+    }
 
     // The range and the duration sit with the counts rather than at the far right, which the zoom
     // slider now owns. Each appears only once it means something: an instrument can be selected

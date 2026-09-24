@@ -16,18 +16,13 @@ static_assert(juce::exactlyEqual(TRANSCRIPTION_SAMPLE_RATE, static_cast<double>(
 
 namespace
 {
-// msl::Note carries no velocity (the model only emits onset/offset/pitch), so a fixed
-// synthetic velocity is used here, mirroring the reference implementation's own convention
-// of hardcoding a velocity rather than fabricating one that would look like real data.
-constexpr double FIXED_AMPLITUDE = 100.0 / 127.0;
-
 NoteEvent toNoteEvent(const msl::Note& inNote)
 {
     NoteEvent event;
     event.startTime = inNote.onset;
     event.endTime = inNote.offset;
     event.pitch = inNote.pitch;
-    event.amplitude = FIXED_AMPLITUDE;
+    event.amplitude = FIXED_NOTE_AMPLITUDE;
     event.program = inNote.program;
     return event;
 }

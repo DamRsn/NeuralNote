@@ -70,6 +70,10 @@ void NeuralNoteAudioProcessor::getStateInformation(MemoryBlock& destData)
 
     full_state_tree.appendChild(mValueTree, nullptr);
 
+    if (auto transcription_tree = mTranscriptionManager->createStateTree(); transcription_tree.isValid()) {
+        full_state_tree.appendChild(transcription_tree, nullptr);
+    }
+
     std::unique_ptr<XmlElement> xml(full_state_tree.createXml());
 
     if (xml != nullptr) {
@@ -99,6 +103,9 @@ void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInB
         if (full_state_tree.isValid() && full_state_tree.hasType(NnId::FullStateId)) {
             auto new_value_tree = full_state_tree.getChildWithName(NnId::NeuralNoteStateId);
             _updateValueTree(new_value_tree);
+
+            // After the value tree, which is what loads the audio the notes belong to.
+            mTranscriptionManager->restoreFromStateTree(full_state_tree.getChildWithName(NnId::TranscriptionId));
         } else {
             jassertfalse;
         }

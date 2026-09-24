@@ -10,6 +10,64 @@
 #include "NnGlobalSettings.h"
 #include "TranscriptionConstants.h"
 
+namespace
+{
+// The layout of the saved TRANSCRIPTION tree and its notes.
+constexpr int TRANSCRIPTION_FORMAT_VERSION = 1;
+
+// Note times are saved to the microsecond. JUCE trims the trailing zeros, so a time on the model's
+// 10 ms grid is written as e.g. "0.33".
+constexpr int SAVED_TIME_DECIMAL_PLACES = 6;
+
+/**
+ * Reads what _updateSavedNotes wrote. Any malformed entry rejects the whole list; a note starting
+ * outside [0, inDuration] is dropped. The end is not bounded: a note left open at the end of the
+ * audio ends 10 ms after its onset, which can be past the last sample.
+ */
+std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson, double inDuration)
+{
+    const var parsed = JSON::parse(inJson);
+    const Array<var>* entries = parsed.getArray();
+
+    if (entries == nullptr) {
+        return std::nullopt;
+    }
+
+    std::vector<NoteEvent> notes;
+    notes.reserve(static_cast<std::size_t>(entries->size()));
+
+    for (const var& entry: *entries) {
+        const Array<var>* fields = entry.getArray();
+
+        if (fields == nullptr || fields->size() != 4) {
+            return std::nullopt;
+        }
+
+        NoteEvent note;
+        note.startTime = fields->getReference(0);
+        note.endTime = fields->getReference(1);
+        note.pitch = fields->getReference(2);
+        note.program = fields->getReference(3);
+        note.amplitude = FIXED_NOTE_AMPLITUDE;
+
+        const bool valid_times =
+            std::isfinite(note.startTime) && std::isfinite(note.endTime) && note.endTime >= note.startTime;
+        const bool valid_pitch = note.pitch >= MIN_MIDI_NOTE && note.pitch <= MAX_MIDI_NOTE;
+        const bool valid_program = note.program >= 0 && note.program < NUM_INSTRUMENT_IDS;
+
+        if (!valid_times || !valid_pitch || !valid_program) {
+            return std::nullopt;
+        }
+
+        if (note.startTime >= 0.0 && note.startTime <= inDuration) {
+            notes.push_back(note);
+        }
+    }
+
+    return notes;
+}
+} // namespace
+
 TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
     , mThreadPool(1)
@@ -86,6 +144,7 @@ void TranscriptionManager::_handleFinishedJob(JobOutcome inOutcome)
             // authoritative, and the streamed one is missing any note the model never closed.
             mRawNotes = mMuscriptorEngine.takeFinalNotes();
             mFinalizedThrough = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
+            _updateSavedNotes();
             _updatePostProcessing();
             mProcessor->setStateToPopulatedAudioAndMidiRegions();
             _repaintPianoRoll();
@@ -219,6 +278,13 @@ void TranscriptionManager::clear()
     mRawNotes.shrink_to_fit();
     mFinalizedThrough = 0.0;
     mPostProcessedNotes.clear();
+    mTranscriptionModelSize.reset();
+
+    {
+        const ScopedLock sl(mSavedNotesLock);
+        mSavedNotes.reset();
+    }
+
     mProcessor->getInstrumentMixer()->clear();
 
     // Otherwise the synth keeps playing the notes of the transcription that was just thrown away.
@@ -273,6 +339,7 @@ void TranscriptionManager::launchTranscribeJob()
     mProcessor->getInstrumentMixer()->resetStoredSettings();
 
     mJobModelSize = *model_size;
+    mTranscriptionModelSize = *model_size;
 
     mProcessor->setStateToProcessing();
 
@@ -283,6 +350,83 @@ void TranscriptionManager::launchTranscribeJob()
     } else {
         mProcessor->clear();
     }
+}
+
+std::optional<ModelSize> TranscriptionManager::getTranscriptionModelSize() const
+{
+    return mTranscriptionModelSize;
+}
+
+ValueTree TranscriptionManager::createStateTree() const
+{
+    const ScopedLock sl(mSavedNotesLock);
+
+    if (!mSavedNotes.has_value()) {
+        return {};
+    }
+
+    ValueTree tree(NnId::TranscriptionId);
+    tree.setProperty(NnId::TranscriptionFormatVersionId, TRANSCRIPTION_FORMAT_VERSION, nullptr);
+    tree.setProperty(NnId::TranscriptionModelSizeId, modelSizeToString(mSavedNotes->modelSize), nullptr);
+    tree.setProperty(NnId::TranscriptionNotesId, mSavedNotes->notesJson, nullptr);
+    return tree;
+}
+
+void TranscriptionManager::restoreFromStateTree(const ValueTree& inTree)
+{
+    if (mJobActive.load()) {
+        return;
+    }
+
+    // Replaced even when the restored state has no transcription: the audio path may not have
+    // changed, in which case nothing else would drop the notes on screen.
+    if (mProcessor->getState() == PopulatedAudioAndMidiRegions) {
+        mProcessor->clearTranscription();
+    }
+
+    if (!inTree.isValid() || mProcessor->getState() != AudioLoaded
+        || static_cast<int>(inTree.getProperty(NnId::TranscriptionFormatVersionId)) != TRANSCRIPTION_FORMAT_VERSION) {
+        return;
+    }
+
+    const double duration = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
+    auto notes = parseNotes(inTree.getProperty(NnId::TranscriptionNotesId).toString(), duration);
+
+    if (!notes.has_value()) {
+        return;
+    }
+
+    mRawNotes = std::move(*notes);
+    mFinalizedThrough = duration;
+    mTranscriptionModelSize = modelSizeFromString(
+        inTree.getProperty(NnId::TranscriptionModelSizeId).toString().toStdString(), DEFAULT_MODEL_SIZE);
+    _updateSavedNotes();
+
+    // Before post-processing, which only runs on a transcription the processor says it has.
+    mProcessor->setStateToPopulatedAudioAndMidiRegions();
+    _updatePostProcessing();
+    _repaintPianoRoll();
+}
+
+void TranscriptionManager::_updateSavedNotes()
+{
+    jassert(MessageManager::getInstance()->isThisTheMessageThread());
+    jassert(mTranscriptionModelSize.has_value());
+
+    Array<var> entries;
+    entries.ensureStorageAllocated(static_cast<int>(mRawNotes.size()));
+
+    for (const NoteEvent& note: mRawNotes) {
+        entries.add(Array<var> {note.startTime, note.endTime, note.pitch, note.program});
+    }
+
+    const auto format =
+        JSON::FormatOptions {}.withSpacing(JSON::Spacing::none).withMaxDecimalPlaces(SAVED_TIME_DECIMAL_PLACES);
+
+    SavedNotes saved {JSON::toString(entries, format), *mTranscriptionModelSize};
+
+    const ScopedLock sl(mSavedNotesLock);
+    mSavedNotes = std::move(saved);
 }
 
 void TranscriptionManager::_repaintPianoRoll()

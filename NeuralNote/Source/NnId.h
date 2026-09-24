@@ -61,6 +61,20 @@ inline static Identifier SoloedId = "SOLOED";
 // every other property through save, restore and defaulting.
 inline static Identifier SelectedInstrumentGroupsId = "SELECTED_INSTRUMENT_GROUPS";
 
+// --------------- Transcription --------------------
+// A child of the full state, not of NEURAL_NOTE_STATE: the finished transcription, written only
+// by getStateInformation and read only by setStateInformation.
+inline static Identifier TranscriptionId = "TRANSCRIPTION";
+
+inline static Identifier TranscriptionFormatVersionId = "FORMAT_VERSION";
+
+// The checkpoint that produced the notes, as modelSizeToString writes it.
+inline static Identifier TranscriptionModelSizeId = "MODEL_SIZE";
+
+// The model's raw notes, as a JSON array of [onset_sec, offset_sec, pitch, program], with times to
+// the microsecond.
+inline static Identifier TranscriptionNotesId = "NOTES";
+
 // To be set in this specific order
 const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault = {
     {ExportTempoId, 120.0},
