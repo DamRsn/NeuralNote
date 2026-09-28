@@ -8,6 +8,7 @@
 
 #include <JuceHeader.h>
 
+#include "ComputeDevices.h"
 #include "NNFileUtils.h"
 #include "TranscriptionConstants.h"
 
@@ -46,14 +47,18 @@ void MuscriptorEngine::reset()
     mProgress = Progress {};
 }
 
-MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize)
+MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, const ComputeDeviceChoice& inDevice)
 {
     jassert(!mTranscriber.has_value());
 
     const File model_file = NNFileUtils::getModelFile(inModelSize);
 
+    // Waits if the editor's listing is still running; it cannot be cancelled, like the GPU
+    // initialisation inside load().
+    const std::vector<msl::Device>& devices = ComputeDevices::get();
+
     msl::LoadOptions options;
-    options.use_gpu = true;
+    options.device = ComputeDevices::resolve(devices, inDevice);
     options.should_cancel = [this] { return mCancelRequested.load(); };
     options.on_progress = [this](float inProgress) { mProgress = Progress {Phase::LoadingModel, inProgress}; };
 
@@ -66,11 +71,24 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize)
 
         // A checkpoint from another release that happens to have this one's size counts as
         // installed, so this is the first place it shows. Deleting it is what makes it downloadable.
-        mLastErrorMessage = loaded.error() == msl::Error::UnsupportedCheckpointVersion
-                                ? model_file.getFileName().toStdString()
-                                      + " is for another version of NeuralNote. Delete it from the models folder,"
-                                        " then download it again"
-                                : std::string(msl::describe(loaded.error()));
+        if (loaded.error() == msl::Error::UnsupportedCheckpointVersion) {
+            mLastErrorMessage = model_file.getFileName().toStdString()
+                                + " is for another version of NeuralNote. Delete it from the models folder,"
+                                  " then download it again";
+        }
+
+        // Only an explicit choice can fail this way. The list is fixed for the life of the process,
+        // so a GPU that went away is still in it until NeuralNote restarts.
+        else if (loaded.error() == msl::Error::DeviceUnavailable && options.device.has_value()) {
+            mLastErrorMessage = ComputeDevices::label(devices, *options.device)
+                                + " could not be used. Choose Auto or CPU under Settings > Compute device,"
+                                  " or restart NeuralNote if your GPUs have changed";
+        }
+
+        else {
+            mLastErrorMessage = msl::describe(loaded.error());
+        }
+
         Logger::writeToLog("MuscriptorEngine: failed to load " + model_file.getFullPathName() + ": "
                            + String(mLastErrorMessage));
         return Outcome::Failed;
@@ -78,12 +96,14 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize)
 
     mTranscriber = std::move(*loaded);
 
-    Logger::writeToLog("MuscriptorEngine: model loaded, backend: " + String(mTranscriber->backendName()));
+    Logger::writeToLog("MuscriptorEngine: model loaded on " + String(mTranscriber->device().name) + " ("
+                       + String(mTranscriber->device().backend) + ")");
 
     return Outcome::Success;
 }
 
 MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSize,
+                                                             const ComputeDeviceChoice& inDevice,
                                                              const float* inAudio,
                                                              int inNumSamples,
                                                              const std::vector<msl::InstrumentGroup>& inInstruments)
@@ -95,7 +115,7 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
     mFinalNotes.clear();
     mLastErrorMessage.clear();
 
-    if (const Outcome loaded = _loadModel(inModelSize); loaded != Outcome::Success) {
+    if (const Outcome loaded = _loadModel(inModelSize, inDevice); loaded != Outcome::Success) {
         return loaded;
     }
 

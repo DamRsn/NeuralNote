@@ -5,7 +5,21 @@
 #ifndef NnGlobalSettings_h
 #define NnGlobalSettings_h
 
+#include <string>
+
 #include "TranscriptionConstants.h"
+
+/**
+ * A compute device as the user picked it, by name rather than by index: indices move when drivers
+ * or hardware change. Identical devices share a name, so ordinal counts among those.
+ */
+struct ComputeDeviceChoice {
+    // Empty is Auto.
+    std::string name;
+    int ordinal = 0;
+
+    bool isAuto() const { return name.empty(); }
+};
 
 /**
  * The settings that belong to the machine rather than to one plugin instance, kept in
@@ -32,6 +46,9 @@ void setEditorScale(double inScale);
 
 bool getTooltipsVisible();
 void setTooltipsVisible(bool inVisible);
+
+ComputeDeviceChoice getComputeDevice();
+void setComputeDevice(const ComputeDeviceChoice& inChoice);
 
 } // namespace NnGlobalSettings
 
