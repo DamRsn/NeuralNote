@@ -15,6 +15,12 @@ for dir in "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/N
 		>&2 echo "Could not find $dir"
 		exit 1
 	fi
+
+	# Without it, transcription falls back to the CPU instead of failing.
+	if ! test -f "$dir/Contents/Resources/default.metallib"; then
+		>&2 echo "Missing $dir/Contents/Resources/default.metallib: build with MUSCRIPTOR_METAL_PRECOMPILED=ON"
+		exit 1
+	fi
 done
 
 signingID=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | cut -d'"' -f2)

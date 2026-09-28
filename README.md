@@ -91,6 +91,10 @@ Requirements:
 - Internet access on the first configure. `muscriptor.cpp` fetches [ggml](https://github.com/ggml-org/ggml), and the
   soundfont (~38 MB) is downloaded.
 
+**macOS** needs Xcode's Metal toolchain, which compiles the GPU shaders at build time:
+`xcodebuild -downloadComponent MetalToolchain`. Configuring with `-DMUSCRIPTOR_METAL_PRECOMPILED=OFF` builds without it
+instead, and the shaders then compile on the first transcription in each app or DAW, which takes about 20 seconds.
+
 **Windows GPU support** needs the [Vulkan SDK](https://vulkan.lunarg.com/sdk/home) at build time. Without it,
 NeuralNote builds and transcribes on the CPU only. With it, configure from a Visual Studio developer prompt, or set
 `CC`, `CXX` and `RC` in the environment: ggml builds its shader generator as a separate project that doesn't see

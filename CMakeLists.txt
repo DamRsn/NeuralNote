@@ -162,6 +162,13 @@ target_link_libraries(${BaseTargetName}
         juce_recommended_config_flags
         juce_recommended_warning_flags)
 
+# Without default.metallib in the bundle, transcription silently runs on the CPU.
+foreach (format Standalone VST3 AU)
+  if (TARGET ${BaseTargetName}_${format})
+    muscriptor_add_metal_library(${BaseTargetName}_${format})
+  endif ()
+endforeach ()
+
 if (${LTO})
   target_link_libraries(${BaseTargetName} PUBLIC juce_recommended_lto_flags)
   message(STATUS "Link Time Optimization (LTO) enabled")
