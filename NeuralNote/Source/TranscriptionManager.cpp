@@ -113,6 +113,7 @@ void TranscriptionManager::_runModel()
 {
     const auto outcome = mMuscriptorEngine.transcribeToMIDI(
         mJobModelSize,
+        mJobDevice,
         mProcessor->getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
         mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired(),
         mJobInstruments);
@@ -341,6 +342,8 @@ void TranscriptionManager::launchTranscribeJob()
 
     mJobModelSize = *model_size;
     mTranscriptionModelSize = *model_size;
+
+    mJobDevice = NnGlobalSettings::getComputeDevice();
 
     mProcessor->setStateToProcessing();
 

@@ -103,10 +103,11 @@ private:
 
     MuscriptorEngine mMuscriptorEngine;
 
-    // What the running job was launched with. Both are written by launchTranscribeJob before the
+    // What the running job was launched with. All are written by launchTranscribeJob before the
     // job is queued and read only by the job, so they need no synchronisation of their own.
     std::vector<msl::InstrumentGroup> mJobInstruments;
     ModelSize mJobModelSize = DEFAULT_MODEL_SIZE;
+    ComputeDeviceChoice mJobDevice;
 
     // The model's own output, accumulated chunk by chunk as the job decodes it. Message thread
     // only, and owned here rather than by the engine because it has to outlive it: the engine is

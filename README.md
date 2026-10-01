@@ -28,7 +28,7 @@ Audio Workstation.
 
 ## Usage
 
-NeuralNote is a simple AudioFX plugin (VST3/AU/Standalone app) that you apply to the track you want to transcribe.
+NeuralNote is a simple AudioFX plugin (VST®3/AU/Standalone app) that you apply to the track you want to transcribe.
 
 - Gather some audio:
   - Click record. This works both when recording live and when playing the track in your DAW.
@@ -62,11 +62,13 @@ You can also put a model file in that folder by hand. Use a file from `v1/` of t
 
 You can remove a model by deleting it from this folder, and re-download it at any time.
 
-**Hardware.** Transcription speed depends mostly on the model size and on your hardware. The GPU is used when
-available, through Metal on macOS and Vulkan on Windows. A GPU is strongly recommended for the `medium` and `large`
-models. Only a few GPUs have been tested so far. If transcription fails, gives wrong results or is unexpectedly slow on
-your machine, please open an issue, either [here](https://github.com/DamRsn/NeuralNote/issues) or in
-[muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp/issues) if the problem is in the engine itself. Please
+**Hardware.** Transcription speed depends mostly on the model size and on your hardware. The GPU is used when available,
+through Metal on macOS and Vulkan on Windows. A GPU is strongly recommended for the `medium` and `large` models.
+**Settings > Compute device** picks the device: Auto (the default, which names the device it chose), a specific GPU, or
+the CPU. The choice applies from the next transcription, and GPUs added or removed later are listed after restarting
+NeuralNote (or your DAW). Only a few GPUs have been tested so far. If transcription fails, gives wrong results or is
+unexpectedly slow on your machine, please open an issue, either [here](https://github.com/DamRsn/NeuralNote/issues) or
+in [muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp/issues) if the problem is in the engine itself. Please
 include your OS, GPU and model size.
 
 Approximate real-time factors measured on an Apple M1 Pro (above 1× means faster than real time):
@@ -93,7 +95,8 @@ Requirements:
 
 **macOS** needs Xcode's Metal toolchain, which compiles the GPU shaders at build time:
 `xcodebuild -downloadComponent MetalToolchain`. Configuring with `-DMUSCRIPTOR_METAL_PRECOMPILED=OFF` builds without it
-instead, and the shaders then compile on the first transcription in each app or DAW, which takes about 20 seconds.
+instead, and the shaders then compile when NeuralNote's window first opens in each app or DAW, which takes about 20
+seconds.
 
 **Windows GPU support** needs the [Vulkan SDK](https://vulkan.lunarg.com/sdk/home) at build time. Without it,
 NeuralNote builds and transcribes on the CPU only. With it, configure from a Visual Studio developer prompt, or set
@@ -119,6 +122,10 @@ cmake --build build --config Release
 ```
 
 The Standalone app and the plugins are written to `build/NeuralNote_artefacts/Release/`.
+
+On Windows, the Standalone app supports ASIO devices. Distributing a build with ASIO requires signing Steinberg's
+[ASIO license agreement](https://www.steinberg.net/developers/prorietary-sdk/). To build without it, configure with
+`-DNEURALNOTE_ASIO=OFF`.
 
 ## Reuse NeuralNote's transcription engine
 
@@ -156,6 +163,8 @@ non-commercially. The Apache-2.0 license covers NeuralNote's code only, not the 
 Their full license notices are in [`Installers/license.txt`](Installers/license.txt).
 
 - [JUCE](https://juce.com/) (JUCE Starter)
+- [VST3 SDK](https://github.com/steinbergmedia/vst3sdk) (MIT license, bundled with JUCE)
+- ASIO SDK headers (Steinberg ASIO license, bundled with JUCE, Windows only)
 - [muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp) (MIT license)
 - [ggml](https://github.com/ggml-org/ggml) (MIT license, fetched by muscriptor.cpp)
 - [PFFFT](https://bitbucket.org/jpommier/pffft) (BSD-style license, bundled in muscriptor.cpp)
@@ -165,6 +174,9 @@ Their full license notices are in [`Installers/license.txt`](Installers/license.
 - [minimp3](https://github.com/lieff/minimp3) (CC0-1.0 license)
 - [Inter](https://github.com/rsms/inter) (SIL Open Font License 1.1)
 - [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) (SIL Open Font License 1.1)
+
+VST is a registered trademark of Steinberg Media Technologies GmbH. ASIO is a registered trademark of Steinberg Media
+Technologies GmbH.
 
 ## Credits
 
