@@ -95,8 +95,8 @@ Requirements:
 
 **macOS** needs Xcode's Metal toolchain, which compiles the GPU shaders at build time:
 `xcodebuild -downloadComponent MetalToolchain`. Configuring with `-DMUSCRIPTOR_METAL_PRECOMPILED=OFF` builds without it
-instead, and the shaders then compile when NeuralNote's window first opens in each app or DAW, which takes about 20
-seconds.
+instead, and the shaders then compile when NeuralNote's window first opens in each app or DAW, and again after a macOS
+update, which takes about 20 seconds.
 
 **Windows GPU support** needs the [Vulkan SDK](https://vulkan.lunarg.com/sdk/home) at build time. Without it,
 NeuralNote builds and transcribes on the CPU only. With it, configure from a Visual Studio developer prompt, or set
