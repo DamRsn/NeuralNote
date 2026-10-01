@@ -28,7 +28,7 @@ Audio Workstation.
 
 ## Usage
 
-NeuralNote is a simple AudioFX plugin (VST3/AU/Standalone app) that you apply to the track you want to transcribe.
+NeuralNote is a simple AudioFX plugin (VST®3/AU/Standalone app) that you apply to the track you want to transcribe.
 
 - Gather some audio:
   - Click record. This works both when recording live and when playing the track in your DAW.
@@ -118,6 +118,10 @@ cmake --build build --config Release
 
 The Standalone app and the plugins are written to `build/NeuralNote_artefacts/Release/`.
 
+On Windows, the Standalone app supports ASIO devices. Distributing a build with ASIO requires signing Steinberg's
+[ASIO license agreement](https://www.steinberg.net/developers/prorietary-sdk/). To build without it, configure with
+`-DNEURALNOTE_ASIO=OFF`.
+
 ## Reuse NeuralNote's transcription engine
 
 The transcription engine is a separate, self-contained repo:
@@ -154,6 +158,8 @@ non-commercially. The Apache-2.0 license covers NeuralNote's code only, not the 
 Their full license notices are in [`Installers/license.txt`](Installers/license.txt).
 
 - [JUCE](https://juce.com/) (JUCE Starter)
+- [VST3 SDK](https://github.com/steinbergmedia/vst3sdk) (MIT license, bundled with JUCE)
+- ASIO SDK headers (Steinberg ASIO license, bundled with JUCE, Windows only)
 - [muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp) (MIT license)
 - [ggml](https://github.com/ggml-org/ggml) (MIT license, fetched by muscriptor.cpp)
 - [PFFFT](https://bitbucket.org/jpommier/pffft) (BSD-style license, bundled in muscriptor.cpp)
@@ -163,6 +169,9 @@ Their full license notices are in [`Installers/license.txt`](Installers/license.
 - [minimp3](https://github.com/lieff/minimp3) (CC0-1.0 license)
 - [Inter](https://github.com/rsms/inter) (SIL Open Font License 1.1)
 - [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) (SIL Open Font License 1.1)
+
+VST is a registered trademark of Steinberg Media Technologies GmbH. ASIO is a registered trademark of Steinberg Media
+Technologies GmbH.
 
 ## Credits
 
