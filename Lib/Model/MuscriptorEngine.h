@@ -75,7 +75,8 @@ public:
      * post-processed here.
      * @param inModelSize Which checkpoint to load from the models directory.
      * @param inDevice Where to run it. An explicit device that cannot be used fails the call rather
-     *        than running elsewhere; Auto, or a device that is no longer listed, never does.
+     *        than running elsewhere; Auto, which a device that is no longer listed resolves to,
+     *        never fails this way.
      * @param inAudio Pointer to raw audio (must be mono at TRANSCRIPTION_SAMPLE_RATE Hz).
      * @param inNumSamples Number of input samples available.
      * @param inInstruments Which instruments to look for. Empty lets the model choose, which is

@@ -77,12 +77,12 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
                                   " then download it again";
         }
 
-        // Only an explicit choice can fail this way. The list is fixed for the life of the process,
-        // so a GPU that went away is still in it until NeuralNote restarts.
+        // Only an explicit choice can fail this way. The list lasts as long as the plugin binary is
+        // loaded, which in a DAW can outlast closing NeuralNote.
         else if (loaded.error() == msl::Error::DeviceUnavailable && options.device.has_value()) {
             mLastErrorMessage = ComputeDevices::label(devices, *options.device)
                                 + " could not be used. Choose Auto or CPU under Settings > Compute device,"
-                                  " or restart NeuralNote if your GPUs have changed";
+                                  " or restart NeuralNote (or your DAW) if your GPUs have changed";
         }
 
         else {
