@@ -18,6 +18,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment ver
 option(NEURALNOTE_MUSCRIPTOR_DEBUG "Build muscriptor.cpp in Debug even when the plugin is Debug" OFF)
 option(LTO "Enable Link Time Optimization" ON)
 option(NEURALNOTE_FETCH_SOUNDFONT "Download the soundfont at configure time if it is missing" ON)
+option(NEURALNOTE_ASIO "Enable ASIO devices on Windows (distributing it needs a Steinberg ASIO license agreement)" ON)
 
 #static linking in Windows
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -171,7 +172,6 @@ if (BUILD_UNIT_TESTS)
   add_subdirectory(Tests)
 endif ()
 
-if (WIN32)
+if (WIN32 AND NEURALNOTE_ASIO)
   target_compile_definitions(${BaseTargetName} PUBLIC JUCE_ASIO=1)
-  target_include_directories(${BaseTargetName} PRIVATE ThirdParty/ASIO/common)
 endif ()
