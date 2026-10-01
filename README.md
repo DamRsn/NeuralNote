@@ -62,11 +62,13 @@ You can also put a model file in that folder by hand. Use a file from `v1/` of t
 
 You can remove a model by deleting it from this folder, and re-download it at any time.
 
-**Hardware.** Transcription speed depends mostly on the model size and on your hardware. The GPU is used when
-available, through Metal on macOS and Vulkan on Windows. A GPU is strongly recommended for the `medium` and `large`
-models. Only a few GPUs have been tested so far. If transcription fails, gives wrong results or is unexpectedly slow on
-your machine, please open an issue, either [here](https://github.com/DamRsn/NeuralNote/issues) or in
-[muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp/issues) if the problem is in the engine itself. Please
+**Hardware.** Transcription speed depends mostly on the model size and on your hardware. The GPU is used when available,
+through Metal on macOS and Vulkan on Windows. A GPU is strongly recommended for the `medium` and `large` models.
+**Settings > Compute device** picks the device: Auto (the default, which names the device it chose), a specific GPU, or
+the CPU. The choice applies from the next transcription, and GPUs added or removed later are listed after restarting
+NeuralNote (or your DAW). Only a few GPUs have been tested so far. If transcription fails, gives wrong results or is
+unexpectedly slow on your machine, please open an issue, either [here](https://github.com/DamRsn/NeuralNote/issues) or
+in [muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp/issues) if the problem is in the engine itself. Please
 include your OS, GPU and model size.
 
 Approximate real-time factors measured on an Apple M1 Pro (above 1× means faster than real time):

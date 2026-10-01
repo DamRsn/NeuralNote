@@ -4,6 +4,7 @@
 
 #include "NeuralNoteMainView.h"
 
+#include "ComputeDevices.h"
 #include "MidiFileWriter.h"
 #include "NeuralNoteTooltips.h"
 #include "NNFileUtils.h"
@@ -41,7 +42,8 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
 
     mUpdateCheck = std::make_unique<UpdateCheck>();
 
-    _buildSettingsMenu();
+    // Off this thread: the first listing initialises the GPU backends.
+    ComputeDevices::prepare();
 
     mTopBar.getModelButton().onClick = [this] {
         mVisualizationPanel.setModelPanelOpen(!mVisualizationPanel.isModelPanelVisible());
@@ -49,7 +51,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     };
 
     mTopBar.getSettingsButton().onClick = [this] {
-        _refreshSettingsMenu();
+        _buildSettingsMenu();
         mSettingsMenu->showMenuAsync(PopupMenu::Options().withTargetComponent(&mTopBar.getSettingsButton()));
     };
 
@@ -227,6 +229,8 @@ void NeuralNoteMainView::valueTreePropertyChanged(ValueTree& treeWhosePropertyHa
 void NeuralNoteMainView::_buildSettingsMenu()
 {
     mSettingsMenu = std::make_unique<PopupMenu>();
+    mSettingsMenuItemsShouldBeTicked.clear();
+    mSettingsMenuItemsShouldBeEnabled.clear();
 
     int item_id = 0;
 
@@ -304,6 +308,48 @@ void NeuralNoteMainView::_buildSettingsMenu()
     }
 
     mSettingsMenu->addSubMenu("Window size", scale_menu);
+
+    // Applies from the next transcription: the model is loaded per run.
+    PopupMenu device_menu;
+
+    if (const std::vector<msl::Device>* devices = ComputeDevices::tryGet()) {
+        const auto is_selected = [devices](std::optional<std::size_t> inIndex) {
+            return ComputeDevices::resolve(*devices, NnGlobalSettings::getComputeDevice()) == inIndex;
+        };
+
+        const auto add_device_item =
+            [&](const String& inLabel, std::optional<std::size_t> inIndex, const ComputeDeviceChoice& inChoice) {
+                auto device_item = PopupMenu::Item(inLabel);
+                device_item.setID(++item_id);
+                device_item.setEnabled(true);
+                mSettingsMenuItemsShouldBeTicked.emplace_back(device_item.itemID,
+                                                              [is_selected, inIndex] { return is_selected(inIndex); });
+                device_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+                device_item.setAction([this, inChoice] {
+                    NnGlobalSettings::setComputeDevice(inChoice);
+                    _refreshSettingsMenu();
+                });
+                device_menu.addItem(device_item);
+            };
+
+        add_device_item(
+            "Auto (" + String(ComputeDevices::label(*devices, msl::autoDevice(*devices))) + ")", std::nullopt, {});
+        device_menu.addSeparator();
+
+        for (std::size_t i = 0; i < devices->size(); ++i) {
+            add_device_item(ComputeDevices::label(*devices, i), i, ComputeDevices::choiceFor(*devices, i));
+        }
+    }
+
+    else {
+        auto detecting_item = PopupMenu::Item("Detecting devices...");
+        detecting_item.setID(++item_id);
+        detecting_item.setEnabled(false);
+        mSettingsMenuItemsShouldBeEnabled.emplace_back(detecting_item.itemID, [] { return false; });
+        device_menu.addItem(detecting_item);
+    }
+
+    mSettingsMenu->addSubMenu("Compute device", device_menu);
 
     auto check_updates_item = PopupMenu::Item("Check for updates");
     check_updates_item.setID(++item_id);

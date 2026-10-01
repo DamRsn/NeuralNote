@@ -46,10 +46,10 @@ private:
 
     void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override;
 
+    /** Rebuilt each time the menu opens: the compute devices are listed after the editor opens. */
     void _buildSettingsMenu();
 
-    /** Re-evaluates every tick and enablement predicate. The menu is built once, so this is what
-        keeps it in step with settings another instance may have changed. */
+    /** Re-evaluates every tick and enablement predicate. */
     void _refreshSettingsMenu();
 
     void _updateTooltipVisibility();

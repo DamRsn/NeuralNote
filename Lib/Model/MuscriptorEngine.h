@@ -14,6 +14,7 @@
 
 #include "muscriptor/muscriptor.hpp"
 
+#include "NnGlobalSettings.h"
 #include "NoteEvent.h"
 #include "TranscriptionConstants.h"
 
@@ -73,6 +74,9 @@ public:
      * The notes are the model's own output: nothing is merged, filtered or otherwise
      * post-processed here.
      * @param inModelSize Which checkpoint to load from the models directory.
+     * @param inDevice Where to run it. An explicit device that cannot be used fails the call rather
+     *        than running elsewhere; Auto, which a device that is no longer listed resolves to,
+     *        never fails this way.
      * @param inAudio Pointer to raw audio (must be mono at TRANSCRIPTION_SAMPLE_RATE Hz).
      * @param inNumSamples Number of input samples available.
      * @param inInstruments Which instruments to look for. Empty lets the model choose, which is
@@ -82,6 +86,7 @@ public:
      * @return Success only if the final note event vector is usable.
      */
     Outcome transcribeToMIDI(ModelSize inModelSize,
+                             const ComputeDeviceChoice& inDevice,
                              const float* inAudio,
                              int inNumSamples,
                              const std::vector<msl::InstrumentGroup>& inInstruments);
@@ -128,7 +133,7 @@ public:
 
 private:
     /** @return Success with mTranscriber set, or why not; Failed also sets mLastErrorMessage. */
-    Outcome _loadModel(ModelSize inModelSize);
+    Outcome _loadModel(ModelSize inModelSize, const ComputeDeviceChoice& inDevice);
 
     // Only holds a value for the duration of a transcribeToMIDI call.
     std::optional<msl::Transcriber> mTranscriber;

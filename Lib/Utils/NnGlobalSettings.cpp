@@ -17,6 +17,8 @@ namespace
     const char* MODEL_SIZE_KEY = "modelSize";
     const char* EDITOR_SCALE_KEY = "editorScale";
     const char* TOOLTIPS_VISIBLE_KEY = "tooltipsVisible";
+    const char* COMPUTE_DEVICE_KEY = "computeDevice";
+    const char* COMPUTE_DEVICE_ORDINAL_KEY = "computeDeviceOrdinal";
 
     /**
      * Deleted by JUCE's own shutdown, while the message manager still exists: the file is a Timer,
@@ -67,6 +69,10 @@ namespace
         props.setValue(EDITOR_SCALE_KEY, getEditorScale());
         props.setValue(TOOLTIPS_VISIBLE_KEY, getTooltipsVisible());
 
+        const ComputeDeviceChoice device = getComputeDevice();
+        props.setValue(COMPUTE_DEVICE_KEY, juce::String(device.name));
+        props.setValue(COMPUTE_DEVICE_ORDINAL_KEY, device.ordinal);
+
         props.save();
     }
 
@@ -108,6 +114,19 @@ bool getTooltipsVisible()
 void setTooltipsVisible(bool inVisible)
 {
     properties().setValue(TOOLTIPS_VISIBLE_KEY, inVisible);
+    _saveAllSettings();
+}
+
+ComputeDeviceChoice getComputeDevice()
+{
+    return {.name = properties().getValue(COMPUTE_DEVICE_KEY).toStdString(),
+            .ordinal = std::max(0, properties().getIntValue(COMPUTE_DEVICE_ORDINAL_KEY, 0))};
+}
+
+void setComputeDevice(const ComputeDeviceChoice& inChoice)
+{
+    properties().setValue(COMPUTE_DEVICE_KEY, juce::String(inChoice.name));
+    properties().setValue(COMPUTE_DEVICE_ORDINAL_KEY, inChoice.ordinal);
     _saveAllSettings();
 }
 
