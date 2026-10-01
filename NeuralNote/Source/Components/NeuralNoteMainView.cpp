@@ -45,8 +45,6 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     // Off this thread: the first listing initialises the GPU backends.
     ComputeDevices::prepare();
 
-    _buildSettingsMenu();
-
     mTopBar.getModelButton().onClick = [this] {
         mVisualizationPanel.setModelPanelOpen(!mVisualizationPanel.isModelPanelVisible());
         mTopBar.syncModelButton(mVisualizationPanel.isModelPanelVisible());
@@ -54,7 +52,6 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
 
     mTopBar.getSettingsButton().onClick = [this] {
         _buildSettingsMenu();
-        _refreshSettingsMenu();
         mSettingsMenu->showMenuAsync(PopupMenu::Options().withTargetComponent(&mTopBar.getSettingsButton()));
     };
 

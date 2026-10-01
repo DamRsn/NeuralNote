@@ -19,6 +19,7 @@ struct ComputeDeviceChoice {
     int ordinal = 0;
 
     bool isAuto() const { return name.empty(); }
+    bool operator==(const ComputeDeviceChoice&) const = default;
 };
 
 /**

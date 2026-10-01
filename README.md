@@ -66,9 +66,9 @@ You can remove a model by deleting it from this folder, and re-download it at an
 available, through Metal on macOS and Vulkan on Windows. A GPU is strongly recommended for the `medium` and `large`
 models. **Settings > Compute device** picks the device: Auto (the default, which names the device it chose), a specific
 GPU, or the CPU. The choice applies from the next transcription, and GPUs added or removed while NeuralNote is open are
-listed after a restart. Only a few GPUs have been tested so far. If transcription fails, gives wrong results or is unexpectedly slow on
-your machine, please open an issue, either [here](https://github.com/DamRsn/NeuralNote/issues) or in
-[muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp/issues) if the problem is in the engine itself. Please
+listed after a restart. Only a few GPUs have been tested so far. If transcription fails, gives wrong results or is
+unexpectedly slow on your machine, please open an issue, either [here](https://github.com/DamRsn/NeuralNote/issues) or
+in [muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp/issues) if the problem is in the engine itself. Please
 include your OS, GPU and model size.
 
 Approximate real-time factors measured on an Apple M1 Pro (above 1× means faster than real time):

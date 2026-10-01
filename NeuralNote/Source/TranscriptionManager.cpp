@@ -343,7 +343,6 @@ void TranscriptionManager::launchTranscribeJob()
     mJobModelSize = *model_size;
     mTranscriptionModelSize = *model_size;
 
-    // Global settings are message-thread only.
     mJobDevice = NnGlobalSettings::getComputeDevice();
 
     mProcessor->setStateToProcessing();
