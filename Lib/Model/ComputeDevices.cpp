@@ -62,7 +62,7 @@ std::optional<std::size_t> resolve(const std::vector<msl::Device>& inDevices, co
     }
 
     for (std::size_t i = 0; i < inDevices.size(); ++i) {
-        if (inDevices[i].name == inChoice.name && ordinalOf(inDevices, i) == inChoice.ordinal) {
+        if (choiceFor(inDevices, i) == inChoice) {
             return i;
         }
     }
