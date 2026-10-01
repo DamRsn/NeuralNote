@@ -77,8 +77,13 @@ ComputeDeviceChoice choiceFor(const std::vector<msl::Device>& inDevices, std::si
 
 std::string label(const std::vector<msl::Device>& inDevices, std::size_t inIndex)
 {
+    const msl::Device& device = inDevices[inIndex];
+
+    // Metal names the GPU after the chip, which is also what Apple calls the CPU.
+    const std::string name = device.backend == "Metal" ? device.name + " GPU" : device.name;
+
     const int ordinal = ordinalOf(inDevices, inIndex);
-    return ordinal == 0 ? inDevices[inIndex].name : inDevices[inIndex].name + " (" + std::to_string(ordinal + 1) + ")";
+    return ordinal == 0 ? name : name + " (" + std::to_string(ordinal + 1) + ")";
 }
 
 } // namespace ComputeDevices
