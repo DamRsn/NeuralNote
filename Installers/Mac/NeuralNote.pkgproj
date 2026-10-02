@@ -38,9 +38,9 @@
 									<key>GID</key>
 									<integer>80</integer>
 									<key>PATH</key>
-									<string>Standalone/NeuralNote.app</string>
+									<string>../../cmake-build-release/NeuralNote_artefacts/Release/Standalone/NeuralNote.app</string>
 									<key>PATH_TYPE</key>
-									<integer>3</integer>
+									<integer>1</integer>
 									<key>PERMISSIONS</key>
 									<integer>493</integer>
 									<key>TYPE</key>
@@ -500,7 +500,7 @@
 				<key>USE_HFS+_COMPRESSION</key>
 				<false/>
 				<key>VERSION</key>
-				<string>1.1.0</string>
+				<string>2.0.0</string>
 			</dict>
 			<key>TYPE</key>
 			<integer>0</integer>
@@ -582,9 +582,9 @@
 															<key>GID</key>
 															<integer>0</integer>
 															<key>PATH</key>
-															<string>VST3/NeuralNote.vst3</string>
+															<string>../../cmake-build-release/NeuralNote_artefacts/Release/VST3/NeuralNote.vst3</string>
 															<key>PATH_TYPE</key>
-															<integer>3</integer>
+															<integer>1</integer>
 															<key>PERMISSIONS</key>
 															<integer>493</integer>
 															<key>TYPE</key>
@@ -1068,7 +1068,7 @@
 				<key>USE_HFS+_COMPRESSION</key>
 				<false/>
 				<key>VERSION</key>
-				<string>1.1.0</string>
+				<string>2.0.0</string>
 			</dict>
 			<key>TYPE</key>
 			<integer>0</integer>
@@ -1150,9 +1150,9 @@
 															<key>GID</key>
 															<integer>0</integer>
 															<key>PATH</key>
-															<string>AU/NeuralNote.component</string>
+															<string>../../cmake-build-release/NeuralNote_artefacts/Release/AU/NeuralNote.component</string>
 															<key>PATH_TYPE</key>
-															<integer>3</integer>
+															<integer>1</integer>
 															<key>PERMISSIONS</key>
 															<integer>493</integer>
 															<key>TYPE</key>
@@ -1636,7 +1636,7 @@
 				<key>USE_HFS+_COMPRESSION</key>
 				<false/>
 				<key>VERSION</key>
-				<string>1.1.0</string>
+				<string>2.0.0</string>
 			</dict>
 			<key>TYPE</key>
 			<integer>0</integer>
@@ -2067,8 +2067,6 @@
 			<string>NeuralNote</string>
 			<key>PAYLOAD_ONLY</key>
 			<false/>
-			<key>REFERENCE_FOLDER_PATH</key>
-			<string>/Users/damienronssin/Projects/NeuralNote/cmake-build-release/NeuralNote_artefacts/Release</string>
 			<key>TREAT_MISSING_PRESENTATION_DOCUMENTS_AS_WARNING</key>
 			<false/>
 		</dict>
