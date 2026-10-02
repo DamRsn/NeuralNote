@@ -102,9 +102,9 @@ void InstrumentSynth::ensureInstrument(int inProgram)
                                                             : tsf_get_presetindex(mFont, 0, inProgram);
 
     if (preset_index < 0) {
-        // The bundled soundfont is General MIDI and covers every program the model can emit, so
-        // this is a broken font rather than a runtime condition. Skipping leaves that instrument
-        // silent instead of taking the rest of the transcription down with it.
+        // The bundled soundfont holds a preset for every program the model emits, so this is a
+        // broken font rather than a runtime condition. Skipping leaves that instrument silent
+        // instead of taking the rest of the transcription down with it.
         jassertfalse;
         Logger::writeToLog("InstrumentSynth: no preset for program " + String(inProgram));
         return;

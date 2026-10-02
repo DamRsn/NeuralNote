@@ -2,16 +2,10 @@
 """Builds the soundfont the synth plays from two upstream General MIDI fonts.
 
 Keeps only the presets a transcription can name: the program the model emits for
-each instrument group, plus the Standard drum kit. They all come from
-MuseScore_General except the acoustic piano, which comes from FluidR3Mono.
-MuseScore_General's piano is built around SF2 modulators that open its low-pass
-filter, and TinySoundFont implements none, so it plays ~20 dB quieter than
-everything else; it also accounts for 200 MB of the decoded font on its own.
-
-TinySoundFont decodes every sample in the file to float32 at load, so what is
-left out here is memory the plugin does not hold. The Ogg sample data is copied
-byte for byte, never re-encoded, and the output is deterministic: its digest is
-pinned below.
+each instrument group, plus the Standard drum kit. All come from MuseScore_General
+except the piano, which comes from FluidR3Mono: MuseScore_General's piano relies on
+SF2 modulators, which TinySoundFont does not implement. The Ogg sample data is
+copied byte for byte, and the output is deterministic: its digest is pinned below.
 
 Run by fetch_soundfont.py once the sources are on disk.
 """
@@ -33,9 +27,8 @@ OUTPUT_SHA256 = "6152b329bfb7c57c73112e26452e6b61909b19df1f146351bab85a5f3b0ea0a
 DRUM_BANK = 128
 STANDARD_KIT = 0
 
-# The program muscriptor.cpp reports for each instrument group: the named groups first, then the
-# unnamed singleton groups, which auto mode can still decode. Group 96 is drums and plays from
-# DRUM_BANK instead.
+# The program muscriptor.cpp emits for each instrument group, unnamed ones included (auto mode can
+# decode those). Program 96 belongs to the drums group, which plays from DRUM_BANK instead.
 GROUP_PROGRAMS = (
     0, 2, 8, 16, 24, 26, 29, 32, 33, 40, 41, 42, 43, 46, 47, 48, 50, 52, 55, 56, 57, 58,
     60, 61, 64, 66, 67, 68, 69, 70, 71, 72, 80, 88, 100, 101,
@@ -156,7 +149,6 @@ class Builder:
         key = (source, index)
 
         if key not in self.instruments:
-            # Before the zones: they can only append to ibag/igen/imod, never to inst.
             self.instruments[key] = len(self.out["inst"])
             hydra = fonts[source].pdta
             name, first_bag = hydra["inst"][index]
