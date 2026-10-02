@@ -13,8 +13,8 @@ namespace AudioUtils
 {
 bool loadAudioFile(const juce::File& inFile, AudioBuffer<float>& outBuffer, double& outSampleRate)
 {
-    if (inFile.getFileExtension() == ".mp3") {
-        return _loadMP3File(inFile.getFullPathName().toStdString(), outBuffer, outSampleRate);
+    if (inFile.hasFileExtension(".mp3")) {
+        return _loadMP3File(inFile, outBuffer, outSampleRate);
     }
 
     // Register different audio formats
@@ -132,13 +132,23 @@ void resampleBufferToMono(const AudioBuffer<float>& inBuffer,
     jassertquiet(num_samples_after_resample == num_expected_samples_after_resample);
 }
 
-bool _loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuffer, double& outSampleRate)
+bool _loadMP3File(const juce::File& inFile, juce::AudioBuffer<float>& outBuffer, double& outSampleRate)
 {
-    mp3dec_t mp3d;
-    mp3dec_file_info_t info;
-    int loadResult = mp3dec_load(&mp3d, filename.c_str(), &info, nullptr, nullptr);
+    // Read through JUCE rather than mp3dec_load: minimp3 opens paths with CreateFileA on Windows,
+    // which misreads a UTF-8 path containing non-ASCII characters.
+    juce::MemoryBlock data;
+    if (!inFile.loadFileAsData(data)) {
+        return false;
+    }
 
-    if (loadResult) {
+    mp3dec_t mp3d;
+    mp3dec_file_info_t info {};
+    int loadResult =
+        mp3dec_load_buf(&mp3d, static_cast<const uint8_t*>(data.getData()), data.getSize(), &info, nullptr, nullptr);
+
+    // minimp3 returns success with no channels when it finds no mp3 frame.
+    if (loadResult || info.channels <= 0 || info.samples == 0) {
+        free(info.buffer);
         return false;
     }
 

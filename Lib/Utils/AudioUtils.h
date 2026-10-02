@@ -73,12 +73,12 @@ void resampleBufferToMono(const AudioBuffer<float>& inBuffer,
 
 /**
  * Load an mp3 file
- * @param filename path to mp3 file to read
+ * @param inFile mp3 file to read
  * @param outBuffer output buffer on which to read the data
  * @param outSampleRate File sample rate
  * @return Whether file load was a success
  */
-bool _loadMP3File(const std::string& filename, juce::AudioBuffer<float>& outBuffer, double& outSampleRate);
+bool _loadMP3File(const juce::File& inFile, juce::AudioBuffer<float>& outBuffer, double& outSampleRate);
 
 } // namespace AudioUtils
 

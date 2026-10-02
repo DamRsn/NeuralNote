@@ -220,7 +220,7 @@ bool CombinedAudioMidiRegion::_isFileTypeSupported(const String& filename) const
 {
     return std::find_if(mSupportedAudioFileExtensions.begin(),
                         mSupportedAudioFileExtensions.end(),
-                        [filename](const String& extension) { return filename.endsWith(extension); })
+                        [filename](const String& extension) { return filename.endsWithIgnoreCase(extension); })
            != mSupportedAudioFileExtensions.end();
 }
 
