@@ -68,7 +68,7 @@ void ProcessorBase::setCurrentProgram(int index)
 const juce::String ProcessorBase::getProgramName(int index)
 {
     juce::ignoreUnused(index);
-    return {};
+    return "Default";
 }
 
 void ProcessorBase::changeProgramName(int index, const juce::String& newName)
