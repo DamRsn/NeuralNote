@@ -34,7 +34,7 @@ InstrumentSynth::InstrumentSynth()
     mIndexForProgram.fill(-1);
     mInstruments.reserve(NUM_INSTRUMENT_IDS);
 
-    // Off the message thread: ~40 MB of Vorbis to decode, over a second on an M1 Pro, and doing it
+    // Off the message thread: ~13 MB of Vorbis to decode, half a second on an M1 Pro, and doing it
     // in the constructor would stall a DAW's plugin scan. Nothing can play until a transcription
     // exists, which takes minutes, so this is always finished long before it is needed -- and if it
     // somehow is not, the audio thread renders silence rather than racing.
@@ -54,7 +54,7 @@ InstrumentSynth::~InstrumentSynth()
 
 void InstrumentSynth::_loadFont()
 {
-    tsf* font = tsf_load_memory(SoundFontData::MuseScore_General_sf3, SoundFontData::MuseScore_General_sf3Size);
+    tsf* font = tsf_load_memory(SoundFontData::NeuralNote_GM_sf3, SoundFontData::NeuralNote_GM_sf3Size);
 
     if (font == nullptr) {
         // tsf reports nothing more specific -- it does not even set an error code on the

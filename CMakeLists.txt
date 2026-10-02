@@ -27,15 +27,16 @@ add_subdirectory(ThirdParty/JUCE)
 add_subdirectory(ThirdParty/TinySoundFont)
 add_subdirectory(ThirdParty/minimp3)
 
-# The soundfont the synth plays is ~38 MB and is not committed; Tools/fetch_soundfont.py
-# downloads and SHA-256-verifies it. Run here so a fresh clone builds in one step.
+# The soundfont the synth plays is not committed; Tools/fetch_soundfont.py downloads and
+# SHA-256-verifies its two upstream sources and builds it from them. Run here so a fresh
+# clone builds in one step.
 # Failing at configure time with the script named beats failing at link time with a
 # missing BinaryData symbol.
-set(NEURALNOTE_SOUNDFONT "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/SoundFont/MuseScore_General.sf3")
+set(NEURALNOTE_SOUNDFONT "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/SoundFont/NeuralNote_GM.sf3")
 
 if (NEURALNOTE_FETCH_SOUNDFONT AND NOT EXISTS "${NEURALNOTE_SOUNDFONT}")
   find_package(Python3 COMPONENTS Interpreter REQUIRED)
-  message(STATUS "Fetching the soundfont (~38 MB), one time only")
+  message(STATUS "Fetching the soundfont sources (~55 MB), one time only")
   execute_process(
           COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/Tools/fetch_soundfont.py"
           RESULT_VARIABLE soundfont_result)
@@ -134,7 +135,7 @@ endforeach ()
 #Binary data
 file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/Fonts/*.ttf)
 
-# The soundfont is its own binary-data target: it is ~38 MB against a few hundred KB
+# The soundfont is its own binary-data target: it is ~13 MB against a few hundred KB
 # of fonts and images, and keeping it separate means editing an icon does not
 # regenerate (and recompile) the soundfont's source file.
 juce_add_binary_data(bin_data SOURCES ${RESOURCES_FILES})
