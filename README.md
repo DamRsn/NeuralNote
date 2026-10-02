@@ -89,9 +89,9 @@ Requirements:
 - `git`
 - [CMake](https://cmake.org/)
 - A C++23 compiler, such as Clang, MSVC or GCC. Only Clang has been tested so far, on macOS and Windows.
-- Python 3 (used at configure time to fetch the synth's soundfont)
+- Python 3 (used at configure time to fetch and build the synth's soundfont)
 - Internet access on the first configure. `muscriptor.cpp` fetches [ggml](https://github.com/ggml-org/ggml), and the
-  soundfont (~38 MB) is downloaded.
+  soundfont's two sources (~55 MB) are downloaded.
 
 **macOS** needs Xcode's Metal toolchain, which compiles the GPU shaders at build time:
 `xcodebuild -downloadComponent MetalToolchain`. Configuring with `-DMUSCRIPTOR_METAL_PRECOMPILED=OFF` builds without it
@@ -171,6 +171,7 @@ Their full license notices are in [`Installers/license.txt`](Installers/license.
 - [MuScriptor](https://github.com/muscriptor/muscriptor) model weights (CC BY-NC 4.0, see above)
 - [TinySoundFont](https://github.com/schellingb/TinySoundFont) (MIT license)
 - [MuseScore_General](https://ftp.osuosl.org/pub/musescore/soundfont/MuseScore_General/) soundfont (MIT license)
+- [FluidR3Mono_GM](https://github.com/musescore/MuseScore/tree/v2.3.2/share/sound) soundfont (MIT license)
 - [minimp3](https://github.com/lieff/minimp3) (CC0-1.0 license)
 - [Inter](https://github.com/rsms/inter) (SIL Open Font License 1.1)
 - [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) (SIL Open Font License 1.1)
