@@ -76,7 +76,7 @@ void VisualizationPanel::valueTreePropertyChanged(juce::ValueTree& inTree, const
 {
     juce::ignoreUnused(inTree);
 
-    // Reset Zoom writes it back to automatic, and a restored session brings its own value.
+    // Reset piano roll zoom writes it back to automatic, and a restored session brings its own value.
     if (inProperty == NnId::VerticalZoomId) {
         _applyVerticalZoom();
     }

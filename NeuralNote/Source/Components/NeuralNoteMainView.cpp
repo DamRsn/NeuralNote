@@ -234,19 +234,56 @@ void NeuralNoteMainView::_buildSettingsMenu()
 
     int item_id = 0;
 
-    auto reset_zoom_item = PopupMenu::Item("Reset Zoom");
-    reset_zoom_item.setID(++item_id);
-    reset_zoom_item.setTicked(false);
-    reset_zoom_item.setAction([this] {
-        mProcessor.getValueTree().setProperty(NnId::ZoomLevelId, 1.0, nullptr);
+    // Applies from the next transcription: the model is loaded per run.
+    PopupMenu device_menu;
+    String device_menu_name = "Compute device";
 
-        // Negative returns the vertical zoom to fitting itself to the transcription, which is what
-        // it does before the slider is ever touched.
-        mProcessor.getValueTree().setProperty(NnId::VerticalZoomId, -1.0, nullptr);
-    });
-    mSettingsMenu->addItem(reset_zoom_item);
+    if (const std::vector<msl::Device>* devices = ComputeDevices::tryGet()) {
+        const auto is_selected = [devices](std::optional<std::size_t> inIndex) {
+            return ComputeDevices::resolve(*devices, NnGlobalSettings::getComputeDevice()) == inIndex;
+        };
 
-    auto tooltip_visibility_item = PopupMenu::Item("Show Tooltips");
+        const auto add_device_item =
+            [&](const String& inLabel, std::optional<std::size_t> inIndex, const ComputeDeviceChoice& inChoice) {
+                auto device_item = PopupMenu::Item(inLabel);
+                device_item.setID(++item_id);
+                device_item.setEnabled(true);
+                mSettingsMenuItemsShouldBeTicked.emplace_back(device_item.itemID,
+                                                              [is_selected, inIndex] { return is_selected(inIndex); });
+                device_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+                device_item.setAction([this, inChoice] {
+                    NnGlobalSettings::setComputeDevice(inChoice);
+                    _refreshSettingsMenu();
+                });
+                device_menu.addItem(device_item);
+            };
+
+        const String auto_label =
+            "Auto (" + String(ComputeDevices::label(*devices, msl::autoDevice(*devices))) + ")";
+        const auto selected = ComputeDevices::resolve(*devices, NnGlobalSettings::getComputeDevice());
+        device_menu_name +=
+            ": " + (selected.has_value() ? String(ComputeDevices::label(*devices, *selected)) : auto_label);
+
+        add_device_item(auto_label, std::nullopt, {});
+        device_menu.addSeparator();
+
+        for (std::size_t i = 0; i < devices->size(); ++i) {
+            add_device_item(ComputeDevices::label(*devices, i), i, ComputeDevices::choiceFor(*devices, i));
+        }
+    }
+
+    else {
+        auto detecting_item = PopupMenu::Item("Detecting devices...");
+        detecting_item.setID(++item_id);
+        detecting_item.setEnabled(false);
+        mSettingsMenuItemsShouldBeEnabled.emplace_back(detecting_item.itemID, [] { return false; });
+        device_menu.addItem(detecting_item);
+    }
+
+    mSettingsMenu->addSubMenu(device_menu_name, device_menu);
+    mSettingsMenu->addSeparator();
+
+    auto tooltip_visibility_item = PopupMenu::Item("Show tooltips");
     tooltip_visibility_item.setID(++item_id);
     tooltip_visibility_item.setEnabled(true);
     mSettingsMenuItemsShouldBeTicked.emplace_back(tooltip_visibility_item.itemID,
@@ -258,30 +295,6 @@ void NeuralNoteMainView::_buildSettingsMenu()
         _refreshSettingsMenu();
     });
     mSettingsMenu->addItem(tooltip_visibility_item);
-
-    // A dense mix can name more instruments than MIDI has channels; see MidiOverflowMode.
-    PopupMenu overflow_menu;
-
-    for (const auto& [mode, label]:
-         {std::pair {MidiOverflowMode::ReuseChannels, "Reuse the last channels"},
-          std::pair {MidiOverflowMode::DropExtraInstruments, "Drop the extra instruments"}}) {
-        auto overflow_item = PopupMenu::Item(label);
-        overflow_item.setID(++item_id);
-        overflow_item.setEnabled(true);
-        mSettingsMenuItemsShouldBeTicked.emplace_back(overflow_item.itemID, [this, item_mode = mode] {
-            return static_cast<int>(mProcessor.getValueTree().getProperty(
-                       NnId::MidiOverflowModeId, static_cast<int>(MidiOverflowMode::ReuseChannels)))
-                   == static_cast<int>(item_mode);
-        });
-        overflow_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
-        overflow_item.setAction([this, item_mode = mode] {
-            mProcessor.getValueTree().setProperty(NnId::MidiOverflowModeId, static_cast<int>(item_mode), nullptr);
-            _refreshSettingsMenu();
-        });
-        overflow_menu.addItem(overflow_item);
-    }
-
-    mSettingsMenu->addSubMenu("MIDI export: too many instruments", overflow_menu);
 
     // The editor applies this factor, clamped to what the display can hold, and writes back the
     // one it used -- so a preset too large for the screen ends up unticked.
@@ -309,47 +322,42 @@ void NeuralNoteMainView::_buildSettingsMenu()
 
     mSettingsMenu->addSubMenu("Window size", scale_menu);
 
-    // Applies from the next transcription: the model is loaded per run.
-    PopupMenu device_menu;
+    auto reset_zoom_item = PopupMenu::Item("Reset piano roll zoom");
+    reset_zoom_item.setID(++item_id);
+    reset_zoom_item.setTicked(false);
+    reset_zoom_item.setAction([this] {
+        mProcessor.getValueTree().setProperty(NnId::ZoomLevelId, 1.0, nullptr);
 
-    if (const std::vector<msl::Device>* devices = ComputeDevices::tryGet()) {
-        const auto is_selected = [devices](std::optional<std::size_t> inIndex) {
-            return ComputeDevices::resolve(*devices, NnGlobalSettings::getComputeDevice()) == inIndex;
-        };
+        // Negative returns the vertical zoom to fitting itself to the transcription, which is what
+        // it does before the slider is ever touched.
+        mProcessor.getValueTree().setProperty(NnId::VerticalZoomId, -1.0, nullptr);
+    });
+    mSettingsMenu->addItem(reset_zoom_item);
+    mSettingsMenu->addSeparator();
 
-        const auto add_device_item =
-            [&](const String& inLabel, std::optional<std::size_t> inIndex, const ComputeDeviceChoice& inChoice) {
-                auto device_item = PopupMenu::Item(inLabel);
-                device_item.setID(++item_id);
-                device_item.setEnabled(true);
-                mSettingsMenuItemsShouldBeTicked.emplace_back(device_item.itemID,
-                                                              [is_selected, inIndex] { return is_selected(inIndex); });
-                device_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
-                device_item.setAction([this, inChoice] {
-                    NnGlobalSettings::setComputeDevice(inChoice);
-                    _refreshSettingsMenu();
-                });
-                device_menu.addItem(device_item);
-            };
+    // A dense mix can name more instruments than MIDI has channels; see MidiOverflowMode.
+    PopupMenu overflow_menu;
 
-        add_device_item(
-            "Auto (" + String(ComputeDevices::label(*devices, msl::autoDevice(*devices))) + ")", std::nullopt, {});
-        device_menu.addSeparator();
-
-        for (std::size_t i = 0; i < devices->size(); ++i) {
-            add_device_item(ComputeDevices::label(*devices, i), i, ComputeDevices::choiceFor(*devices, i));
-        }
+    for (const auto& [mode, label]:
+         {std::pair {MidiOverflowMode::ReuseChannels, "Reuse the last channels"},
+          std::pair {MidiOverflowMode::DropExtraInstruments, "Drop the extra instruments"}}) {
+        auto overflow_item = PopupMenu::Item(label);
+        overflow_item.setID(++item_id);
+        overflow_item.setEnabled(true);
+        mSettingsMenuItemsShouldBeTicked.emplace_back(overflow_item.itemID, [this, item_mode = mode] {
+            return static_cast<int>(mProcessor.getValueTree().getProperty(
+                       NnId::MidiOverflowModeId, static_cast<int>(MidiOverflowMode::ReuseChannels)))
+                   == static_cast<int>(item_mode);
+        });
+        overflow_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+        overflow_item.setAction([this, item_mode = mode] {
+            mProcessor.getValueTree().setProperty(NnId::MidiOverflowModeId, static_cast<int>(item_mode), nullptr);
+            _refreshSettingsMenu();
+        });
+        overflow_menu.addItem(overflow_item);
     }
 
-    else {
-        auto detecting_item = PopupMenu::Item("Detecting devices...");
-        detecting_item.setID(++item_id);
-        detecting_item.setEnabled(false);
-        mSettingsMenuItemsShouldBeEnabled.emplace_back(detecting_item.itemID, [] { return false; });
-        device_menu.addItem(detecting_item);
-    }
-
-    mSettingsMenu->addSubMenu("Compute device", device_menu);
+    mSettingsMenu->addSubMenu("MIDI export on channel overflow", overflow_menu);
 
     auto check_updates_item = PopupMenu::Item("Check for updates");
     check_updates_item.setID(++item_id);
