@@ -45,6 +45,10 @@ NnToolbar::NnToolbar(NeuralNoteAudioProcessor& inProcessor)
     mTempoEditor = std::make_unique<NumericTextEditor<double>>(
         &mProcessor, NnId::ExportTempoId, 6, 120.0, juce::Justification::centredLeft, tempo_is_valid, correct_tempo);
     mTempoEditor->setTooltip(NeuralNoteTooltips::export_tempo);
+
+    // TextEditor only centres vertically when the line fits below its top indent, so the indent goes
+    // and the editor takes the pill's full height.
+    mTempoEditor->setIndents(mTempoEditor->getLeftIndent(), 0);
     addAndMakeVisible(*mTempoEditor);
 
     mExportButton.setIcon(nn::icons::folderStroked, NnFlatButton::IconStyle::stroked, 13.0f);
@@ -92,10 +96,8 @@ void NnToolbar::resized()
     const int tempo_width = 2 * PILL_PADDING + label_width + PILL_GAP + TEMPO_VALUE_WIDTH + PILL_GAP + SPINNER_WIDTH;
 
     mTempoPill = bounds.removeFromRight(tempo_width).withSizeKeepingCentre(tempo_width, button_height);
-    mTempoEditor->setBounds(mTempoPill.getX() + PILL_PADDING + label_width + PILL_GAP,
-                            mTempoPill.getY() + 6,
-                            TEMPO_VALUE_WIDTH,
-                            button_height - 12);
+    mTempoEditor->setBounds(
+        mTempoPill.getX() + PILL_PADDING + label_width + PILL_GAP, mTempoPill.getY(), TEMPO_VALUE_WIDTH, button_height);
 }
 
 void NnToolbar::paint(juce::Graphics& g)
