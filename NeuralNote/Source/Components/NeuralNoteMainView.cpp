@@ -258,8 +258,7 @@ void NeuralNoteMainView::_buildSettingsMenu()
                 device_menu.addItem(device_item);
             };
 
-        const String auto_label =
-            "Auto (" + String(ComputeDevices::label(*devices, msl::autoDevice(*devices))) + ")";
+        const String auto_label = "Auto (" + String(ComputeDevices::label(*devices, msl::autoDevice(*devices))) + ")";
         const auto selected = ComputeDevices::resolve(*devices, NnGlobalSettings::getComputeDevice());
         device_menu_name +=
             ": " + (selected.has_value() ? String(ComputeDevices::label(*devices, *selected)) : auto_label);

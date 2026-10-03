@@ -54,6 +54,7 @@ int modelButtonWidth()
 
     return 2 * MODEL_BUTTON_PADDING + juce::roundToInt(std::ceil(widest));
 }
+
 void paintWordmark(juce::Graphics& g, juce::Rectangle<int> inBounds)
 {
     const auto centre_y = static_cast<float>(inBounds.getCentreY());
