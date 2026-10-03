@@ -59,6 +59,9 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
         mProcessor.getValueTree().getPropertyAsValue(NnId::PlayheadCenteredId, nullptr));
     NeuralNoteMainView::valueTreePropertyChanged(mProcessor.getValueTree(), NnId::PlayheadCenteredId);
 
+    mTopBar.getLoopButton().getToggleStateValue().referTo(
+        mProcessor.getValueTree().getPropertyAsValue(NnId::LoopEnabledId, nullptr));
+
     mTopBar.getBackButton().onClick = [this] {
         mProcessor.getPlayer()->returnToStart();
         mTopBar.syncTransportToggles();
@@ -190,6 +193,11 @@ bool NeuralNoteMainView::keyPressed(const KeyPress& key)
 
     if (key == KeyPress('c', juce::ModifierKeys::noModifiers, 0)) {
         mTopBar.getFollowButton().triggerClick();
+        return true;
+    }
+
+    if (key == KeyPress('l', juce::ModifierKeys::noModifiers, 0)) {
+        mTopBar.getLoopButton().triggerClick();
         return true;
     }
 

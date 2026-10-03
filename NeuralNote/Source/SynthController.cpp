@@ -26,7 +26,7 @@ void SynthController::setNotes(std::vector<NoteEvent>& ioNotes)
     mScheduler.setNotes(ioNotes);
 }
 
-const MidiBuffer& SynthController::generateNextMidiBuffer(int inNumSamples, bool inIsPlaying)
+const MidiBuffer& SynthController::generateNextMidiBuffer(int inNumSamples, bool inIsPlaying, bool inShouldLoop)
 {
     mMidiBuffer.clear();
 
@@ -35,8 +35,10 @@ const MidiBuffer& SynthController::generateNextMidiBuffer(int inNumSamples, bool
     // Only while playing: this is called every block now, and with no audio loaded the duration is
     // zero, so an unguarded check would rewind the transport on every callback forever.
     if (inIsPlaying && mScheduler.getTimeSeconds() >= mProcessor->getSourceAudioManager()->getAudioSampleDuration()) {
-        // Stop playing and reset to start
-        mProcessor->getPlayer()->setPlayingState(false);
+        if (!inShouldLoop) {
+            mProcessor->getPlayer()->setPlayingState(false);
+        }
+
         setNewTimeSeconds(0);
     }
 

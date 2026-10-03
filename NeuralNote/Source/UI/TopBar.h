@@ -40,6 +40,8 @@ public:
 
     NnFlatButton& getRecordButton() { return mRecordButton; }
 
+    NnFlatButton& getLoopButton() { return mLoopButton; }
+
     NnFlatButton& getFollowButton() { return mFollowButton; }
 
     NnFlatButton& getMuteButton() { return mMuteButton; }
