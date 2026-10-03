@@ -128,6 +128,9 @@ public:
      */
     void cancel();
 
+    /** @return Whether cancel() has been called since the last reset(). Thread-safe. */
+    bool isCancelRequested() const;
+
     /** @return Progress of the current/last transcribeToMIDI call. Thread-safe. */
     Progress getProgress() const;
 

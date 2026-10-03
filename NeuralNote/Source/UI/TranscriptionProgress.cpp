@@ -57,9 +57,7 @@ TranscriptionProgress::TranscriptionProgress(NeuralNoteAudioProcessor& inProcess
     // the second click is a button the user has to assume is broken.
     mCancelButton.onClick = [this] {
         if (mProcessor.getState() == Processing) {
-            mIsCancelling = true;
             mProcessor.getTranscriptionManager()->cancelTranscription();
-            repaint();
         }
     };
 
@@ -139,14 +137,18 @@ void TranscriptionProgress::_onVBlankCallback()
         return;
     }
 
-    const auto progress = mProcessor.getTranscriptionManager()->getTranscriptionProgress();
+    const auto* manager = mProcessor.getTranscriptionManager();
+    const auto progress = manager->getTranscriptionProgress();
     const int percent = progress.fraction < 0.0f ? -1 : juce::roundToInt(100.0f * progress.fraction);
     const float pulse = pulseAt(static_cast<double>(juce::Time::getMillisecondCounter()));
+    const bool is_cancelling = manager->isCancelRequested();
 
-    if (progress.phase == mDisplayedPhase && percent == mDisplayedPercent && juce::approximatelyEqual(pulse, mPulse)) {
+    if (progress.phase == mDisplayedPhase && percent == mDisplayedPercent && juce::approximatelyEqual(pulse, mPulse)
+        && is_cancelling == mIsCancelling) {
         return;
     }
 
+    mIsCancelling = is_cancelling;
     mDisplayedPhase = progress.phase;
     mDisplayedPercent = percent;
     mPulse = pulse;

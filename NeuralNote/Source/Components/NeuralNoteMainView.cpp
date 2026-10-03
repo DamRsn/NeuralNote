@@ -166,15 +166,7 @@ bool NeuralNoteMainView::keyPressed(const KeyPress& key)
     }
 
     if (key == KeyPress(KeyPress::backspaceKey, ModifierKeys::shiftModifier, 0)) {
-        // Same states as the toolbar's bin (NnToolbar::updateEnablements). Recording is excluded:
-        // clearing mid-record stops the recording behind the record button's back, and the toggle
-        // sync then stops it a second time.
-        const State state = mProcessor.getState();
-
-        if (state == AudioLoaded || state == PopulatedAudioAndMidiRegions) {
-            mProcessor.clear();
-        }
-
+        mVisualizationPanel.clearOneStep();
         return true;
     }
 

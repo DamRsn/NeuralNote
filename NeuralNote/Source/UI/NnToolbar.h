@@ -34,11 +34,11 @@ public:
 
     NnFlatButton& getClearButton() { return mClearButton; }
 
+    /** The bin: stops a running transcription, else drops the transcription, else the audio. */
+    void clearOneStep();
+
 private:
     void _exportMidiFile();
-
-    /** The bin's right-click menu: everything, or the transcription only. */
-    void _showClearMenu();
 
     void _paintTempoPill(juce::Graphics& g) const;
 

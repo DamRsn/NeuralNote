@@ -205,6 +205,11 @@ void MuscriptorEngine::cancel()
     mCancelRequested = true;
 }
 
+bool MuscriptorEngine::isCancelRequested() const
+{
+    return mCancelRequested.load();
+}
+
 MuscriptorEngine::Progress MuscriptorEngine::getProgress() const
 {
     return mProgress.load();

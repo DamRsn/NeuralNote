@@ -265,3 +265,8 @@ CombinedAudioMidiRegion& VisualizationPanel::getCombinedAudioMidiRegion()
 {
     return mCombinedAudioMidiRegion;
 }
+
+void VisualizationPanel::clearOneStep()
+{
+    mToolbar.clearOneStep();
+}

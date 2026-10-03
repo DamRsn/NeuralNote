@@ -60,18 +60,9 @@ public:
     /** @return The width the current icon, gap, label and padding need. */
     int getIdealWidth() const;
 
-    /**
-     * Called instead of onClick for a right-click (or a ctrl-click on macOS), for a button that
-     * offers a menu of variants alongside its plain action. Unset on all but the few that do, and
-     * those keep their left-click behaviour unchanged.
-     */
-    std::function<void()> onRightClick;
-
     void paintButton(juce::Graphics& g, bool inIsHighlighted, bool inIsDown) override;
 
     void enablementChanged() override;
-
-    void mouseDown(const juce::MouseEvent& inEvent) override;
 
 private:
     IconBuilder mIconBuilder;

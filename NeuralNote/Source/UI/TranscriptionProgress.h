@@ -40,8 +40,9 @@ private:
 
     juce::VBlankAttachment mVBlankAttachment;
 
-    // Latched so a second click does not read as the first one having done nothing. Cancellation
-    // cannot interrupt GPU initialisation, which can take seconds.
+    // Mirrors the engine's pending request, from either this button or the toolbar's bin, so a second
+    // click does not read as the first one having done nothing. Cancellation cannot interrupt GPU
+    // initialisation, which can take seconds.
     bool mIsCancelling = false;
 
     MuscriptorEngine::Phase mDisplayedPhase = MuscriptorEngine::Phase::LoadingModel;
