@@ -39,8 +39,8 @@ InstrumentStrip::InstrumentStrip(InstrumentMixer& inMixer, int inProgram)
         addAndMakeVisible(button);
     };
 
-    setup_toggle(mMuteButton, nn::colours::bgMuteActive, nn::colours::warn);
-    setup_toggle(mSoloButton, nn::colours::soloButtonBg(), nn::colours::rec);
+    setup_toggle(mMuteButton, nn::colours::muteFill(), nn::colours::warn);
+    setup_toggle(mSoloButton, nn::colours::accentFillToggle(), nn::colours::accentText);
 
     mMuteButton.setTooltip("Mute this instrument");
     mMuteButton.onClick = [this] { mMixer.setMuted(mProgram, mMuteButton.getToggleState()); };
@@ -101,7 +101,8 @@ void InstrumentStrip::_updateAppearance()
 
     // Muted, the fader loses its instrument colour rather than only dimming: the whole strip is
     // already drawn at half opacity, and a dimmed hue on a dimmed strip stops reading as "off".
-    mFader.setColour(NnFlatSlider::fillColourId, muted ? nn::colours::faderFillMuted : mEntry.colour.withAlpha(0.85f));
+    mFader.setColour(NnFlatSlider::fillColourId,
+                     muted ? nn::colours::faderFillMuted : nn::colours::faderFill(mEntry.colour));
     mFader.setColour(NnFlatSlider::thumbColourId, muted ? nn::colours::faderThumbMuted : nn::colours::faderThumb);
 
     // paint() cannot reach the children, so the strip's muted opacity is applied to them here.
@@ -188,7 +189,7 @@ void InstrumentStrip::paint(juce::Graphics& g)
 
     text_area.removeFromTop(2);
 
-    g.setColour(nn::colours::textFaintest.withMultipliedAlpha(alpha));
+    g.setColour(nn::colours::textFainter.withMultipliedAlpha(alpha));
     g.setFont(nn::fonts::meta());
 
     // Drums have no pitch range to report: their key numbers name pieces of a kit, not notes.

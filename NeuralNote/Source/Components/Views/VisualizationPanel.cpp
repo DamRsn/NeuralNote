@@ -30,7 +30,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     // a saturated blue that reads as an accent this palette does not have.
     auto& scrollbar = mAudioMidiViewport.getHorizontalScrollBar();
     scrollbar.setColour(ScrollBar::backgroundColourId, Colours::transparentBlack);
-    scrollbar.setColour(ScrollBar::thumbColourId, nn::colours::faderTrack);
+    scrollbar.setColour(ScrollBar::thumbColourId, nn::colours::scrollbarThumb);
     scrollbar.setColour(ScrollBar::trackColourId, Colours::transparentBlack);
 
     addAndMakeVisible(mAudioMidiViewport);

@@ -122,7 +122,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     mRecordButton.setIcon(nn::icons::record, NnFlatButton::IconStyle::filled, 16.0f);
     mRecordButton.setColour(NnFlatButton::iconColourId, nn::colours::recIdle);
     mRecordButton.setColour(NnFlatButton::iconOnColourId, nn::colours::rec);
-    mRecordButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::rec.withAlpha(0.14f));
+    mRecordButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::activeFill(nn::colours::rec));
     mRecordButton.onClick = [this] {
         if (mRecordButton.getToggleState()) {
             mProcessor.getSourceAudioManager()->startRecording();
@@ -149,7 +149,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     syncModelButton(false);
 
     mMixSlider.setColour(NnFlatSlider::trackColourId, nn::colours::faderTrackTop);
-    mMixSlider.setColour(NnFlatSlider::fillColourId, nn::colours::accent.withAlpha(0.8f));
+    mMixSlider.setColour(NnFlatSlider::fillColourId, nn::colours::mixSliderFill());
     mMixSlider.setTooltip("Balance between the source audio and the synthesised transcription");
     mMixAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::MixId), mMixSlider);
@@ -169,7 +169,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     mMuteButton.setLabel("MUTE", nn::fonts::sectionHeader(), 0.09f);
     mMuteButton.setPadding(11, 11, 7);
     mMuteButton.setColour(NnFlatButton::backgroundColourId, nn::colours::bgControl);
-    mMuteButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::bgMuteActive);
+    mMuteButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::muteFill());
     mMuteButton.setColour(NnFlatButton::iconColourId, nn::colours::textIcon);
     mMuteButton.setColour(NnFlatButton::iconOnColourId, nn::colours::warn);
     mMuteButton.setColour(NnFlatButton::textColourId, nn::colours::textIcon);
@@ -314,7 +314,7 @@ void TopBar::_paintMixPill(juce::Graphics& g, float inAlpha) const
     const auto font = nn::fonts::pillLabel();
     auto text_area = mMixPill.reduced(PILL_PADDING, 0).toFloat();
 
-    g.setColour(nn::colours::textMuted.withMultipliedAlpha(inAlpha));
+    g.setColour(nn::colours::textLabel.withMultipliedAlpha(inAlpha));
     nn::drawTrackedText(g, "ORIG", font, text_area, juce::Justification::centredLeft, LABEL_TRACKING);
 
     g.setColour(nn::colours::accentText.withMultipliedAlpha(inAlpha));
@@ -339,7 +339,7 @@ void TopBar::_paintVolumePill(juce::Graphics& g, float inAlpha) const
     g.setColour(nn::colours::textIcon.withMultipliedAlpha(inAlpha));
     g.fillPath(nn::icons::speaker(icon_box));
 
-    g.setColour(nn::colours::textMuted.withMultipliedAlpha(inAlpha));
+    g.setColour(nn::colours::textLabel.withMultipliedAlpha(inAlpha));
     g.setFont(nn::fonts::meta());
     g.drawText(juce::String(mMasterGainSlider.getValue(), 1),
                mVolumePill.withTrimmedRight(PILL_PADDING).removeFromRight(VOLUME_VALUE_WIDTH),

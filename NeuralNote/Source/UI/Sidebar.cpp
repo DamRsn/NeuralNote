@@ -80,7 +80,7 @@ Sidebar::Sidebar(NeuralNoteAudioProcessor& inProcessor)
     mAddButton.setCornerRadius(4.0f);
     mAddButton.setColour(NnFlatButton::backgroundColourId, nn::colours::bgControlSubtle);
     mAddButton.setColour(NnFlatButton::iconColourId, nn::colours::textIconSoft);
-    mAddButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::accent.withAlpha(0.18f));
+    mAddButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::accentFillToggle());
     mAddButton.setColour(NnFlatButton::iconOnColourId, nn::colours::accentText);
     mAddButton.setTooltip(NeuralNoteTooltips::add_instrument);
     mAddButton.setWantsKeyboardFocus(false);
@@ -269,7 +269,7 @@ void Sidebar::_paintHeader(juce::Graphics& g, juce::Rectangle<int> inBounds) con
     nn::drawTrackedText(
         g, "INSTRUMENTS", nn::fonts::sectionHeader(), content, juce::Justification::centredLeft, HEADER_TRACKING);
 
-    g.setColour(nn::colours::textFaintest);
+    g.setColour(nn::colours::textFainter);
     g.setFont(nn::fonts::mono(10.0f, 400));
     const int right_trim = mAddButton.isVisible() ? PADDING_SIDE + ADD_BUTTON_SIZE + HEADER_GAP : PADDING_SIDE;
 
