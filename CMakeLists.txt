@@ -84,8 +84,7 @@ endif ()
 
 juce_add_plugin("${BaseTargetName}"
         # VERSION ...                               # Set this if the plugin version is different to the project version
-        ICON_BIG "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/logo.png"
-        ICON_SMALL "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/logo.png"
+        ICON_BIG "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/Logo/neuralnote-1024.png"
         COMPANY_NAME "Dr. Audio"
         BUNDLE_ID "com.draudio.neuralnote"
         IS_SYNTH FALSE
@@ -103,6 +102,15 @@ juce_add_plugin("${BaseTargetName}"
         # Only acted on for Linux, the one platform JUCE_USE_CURL is set for below.
         NEEDS_CURL TRUE
         PRODUCT_NAME "NeuralNote")
+
+# juce_add_plugin builds AppIcon.icns / icon.ico from ICON_BIG, with one size in the .icns and
+# four in the .ico. Replace them with the full size sets in Assets/Logo.
+get_target_property(nn_generated_dir ${BaseTargetName} JUCE_GENERATED_SOURCES_DIRECTORY)
+if (APPLE)
+  configure_file(NeuralNote/Assets/Logo/NeuralNote.icns "${nn_generated_dir}/AppIcon.icns" COPYONLY)
+elseif (WIN32)
+  configure_file(NeuralNote/Assets/Logo/NeuralNote.ico "${nn_generated_dir}/icon.ico" COPYONLY)
+endif ()
 
 juce_generate_juce_header(${BaseTargetName})
 

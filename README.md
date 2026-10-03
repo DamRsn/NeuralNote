@@ -1,4 +1,4 @@
-# NeuralNote <img style="float: right;" src="NeuralNote/Assets/logo.png" width="100" />
+# NeuralNote <img align="right" src="NeuralNote/Assets/Logo/neuralnote-1024.png" width="100" />
 
 NeuralNote is the audio plugin that brings **state-of-the-art audio-to-MIDI transcription** into your favorite Digital
 Audio Workstation.
