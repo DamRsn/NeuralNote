@@ -66,8 +66,7 @@ NnToolbar::NnToolbar(NeuralNoteAudioProcessor& inProcessor)
     mClearButton.setColour(NnFlatButton::iconColourId, nn::colours::textIconSoft);
     mClearButton.setTooltip(NeuralNoteTooltips::clear);
     mClearButton.setWantsKeyboardFocus(false);
-    mClearButton.onClick = [this] { mProcessor.clear(); };
-    mClearButton.onRightClick = [this] { _showClearMenu(); };
+    mClearButton.onClick = [this] { _clearOneStep(); };
     addAndMakeVisible(mClearButton);
 
     updateEnablements();
@@ -130,11 +129,9 @@ void NnToolbar::updateEnablements()
     mTempoEditor->setEnabled(is_finished);
     mTempoEditor->setAlpha(is_finished ? 1.0f : nn::DISABLED_ALPHA);
 
-    // The bin is live as soon as there is anything to throw away, audio with no transcription
-    // included. Not while a run is in flight: stopping one is the status bar's cancel, and
-    // TranscriptionManager::clear cannot run under a live job.
+    // Not while recording: clearing would stop the recording behind the record button's back.
     const State state = mProcessor.getState();
-    mClearButton.setEnabled(state == AudioLoaded || state == PopulatedAudioAndMidiRegions);
+    mClearButton.setEnabled(state == AudioLoaded || state == Processing || state == PopulatedAudioAndMidiRegions);
 
     resized();
     repaint();
@@ -176,24 +173,27 @@ void NnToolbar::_exportMidiFile()
         });
 }
 
-void NnToolbar::_showClearMenu()
+void NnToolbar::_clearOneStep()
 {
-    juce::PopupMenu menu;
+    switch (mProcessor.getState()) {
+        case Processing:
+            // A cancelled run ends in clearTranscription(), so the audio stays for the next click.
+            mProcessor.getTranscriptionManager()->cancelTranscription();
+            break;
 
-    auto clear_all = juce::PopupMenu::Item("Clear audio and transcription");
-    clear_all.setID(1);
-    clear_all.setAction([this] { mProcessor.clear(); });
-    menu.addItem(clear_all);
+        case PopulatedAudioAndMidiRegions:
+            mProcessor.clearTranscription();
+            break;
 
-    // Keeps the file loaded and the instrument selection with it, so the obvious next move --
-    // adjust the selection and run again -- does not start with re-dropping the audio.
-    auto clear_transcription = juce::PopupMenu::Item("Clear transcription only");
-    clear_transcription.setID(2);
-    clear_transcription.setEnabled(mProcessor.getState() == PopulatedAudioAndMidiRegions);
-    clear_transcription.setAction([this] { mProcessor.clearTranscription(); });
-    menu.addItem(clear_transcription);
+        case AudioLoaded:
+            mProcessor.clear();
+            break;
 
-    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&mClearButton));
+        // The button is disabled in both.
+        case Recording:
+        case EmptyAudioAndMidiRegions:
+            break;
+    }
 }
 
 void NnToolbar::_paintTempoPill(juce::Graphics& g) const

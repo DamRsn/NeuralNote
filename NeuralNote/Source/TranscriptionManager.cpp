@@ -268,6 +268,11 @@ void TranscriptionManager::cancelTranscription()
     mMuscriptorEngine.cancel();
 }
 
+bool TranscriptionManager::isCancelRequested() const
+{
+    return mMuscriptorEngine.isCancelRequested();
+}
+
 void TranscriptionManager::clear()
 {
     // Resets state a running job owns, so it must not be called while one is in flight. Every

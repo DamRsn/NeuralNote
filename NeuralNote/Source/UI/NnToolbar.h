@@ -37,8 +37,8 @@ public:
 private:
     void _exportMidiFile();
 
-    /** The bin's right-click menu: everything, or the transcription only. */
-    void _showClearMenu();
+    /** The bin: stops a running transcription, else drops the transcription, else the audio. */
+    void _clearOneStep();
 
     void _paintTempoPill(juce::Graphics& g) const;
 

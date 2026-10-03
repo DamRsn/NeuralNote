@@ -13,7 +13,7 @@ namespace NeuralNoteTooltips
 
 const String record = "Record | r";
 
-const String clear = "Clear audio and transcription | Shift + Backspace\nRight-click to clear the transcription only";
+const String clear = "Clear transcription, then audio | Shift + Backspace\nStops a running transcription";
 
 const String play_pause = "Play / Pause | Space";
 

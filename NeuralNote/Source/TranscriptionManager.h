@@ -43,6 +43,9 @@ public:
      */
     void cancelTranscription();
 
+    /** @return Whether the current transcription has been asked to stop. */
+    bool isCancelRequested() const;
+
     void clear();
 
     /** @return The checkpoint the current transcription is from, running or finished. Message thread. */

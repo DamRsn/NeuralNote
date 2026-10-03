@@ -52,6 +52,8 @@ public:
 
     CombinedAudioMidiRegion& getCombinedAudioMidiRegion();
 
+    NnToolbar& getToolbar();
+
 private:
     /** Follows the instrument mixer, which reports the transcription's pitch range as it grows. */
     void changeListenerCallback(juce::ChangeBroadcaster* inSource) override;

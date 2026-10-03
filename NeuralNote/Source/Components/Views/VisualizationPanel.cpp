@@ -265,3 +265,8 @@ CombinedAudioMidiRegion& VisualizationPanel::getCombinedAudioMidiRegion()
 {
     return mCombinedAudioMidiRegion;
 }
+
+NnToolbar& VisualizationPanel::getToolbar()
+{
+    return mToolbar;
+}

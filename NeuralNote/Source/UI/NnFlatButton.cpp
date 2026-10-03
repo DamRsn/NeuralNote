@@ -75,18 +75,6 @@ int NnFlatButton::getIdealWidth() const
     return width;
 }
 
-void NnFlatButton::mouseDown(const juce::MouseEvent& inEvent)
-{
-    // Swallowed rather than passed on: letting Button see it would arm the press, and the button
-    // would fire its plain action when the menu closed.
-    if (isEnabled() && onRightClick != nullptr && inEvent.mods.isPopupMenu()) {
-        onRightClick();
-        return;
-    }
-
-    juce::Button::mouseDown(inEvent);
-}
-
 void NnFlatButton::enablementChanged()
 {
     setMouseCursor(isEnabled() ? juce::MouseCursor::PointingHandCursor : juce::MouseCursor::NormalCursor);
