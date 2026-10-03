@@ -114,6 +114,10 @@ void Sidebar::updateEnablements()
     // constraint rather than a filter -- so the button goes away once there are notes.
     mAddButton.setVisible(!mProcessor.hasTranscription());
     repaint(mHeaderBounds);
+
+    for (const auto& strip: mStripList.strips) {
+        strip->setTranscriptionFinished(mProcessor.getState() == PopulatedAudioAndMidiRegions);
+    }
 }
 
 void Sidebar::resized()
@@ -249,6 +253,7 @@ void Sidebar::_rebuildStrips()
 
     for (std::size_t i = 0; i < entries.size(); i++) {
         mStripList.strips[i]->setEntry(entries[i]);
+        mStripList.strips[i]->setTranscriptionFinished(mProcessor.getState() == PopulatedAudioAndMidiRegions);
         mStripList.strips[i]->refreshFromMixer();
     }
 

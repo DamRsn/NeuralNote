@@ -27,6 +27,12 @@ public:
     /** Takes the note count and range from a fresh rebuild. Does not touch the fader. */
     void setEntry(const InstrumentEntry& inEntry);
 
+    /**
+     * Whether the transcription has finished. The selection cannot change once one exists, so an
+     * entry without notes is then one the run was asked for and found nothing of.
+     */
+    void setTranscriptionFinished(bool inIsFinished);
+
     /** Pulls the fader, mute and solo back out of the mixer, after an edit or a state reload. */
     void refreshFromMixer();
 
@@ -45,6 +51,7 @@ private:
     int mProgram;
 
     InstrumentEntry mEntry;
+    bool mTranscriptionFinished = false;
 
     NnFlatButton mMuteButton {"M"};
     NnFlatButton mSoloButton {"S"};
