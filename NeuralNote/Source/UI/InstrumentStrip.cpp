@@ -186,13 +186,6 @@ void InstrumentStrip::paint(juce::Graphics& g)
     g.setFont(name_font);
     g.drawText(mEntry.name, name_area, juce::Justification::centredLeft, true);
 
-    if (muted) {
-        const int name_width =
-            juce::jmin(name_area.getWidth(), juce::GlyphArrangement::getStringWidthInt(name_font, mEntry.name));
-
-        g.fillRect(name_area.getX(), name_area.getCentreY(), name_width, 1);
-    }
-
     text_area.removeFromTop(2);
 
     g.setColour(nn::colours::textFaintest.withMultipliedAlpha(alpha));
