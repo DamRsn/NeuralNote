@@ -14,7 +14,7 @@
 namespace
 {
 constexpr int PADDING_SIDE = 14;
-constexpr int GROUP_GAP = 12;
+constexpr int FILENAME_GAP = 12; // the least the filename keeps clear of the tempo pill
 constexpr int PILL_PADDING = 10;
 constexpr int PILL_GAP = 8;
 constexpr int TEMPO_VALUE_WIDTH = 40;
@@ -80,7 +80,7 @@ void NnToolbar::resized()
 
     auto place_right = [&bounds](juce::Component& inComponent, int inWidth) {
         inComponent.setBounds(bounds.removeFromRight(inWidth).withSizeKeepingCentre(inWidth, button_height));
-        bounds.removeFromRight(GROUP_GAP);
+        bounds.removeFromRight(nn::metrics::controlGap);
     };
 
     place_right(mClearButton, button_height);
@@ -108,7 +108,7 @@ void NnToolbar::paint(juce::Graphics& g)
     auto filename_area = getLocalBounds()
                              .withTrimmedBottom(1)
                              .reduced(PADDING_SIDE, 0)
-                             .withTrimmedRight(getWidth() - mTempoPill.getX() + GROUP_GAP);
+                             .withTrimmedRight(getWidth() - mTempoPill.getX() + FILENAME_GAP);
 
     // Nothing at all when there is no file: the waveform's drop zone right below already says the
     // window is empty, and a second sentence saying it is one too many.
@@ -159,12 +159,12 @@ void NnToolbar::_exportMidiFile()
                 static_cast<MidiOverflowMode>(static_cast<int>(mProcessor.getValueTree().getProperty(
                     NnId::MidiOverflowModeId, static_cast<int>(MidiOverflowMode::ReuseChannels))));
 
-            const bool success = mMidiFileWriter.writeMidiFile(
-                mProcessor.getTranscriptionManager()->getNoteEventVector(),
-                file,
-                export_bpm,
-                mProcessor.getSourceAudioManager()->getExportStartOffsetSeconds(),
-                overflow_mode);
+            const bool success =
+                mMidiFileWriter.writeMidiFile(mProcessor.getTranscriptionManager()->getNoteEventVector(),
+                                              file,
+                                              export_bpm,
+                                              mProcessor.getSourceAudioManager()->getExportStartOffsetSeconds(),
+                                              overflow_mode);
 
             if (!success) {
                 juce::NativeMessageBox::showMessageBoxAsync(

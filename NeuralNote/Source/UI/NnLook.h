@@ -312,6 +312,7 @@ constexpr int toolbarButton = 28;
 constexpr int transportButtonW = 34;
 constexpr int transportButtonH = 30;
 constexpr int controlCorner = 6;
+constexpr int controlGap = 8; // between the boxes of neighbouring top bar and toolbar controls
 
 constexpr int stripChipSize = 22;
 constexpr int stripTextInset = 31; // chip (22) + gap (9)
