@@ -173,7 +173,7 @@ void PianoRoll::_drawTranscriptionFrontier(Graphics& g) const
         return;
     }
 
-    g.setColour(nn::colours::bgRoot.withAlpha(0.75f));
+    g.setColour(nn::colours::untranscribedShade());
     g.fillRect(frontier_x, 0.0f, width - frontier_x, static_cast<float>(getHeight()));
 
     g.setColour(nn::colours::divStrong);

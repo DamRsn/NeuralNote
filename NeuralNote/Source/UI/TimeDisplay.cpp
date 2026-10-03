@@ -10,7 +10,6 @@
 
 namespace
 {
-constexpr int SIDE_PADDING = 14;
 constexpr int GAP = 8;
 } // namespace
 
@@ -26,20 +25,12 @@ int TimeDisplay::getIdealWidth()
     const int position_width = juce::GlyphArrangement::getStringWidthInt(nn::fonts::transportTime(), "00:00.00");
     const int total_width = juce::GlyphArrangement::getStringWidthInt(nn::fonts::transportTotal(), "/ 00:00.00");
 
-    return 2 * SIDE_PADDING + position_width + GAP + total_width;
+    return position_width + GAP + total_width;
 }
 
 void TimeDisplay::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
-
-    // The 1 px rules that separate the readout from the transport and from the empty stretch after
-    // it. Drawn here rather than by the top bar so they cannot drift from the text they bracket.
-    g.setColour(nn::colours::divStrong);
-    g.fillRect(bounds.getX(), bounds.getY(), 1, bounds.getHeight());
-    g.fillRect(bounds.getRight() - 1, bounds.getY(), 1, bounds.getHeight());
-
-    bounds.reduce(SIDE_PADDING, 0);
 
     const auto position_font = nn::fonts::transportTime();
     const int position_width = juce::GlyphArrangement::getStringWidthInt(position_font, mPosition);

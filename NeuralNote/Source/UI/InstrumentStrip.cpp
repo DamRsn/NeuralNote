@@ -21,6 +21,7 @@ constexpr int FADER_HEIGHT = 11;
 constexpr int VALUE_WIDTH = 30;
 constexpr int VALUE_GAP = 9;
 constexpr int CHIP_CORNER = 5;
+constexpr int META_GAP = 1;
 } // namespace
 
 InstrumentStrip::InstrumentStrip(InstrumentMixer& inMixer, int inProgram)
@@ -39,8 +40,8 @@ InstrumentStrip::InstrumentStrip(InstrumentMixer& inMixer, int inProgram)
         addAndMakeVisible(button);
     };
 
-    setup_toggle(mMuteButton, nn::colours::bgMuteActive, nn::colours::warn);
-    setup_toggle(mSoloButton, nn::colours::soloButtonBg(), nn::colours::rec);
+    setup_toggle(mMuteButton, nn::colours::muteFill(), nn::colours::warn);
+    setup_toggle(mSoloButton, nn::colours::accentFillToggle(), nn::colours::accentText);
 
     mMuteButton.setTooltip("Mute this instrument");
     mMuteButton.onClick = [this] { mMixer.setMuted(mProgram, mMuteButton.getToggleState()); };
@@ -79,6 +80,14 @@ void InstrumentStrip::setEntry(const InstrumentEntry& inEntry)
     repaint();
 }
 
+void InstrumentStrip::setTranscriptionFinished(bool inIsFinished)
+{
+    if (inIsFinished != mTranscriptionFinished) {
+        mTranscriptionFinished = inIsFinished;
+        repaint();
+    }
+}
+
 void InstrumentStrip::refreshFromMixer()
 {
     mMuteButton.setToggleState(mMixer.isMuted(mProgram), juce::dontSendNotification);
@@ -101,7 +110,8 @@ void InstrumentStrip::_updateAppearance()
 
     // Muted, the fader loses its instrument colour rather than only dimming: the whole strip is
     // already drawn at half opacity, and a dimmed hue on a dimmed strip stops reading as "off".
-    mFader.setColour(NnFlatSlider::fillColourId, muted ? nn::colours::faderFillMuted : mEntry.colour.withAlpha(0.85f));
+    mFader.setColour(NnFlatSlider::fillColourId,
+                     muted ? nn::colours::faderFillMuted : nn::colours::faderFill(mEntry.colour));
     mFader.setColour(NnFlatSlider::thumbColourId, muted ? nn::colours::faderThumbMuted : nn::colours::faderThumb);
 
     // paint() cannot reach the children, so the strip's muted opacity is applied to them here.
@@ -175,7 +185,8 @@ void InstrumentStrip::paint(juce::Graphics& g)
     g.setFont(nn::fonts::mono(8.0f, 600));
     g.drawText(mEntry.abbreviation, chip.toNearestInt(), juce::Justification::centred);
 
-    // The name and the meta line share the identity row, split at the name's own line height.
+    // The meta line sits under the name, each at its font's own height, and runs past the identity
+    // row into the gap above the fader.
     auto text_area = identity_row.withTrimmedLeft(nn::metrics::stripTextInset - nn::metrics::stripChipSize)
                          .withTrimmedRight(2 * TOGGLE_WIDTH + TOGGLE_GAP + 8);
 
@@ -186,24 +197,15 @@ void InstrumentStrip::paint(juce::Graphics& g)
     g.setFont(name_font);
     g.drawText(mEntry.name, name_area, juce::Justification::centredLeft, true);
 
-    if (muted) {
-        const int name_width =
-            juce::jmin(name_area.getWidth(), juce::GlyphArrangement::getStringWidthInt(name_font, mEntry.name));
-
-        g.fillRect(name_area.getX(), name_area.getCentreY(), name_width, 1);
-    }
-
-    text_area.removeFromTop(2);
-
-    g.setColour(nn::colours::textFaintest.withMultipliedAlpha(alpha));
-    g.setFont(nn::fonts::meta());
+    const auto meta_font = nn::fonts::meta();
+    const auto meta_area = text_area.withTrimmedTop(META_GAP).withHeight(juce::roundToInt(meta_font.getHeight()));
 
     // Drums have no pitch range to report: their key numbers name pieces of a kit, not notes.
     const juce::String separator = " " + nn::separatorDot() + " ";
     juce::String meta;
 
     if (!mEntry.hasNotes()) {
-        meta = "selected" + separator + "not transcribed yet";
+        meta = mTranscriptionFinished ? "no notes" : juce::String();
     } else if (mEntry.program == msl::DRUM_PROGRAM) {
         meta = juce::String(mEntry.noteCount) + " hits" + separator + "kit map";
     } else {
@@ -211,7 +213,9 @@ void InstrumentStrip::paint(juce::Graphics& g)
                + nn::midiNoteName(mEntry.highestPitch);
     }
 
-    g.drawText(meta, text_area, juce::Justification::centredLeft, true);
+    g.setColour(nn::colours::textFainter.withMultipliedAlpha(alpha));
+    g.setFont(meta_font);
+    g.drawText(meta, meta_area, juce::Justification::centredLeft, true);
 
     bounds.removeFromTop(FADER_TOP_GAP);
 

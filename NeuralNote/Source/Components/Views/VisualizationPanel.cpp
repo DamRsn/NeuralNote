@@ -30,7 +30,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     // a saturated blue that reads as an accent this palette does not have.
     auto& scrollbar = mAudioMidiViewport.getHorizontalScrollBar();
     scrollbar.setColour(ScrollBar::backgroundColourId, Colours::transparentBlack);
-    scrollbar.setColour(ScrollBar::thumbColourId, nn::colours::faderTrack);
+    scrollbar.setColour(ScrollBar::thumbColourId, nn::colours::scrollbarThumb);
     scrollbar.setColour(ScrollBar::trackColourId, Colours::transparentBlack);
 
     addAndMakeVisible(mAudioMidiViewport);
@@ -76,7 +76,7 @@ void VisualizationPanel::valueTreePropertyChanged(juce::ValueTree& inTree, const
 {
     juce::ignoreUnused(inTree);
 
-    // Reset Zoom writes it back to automatic, and a restored session brings its own value.
+    // Reset piano roll zoom writes it back to automatic, and a restored session brings its own value.
     if (inProperty == NnId::VerticalZoomId) {
         _applyVerticalZoom();
     }
