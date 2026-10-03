@@ -16,6 +16,7 @@ Player::Player(NeuralNoteAudioProcessor* inProcessor)
     setPlayheadPositionSeconds(mProcessor->getValueTree().getProperty(NnId::PlayheadPositionSecId, 0.0));
 
     mShouldOutputMidi = mProcessor->getValueTree().getProperty(NnId::MidiOut, false);
+    mShouldLoop = static_cast<bool>(mProcessor->getValueTree().getProperty(NnId::LoopEnabledId, false));
 }
 
 Player::~Player()
@@ -68,7 +69,8 @@ void Player::processBlock(AudioBuffer<float>& inAudioBuffer, MidiBuffer& outMidi
 
     // Every block, playing or not: a stopped transport, a seek and a swapped note list all leave
     // note-offs to deliver, and this is the only thing that delivers them.
-    auto& midi_buffer = mSynthController->generateNextMidiBuffer(inAudioBuffer.getNumSamples(), is_playing);
+    auto& midi_buffer =
+        mSynthController->generateNextMidiBuffer(inAudioBuffer.getNumSamples(), is_playing, mShouldLoop.load());
 
     if (mShouldOutputMidi) {
         outMidiBuffer.addEvents(midi_buffer, 0, inAudioBuffer.getNumSamples(), 0);
@@ -222,6 +224,10 @@ void Player::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, co
 
     if (property == NnId::MidiOut) {
         mShouldOutputMidi = treeWhosePropertyHasChanged.getProperty(property);
+    }
+
+    if (property == NnId::LoopEnabledId) {
+        mShouldLoop = static_cast<bool>(treeWhosePropertyHasChanged.getProperty(property));
     }
 }
 

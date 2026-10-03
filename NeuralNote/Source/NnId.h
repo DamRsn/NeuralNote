@@ -27,6 +27,8 @@ inline static Identifier PlayheadPositionSecId = "PLAYHEAD_POSITION_SEC";
 
 inline static Identifier PlayheadCenteredId = "PLAYHEAD_CENTERED";
 
+inline static Identifier LoopEnabledId = "LOOP_ENABLED";
+
 inline static Identifier MidiOut = "MIDI_OUT";
 
 inline static Identifier ExportTempoId = "EXPORT_TEMPO";
@@ -82,6 +84,7 @@ const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault 
     {SourceAudioNativeSrPathId, String()},
     {PlayheadPositionSecId, 0.0},
     {PlayheadCenteredId, true},
+    {LoopEnabledId, false},
     {ZoomLevelId, 1.0},
     {VerticalZoomId, -1.0},
     {SelectedInstrumentGroupsId, String()}};

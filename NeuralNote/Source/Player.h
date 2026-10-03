@@ -92,6 +92,8 @@ private:
     bool mShouldOutputMidi = false;
     bool mWasOutputtingMidi = false;
 
+    std::atomic<bool> mShouldLoop = false;
+
     // A stop or a seek asking the synth to go quiet, consumed by the next block. Needed on top of
     // the scheduler's note-offs because the synth ignores those for drums, which are one-shot.
     std::atomic<bool> mShouldSilenceSynth = false;

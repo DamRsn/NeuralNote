@@ -14,7 +14,7 @@ class NeuralNoteAudioProcessor;
 
 /**
  * Wires NoteScheduler into the plugin: owns the block's MidiBuffer, keeps the audio thread out of
- * the way while the note list is swapped, and stops the transport at the end of the audio.
+ * the way while the note list is swapped, and stops or loops the transport at the end of the audio.
  *
  * The scheduling itself, including the guarantee that no note is ever left hanging, is
  * NoteScheduler's -- and deliberately knows nothing about the synth, so the buffer it produces is
@@ -36,8 +36,9 @@ public:
     /**
      * Builds this block's MIDI. Audio thread only, and called every block whether or not the
      * transport is running -- a stopped transport still has note-offs to deliver.
+     * At the end of the audio it rewinds to the start, and stops the transport unless inShouldLoop.
      */
-    const MidiBuffer& generateNextMidiBuffer(int inNumSamples, bool inIsPlaying);
+    const MidiBuffer& generateNextMidiBuffer(int inNumSamples, bool inIsPlaying, bool inShouldLoop);
 
     /**
      * @return The same events as the buffer generateNextMidiBuffer just returned, but carrying the

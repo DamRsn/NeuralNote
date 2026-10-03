@@ -108,9 +108,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     mLoopButton.setColour(NnFlatButton::iconColourId, nn::colours::textIcon);
     mLoopButton.setColour(NnFlatButton::iconOnColourId, nn::colours::accent);
     mLoopButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::accentFillActive());
-    // No loop transport yet; the button is here so the layout is the final one.
-    mLoopButton.setEnabled(false);
-    add_transport(mLoopButton, "Loop (not implemented yet)");
+    add_transport(mLoopButton, NeuralNoteTooltips::loop);
 
     mFollowButton.setClickingTogglesState(true);
     mFollowButton.setIcon(nn::icons::followPlayheadStroked, NnFlatButton::IconStyle::stroked, 16.0f);
@@ -267,6 +265,7 @@ void TopBar::updateEnablements()
 
     mBackButton.setEnabled(can_play);
     mPlayPauseButton.setEnabled(can_play);
+    mLoopButton.setEnabled(can_play);
     mFollowButton.setEnabled(can_play);
     mRecordButton.setEnabled(state == EmptyAudioAndMidiRegions || state == Recording);
 
