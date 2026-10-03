@@ -129,7 +129,7 @@ void TranscriptionProgress::paint(juce::Graphics& g)
 void TranscriptionProgress::_onVBlankCallback()
 {
     if (mProcessor.getState() != Processing) {
-        // The run is over: drop the latch, the progress and the pulse, so the next one starts fresh.
+        // The run is over: drop the progress and the pulse, so the next one starts fresh.
         mIsCancelling = false;
         mDisplayedPhase = MuscriptorEngine::Phase::LoadingModel;
         mDisplayedPercent = -1;

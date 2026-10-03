@@ -52,8 +52,7 @@ public:
 
     CombinedAudioMidiRegion& getCombinedAudioMidiRegion();
 
-    /** Same as a click on the toolbar's bin. */
-    void clearOneStep();
+    NnToolbar& getToolbar();
 
 private:
     /** Follows the instrument mixer, which reports the transcription's pitch range as it grows. */

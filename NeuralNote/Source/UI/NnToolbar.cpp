@@ -66,7 +66,7 @@ NnToolbar::NnToolbar(NeuralNoteAudioProcessor& inProcessor)
     mClearButton.setColour(NnFlatButton::iconColourId, nn::colours::textIconSoft);
     mClearButton.setTooltip(NeuralNoteTooltips::clear);
     mClearButton.setWantsKeyboardFocus(false);
-    mClearButton.onClick = [this] { clearOneStep(); };
+    mClearButton.onClick = [this] { _clearOneStep(); };
     addAndMakeVisible(mClearButton);
 
     updateEnablements();
@@ -173,7 +173,7 @@ void NnToolbar::_exportMidiFile()
         });
 }
 
-void NnToolbar::clearOneStep()
+void NnToolbar::_clearOneStep()
 {
     switch (mProcessor.getState()) {
         case Processing:
@@ -189,8 +189,7 @@ void NnToolbar::clearOneStep()
             mProcessor.clear();
             break;
 
-        // Recording is left alone, as in updateEnablements(): this is also reached from the
-        // keyboard, where the button's enablement does not guard it.
+        // The button is disabled in both.
         case Recording:
         case EmptyAudioAndMidiRegions:
             break;

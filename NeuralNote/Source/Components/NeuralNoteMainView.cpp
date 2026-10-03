@@ -166,7 +166,7 @@ bool NeuralNoteMainView::keyPressed(const KeyPress& key)
     }
 
     if (key == KeyPress(KeyPress::backspaceKey, ModifierKeys::shiftModifier, 0)) {
-        mVisualizationPanel.clearOneStep();
+        mVisualizationPanel.getToolbar().getClearButton().triggerClick();
         return true;
     }
 
