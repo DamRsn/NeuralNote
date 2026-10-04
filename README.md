@@ -3,14 +3,11 @@
 NeuralNote is the audio plugin that brings **state-of-the-art audio-to-MIDI transcription** into your favorite Digital
 Audio Workstation.
 
-> [!WARNING]
-> 🚧 **NeuralNote v2 is a work in progress.**
+> [!NOTE]
+> 🎉 **NeuralNote v2.0.0 is out!** Download it from the [releases page](https://github.com/DamRsn/NeuralNote/releases).
 >
-> - There are no installers or prebuilt binaries yet. You need to [build it from source](#build-from-source). Please
->   share your feedback in [GitHub issues](https://github.com/DamRsn/NeuralNote/issues)!
-> - Only macOS and Windows are supported for now. Linux support is coming soon.
-> - Testing so far covers only a few machines and GPUs. If something breaks or runs slowly on your hardware, please
->   report it (see [Hardware](#models-and-performance)).
+> Testing so far covers only a few machines and GPUs. Whether something breaks or works great on your hardware,
+> please tell us in [GitHub issues](https://github.com/DamRsn/NeuralNote/issues) (see [Hardware](#models-and-performance)).
 
 ## What's new in v2
 
@@ -21,10 +18,28 @@ Audio Workstation.
   fewer than 17K for Basic Pitch.
 - **Multi-instrument transcription.** Transcribe full mixes, not just one instrument at a time, with notes
   grouped by instrument.
-- **Still fully local.** Transcription runs on your machine, and your audio never leaves it. NeuralNote only goes
-  online to download models and to check for updates.
+- **A built-in multi-instrument synth.** Listen to every transcribed instrument, with per-instrument gain, mute and
+  solo.
+- **A new, modern UI.**
+- **Still fully local.** Transcription runs on your machine, on the GPU or the CPU, and your audio never leaves it.
+  NeuralNote only goes online to download models and to check for updates.
 
 ![UI](NeuralNote_UI.png)
+
+## Install
+
+Download the latest release for your platform from the
+[releases page](https://github.com/DamRsn/NeuralNote/releases).
+
+- **macOS (Apple Silicon):** `NeuralNote_Installer_Mac_arm64.pkg` installs the Standalone app, VST3 and AU. It is
+  signed and notarized. An installer for Intel Macs will come later. In the meantime, you can
+  [build from source](#build-from-source).
+- **Windows (x64):** `NeuralNote_Installer_Windows_x64.exe` installs the Standalone app and VST3. It is not code signed,
+  so Windows may warn you before running it for the first time.
+- **Linux:** prebuilt binaries are coming soon. In the meantime, you can [build from source](#build-from-source).
+
+The transcription model is not included. Download it from within NeuralNote the first time you open it (see
+[Models and performance](#models-and-performance)).
 
 ## Usage
 
@@ -55,6 +70,9 @@ switch between installed models, download other sizes, and open the folder where
 | ------- | ----------------------------- |
 | macOS   | `~/Library/NeuralNote/models` |
 | Windows | `%APPDATA%\NeuralNote\models` |
+| Linux   | `~/.config/NeuralNote/models` |
+
+The downloads are about 210 MB for `small`, 620 MB for `medium` and 2.7 GB for `large`.
 
 You can also put a model file in that folder by hand. Use a file from `v1/` of the
 [HF repo](https://huggingface.co/DamRsn/muscriptor-gguf), unchanged and with its original name (e.g.
@@ -63,7 +81,7 @@ You can also put a model file in that folder by hand. Use a file from `v1/` of t
 You can remove a model by deleting it from this folder, and re-download it at any time.
 
 **Hardware.** Transcription speed depends mostly on the model size and on your hardware. The GPU is used when available,
-through Metal on macOS and Vulkan on Windows. A GPU is strongly recommended for the `medium` and `large` models.
+through Metal on macOS and Vulkan on Windows and Linux. A GPU is strongly recommended for the `medium` and `large` models.
 **Settings > Compute device** picks the device: Auto (the default, which names the device it chose), a specific GPU, or
 the CPU. The choice applies from the next transcription, and GPUs added or removed later are listed after restarting
 NeuralNote (or your DAW). Only a few GPUs have been tested so far. If transcription fails, gives wrong results or is
@@ -88,7 +106,7 @@ Requirements:
 
 - `git`
 - [CMake](https://cmake.org/)
-- A C++23 compiler, such as Clang, MSVC or GCC. Only Clang has been tested so far, on macOS and Windows.
+- A C++23 compiler, such as Clang, MSVC or GCC. Only Clang has been tested so far, on macOS, Windows and Linux.
 - Python 3 (used at configure time to fetch and build the synth's soundfont)
 - Internet access on the first configure. `muscriptor.cpp` fetches [ggml](https://github.com/ggml-org/ggml), and the
   soundfont's two sources (~55 MB) are downloaded.
@@ -102,6 +120,21 @@ update, which takes about 20 seconds.
 NeuralNote builds and transcribes on the CPU only. With it, configure from a Visual Studio developer prompt, or set
 `CC`, `CXX` and `RC` in the environment: ggml builds its shader generator as a separate project that doesn't see
 CMake's compiler settings.
+
+**Linux** has been tested on Ubuntu 24.04 with Clang 20. Install the compiler, JUCE's
+[Linux dependencies](https://github.com/juce-framework/JUCE/blob/master/docs/Linux%20Dependencies.md), and the Vulkan
+headers and shader compiler:
+
+```
+sudo apt install clang-20 ninja-build pkg-config python3 \
+    libasound2-dev libjack-jackd2-dev ladspa-sdk libcurl4-openssl-dev libfreetype-dev libfontconfig1-dev \
+    libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev \
+    libwebkit2gtk-4.1-dev libglu1-mesa-dev mesa-common-dev \
+    libvulkan-dev glslc spirv-headers
+```
+
+Select the compiler through the environment when configuring, e.g. `CC=clang-20 CXX=clang++-20 cmake -B build -G Ninja
+-DCMAKE_BUILD_TYPE=Release`.
 
 [Ninja](https://ninja-build.org/) is optional but makes builds faster (`-G Ninja`).
 
@@ -138,9 +171,9 @@ public API. The GGUF weights it loads are available on
 
 ## Roadmap
 
-- Linux support
+- Prebuilt binaries for Linux
+- Installer for Intel Macs
 - MIDI out, with per-instrument channel selection
-- Installers and prebuilt binaries
 - CLI
 - Performance optimizations
 
