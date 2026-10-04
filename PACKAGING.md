@@ -15,7 +15,7 @@
       ```
     - The script will ask for the Apple ID and password (app specific) for the signing process.
     - An optional second argument names the installer, e.g. `NeuralNote_Installer_Mac_x64.pkg`. The script refuses
-      a name that mentions the other architecture than the binaries'.
+      a name for the wrong architecture.
     - The installer will be located in `Installers/Mac/build`, named `NeuralNote_Installer_Mac_arm64.pkg` or
       `NeuralNote_Installer_Mac_x64.pkg` unless named by the second argument.
 

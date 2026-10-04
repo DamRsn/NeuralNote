@@ -83,14 +83,15 @@ codesign -dv --verbose=4 "$PLUG_DIR"/AU/NeuralNote.component
 
 # Build installer
 echo "Building installer"
-packagesbuild -F "$PLUG_DIR" Installers/Mac/NeuralNote.pkgproj
-mv Installers/Mac/build/NeuralNote.pkg Installers/Mac/build/NeuralNote_unsigned.pkg
+# Per-architecture build folder, so packaging both architectures at once doesn't collide.
+UNSIGNED_DIR=$PWD/Installers/Mac/build/unsigned_$ARCH
+packagesbuild -F "$PLUG_DIR" --build-folder "$UNSIGNED_DIR" Installers/Mac/NeuralNote.pkgproj
 
 # Sign installer
 echo "Signing installer"
 product_sign_ID=$(security find-identity -v -p basic | grep "Developer ID Installer" | head -1 | cut -d'"' -f2)
-productsign --sign "$product_sign_ID" Installers/Mac/build/NeuralNote_unsigned.pkg "$PKG"
-rm Installers/Mac/build/NeuralNote_unsigned.pkg
+productsign --sign "$product_sign_ID" "$UNSIGNED_DIR/NeuralNote.pkg" "$PKG"
+rm -r "$UNSIGNED_DIR"
 
 # Notarize the pkg and staple it
 echo "Notarize and staple installer"

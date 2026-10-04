@@ -125,7 +125,7 @@ The Standalone app and the plugins are written to `build/NeuralNote_artefacts/Re
 
 On macOS, a build contains only one architecture, the host's by default. To build for Intel Macs on Apple Silicon,
 configure with `-DCMAKE_OSX_ARCHITECTURES=x86_64`. Such a build runs under Rosetta, and its plugins are not copied to
-`~/Library/Audio/Plug-Ins`. Intel builds have not yet been tested on an actual Intel Mac.
+`~/Library/Audio/Plug-Ins`.
 
 On Windows, the Standalone app supports ASIO devices. Distributing a build with ASIO requires signing Steinberg's
 [ASIO license agreement](https://www.steinberg.net/developers/prorietary-sdk/). To build without it, configure with
