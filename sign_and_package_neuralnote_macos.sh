@@ -4,10 +4,12 @@ set -euo pipefail
 
 # First argument gives the path to the dir containing the Standalone, AU and VST3 subdirectories.
 # Typically cmake-build-release/NeuralNote_artefacts/Release or build/NeuralNote_artefacts/Release
+# The optional second one is the installer's file name, NeuralNote_Installer_Mac_<arm64|x64>.pkg by default.
 PLUG_DIR=${1:-}
+PKG_NAME=${2:-}
 
 if [[ $# -eq 0 ]]; then
-	>&2 echo "usage: $0 <release_dir>"; exit 1
+	>&2 echo "usage: $0 <release_dir> [installer_name.pkg]"; exit 1
 fi
 
 for dir in "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3}; do
@@ -22,6 +24,32 @@ for dir in "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/N
 		exit 1
 	fi
 done
+
+ARCH=$(lipo -archs "$PLUG_DIR"/Standalone/NeuralNote.app/Contents/MacOS/NeuralNote)
+for dir in "$PLUG_DIR"/{AU/NeuralNote.component,VST3/NeuralNote.vst3}; do
+	if [[ "$(lipo -archs "$dir/Contents/MacOS/NeuralNote")" != "$ARCH" ]]; then
+		>&2 echo "$dir is not built for $ARCH like the Standalone"
+		exit 1
+	fi
+done
+
+# x64, as the release assets spell it.
+PKG_NAME=${PKG_NAME:-NeuralNote_Installer_Mac_${ARCH/x86_64/x64}.pkg}
+if [[ "$PKG_NAME" != *.pkg || "$PKG_NAME" == */* ]]; then
+	>&2 echo "The installer name must be a file name ending in .pkg: $PKG_NAME"
+	exit 1
+fi
+
+# Refuse a name that advertises the other architecture.
+shopt -s nocasematch
+if [[ ( "$ARCH" == arm64 && "$PKG_NAME" =~ x64|x86_64|intel ) || ( "$ARCH" == x86_64 && "$PKG_NAME" =~ arm64 ) ]]; then
+	>&2 echo "$PKG_NAME names another architecture than the binaries' ($ARCH)"
+	exit 1
+fi
+shopt -u nocasematch
+
+PKG=Installers/Mac/build/$PKG_NAME
+echo "Packaging the $ARCH build as $PKG"
 
 signingID=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | cut -d'"' -f2)
 if test -z "$signingID"; then
@@ -61,10 +89,10 @@ mv Installers/Mac/build/NeuralNote.pkg Installers/Mac/build/NeuralNote_unsigned.
 # Sign installer
 echo "Signing installer"
 product_sign_ID=$(security find-identity -v -p basic | grep "Developer ID Installer" | head -1 | cut -d'"' -f2)
-productsign --sign "$product_sign_ID" Installers/Mac/build/NeuralNote_unsigned.pkg Installers/Mac/build/NeuralNote.pkg
+productsign --sign "$product_sign_ID" Installers/Mac/build/NeuralNote_unsigned.pkg "$PKG"
 rm Installers/Mac/build/NeuralNote_unsigned.pkg
 
 # Notarize the pkg and staple it
 echo "Notarize and staple installer"
-xcrun notarytool submit --apple-id "$APPLE_USERNAME" --team-id "$APPLE_TEAMID" --password "$APPLE_PASSWORD" --wait Installers/Mac/build/NeuralNote.pkg
-xcrun stapler staple Installers/Mac/build/NeuralNote.pkg
+xcrun notarytool submit --apple-id "$APPLE_USERNAME" --team-id "$APPLE_TEAMID" --password "$APPLE_PASSWORD" --wait "$PKG"
+xcrun stapler staple "$PKG"
