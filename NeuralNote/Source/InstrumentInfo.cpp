@@ -50,7 +50,7 @@ constexpr GroupDisplay GROUP_DISPLAYS[] = {
     // Brass
     {msl::InstrumentGroup::Trumpet, "Trumpet", "TPT", 0xffc458},
     {msl::InstrumentGroup::Trombone, "Trombone", "TBN", 0xe07f25},
-    {msl::InstrumentGroup::FrenchHorn, "French Horn", "HRN", 0xf2a33c},
+    {msl::InstrumentGroup::FrenchHorn, "French Horn", "HRN", 0xde9a3b},
     {msl::InstrumentGroup::BrassSection, "Brass", "BRS", 0xffdd81},
     {msl::InstrumentGroup::Tuba, "Tuba", "TBA", 0xb46029},
     // Saxes

@@ -16,10 +16,11 @@ namespace
 {
 constexpr int PADDING_LEFT = 18;
 constexpr int PADDING_RIGHT = 14;
-constexpr int GROUP_GAP = 16;
+
+// Tighter than nn::metrics::controlGap: the transport's buttons draw no box when idle, so their
+// icons already sit apart.
 constexpr int TRANSPORT_GAP = 2;
 
-constexpr int WORDMARK_WIDTH = 230;
 constexpr int PILL_PADDING = 12;
 constexpr int PILL_GAP = 9;
 constexpr int MIX_TRACK_WIDTH = 86;
@@ -30,6 +31,30 @@ constexpr int SPEAKER_ICON_SIZE = 13;
 constexpr int SETTINGS_WIDTH = 32;
 
 constexpr float LABEL_TRACKING = 0.08f;
+
+constexpr int MODEL_BUTTON_PADDING = 11;
+constexpr float MODEL_LABEL_TRACKING = 0.09f;
+
+juce::String modelButtonLabel(const char* inModelName)
+{
+    return ("Model: " + juce::String(inModelName)).toUpperCase();
+}
+
+/** Sized for the longest label it can carry, so changing model does not move the bar around it. */
+int modelButtonWidth()
+{
+    float widest = nn::trackedTextWidth(modelButtonLabel("None"), nn::fonts::sectionHeader(), MODEL_LABEL_TRACKING);
+
+    for (const ModelSize size: ALL_MODEL_SIZES) {
+        widest = std::max(widest,
+                          nn::trackedTextWidth(modelButtonLabel(modelSizeToDisplayName(size)),
+                                               nn::fonts::sectionHeader(),
+                                               MODEL_LABEL_TRACKING));
+    }
+
+    return 2 * MODEL_BUTTON_PADDING + juce::roundToInt(std::ceil(widest));
+}
+
 void paintWordmark(juce::Graphics& g, juce::Rectangle<int> inBounds)
 {
     const auto centre_y = static_cast<float>(inBounds.getCentreY());
@@ -122,7 +147,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     mRecordButton.setIcon(nn::icons::record, NnFlatButton::IconStyle::filled, 16.0f);
     mRecordButton.setColour(NnFlatButton::iconColourId, nn::colours::recIdle);
     mRecordButton.setColour(NnFlatButton::iconOnColourId, nn::colours::rec);
-    mRecordButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::rec.withAlpha(0.14f));
+    mRecordButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::activeFill(nn::colours::rec));
     mRecordButton.onClick = [this] {
         if (mRecordButton.getToggleState()) {
             mProcessor.getSourceAudioManager()->startRecording();
@@ -138,7 +163,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     addAndMakeVisible(mTimeDisplay);
 
     // onClick belongs to the main view, which owns the panel this opens.
-    mModelButton.setPadding(11, 11, 7);
+    mModelButton.setPadding(MODEL_BUTTON_PADDING, MODEL_BUTTON_PADDING, 7);
     mModelButton.setColour(NnFlatButton::backgroundColourId, nn::colours::bgControl);
     mModelButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::accentFillActive());
     mModelButton.setColour(NnFlatButton::textColourId, nn::colours::textButton);
@@ -149,7 +174,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     syncModelButton(false);
 
     mMixSlider.setColour(NnFlatSlider::trackColourId, nn::colours::faderTrackTop);
-    mMixSlider.setColour(NnFlatSlider::fillColourId, nn::colours::accent.withAlpha(0.8f));
+    mMixSlider.setColour(NnFlatSlider::fillColourId, nn::colours::mixSliderFill());
     mMixSlider.setTooltip("Balance between the source audio and the synthesised transcription");
     mMixAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         mProcessor.getAPVTS(), ParameterHelpers::getIdStr(ParameterHelpers::MixId), mMixSlider);
@@ -169,7 +194,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     mMuteButton.setLabel("MUTE", nn::fonts::sectionHeader(), 0.09f);
     mMuteButton.setPadding(11, 11, 7);
     mMuteButton.setColour(NnFlatButton::backgroundColourId, nn::colours::bgControl);
-    mMuteButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::bgMuteActive);
+    mMuteButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::muteFill());
     mMuteButton.setColour(NnFlatButton::iconColourId, nn::colours::textIcon);
     mMuteButton.setColour(NnFlatButton::iconOnColourId, nn::colours::warn);
     mMuteButton.setColour(NnFlatButton::textColourId, nn::colours::textIcon);
@@ -192,56 +217,79 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
 
 void TopBar::resized()
 {
-    auto bounds = getLocalBounds().withTrimmedBottom(1);
-    bounds.removeFromLeft(PADDING_LEFT);
-    bounds.removeFromRight(PADDING_RIGHT);
+    // The wordmark sits over the sidebar. The four groups share the stretch over the content area,
+    // from the sidebar's edge line to the right padding.
+    auto bounds = getLocalBounds().withTrimmedBottom(1).withTrimmedRight(PADDING_RIGHT);
+    bounds.setLeft(nn::metrics::sidebarWidth - 1);
 
-    bounds.removeFromLeft(WORDMARK_WIDTH);
+    const auto label_font = nn::fonts::pillLabel();
+    const int orig_width = juce::roundToInt(std::ceil(nn::trackedTextWidth("ORIG", label_font, LABEL_TRACKING)));
+    const int midi_width = juce::roundToInt(std::ceil(nn::trackedTextWidth("MIDI", label_font, LABEL_TRACKING)));
 
-    auto transport = bounds.removeFromLeft(5 * nn::metrics::transportButtonW + 4 * TRANSPORT_GAP)
-                         .withSizeKeepingCentre(5 * nn::metrics::transportButtonW + 4 * TRANSPORT_GAP,
-                                                nn::metrics::transportButtonH);
+    const int transport_width = 5 * nn::metrics::transportButtonW + 4 * TRANSPORT_GAP;
+    const int time_width = TimeDisplay::getIdealWidth();
+    const int model_width = modelButtonWidth();
+    const int mix_width = 2 * PILL_PADDING + orig_width + PILL_GAP + MIX_TRACK_WIDTH + PILL_GAP + midi_width;
+    const int volume_width =
+        2 * PILL_PADDING + SPEAKER_ICON_SIZE + PILL_GAP + VOLUME_TRACK_WIDTH + PILL_GAP + VOLUME_VALUE_WIDTH;
+    const int mute_width = mMuteButton.getIdealWidth();
+    const int levels_width = mix_width + nn::metrics::controlGap + volume_width + nn::metrics::controlGap + mute_width
+                             + nn::metrics::controlGap + SETTINGS_WIDTH;
+
+    // What the groups leave over is split evenly either side of the three 1 px rules, the rounding
+    // remainder a pixel at a time, so both ends of the bar land exactly on their edges.
+    const int num_sides = 2 * static_cast<int>(mRuleXs.size());
+    const int leftover = bounds.getWidth() - transport_width - time_width - model_width - levels_width
+                         - static_cast<int>(mRuleXs.size());
+    jassert(leftover >= num_sides);
+
+    int side_index = 0;
+    auto take_side = [&] {
+        bounds.removeFromLeft(leftover / num_sides + (side_index++ < leftover % num_sides ? 1 : 0));
+    };
+
+    auto take = [&bounds](int inWidth, int inHeight = nn::metrics::controlHeight) {
+        return bounds.removeFromLeft(inWidth).withSizeKeepingCentre(inWidth, inHeight);
+    };
+
+    auto take_rule = [&](std::size_t inIndex) {
+        take_side();
+        mRuleXs[inIndex] = bounds.removeFromLeft(1).getX();
+        take_side();
+    };
+
+    auto transport = take(transport_width, nn::metrics::transportButtonH);
 
     for (NnFlatButton* button: {&mBackButton, &mPlayPauseButton, &mLoopButton, &mFollowButton, &mRecordButton}) {
         button->setBounds(transport.removeFromLeft(nn::metrics::transportButtonW));
         transport.removeFromLeft(TRANSPORT_GAP);
     }
 
-    bounds.removeFromLeft(GROUP_GAP);
-    const int time_width = TimeDisplay::getIdealWidth();
-    mTimeDisplay.setBounds(
-        bounds.removeFromLeft(time_width).withSizeKeepingCentre(time_width, nn::metrics::controlHeight));
+    take_rule(0);
+    mTimeDisplay.setBounds(take(time_width));
 
-    bounds.removeFromLeft(GROUP_GAP);
-    const int model_width = mModelButton.getIdealWidth();
-    mModelButton.setBounds(
-        bounds.removeFromLeft(model_width).withSizeKeepingCentre(model_width, nn::metrics::controlHeight));
+    take_rule(1);
+    mModelButton.setBounds(take(model_width));
 
-    // Right to left from here, so the flexible gap lands between the readout and the pills.
-    mSettingsButton.setBounds(
-        bounds.removeFromRight(SETTINGS_WIDTH).withSizeKeepingCentre(SETTINGS_WIDTH, nn::metrics::controlHeight));
+    take_rule(2);
+    auto levels = take(levels_width);
 
-    bounds.removeFromRight(GROUP_GAP);
-    mMuteButton.setBounds(bounds.removeFromRight(mMuteButton.getIdealWidth())
-                              .withSizeKeepingCentre(mMuteButton.getIdealWidth(), nn::metrics::controlHeight));
+    mMixPill = levels.removeFromLeft(mix_width);
+    mMixSlider.setBounds(
+        mMixPill.getX() + PILL_PADDING + orig_width + PILL_GAP, mMixPill.getY(), MIX_TRACK_WIDTH, mMixPill.getHeight());
 
-    bounds.removeFromRight(GROUP_GAP);
-    const int volume_width =
-        2 * PILL_PADDING + SPEAKER_ICON_SIZE + PILL_GAP + VOLUME_TRACK_WIDTH + PILL_GAP + VOLUME_VALUE_WIDTH;
-    mVolumePill = bounds.removeFromRight(volume_width).withSizeKeepingCentre(volume_width, nn::metrics::controlHeight);
+    levels.removeFromLeft(nn::metrics::controlGap);
+    mVolumePill = levels.removeFromLeft(volume_width);
     mMasterGainSlider.setBounds(mVolumePill.getX() + PILL_PADDING + SPEAKER_ICON_SIZE + PILL_GAP,
                                 mVolumePill.getY(),
                                 VOLUME_TRACK_WIDTH,
                                 mVolumePill.getHeight());
 
-    bounds.removeFromRight(GROUP_GAP);
-    const auto label_font = nn::fonts::pillLabel();
-    const int orig_width = juce::roundToInt(std::ceil(nn::trackedTextWidth("ORIG", label_font, LABEL_TRACKING)));
-    const int midi_width = juce::roundToInt(std::ceil(nn::trackedTextWidth("MIDI", label_font, LABEL_TRACKING)));
-    const int mix_width = 2 * PILL_PADDING + orig_width + PILL_GAP + MIX_TRACK_WIDTH + PILL_GAP + midi_width;
-    mMixPill = bounds.removeFromRight(mix_width).withSizeKeepingCentre(mix_width, nn::metrics::controlHeight);
-    mMixSlider.setBounds(
-        mMixPill.getX() + PILL_PADDING + orig_width + PILL_GAP, mMixPill.getY(), MIX_TRACK_WIDTH, mMixPill.getHeight());
+    levels.removeFromLeft(nn::metrics::controlGap);
+    mMuteButton.setBounds(levels.removeFromLeft(mute_width));
+
+    levels.removeFromLeft(nn::metrics::controlGap);
+    mSettingsButton.setBounds(levels);
 }
 
 void TopBar::paint(juce::Graphics& g)
@@ -250,6 +298,14 @@ void TopBar::paint(juce::Graphics& g)
     nn::drawBottomBorder(g, getLocalBounds(), nn::colours::divStrong);
 
     paintWordmark(g, getLocalBounds().withTrimmedLeft(PADDING_LEFT).withTrimmedBottom(1));
+
+    const int rule_top = (getHeight() - 1 - nn::metrics::controlHeight) / 2;
+
+    g.setColour(nn::colours::divStrong);
+
+    for (const int x: mRuleXs) {
+        g.fillRect(x, rule_top, 1, nn::metrics::controlHeight);
+    }
 
     // The two level controls are held back until there is something to hear. Dimmed rather than
     // disabled: what they set survives a take being cleared, so they are never really unavailable.
@@ -314,7 +370,7 @@ void TopBar::_paintMixPill(juce::Graphics& g, float inAlpha) const
     const auto font = nn::fonts::pillLabel();
     auto text_area = mMixPill.reduced(PILL_PADDING, 0).toFloat();
 
-    g.setColour(nn::colours::textMuted.withMultipliedAlpha(inAlpha));
+    g.setColour(nn::colours::textLabel.withMultipliedAlpha(inAlpha));
     nn::drawTrackedText(g, "ORIG", font, text_area, juce::Justification::centredLeft, LABEL_TRACKING);
 
     g.setColour(nn::colours::accentText.withMultipliedAlpha(inAlpha));
@@ -339,7 +395,7 @@ void TopBar::_paintVolumePill(juce::Graphics& g, float inAlpha) const
     g.setColour(nn::colours::textIcon.withMultipliedAlpha(inAlpha));
     g.fillPath(nn::icons::speaker(icon_box));
 
-    g.setColour(nn::colours::textMuted.withMultipliedAlpha(inAlpha));
+    g.setColour(nn::colours::textLabel.withMultipliedAlpha(inAlpha));
     g.setFont(nn::fonts::meta());
     g.drawText(juce::String(mMasterGainSlider.getValue(), 1),
                mVolumePill.withTrimmedRight(PILL_PADDING).removeFromRight(VOLUME_VALUE_WIDTH),
@@ -368,15 +424,12 @@ void TopBar::_refreshMixAvailability()
 void TopBar::syncModelButton(bool inModelPanelVisible)
 {
     const std::optional<ModelSize> in_use = NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize());
-    const juce::String label = "Model: " + juce::String(in_use.has_value() ? modelSizeToDisplayName(*in_use) : "None");
+    const juce::String label = modelButtonLabel(in_use.has_value() ? modelSizeToDisplayName(*in_use) : "None");
 
     if (label != mModelButtonLabel) {
         mModelButtonLabel = label;
         // The mute button's type, so the two labelled buttons of this bar read as a pair.
-        mModelButton.setLabel(label.toUpperCase(), nn::fonts::sectionHeader(), 0.09f);
-
-        // The name sets the button's width.
-        resized();
+        mModelButton.setLabel(label, nn::fonts::sectionHeader(), MODEL_LABEL_TRACKING);
     }
 
     if (mModelButton.getToggleState() != inModelPanelVisible) {

@@ -38,7 +38,7 @@ InstrumentMenu::InstrumentMenu(NeuralNoteAudioProcessor& inProcessor)
 
     auto& scrollbar = mViewport.getVerticalScrollBar();
     scrollbar.setColour(juce::ScrollBar::backgroundColourId, juce::Colours::transparentBlack);
-    scrollbar.setColour(juce::ScrollBar::thumbColourId, nn::colours::checkboxBorder);
+    scrollbar.setColour(juce::ScrollBar::thumbColourId, nn::colours::scrollbarThumb);
     scrollbar.setColour(juce::ScrollBar::trackColourId, juce::Colours::transparentBlack);
 
     addAndMakeVisible(mViewport);
@@ -111,7 +111,7 @@ void InstrumentMenu::paint(juce::Graphics& g)
 
     nn::drawTopBorder(g, footer, nn::colours::divStrong);
 
-    g.setColour(nn::colours::textFaintest);
+    g.setColour(nn::colours::textFainter);
     nn::drawTrackedText(g,
                         FOOTER,
                         nn::fonts::meta(),

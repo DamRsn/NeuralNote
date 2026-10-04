@@ -40,7 +40,7 @@ inline static Identifier ZoomLevelId = "ZOOM_LEVEL";
 
 // The piano roll's vertical zoom, as the slider's normalised position. Negative means the view has
 // not been told what to show and picks the zoom that fits the transcription; moving the slider is
-// what takes it off that, and Reset Zoom is what puts it back.
+// what takes it off that, and Reset piano roll zoom is what puts it back.
 inline static Identifier VerticalZoomId = "VERTICAL_ZOOM";
 
 // --------------- Instrument mixer -----------------

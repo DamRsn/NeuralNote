@@ -23,7 +23,7 @@ public:
 
     void paint(juce::Graphics& g) override;
 
-    /** @return The width the display needs for its text and padding. Fixed: the font is monospaced
+    /** @return The width the display needs for its text. Fixed: the font is monospaced
         and the format has no variable-width part, so it does not depend on the current time. */
     static int getIdealWidth();
 

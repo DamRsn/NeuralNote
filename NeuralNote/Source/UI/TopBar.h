@@ -5,6 +5,7 @@
 #ifndef TopBar_h
 #define TopBar_h
 
+#include <array>
 #include <optional>
 
 #include <JuceHeader.h>
@@ -98,6 +99,9 @@ private:
 
     juce::Rectangle<int> mMixPill;
     juce::Rectangle<int> mVolumePill;
+
+    // The rules between the four groups: transport, time, model, and levels with settings.
+    std::array<int, 3> mRuleXs {};
 
     // Unset until first evaluated, so the opening refresh always applies.
     std::optional<bool> mMixHeldToOriginal;

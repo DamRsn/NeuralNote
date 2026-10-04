@@ -282,7 +282,7 @@ void ModelDownloadPanel::paint(juce::Graphics& g)
                juce::Justification::centredLeft,
                true);
 
-    g.setColour(nn::colours::textMuted);
+    g.setColour(nn::colours::textLabel);
     g.setFont(nn::fonts::menuItem());
     g.drawText(mHasInstalledModel ? "Tick the model to transcribe with." : "Download a model to start transcribing.",
                header.removeFromTop(SUBTITLE_HEIGHT),
@@ -357,7 +357,7 @@ void ModelDownloadPanel::paint(juce::Graphics& g)
 
         g.setColour(row.isInUse       ? nn::colours::popupItemTicked
                     : row.isInstalled ? nn::colours::popupItem
-                                      : nn::colours::textMuted);
+                                      : nn::colours::textLabel);
         g.setFont(row.isInUse ? nn::fonts::menuItemTicked() : nn::fonts::instrumentName());
         g.drawText(modelSizeToDisplayName(row.modelSize),
                    text.withTrimmedTop(ROW_NAME_TOP).withHeight(ROW_LINE_HEIGHT),

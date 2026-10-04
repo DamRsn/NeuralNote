@@ -14,7 +14,7 @@
 namespace
 {
 constexpr int PADDING_SIDE = 14;
-constexpr int GROUP_GAP = 12;
+constexpr int FILENAME_GAP = 12; // the least the filename keeps clear of the tempo pill
 constexpr int PILL_PADDING = 10;
 constexpr int PILL_GAP = 8;
 constexpr int TEMPO_VALUE_WIDTH = 40;
@@ -45,6 +45,10 @@ NnToolbar::NnToolbar(NeuralNoteAudioProcessor& inProcessor)
     mTempoEditor = std::make_unique<NumericTextEditor<double>>(
         &mProcessor, NnId::ExportTempoId, 6, 120.0, juce::Justification::centredLeft, tempo_is_valid, correct_tempo);
     mTempoEditor->setTooltip(NeuralNoteTooltips::export_tempo);
+
+    // TextEditor only centres vertically when the line fits below its top indent, so the indent goes
+    // and the editor takes the pill's full height.
+    mTempoEditor->setIndents(mTempoEditor->getLeftIndent(), 0);
     addAndMakeVisible(*mTempoEditor);
 
     mExportButton.setIcon(nn::icons::folderStroked, NnFlatButton::IconStyle::stroked, 13.0f);
@@ -80,7 +84,7 @@ void NnToolbar::resized()
 
     auto place_right = [&bounds](juce::Component& inComponent, int inWidth) {
         inComponent.setBounds(bounds.removeFromRight(inWidth).withSizeKeepingCentre(inWidth, button_height));
-        bounds.removeFromRight(GROUP_GAP);
+        bounds.removeFromRight(nn::metrics::controlGap);
     };
 
     place_right(mClearButton, button_height);
@@ -92,10 +96,8 @@ void NnToolbar::resized()
     const int tempo_width = 2 * PILL_PADDING + label_width + PILL_GAP + TEMPO_VALUE_WIDTH + PILL_GAP + SPINNER_WIDTH;
 
     mTempoPill = bounds.removeFromRight(tempo_width).withSizeKeepingCentre(tempo_width, button_height);
-    mTempoEditor->setBounds(mTempoPill.getX() + PILL_PADDING + label_width + PILL_GAP,
-                            mTempoPill.getY() + 6,
-                            TEMPO_VALUE_WIDTH,
-                            button_height - 12);
+    mTempoEditor->setBounds(
+        mTempoPill.getX() + PILL_PADDING + label_width + PILL_GAP, mTempoPill.getY(), TEMPO_VALUE_WIDTH, button_height);
 }
 
 void NnToolbar::paint(juce::Graphics& g)
@@ -108,7 +110,7 @@ void NnToolbar::paint(juce::Graphics& g)
     auto filename_area = getLocalBounds()
                              .withTrimmedBottom(1)
                              .reduced(PADDING_SIDE, 0)
-                             .withTrimmedRight(getWidth() - mTempoPill.getX() + GROUP_GAP);
+                             .withTrimmedRight(getWidth() - mTempoPill.getX() + FILENAME_GAP);
 
     // Nothing at all when there is no file: the waveform's drop zone right below already says the
     // window is empty, and a second sentence saying it is one too many.
@@ -159,12 +161,12 @@ void NnToolbar::_exportMidiFile()
                 static_cast<MidiOverflowMode>(static_cast<int>(mProcessor.getValueTree().getProperty(
                     NnId::MidiOverflowModeId, static_cast<int>(MidiOverflowMode::ReuseChannels))));
 
-            const bool success = mMidiFileWriter.writeMidiFile(
-                mProcessor.getTranscriptionManager()->getNoteEventVector(),
-                file,
-                export_bpm,
-                mProcessor.getSourceAudioManager()->getExportStartOffsetSeconds(),
-                overflow_mode);
+            const bool success =
+                mMidiFileWriter.writeMidiFile(mProcessor.getTranscriptionManager()->getNoteEventVector(),
+                                              file,
+                                              export_bpm,
+                                              mProcessor.getSourceAudioManager()->getExportStartOffsetSeconds(),
+                                              overflow_mode);
 
             if (!success) {
                 juce::NativeMessageBox::showMessageBoxAsync(
