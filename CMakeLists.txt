@@ -15,6 +15,17 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 #Minimum MacOS target, set globally. Matches muscriptor.cpp's floor.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment version" FORCE)
 
+# One architecture per build (muscriptor.cpp refuses universal): CMAKE_OSX_ARCHITECTURES, or the
+# host's when empty.
+if (APPLE)
+  if (CMAKE_OSX_ARCHITECTURES)
+    set(NEURALNOTE_OSX_ARCH ${CMAKE_OSX_ARCHITECTURES})
+  else ()
+    set(NEURALNOTE_OSX_ARCH ${CMAKE_HOST_SYSTEM_PROCESSOR})
+  endif ()
+  message(STATUS "Building for macOS ${NEURALNOTE_OSX_ARCH}")
+endif ()
+
 option(NEURALNOTE_MUSCRIPTOR_DEBUG "Build muscriptor.cpp in Debug even when the plugin is Debug" OFF)
 option(LTO "Enable Link Time Optimization" ON)
 option(NEURALNOTE_FETCH_SOUNDFONT "Download the soundfont at configure time if it is missing" ON)
@@ -75,8 +86,9 @@ endif ()
 
 set(BaseTargetName NeuralNote)
 
-# Set COPY_PLUGIN_AFTER_BUILD to TRUE on Mac and to FALSE on Windows due to permission issues
-if (APPLE)
+# Set COPY_PLUGIN_AFTER_BUILD to TRUE on Mac and to FALSE on Windows due to permission issues.
+# Not when building for another architecture: native hosts couldn't load the copied plugins.
+if (APPLE AND NEURALNOTE_OSX_ARCH STREQUAL CMAKE_HOST_SYSTEM_PROCESSOR)
   set(COPY_PLUGIN_AFTER_BUILD TRUE)
 else ()
   set(COPY_PLUGIN_AFTER_BUILD FALSE)
