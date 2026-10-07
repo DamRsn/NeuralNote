@@ -36,6 +36,7 @@ void MuscriptorEngine::reset()
         mStaging.clear();
         mStaging.shrink_to_fit();
         mFinalizedThrough = 0.0;
+        mResumePoint.clear();
     }
 
     mFinalNotes.clear();
@@ -106,7 +107,9 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
                                                              const ComputeDeviceChoice& inDevice,
                                                              const float* inAudio,
                                                              int inNumSamples,
-                                                             const std::vector<msl::InstrumentGroup>& inInstruments)
+                                                             const std::vector<msl::InstrumentGroup>& inInstruments,
+                                                             const std::string& inResumeFrom,
+                                                             float inStartProgress)
 {
     // mCancelRequested and mProgress are deliberately not touched here. cancel() can be called as
     // soon as the plugin enters the Processing state, which happens before the thread pool gets
@@ -124,7 +127,7 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
     // warm reload costs.
     const ScopeGuard unload_model {[this] { mTranscriber.reset(); }};
 
-    mProgress = Progress {Phase::Transcribing, 0.f};
+    mProgress = Progress {Phase::Transcribing, inStartProgress};
 
     const std::span<const float> samples(inAudio, static_cast<size_t>(inNumSamples));
 
@@ -140,6 +143,11 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
             }
 
             mFinalizedThrough = inUpdate.finalized_through;
+
+            // The final update has none: the run is about to succeed, and nothing is left to resume.
+            if (!inUpdate.resume_point.empty()) {
+                mResumePoint = inUpdate.resume_point;
+            }
         }
 
         mProgress = Progress {Phase::Transcribing, inUpdate.progress};
@@ -149,12 +157,19 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
     msl::TranscribeOptions options;
     options.instruments = inInstruments;
     options.should_cancel = [this] { return mCancelRequested.load(); };
+    options.resume_from = inResumeFrom;
 
     auto result = mTranscriber->transcribe(samples, options, callback);
 
     if (!result.has_value()) {
         if (result.error() == msl::Error::Cancelled) {
             return Outcome::Cancelled;
+        }
+
+        if (result.error() == msl::Error::InvalidResumePoint) {
+            mLastErrorMessage = msl::describe(result.error());
+            Logger::writeToLog("MuscriptorEngine: could not resume: " + String(mLastErrorMessage));
+            return Outcome::CannotResume;
         }
 
         mLastErrorMessage = msl::describe(result.error());
@@ -173,19 +188,26 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
     return Outcome::Success;
 }
 
-bool MuscriptorEngine::drainNewNotes(std::vector<NoteEvent>& ioNotes, double& ioFinalizedThrough)
+bool MuscriptorEngine::drainNewNotes(std::vector<NoteEvent>& ioNotes,
+                                     double& ioFinalizedThrough,
+                                     std::string& ioResumePoint)
 {
     const std::lock_guard<std::mutex> lock(mStagingMutex);
 
-    // A chunk can decode no notes and still move the horizon, which is a real change: it is how
-    // far the caller may now play, and the frontier it draws.
-    if (mStaging.empty() && mFinalizedThrough <= ioFinalizedThrough) {
+    // A chunk can decode no notes and still move the horizon or the resume point, which is a real
+    // change: it is how far the caller may now play, and where it can resume from.
+    if (mStaging.empty() && mFinalizedThrough <= ioFinalizedThrough && mResumePoint.empty()) {
         return false;
     }
 
     ioNotes.insert(ioNotes.end(), mStaging.begin(), mStaging.end());
     mStaging.clear();
-    ioFinalizedThrough = mFinalizedThrough;
+    ioFinalizedThrough = std::max(ioFinalizedThrough, mFinalizedThrough);
+
+    if (!mResumePoint.empty()) {
+        ioResumePoint = std::move(mResumePoint);
+        mResumePoint.clear();
+    }
 
     return true;
 }

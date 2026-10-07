@@ -38,8 +38,9 @@ public:
     /**
      * How a transcribeToMIDI call ended. Cancelled is kept distinct from Failed because the two
      * want different handling: one is the user's own doing, the other is worth reporting.
+     * CannotResume means the resume point was rejected, so retrying it is pointless.
      */
-    enum class Outcome { Success, Cancelled, Failed };
+    enum class Outcome { Success, Cancelled, Failed, CannotResume };
 
     enum class Phase : std::uint8_t { LoadingModel, Transcribing };
 
@@ -83,19 +84,25 @@ public:
      *        what every run did before the picker existed. A non-empty selection is not a filter
      *        over the result: the library takes it as a conditioning prefix and a hard mask over
      *        what the decoder may emit, so it belongs here and not downstream.
+     * @param inResumeFrom A resume point drained from an earlier run on the same audio and
+     *        instruments, or empty to start from the beginning. When set, the final notes are only
+     *        the ones that run had not reported yet.
+     * @param inStartProgress The transcribing progress to show until the first chunk lands.
      * @return Success only if the final note event vector is usable.
      */
     Outcome transcribeToMIDI(ModelSize inModelSize,
                              const ComputeDeviceChoice& inDevice,
                              const float* inAudio,
                              int inNumSamples,
-                             const std::vector<msl::InstrumentGroup>& inInstruments);
+                             const std::vector<msl::InstrumentGroup>& inInstruments,
+                             const std::string& inResumeFrom,
+                             float inStartProgress);
 
     /**
-     * Moves everything decoded since the last call onto the end of ioNotes, and advances
-     * ioFinalizedThrough to the time below which the transcription is now complete. Both under one
-     * lock, so the horizon can never describe more than the notes handed over with it -- a caller
-     * that played up to a horizon running ahead of its own note list would drop notes silently.
+     * Moves everything decoded since the last call onto the end of ioNotes, advances
+     * ioFinalizedThrough to the time below which the transcription is now complete, and sets
+     * ioResumePoint to where a later run can continue from. All under one lock, so the horizon and
+     * the resume point never describe more than the notes handed over with them.
      *
      * Thread-safe, and meant to be called while transcribeToMIDI runs on another thread.
      *
@@ -104,12 +111,13 @@ public:
      * already reported. takeFinalNotes() is not subject to it, which is why the finished
      * transcription should replace an accumulation rather than extend it.
      *
-     * @return true if either output changed, i.e. there is something new to show.
+     * @return true if any output changed, i.e. there is something new to show or save.
      */
-    bool drainNewNotes(std::vector<NoteEvent>& ioNotes, double& ioFinalizedThrough);
+    bool drainNewNotes(std::vector<NoteEvent>& ioNotes, double& ioFinalizedThrough, std::string& ioResumePoint);
 
     /**
-     * @return The whole transcription, moved out. Valid only after transcribeToMIDI returned
+     * @return The notes not reported before the run's resume point -- the whole transcription for
+     *         a run that did not resume -- moved out. Valid only after transcribeToMIDI returned
      *         Success, and only once.
      */
     std::vector<NoteEvent> takeFinalNotes();
@@ -147,6 +155,7 @@ private:
     std::mutex mStagingMutex;
     std::vector<NoteEvent> mStaging;
     double mFinalizedThrough = 0.0;
+    std::string mResumePoint;
 
     // The whole transcription. Written before the outcome is published, so whoever observes that
     // outcome can read it without further synchronisation.

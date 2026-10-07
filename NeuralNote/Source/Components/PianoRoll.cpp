@@ -158,7 +158,7 @@ void PianoRoll::_drawNotes(Graphics& g) const
 
 void PianoRoll::_drawTranscriptionFrontier(Graphics& g) const
 {
-    if (mProcessor->getState() != Processing) {
+    if (!mProcessor->isTranscriptionUnfinished()) {
         return;
     }
 

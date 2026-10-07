@@ -24,7 +24,12 @@ class NeuralNoteEditor;
  * transcription, because a run takes minutes and the user gets to pick instruments first. It is
  * also where a cancelled or failed run returns to, which is what lets the audio survive one.
  */
-enum State { EmptyAudioAndMidiRegions = 0, Recording, AudioLoaded, Processing, PopulatedAudioAndMidiRegions };
+/**
+ * Paused is a transcription stopped part way, with no job running: its notes are playable up to
+ * TranscriptionManager::getFinalizedThrough, and it can be resumed from there. Pausing a run lands
+ * here, and so does reopening a state saved while one was running.
+ */
+enum State { EmptyAudioAndMidiRegions = 0, Recording, AudioLoaded, Processing, Paused, PopulatedAudioAndMidiRegions };
 
 class NeuralNoteAudioProcessor : public PluginHelpers::ProcessorBase
 {
@@ -51,18 +56,26 @@ public:
      *         what makes the audio audible. In Processing it is a partial result -- a transcription
      *         publishes its notes chunk by chunk, and TranscriptionManager::getFinalizedThrough
      *         says how much of it is there; past that line the roll is empty and the synth silent.
+     *         Paused is the same, with no job running.
      */
     bool canPlay() const
     {
         const State state = mState.load();
-        return state == AudioLoaded || state == Processing || state == PopulatedAudioAndMidiRegions;
+        return state == AudioLoaded || state == Processing || state == Paused || state == PopulatedAudioAndMidiRegions;
     }
 
-    /** @return Whether there are notes to show, hear and export -- partial ones included. */
+    /** @return Whether there are notes to show and hear -- partial ones included. */
     bool hasTranscription() const
     {
         const State state = mState.load();
-        return state == Processing || state == PopulatedAudioAndMidiRegions;
+        return state == Processing || state == Paused || state == PopulatedAudioAndMidiRegions;
+    }
+
+    /** @return Whether a transcription has been started and not finished: running or paused. */
+    bool isTranscriptionUnfinished() const
+    {
+        const State state = mState.load();
+        return state == Processing || state == Paused;
     }
 
     void setStateToRecording() { mState.store(Recording); }
@@ -70,6 +83,8 @@ public:
     void setStateToAudioLoaded() { mState.store(AudioLoaded); }
 
     void setStateToProcessing() { mState.store(Processing); }
+
+    void setStateToPaused() { mState.store(Paused); }
 
     void setStateToPopulatedAudioAndMidiRegions() { mState.store(PopulatedAudioAndMidiRegions); }
 
