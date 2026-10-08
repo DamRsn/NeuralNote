@@ -191,6 +191,19 @@ foreach (format Standalone VST3 AU)
   endif ()
 endforeach ()
 
+# Shipped Linux binaries carry their own C++ runtime instead of needing the build machine's.
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_link_options(${BaseTargetName} PUBLIC -static-libstdc++ -static-libgcc)
+
+  # The VST3 exports its entry points only, so the host's own libstdc++ or ggml cannot interpose on
+  # the copies linked into it. -z defs fails the link on any symbol left to resolve at load time.
+  if (TARGET ${BaseTargetName}_VST3)
+    set(nn_vst3_exports "${CMAKE_CURRENT_BINARY_DIR}/vst3_exports.map")
+    file(WRITE "${nn_vst3_exports}" "{ global: GetPluginFactory; ModuleEntry; ModuleExit; local: *; };\n")
+    target_link_options(${BaseTargetName}_VST3 PRIVATE "-Wl,--version-script=${nn_vst3_exports}" -Wl,-z,defs)
+  endif ()
+endif ()
+
 if (${LTO})
   target_link_libraries(${BaseTargetName} PUBLIC juce_recommended_lto_flags)
   message(STATUS "Link Time Optimization (LTO) enabled")

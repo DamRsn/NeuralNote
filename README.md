@@ -36,7 +36,10 @@ Download the latest release for your platform from the [website](https://damrsn.
   [build from source](#build-from-source).
 - **Windows (x64):** `NeuralNote_Installer_Windows_x64.exe` installs the Standalone app and VST3. It is not code signed,
   so Windows may warn you before running it for the first time.
-- **Linux:** prebuilt binaries are coming soon. In the meantime, you can [build from source](#build-from-source).
+- **Linux (x64):** `NeuralNote_Linux_x64.tar.gz` contains the Standalone app and VST3. Extract it, copy
+  `NeuralNote.vst3` to `~/.vst3`, and run the Standalone app with `./NeuralNote`. It needs glibc 2.35 or later (Ubuntu
+  22.04 or later, for example) and these libraries: `libcurl.so.4` (the OpenSSL build), `libasound.so.2`,
+  `libfontconfig.so.1` and `libfreetype.so.6`.
 
 The transcription model is not included. Download it from within NeuralNote the first time you open it (see
 [Models and performance](#models-and-performance)).
@@ -82,6 +85,8 @@ You can remove a model by deleting it from this folder, and re-download it at an
 
 **Hardware.** Transcription speed depends mostly on the model size and on your hardware. The GPU is used when available,
 through Metal on macOS and Vulkan on Windows and Linux. A GPU is strongly recommended for the `medium` and `large` models.
+On Linux, the GPU needs Vulkan: the Vulkan loader (`libvulkan.so.1`) and a Vulkan driver for your GPU. If
+**Settings > Compute device** lists only the CPU, check that both are installed.
 **Settings > Compute device** picks the device: Auto (the default, which names the device it chose), a specific GPU, or
 the CPU. The choice applies from the next transcription, and GPUs added or removed later are listed after restarting
 NeuralNote (or your DAW). Only a few GPUs have been tested so far. If transcription fails, gives wrong results or is
@@ -175,7 +180,6 @@ public API. The GGUF weights it loads are available on
 
 ## Roadmap
 
-- Prebuilt binaries for Linux
 - Installer for Intel Macs
 - MIDI out, with per-instrument channel selection
 - CLI
