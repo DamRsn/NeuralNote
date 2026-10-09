@@ -37,6 +37,7 @@ void MuscriptorEngine::reset()
         mStaging.shrink_to_fit();
         mFinalizedThrough = 0.0;
         mResumePoint.clear();
+        mResumeProgress = 0.0f;
     }
 
     mFinalNotes.clear();
@@ -147,6 +148,7 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
             // The final update has none: the run is about to succeed, and nothing is left to resume.
             if (!inUpdate.resume_point.empty()) {
                 mResumePoint = inUpdate.resume_point;
+                mResumeProgress = inUpdate.progress;
             }
         }
 
@@ -190,7 +192,8 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
 
 bool MuscriptorEngine::drainNewNotes(std::vector<NoteEvent>& ioNotes,
                                      double& ioFinalizedThrough,
-                                     std::string& ioResumePoint)
+                                     std::string& ioResumePoint,
+                                     float& ioResumeProgress)
 {
     const std::lock_guard<std::mutex> lock(mStagingMutex);
 
@@ -207,6 +210,7 @@ bool MuscriptorEngine::drainNewNotes(std::vector<NoteEvent>& ioNotes,
     if (!mResumePoint.empty()) {
         ioResumePoint = std::move(mResumePoint);
         mResumePoint.clear();
+        ioResumeProgress = mResumeProgress;
     }
 
     return true;

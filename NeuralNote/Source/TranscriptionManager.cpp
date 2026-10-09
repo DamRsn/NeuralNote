@@ -23,7 +23,7 @@ constexpr int PARTIAL_TRANSCRIPTION_FORMAT_VERSION = 1;
 constexpr int SAVED_TIME_DECIMAL_PLACES = 6;
 
 /**
- * Reads the notes _updateSavedTranscription wrote. Any malformed entry rejects the whole list; a note starting
+ * Reads the notes notesToJson wrote. Any malformed entry rejects the whole list; a note starting
  * outside [0, inDuration] is dropped. The end is not bounded: a note left open at the end of the
  * audio ends 10 ms after its onset, which can be past the last sample.
  */
@@ -69,6 +69,21 @@ std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson, double in
 
     return notes;
 }
+
+String notesToJson(const std::vector<NoteEvent>& inNotes)
+{
+    Array<var> entries;
+    entries.ensureStorageAllocated(static_cast<int>(inNotes.size()));
+
+    for (const NoteEvent& note: inNotes) {
+        entries.add(Array<var> {note.startTime, note.endTime, note.pitch, note.program});
+    }
+
+    const auto format =
+        JSON::FormatOptions {}.withSpacing(JSON::Spacing::none).withMaxDecimalPlaces(SAVED_TIME_DECIMAL_PLACES);
+
+    return JSON::toString(entries, format);
+}
 } // namespace
 
 TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor)
@@ -97,10 +112,8 @@ void TranscriptionManager::timerCallback()
 {
     _catchUpSynthInstrumentsOnceFontReady();
 
-    const auto finished_job_outcome = mFinishedJobOutcome.exchange(JobOutcome::None);
-
-    if (finished_job_outcome != JobOutcome::None) {
-        _handleFinishedJob(finished_job_outcome);
+    if (mJobFinished.exchange(false)) {
+        _handleFinishedJob();
         return;
     }
 
@@ -113,7 +126,7 @@ void TranscriptionManager::_drainEngine()
 {
     // Gated on the drain having something, so this runs at the model's pace -- once per 5 s of
     // audio -- rather than at the timer's.
-    if (mMuscriptorEngine.drainNewNotes(mRawNotes, mFinalizedThrough, mResumePoint)) {
+    if (mMuscriptorEngine.drainNewNotes(mRawNotes, mFinalizedThrough, mResumePoint, mResumeProgress)) {
         _updateSavedTranscription();
         _updatePostProcessing();
         _repaintPianoRoll();
@@ -122,7 +135,7 @@ void TranscriptionManager::_drainEngine()
 
 void TranscriptionManager::_runModel()
 {
-    const auto outcome = mMuscriptorEngine.transcribeToMIDI(
+    mJobOutcome = mMuscriptorEngine.transcribeToMIDI(
         mJobModelSize,
         mJobDevice,
         mProcessor->getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
@@ -131,40 +144,25 @@ void TranscriptionManager::_runModel()
         mJobResumeFrom,
         mJobStartProgress);
 
-    JobOutcome job_outcome = JobOutcome::Success;
-
-    switch (outcome) {
-        case MuscriptorEngine::Outcome::Success:
-            job_outcome = JobOutcome::Success;
-            break;
-        case MuscriptorEngine::Outcome::Cancelled:
-            job_outcome = JobOutcome::Cancelled;
-            break;
-        case MuscriptorEngine::Outcome::Failed:
-            job_outcome = JobOutcome::Failed;
-            break;
-        case MuscriptorEngine::Outcome::CannotResume:
-            job_outcome = JobOutcome::CannotResume;
-            break;
-    }
-
     // Post-processing and the synth handoff belong to the message thread, which has been doing
     // both per chunk while this ran. All that is left here is to say so.
     //
     // Published last: the message thread treats this as the signal that the job is done with
     // everything it owns, and clearing while a job is in flight would race with it.
-    mFinishedJobOutcome = job_outcome;
+    mJobFinished = true;
 }
 
-void TranscriptionManager::_handleFinishedJob(JobOutcome inOutcome)
+void TranscriptionManager::_handleFinishedJob()
 {
+    using Outcome = MuscriptorEngine::Outcome;
+
     jassert(MessageManager::getInstance()->isThisTheMessageThread());
 
     // The job published its outcome as its last act, so nothing on the pool thread can touch the
     // state this manager owns from here on. Dropped before clear() runs below, which asserts it.
     mJobActive = false;
 
-    if (inOutcome == JobOutcome::Success) {
+    if (mJobOutcome == Outcome::Success) {
         // Replaces what this job streamed rather than extending it: transcribe()'s own result is
         // authoritative, and the streamed one is missing any note the model never closed.
         auto final_notes = mMuscriptorEngine.takeFinalNotes();
@@ -172,6 +170,7 @@ void TranscriptionManager::_handleFinishedJob(JobOutcome inOutcome)
         mRawNotes.insert(mRawNotes.end(), final_notes.begin(), final_notes.end());
         mFinalizedThrough = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
         mResumePoint.clear();
+        mResumeProgress = 0.0f;
         _updateSavedTranscription();
         _updatePostProcessing();
         mProcessor->setStateToPopulatedAudioAndMidiRegions();
@@ -179,12 +178,15 @@ void TranscriptionManager::_handleFinishedJob(JobOutcome inOutcome)
         return;
     }
 
-    // Whatever landed between the last timer tick and the stop belongs to the paused transcription.
-    _drainEngine();
-
     // Read before clearTranscription(), which resets the engine and with it the message.
     const String reason = mMuscriptorEngine.getLastErrorMessage();
-    const bool keep = !mDiscardOnStop && !mResumePoint.empty() && inOutcome != JobOutcome::CannotResume;
+    bool keep = !mDiscardOnStop && mJobOutcome != Outcome::CannotResume;
+
+    if (keep) {
+        // Whatever landed between the last timer tick and the stop belongs to the paused transcription.
+        _drainEngine();
+        keep = !mResumePoint.empty();
+    }
 
     if (keep) {
         mProcessor->setStateToPaused();
@@ -197,7 +199,7 @@ void TranscriptionManager::_handleFinishedJob(JobOutcome inOutcome)
 
     // Shown rather than only pointing at the log: it is one line, and the log lives in /tmp, which
     // is neither discoverable nor durable.
-    if (inOutcome == JobOutcome::Failed) {
+    if (mJobOutcome == Outcome::Failed) {
         String message = reason.isEmpty() ? String("The transcription model could not be loaded or run.")
                                           : "The transcription model could not be loaded or run: " + reason + ".";
 
@@ -208,7 +210,7 @@ void TranscriptionManager::_handleFinishedJob(JobOutcome inOutcome)
         NativeMessageBox::showMessageBoxAsync(MessageBoxIconType::NoIcon, "Transcription failed.", message);
     }
 
-    if (inOutcome == JobOutcome::CannotResume) {
+    if (mJobOutcome == Outcome::CannotResume) {
         NativeMessageBox::showMessageBoxAsync(MessageBoxIconType::NoIcon,
                                               "Transcription could not be resumed.",
                                               "The paused transcription does not match the loaded audio. "
@@ -291,6 +293,10 @@ const std::vector<NoteEvent>& TranscriptionManager::getNoteEventVector() const
 
 MuscriptorEngine::Progress TranscriptionManager::getTranscriptionProgress() const
 {
+    if (mProcessor->getState() == Paused) {
+        return {MuscriptorEngine::Phase::Transcribing, mResumeProgress};
+    }
+
     return mMuscriptorEngine.getProgress();
 }
 
@@ -322,11 +328,12 @@ void TranscriptionManager::clear()
     jassert(!mJobActive.load());
 
     mMuscriptorEngine.reset();
-    mFinishedJobOutcome = JobOutcome::None;
+    mJobFinished = false;
     mRawNotes.clear();
     mRawNotes.shrink_to_fit();
     mNotesBeforeJob = 0;
     mResumePoint.clear();
+    mResumeProgress = 0.0f;
     mDiscardOnStop = false;
     mFinalizedThrough = 0.0;
     mPostProcessedNotes.clear();
@@ -335,6 +342,7 @@ void TranscriptionManager::clear()
     {
         const ScopedLock sl(mSavedTranscriptionLock);
         mSavedTranscription.reset();
+        mSavedNotesJson.reset();
     }
 
     mProcessor->getInstrumentMixer()->clear();
@@ -381,6 +389,7 @@ void TranscriptionManager::startTranscription()
     mRawNotes.clear();
     mNotesBeforeJob = 0;
     mResumePoint.clear();
+    mResumeProgress = 0.0f;
     mFinalizedThrough = 0.0;
     mPostProcessedNotes.clear();
 
@@ -420,9 +429,7 @@ void TranscriptionManager::resumeTranscription()
 
     mJobModelSize = *mTranscriptionModelSize;
     mJobResumeFrom = mResumePoint;
-
-    const double duration = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
-    mJobStartProgress = duration > 0.0 ? static_cast<float>(std::clamp(mFinalizedThrough / duration, 0.0, 1.0)) : 0.0f;
+    mJobStartProgress = mResumeProgress;
 
     _launchJob();
 }
@@ -462,6 +469,11 @@ ValueTree TranscriptionManager::createStateTree() const
     }
 
     const SavedTranscription& saved = *mSavedTranscription;
+
+    if (!mSavedNotesJson.has_value()) {
+        mSavedNotesJson = notesToJson(saved.notes);
+    }
+
     const bool finished = saved.resumePoint.empty();
 
     // A separate node for a partial one, so an older version that knows only TRANSCRIPTION skips it
@@ -471,11 +483,12 @@ ValueTree TranscriptionManager::createStateTree() const
                      finished ? TRANSCRIPTION_FORMAT_VERSION : PARTIAL_TRANSCRIPTION_FORMAT_VERSION,
                      nullptr);
     tree.setProperty(NnId::TranscriptionModelSizeId, modelSizeToString(saved.modelSize), nullptr);
-    tree.setProperty(NnId::TranscriptionNotesId, saved.notesJson, nullptr);
+    tree.setProperty(NnId::TranscriptionNotesId, *mSavedNotesJson, nullptr);
 
     if (!finished) {
         tree.setProperty(NnId::FinalizedThroughId, saved.finalizedThrough, nullptr);
         tree.setProperty(NnId::ResumePointId, String(saved.resumePoint), nullptr);
+        tree.setProperty(NnId::ResumeProgressId, saved.resumeProgress, nullptr);
     }
 
     return tree;
@@ -516,19 +529,23 @@ void TranscriptionManager::restoreFromStateTree(const ValueTree& inFullState)
     const double duration = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
     auto notes = parseNotes(tree.getProperty(NnId::TranscriptionNotesId).toString(), duration);
 
-    if (!notes.has_value()) {
+    const std::optional<ModelSize> model_size =
+        modelSizeFromString(tree.getProperty(NnId::TranscriptionModelSizeId).toString().toStdString());
+
+    // Resuming with another checkpoint would mix two models' notes. A finished one only shows the name.
+    if (!notes.has_value() || (!finished && !model_size.has_value())) {
         return;
     }
 
     mRawNotes = std::move(*notes);
-    mTranscriptionModelSize = modelSizeFromString(
-        tree.getProperty(NnId::TranscriptionModelSizeId).toString().toStdString(), DEFAULT_MODEL_SIZE);
+    mTranscriptionModelSize = model_size.value_or(DEFAULT_MODEL_SIZE);
 
     if (finished) {
         mFinalizedThrough = duration;
     } else {
         mFinalizedThrough = std::clamp(static_cast<double>(tree.getProperty(NnId::FinalizedThroughId)), 0.0, duration);
         mResumePoint = resume_point;
+        mResumeProgress = std::clamp(static_cast<float>(tree.getProperty(NnId::ResumeProgressId)), 0.0f, 1.0f);
     }
 
     _updateSavedTranscription();
@@ -549,21 +566,11 @@ void TranscriptionManager::_updateSavedTranscription()
     jassert(MessageManager::getInstance()->isThisTheMessageThread());
     jassert(mTranscriptionModelSize.has_value());
 
-    Array<var> entries;
-    entries.ensureStorageAllocated(static_cast<int>(mRawNotes.size()));
-
-    for (const NoteEvent& note: mRawNotes) {
-        entries.add(Array<var> {note.startTime, note.endTime, note.pitch, note.program});
-    }
-
-    const auto format =
-        JSON::FormatOptions {}.withSpacing(JSON::Spacing::none).withMaxDecimalPlaces(SAVED_TIME_DECIMAL_PLACES);
-
-    SavedTranscription saved {
-        JSON::toString(entries, format), *mTranscriptionModelSize, mFinalizedThrough, mResumePoint};
+    SavedTranscription saved {mRawNotes, *mTranscriptionModelSize, mFinalizedThrough, mResumePoint, mResumeProgress};
 
     const ScopedLock sl(mSavedTranscriptionLock);
     mSavedTranscription = std::move(saved);
+    mSavedNotesJson.reset();
 }
 
 void TranscriptionManager::_repaintPianoRoll()

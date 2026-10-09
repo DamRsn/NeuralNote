@@ -21,13 +21,12 @@ class NeuralNoteEditor;
 /**
  * AudioLoaded is audio in, nothing transcribed: the transport works, the piano roll is empty, and
  * the model has not been asked to run. Loading a file lands here rather than starting a
- * transcription, because a run takes minutes and the user gets to pick instruments first. It is
- * also where a cancelled or failed run returns to, which is what lets the audio survive one.
- */
-/**
+ * transcription, because a run takes minutes and the user gets to pick instruments first. A run
+ * that is discarded, or stops before its first chunk, returns here with the audio kept.
+ *
  * Paused is a transcription stopped part way, with no job running: its notes are playable up to
- * TranscriptionManager::getFinalizedThrough, and it can be resumed from there. Pausing a run lands
- * here, and so does reopening a state saved while one was running.
+ * TranscriptionManager::getFinalizedThrough, and it can be resumed from there. A run that is paused
+ * or fails after its first chunk lands here, and so does reopening a state saved while one was running.
  */
 enum State { EmptyAudioAndMidiRegions = 0, Recording, AudioLoaded, Processing, Paused, PopulatedAudioAndMidiRegions };
 

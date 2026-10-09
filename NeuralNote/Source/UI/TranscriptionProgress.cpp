@@ -147,6 +147,10 @@ void TranscriptionProgress::_onVBlankCallback()
 
     if (state != Processing && state != Paused) {
         // The run is over: drop the progress and the pulse, so the next one starts fresh.
+        if (mIsPaused) {
+            _updateButton(false);
+        }
+
         mIsCancelling = false;
         mIsPaused = false;
         mDisplayedPhase = MuscriptorEngine::Phase::LoadingModel;
@@ -158,15 +162,12 @@ void TranscriptionProgress::_onVBlankCallback()
     const auto* manager = mProcessor.getTranscriptionManager();
     const bool is_paused = state == Paused;
 
-    MuscriptorEngine::Progress progress = manager->getTranscriptionProgress();
+    const MuscriptorEngine::Progress progress = manager->getTranscriptionProgress();
     float pulse = pulseAt(static_cast<double>(juce::Time::getMillisecondCounter()));
     bool is_cancelling = manager->isCancelRequested();
 
-    // Nothing is running, so the bar says how much is transcribed, and holds still.
+    // Nothing is running, so the bar holds still.
     if (is_paused) {
-        const double duration = mProcessor.getSourceAudioManager()->getAudioSampleDuration();
-        const double done = duration > 0.0 ? manager->getFinalizedThrough() / duration : 0.0;
-        progress = {MuscriptorEngine::Phase::Transcribing, static_cast<float>(std::clamp(done, 0.0, 1.0))};
         pulse = 1.0f;
         is_cancelling = false;
     }

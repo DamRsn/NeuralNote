@@ -51,7 +51,9 @@ NeuralNote is a simple AudioFX plugin (VST®3/AU/Standalone app) that you apply 
 - Select the instruments to transcribe in the left panel, or select `Automatic` to let the model detect them.
   - Transcriptions tend to be better when the model is given the correct set of instruments.
 - Click `Transcribe`. The transcription runs in the background, and the MIDI fills into the piano roll as it is
-  decoded. A progress indicator and a cancel button are shown while it runs.
+  decoded. A progress bar is shown while it runs.
+  - Pause it with the button next to the progress bar, and resume it later from where it stopped, even after closing
+    and reopening the plugin or your DAW session. The bin button discards the transcription.
 - Click play to listen to the result without waiting for the transcription to finish. Only the part decoded so far
   plays.
   - Adjust the mix between the source audio and the synthesized transcription.

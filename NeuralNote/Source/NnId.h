@@ -86,6 +86,9 @@ inline static Identifier FinalizedThroughId = "FINALIZED_THROUGH";
 // The library's resume point, passed back to it unread.
 inline static Identifier ResumePointId = "RESUME_POINT";
 
+// The run's progress at the resume point, in [0, 1].
+inline static Identifier ResumeProgressId = "RESUME_PROGRESS";
+
 // To be set in this specific order
 const std::vector<std::pair<Identifier, var>> OrderedStatePropertiesWithDefault = {
     {ExportTempoId, 120.0},

@@ -101,8 +101,9 @@ public:
     /**
      * Moves everything decoded since the last call onto the end of ioNotes, advances
      * ioFinalizedThrough to the time below which the transcription is now complete, and sets
-     * ioResumePoint to where a later run can continue from. All under one lock, so the horizon and
-     * the resume point never describe more than the notes handed over with them.
+     * ioResumePoint to where a later run can continue from, with ioResumeProgress the progress
+     * reached there. All under one lock, so the horizon and the resume point never describe more
+     * than the notes handed over with them.
      *
      * Thread-safe, and meant to be called while transcribeToMIDI runs on another thread.
      *
@@ -113,7 +114,10 @@ public:
      *
      * @return true if any output changed, i.e. there is something new to show or save.
      */
-    bool drainNewNotes(std::vector<NoteEvent>& ioNotes, double& ioFinalizedThrough, std::string& ioResumePoint);
+    bool drainNewNotes(std::vector<NoteEvent>& ioNotes,
+                       double& ioFinalizedThrough,
+                       std::string& ioResumePoint,
+                       float& ioResumeProgress);
 
     /**
      * @return The notes not reported before the run's resume point -- the whole transcription for
@@ -156,6 +160,7 @@ private:
     std::vector<NoteEvent> mStaging;
     double mFinalizedThrough = 0.0;
     std::string mResumePoint;
+    float mResumeProgress = 0.0f;
 
     // The whole transcription. Written before the outcome is published, so whoever observes that
     // outcome can read it without further synchronisation.
