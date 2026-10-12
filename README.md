@@ -1,10 +1,10 @@
 # NeuralNote <img align="right" src="NeuralNote/Assets/Logo/neuralnote-1024.png" width="100" />
 
 NeuralNote is the audio plugin that brings **state-of-the-art audio-to-MIDI transcription** into your favorite Digital
-Audio Workstation.
+Audio Workstation. See the [website](https://damrsn.github.io/NeuralNote/).
 
 > [!NOTE]
-> 🎉 **NeuralNote v2.0.0 is out!** Download it from the [releases page](https://github.com/DamRsn/NeuralNote/releases).
+> 🎉 **NeuralNote v2.0.0 is out!** Download it from the [website](https://damrsn.github.io/NeuralNote/#download) or the [releases page](https://github.com/DamRsn/NeuralNote/releases).
 >
 > Testing so far covers only a few machines and GPUs. Whether something breaks or works great on your hardware,
 > please tell us in [GitHub issues](https://github.com/DamRsn/NeuralNote/issues) (see [Hardware](#models-and-performance)).
@@ -28,7 +28,7 @@ Audio Workstation.
 
 ## Install
 
-Download the latest release for your platform from the
+Download the latest release for your platform from the [website](https://damrsn.github.io/NeuralNote/#download) or 
 [releases page](https://github.com/DamRsn/NeuralNote/releases).
 
 - **macOS (Apple Silicon):** `NeuralNote_Installer_Mac_arm64.pkg` installs the Standalone app, VST3 and AU. It is
