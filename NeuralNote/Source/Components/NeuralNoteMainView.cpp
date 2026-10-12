@@ -364,7 +364,7 @@ void NeuralNoteMainView::_buildSettingsMenu()
 
     PopupMenu crash_menu;
 
-    auto crash_reports_item = PopupMenu::Item("Write a report when NeuralNote crashes");
+    auto crash_reports_item = PopupMenu::Item("Enable crash reports");
     crash_reports_item.setID(++item_id);
     crash_reports_item.setEnabled(true);
     mSettingsMenuItemsShouldBeTicked.emplace_back(crash_reports_item.itemID,
