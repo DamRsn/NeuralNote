@@ -57,13 +57,20 @@ if test -z "$signingID"; then
 	exit 1
 fi
 
-read -p "Enter your Apple ID: " APPLE_USERNAME
+# APPLE_ID and APPLE_APP_PASSWORD in the environment skip the prompts.
+APPLE_USERNAME=${APPLE_ID:-}
+if test -z "$APPLE_USERNAME"; then
+	read -p "Enter your Apple ID: " APPLE_USERNAME
+fi
 APPLE_TEAMID=$(echo "$signingID" | cut -d'(' -f2 | cut -d')' -f1)
 if test -z "$APPLE_TEAMID"; then
 	read -p "Enter your Apple Team ID: " APPLE_TEAMID
 fi
-read -s -p "Enter your Apple ID password (App specific): " APPLE_PASSWORD
-echo
+APPLE_PASSWORD=${APPLE_APP_PASSWORD:-}
+if test -z "$APPLE_PASSWORD"; then
+	read -s -p "Enter your Apple ID password (App specific): " APPLE_PASSWORD
+	echo
+fi
 
 chmod +x "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3}/Contents/MacOS/NeuralNote
 

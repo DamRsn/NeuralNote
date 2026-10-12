@@ -2,7 +2,7 @@
 
 SDKs
 
-build*
+build*/
 
 cmake-*
 CMakeFiles
