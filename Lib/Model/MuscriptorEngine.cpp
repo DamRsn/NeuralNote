@@ -139,7 +139,6 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
     // and KV cache for a plugin that may not transcribe again for hours is not worth the ~0.3 s a
     // warm reload costs.
     const ScopeGuard unload_model {[this] {
-        NnLogger::write(NnLogger::Level::Info, "MuscriptorEngine: unloading model");
         mTranscriber.reset();
         NnLogger::write(NnLogger::Level::Info, "MuscriptorEngine: model unloaded");
     }};
@@ -187,11 +186,6 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
 
     const double audio_seconds = inNumSamples / TRANSCRIPTION_SAMPLE_RATE;
 
-    NnLogger::write(NnLogger::Level::Info,
-                    "MuscriptorEngine: transcribing " + String(inNumSamples) + " samples (" + String(audio_seconds, 1)
-                        + " s), " + String(inInstruments.size()) + " instruments"
-                        + (inResumeFrom.empty() ? String() : ", resuming at progress " + String(inStartProgress, 3)));
-
     const double transcribe_start_ms = Time::getMillisecondCounterHiRes();
 
     auto result = mTranscriber->transcribe(samples, options, callback);
@@ -199,15 +193,12 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
     const double wall_seconds = (Time::getMillisecondCounterHiRes() - transcribe_start_ms) / 1000.0;
     const double covered_seconds = audio_seconds * (mProgress.load().fraction - inStartProgress);
 
-    NnLogger::write(NnLogger::Level::Info,
-                    "MuscriptorEngine: transcribe returned "
-                        + (result.has_value() ? String("success, ") + String(result->size()) + " notes"
-                                              : String(msl::describe(result.error())))
-                        + ", " + String(wall_seconds, 1) + " s, "
-                        + String(wall_seconds > 0.0 ? covered_seconds / wall_seconds : 0.0, 2) + "x real time");
+    const String timing = String(wall_seconds, 1) + " s, "
+                          + String(wall_seconds > 0.0 ? covered_seconds / wall_seconds : 0.0, 2) + "x real time";
 
     if (!result.has_value()) {
         if (result.error() == msl::Error::Cancelled) {
+            NnLogger::write(NnLogger::Level::Info, "MuscriptorEngine: transcription cancelled after " + timing);
             return Outcome::Cancelled;
         }
 
@@ -218,9 +209,13 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
         }
 
         mLastErrorMessage = msl::describe(result.error());
-        NnLogger::write(NnLogger::Level::Error, "MuscriptorEngine: transcription failed: " + String(mLastErrorMessage));
+        NnLogger::write(NnLogger::Level::Error,
+                        "MuscriptorEngine: transcription failed after " + timing + ": " + String(mLastErrorMessage));
         return Outcome::Failed;
     }
+
+    NnLogger::write(NnLogger::Level::Info,
+                    "MuscriptorEngine: transcribed " + String(result->size()) + " notes in " + timing);
 
     mFinalNotes.reserve(result->size());
 

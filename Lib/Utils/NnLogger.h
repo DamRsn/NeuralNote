@@ -5,8 +5,6 @@
 #ifndef NnLogger_h
 #define NnLogger_h
 
-#include <functional>
-
 #include <JuceHeader.h>
 
 /**
@@ -23,8 +21,6 @@ class NnLogger : private juce::Logger
 public:
     enum class Level { Debug, Info, Warning, Error };
 
-    using Callback = std::function<void(Level, const juce::String& inLine)>;
-
     /** Message thread only: reads the level from NnGlobalSettings. */
     NnLogger();
 
@@ -38,12 +34,6 @@ public:
 
     static Level getLevel();
 
-    /**
-     * One callback, empty to remove. Runs under the logger's lock, on the thread that logged, so it
-     * must be quick, must not take the MessageManager lock, and must not log.
-     */
-    static void setCallback(Callback inCallback);
-
     static const char* levelToString(Level inLevel);
 
     /** inName as levelToString writes it, or inDefault. */
@@ -55,7 +45,10 @@ private:
 
     void _writeSessionHeader();
 
-    juce::FileLogger mFileLogger;
+    /** Bypasses the level. Caller holds the lock. */
+    void _append(Level inLevel, const juce::String& inMessage);
+
+    const juce::File mFile;
 
     JUCE_DECLARE_NON_COPYABLE(NnLogger)
 };

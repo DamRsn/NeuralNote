@@ -4,6 +4,8 @@
 
 #include "NnLogger.h"
 
+#include <utility>
+
 #include "muscriptor/log.hpp"
 
 #include "NNFileUtils.h"
@@ -14,7 +16,7 @@ namespace
 
 constexpr juce::int64 MAX_INITIAL_FILE_SIZE_BYTES = 1024 * 1024;
 
-// Covers everything below, the file write and the callback included, so lines reach both in order.
+// Covers everything below and the file writes.
 juce::CriticalSection& getLock()
 {
     static juce::CriticalSection lock;
@@ -23,7 +25,6 @@ juce::CriticalSection& getLock()
 
 NnLogger* gInstance = nullptr;
 NnLogger::Level gLevel = NnLogger::Level::Info;
-NnLogger::Callback gCallback;
 
 const char* levelTag(NnLogger::Level inLevel)
 {
@@ -92,8 +93,11 @@ void onMslLog(msl::LogLevel inLevel, std::string_view inText)
 } // namespace
 
 NnLogger::NnLogger()
-    : mFileLogger(NNFileUtils::getLogsDirectory().getChildFile("NeuralNote.log"), {}, MAX_INITIAL_FILE_SIZE_BYTES)
+    : mFile(NNFileUtils::getLogsDirectory().getChildFile("NeuralNote.log"))
 {
+    juce::FileLogger::trimFileSize(mFile, MAX_INITIAL_FILE_SIZE_BYTES);
+    mFile.create();
+
     const Level level = NnGlobalSettings::getLogLevel();
 
     {
@@ -121,7 +125,7 @@ NnLogger::~NnLogger()
     }
 
     const juce::ScopedLock sl(getLock());
-    mFileLogger.logMessage(formatLine(Level::Info, "NnLogger: session ended"));
+    _append(Level::Info, "NnLogger: session ended");
     gInstance = nullptr;
 }
 
@@ -133,28 +137,19 @@ void NnLogger::write(Level inLevel, const juce::String& inMessage)
         return;
     }
 
-    const juce::String line = formatLine(inLevel, inMessage);
-    gInstance->mFileLogger.logMessage(line);
-
-    if (gCallback) {
-        gCallback(inLevel, line);
-    }
+    gInstance->_append(inLevel, inMessage);
 }
 
 void NnLogger::setLevel(Level inLevel)
 {
-    Level previous;
+    const juce::ScopedLock sl(getLock());
+    const Level previous = std::exchange(gLevel, inLevel);
 
-    {
-        const juce::ScopedLock sl(getLock());
-        previous = gLevel;
-        gLevel = inLevel;
-    }
-
-    if (previous != inLevel) {
-        write(Level::Warning,
-              juce::String("NnLogger: log level: ") + levelToString(previous)
-                  + juce::String(juce::CharPointer_UTF8(" \xe2\x86\x92 ")) + levelToString(inLevel));
+    // Written whatever the level, so the log records being made quieter.
+    if (gInstance != nullptr && previous != inLevel) {
+        gInstance->_append(Level::Warning,
+                           juce::String("NnLogger: log level: ") + levelToString(previous)
+                               + juce::String(juce::CharPointer_UTF8(" \xe2\x86\x92 ")) + levelToString(inLevel));
     }
 }
 
@@ -162,12 +157,6 @@ NnLogger::Level NnLogger::getLevel()
 {
     const juce::ScopedLock sl(getLock());
     return gLevel;
-}
-
-void NnLogger::setCallback(Callback inCallback)
-{
-    const juce::ScopedLock sl(getLock());
-    gCallback = std::move(inCallback);
 }
 
 const char* NnLogger::levelToString(Level inLevel)
@@ -240,6 +229,15 @@ void NnLogger::_writeSessionHeader()
     const juce::ScopedLock sl(getLock());
 
     for (const juce::String& line: lines) {
-        mFileLogger.logMessage(formatLine(Level::Info, "NnLogger: " + line));
+        _append(Level::Info, "NnLogger: " + line);
     }
+}
+
+void NnLogger::_append(Level inLevel, const juce::String& inMessage)
+{
+    const juce::String line = formatLine(inLevel, inMessage);
+    DBG(line);
+
+    juce::FileOutputStream out(mFile, 256);
+    out << line << juce::newLine;
 }

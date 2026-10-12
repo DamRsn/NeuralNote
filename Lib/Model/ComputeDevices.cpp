@@ -15,10 +15,6 @@ namespace ComputeDevices
 
 namespace
 {
-    /**
-     * A copy per caller: a shared_future is safe across threads only through separate copies. The
-     * static's destructor waits for the listing, so it cannot outlive the plugin binary.
-     */
     std::vector<msl::Device> listDevices()
     {
         NnLogger::write(NnLogger::Level::Info, "ComputeDevices: listing devices");
@@ -37,6 +33,10 @@ namespace
         return devices;
     }
 
+    /**
+     * A copy per caller: a shared_future is safe across threads only through separate copies. The
+     * static's destructor waits for the listing, so it cannot outlive the plugin binary.
+     */
     std::shared_future<std::vector<msl::Device>> listing()
     {
         static const std::shared_future<std::vector<msl::Device>> future =

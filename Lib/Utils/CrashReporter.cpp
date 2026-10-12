@@ -131,9 +131,11 @@ void CrashReporter::setEnabled(bool inEnabled)
         _uninstall();
     }
 
-    NnLogger::write(NnLogger::Level::Info,
-                    juce::String("CrashReporter: ") + (mEnabled ? "enabled" : "disabled")
-                        + (inEnabled != mEnabled ? ", could not create the crash reports folder" : ""));
+    if (inEnabled == mEnabled) {
+        NnLogger::write(NnLogger::Level::Info, juce::String("CrashReporter: ") + (mEnabled ? "enabled" : "disabled"));
+    } else {
+        NnLogger::write(NnLogger::Level::Error, "CrashReporter: could not create the crash reports folder");
+    }
 
     NnGlobalSettings::setCrashReportsEnabled(mEnabled);
 }

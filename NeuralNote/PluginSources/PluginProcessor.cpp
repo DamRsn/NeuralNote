@@ -89,41 +89,29 @@ void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInB
     if (xmlState == nullptr) {
         NnLogger::write(NnLogger::Level::Warning,
                         "NeuralNoteAudioProcessor: state rejected: not XML (" + String(sizeInBytes) + " bytes)");
+        return;
     }
 
-    if (xmlState != nullptr) {
-        // Convert XmlElement to ValueTree
-        ValueTree full_state_tree = ValueTree::fromXml(*xmlState);
+    // Convert XmlElement to ValueTree
+    ValueTree full_state_tree = ValueTree::fromXml(*xmlState);
 
-        if (full_state_tree.isValid() && full_state_tree.hasType(NnId::FullStateId)) {
-            NnLogger::write(NnLogger::Level::Info,
-                            "NeuralNoteAudioProcessor: restoring state: " + String(sizeInBytes) + " bytes, saved by "
-                                + full_state_tree.getProperty(NnId::NeuralNoteVersionId).toString());
-        } else {
-            NnLogger::write(NnLogger::Level::Warning,
-                            "NeuralNoteAudioProcessor: state rejected: unexpected root " + xmlState->getTagName());
-        }
-
-        if (full_state_tree.isValid() && full_state_tree.hasType(NnId::FullStateId)) {
-            // Extract the parameters ValueTree
-            auto parameter_tree = full_state_tree.getChildWithName(NnId::ParametersId);
-
-            ParameterHelpers::updateParametersFromState(parameter_tree, mParams);
-
-        } else {
-            jassertfalse;
-        }
-
-        if (full_state_tree.isValid() && full_state_tree.hasType(NnId::FullStateId)) {
-            auto new_value_tree = full_state_tree.getChildWithName(NnId::NeuralNoteStateId);
-            _updateValueTree(new_value_tree);
-
-            // After the value tree, which is what loads the audio the notes belong to.
-            mTranscriptionManager->restoreFromStateTree(full_state_tree);
-        } else {
-            jassertfalse;
-        }
+    if (!full_state_tree.isValid() || !full_state_tree.hasType(NnId::FullStateId)) {
+        NnLogger::write(NnLogger::Level::Warning,
+                        "NeuralNoteAudioProcessor: state rejected: unexpected root " + xmlState->getTagName());
+        jassertfalse;
+        return;
     }
+
+    NnLogger::write(NnLogger::Level::Info,
+                    "NeuralNoteAudioProcessor: restoring state: " + String(sizeInBytes) + " bytes, saved by "
+                        + full_state_tree.getProperty(NnId::NeuralNoteVersionId).toString());
+
+    ParameterHelpers::updateParametersFromState(full_state_tree.getChildWithName(NnId::ParametersId), mParams);
+
+    _updateValueTree(full_state_tree.getChildWithName(NnId::NeuralNoteStateId));
+
+    // After the value tree, which is what loads the audio the notes belong to.
+    mTranscriptionManager->restoreFromStateTree(full_state_tree);
 }
 
 void NeuralNoteAudioProcessor::clear()

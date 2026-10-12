@@ -175,9 +175,6 @@ void TranscriptionManager::_handleFinishedJob()
 
     jassert(MessageManager::getInstance()->isThisTheMessageThread());
 
-    NnLogger::write(NnLogger::Level::Info,
-                    String("TranscriptionManager: job finished: ") + outcomeToString(mJobOutcome));
-
     // The job published its outcome as its last act, so nothing on the pool thread can touch the
     // state this manager owns from here on. Dropped before clear() runs below, which asserts it.
     mJobActive = false;
@@ -195,7 +192,7 @@ void TranscriptionManager::_handleFinishedJob()
         _updatePostProcessing();
         mProcessor->setStateToPopulatedAudioAndMidiRegions();
         _repaintPianoRoll();
-        NnLogger::write(NnLogger::Level::Info, "TranscriptionManager: transcription complete");
+        NnLogger::write(NnLogger::Level::Info, "TranscriptionManager: job finished: success");
         return;
     }
 
@@ -210,8 +207,8 @@ void TranscriptionManager::_handleFinishedJob()
     }
 
     NnLogger::write(NnLogger::Level::Info,
-                    keep ? "TranscriptionManager: paused, can be resumed"
-                         : "TranscriptionManager: transcription cleared");
+                    String("TranscriptionManager: job finished: ") + outcomeToString(mJobOutcome)
+                        + (keep ? ", can be resumed" : ", cleared"));
 
     if (keep) {
         mProcessor->setStateToPaused();
@@ -230,16 +227,14 @@ void TranscriptionManager::_handleFinishedJob()
             message += " What was transcribed so far is kept, and can be resumed.";
         }
 
-        NnLogger::write(NnLogger::Level::Error, "TranscriptionManager: Transcription failed. " + message);
         NativeMessageBox::showMessageBoxAsync(MessageBoxIconType::NoIcon, "Transcription failed.", message);
     }
 
     if (mJobOutcome == Outcome::CannotResume) {
-        const String message = "The paused transcription does not match the loaded audio. "
-                               "Transcribe again to start over.";
-        NnLogger::write(NnLogger::Level::Error, "TranscriptionManager: Transcription could not be resumed. " + message);
-        NativeMessageBox::showMessageBoxAsync(
-            MessageBoxIconType::NoIcon, "Transcription could not be resumed.", message);
+        NativeMessageBox::showMessageBoxAsync(MessageBoxIconType::NoIcon,
+                                              "Transcription could not be resumed.",
+                                              "The paused transcription does not match the loaded audio. "
+                                              "Transcribe again to start over.");
     }
 }
 
