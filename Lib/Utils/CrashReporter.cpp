@@ -19,6 +19,7 @@
 
 #include "NNFileUtils.h"
 #include "NnGlobalSettings.h"
+#include "NnLogger.h"
 
 #pragma comment(lib, "dbghelp.lib")
 
@@ -128,6 +129,12 @@ void CrashReporter::setEnabled(bool inEnabled)
         _install();
     } else if (!inEnabled && mEnabled) {
         _uninstall();
+    }
+
+    if (inEnabled == mEnabled) {
+        NnLogger::write(NnLogger::Level::Info, juce::String("CrashReporter: ") + (mEnabled ? "enabled" : "disabled"));
+    } else {
+        NnLogger::write(NnLogger::Level::Error, "CrashReporter: could not create the crash reports folder");
     }
 
     NnGlobalSettings::setCrashReportsEnabled(mEnabled);

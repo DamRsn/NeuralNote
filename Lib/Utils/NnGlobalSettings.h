@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "NnLogger.h"
 #include "TranscriptionConstants.h"
 
 /**
@@ -54,6 +55,10 @@ void setComputeDevice(const ComputeDeviceChoice& inChoice);
 /** Whether CrashReporter is on. Off by default: its handlers are the whole host process's. */
 bool getCrashReportsEnabled();
 void setCrashReportsEnabled(bool inEnabled);
+
+/** Info by default. Saving does not apply it: see NnLogger::setLevel. */
+NnLogger::Level getLogLevel();
+void setLogLevel(NnLogger::Level inLevel);
 
 } // namespace NnGlobalSettings
 

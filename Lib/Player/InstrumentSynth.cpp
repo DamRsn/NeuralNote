@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "GainConstants.h"
+#include "NnLogger.h"
 #include "SoundFontData.h"
 #include "tsf.h"
 #include "tsf_extras.h"
@@ -61,7 +62,8 @@ void InstrumentSynth::_loadFont()
         // no-sample-data path. In practice the one way this fails with a soundfont baked into the
         // binary is tsf having been built without its Ogg support, which tsf_impl.cpp makes a
         // compile error, so reaching here means something genuinely unexpected.
-        Logger::writeToLog("InstrumentSynth: could not load the soundfont; playback will be silent");
+        NnLogger::write(NnLogger::Level::Error,
+                        "InstrumentSynth: could not load the soundfont; playback will be silent");
         return;
     }
 
@@ -106,7 +108,7 @@ void InstrumentSynth::ensureInstrument(int inProgram)
         // broken font rather than a runtime condition. Skipping leaves that instrument silent
         // instead of taking the rest of the transcription down with it.
         jassertfalse;
-        Logger::writeToLog("InstrumentSynth: no preset for program " + String(inProgram));
+        NnLogger::write(NnLogger::Level::Warning, "InstrumentSynth: no preset for program " + String(inProgram));
         return;
     }
 

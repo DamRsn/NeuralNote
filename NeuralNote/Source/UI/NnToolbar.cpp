@@ -8,6 +8,7 @@
 #include "NNFileUtils.h"
 #include "NnFonts.h"
 #include "NnIcons.h"
+#include "NnLogger.h"
 #include "NnLook.h"
 #include "PluginProcessor.h"
 
@@ -170,6 +171,7 @@ void NnToolbar::_exportMidiFile()
                                               overflow_mode);
 
             if (!success) {
+                NnLogger::write(NnLogger::Level::Error, "NnToolbar: Could not write the MIDI file.");
                 juce::NativeMessageBox::showMessageBoxAsync(
                     juce::MessageBoxIconType::NoIcon, "Error", "Could not write the MIDI file.");
             }

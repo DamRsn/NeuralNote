@@ -8,11 +8,31 @@
 #include <chrono>
 #include <future>
 
+#include "NnLogger.h"
+
 namespace ComputeDevices
 {
 
 namespace
 {
+    std::vector<msl::Device> listDevices()
+    {
+        NnLogger::write(NnLogger::Level::Info, "ComputeDevices: listing devices");
+
+        std::vector<msl::Device> devices = msl::availableDevices();
+
+        for (const msl::Device& device: devices) {
+            NnLogger::write(NnLogger::Level::Info,
+                            "ComputeDevices: " + juce::String(device.name) + " (" + juce::String(device.backend)
+                                + (device.integrated ? ", integrated" : "") + "), "
+                                + (device.memory_total > 0 ? juce::File::descriptionOfSizeInBytes(
+                                                                 static_cast<juce::int64>(device.memory_total))
+                                                           : juce::String("memory unknown")));
+        }
+
+        return devices;
+    }
+
     /**
      * A copy per caller: a shared_future is safe across threads only through separate copies. The
      * static's destructor waits for the listing, so it cannot outlive the plugin binary.
@@ -20,7 +40,7 @@ namespace
     std::shared_future<std::vector<msl::Device>> listing()
     {
         static const std::shared_future<std::vector<msl::Device>> future =
-            std::async(std::launch::async, [] { return msl::availableDevices(); }).share();
+            std::async(std::launch::async, listDevices).share();
         return future;
     }
 

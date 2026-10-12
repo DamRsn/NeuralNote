@@ -11,6 +11,7 @@
 #include "NNFileUtils.h"
 #include "NnFonts.h"
 #include "NnGlobalSettings.h"
+#include "NnLogger.h"
 #include "NnLook.h"
 #include "PluginEditor.h"
 
@@ -385,6 +386,39 @@ void NeuralNoteMainView::_buildSettingsMenu()
 
     mSettingsMenu->addSubMenu("Crash reports", crash_menu);
 #endif
+
+    mSettingsMenu->addSeparator();
+
+    PopupMenu logs_menu;
+    PopupMenu log_level_menu;
+
+    for (const auto& [level, label]: {std::pair {NnLogger::Level::Debug, "Debug"},
+                                      std::pair {NnLogger::Level::Info, "Info"},
+                                      std::pair {NnLogger::Level::Warning, "Warning"},
+                                      std::pair {NnLogger::Level::Error, "Error"}}) {
+        auto level_item = PopupMenu::Item(label);
+        level_item.setID(++item_id);
+        level_item.setEnabled(true);
+        mSettingsMenuItemsShouldBeTicked.emplace_back(
+            level_item.itemID, [item_level = level] { return NnLogger::getLevel() == item_level; });
+        level_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+        level_item.setAction([this, item_level = level] {
+            NnLogger::setLevel(item_level);
+            NnGlobalSettings::setLogLevel(item_level);
+            _refreshSettingsMenu();
+        });
+        log_level_menu.addItem(level_item);
+    }
+
+    logs_menu.addSubMenu("Log level", log_level_menu);
+
+    auto open_logs_item = PopupMenu::Item("Open logs folder");
+    open_logs_item.setID(++item_id);
+    open_logs_item.setEnabled(true);
+    open_logs_item.setAction([] { NNFileUtils::openDirectory(NNFileUtils::getLogsDirectory()); });
+    logs_menu.addItem(open_logs_item);
+
+    mSettingsMenu->addSubMenu("Logs", logs_menu);
 
     auto check_updates_item = PopupMenu::Item("Check for updates");
     check_updates_item.setID(++item_id);
