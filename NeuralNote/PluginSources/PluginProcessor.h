@@ -4,6 +4,7 @@
 #include <JuceHeader.h>
 
 #include "CrashReporter.h"
+#include "NnLogger.h"
 #include "Resampler.h"
 #include "ProcessorBase.h"
 #include "ModelDownloader.h"
@@ -125,8 +126,11 @@ private:
 
     void _updateValueTree(const ValueTree& inNewState);
 
+    // First, so everything below can log while it is built and torn down.
+    SharedResourcePointer<NnLogger> mLogger;
+
 #if JUCE_WINDOWS
-    // First, so its handlers stay installed through the teardown of everything below.
+    // Next, so its handlers stay installed through the teardown of everything below.
     SharedResourcePointer<CrashReporter> mCrashReporter;
 #endif
 
@@ -153,5 +157,4 @@ private:
     std::unique_ptr<Player> mPlayer;
     std::unique_ptr<TranscriptionManager> mTranscriptionManager;
     std::unique_ptr<InstrumentMixer> mInstrumentMixer;
-    std::unique_ptr<FileLogger> mLogger;
 };

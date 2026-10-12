@@ -37,6 +37,11 @@ juce::File getCrashReportsDirectory()
     return getNeuralNoteDirectory().getChildFile("crashes");
 }
 
+juce::File getLogsDirectory()
+{
+    return getNeuralNoteDirectory().getChildFile("logs");
+}
+
 juce::File getMidiDragDirectory()
 {
     return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("neuralnote");

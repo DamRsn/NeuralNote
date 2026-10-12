@@ -2,11 +2,14 @@
 #include "PluginEditor.h"
 
 #include "NnGlobalSettings.h"
+#include "NnLogger.h"
 #include "NnLook.h"
 
 NeuralNoteEditor::NeuralNoteEditor(NeuralNoteAudioProcessor& p)
     : AudioProcessorEditor(&p)
 {
+    NnLogger::write(NnLogger::Level::Debug, "NeuralNoteEditor: opened");
+
     mMainView = std::make_unique<NeuralNoteMainView>(p);
 
     addAndMakeVisible(*mMainView);
@@ -33,6 +36,8 @@ NeuralNoteEditor::~NeuralNoteEditor()
     // resizer -- both of which hold a raw pointer to it and can still be resized during teardown.
     setResizable(false, false);
     setConstrainer(nullptr);
+
+    NnLogger::write(NnLogger::Level::Debug, "NeuralNoteEditor: closed");
 }
 
 void NeuralNoteEditor::paint(juce::Graphics& g)

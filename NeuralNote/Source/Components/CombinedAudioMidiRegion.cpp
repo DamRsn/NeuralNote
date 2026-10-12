@@ -4,6 +4,8 @@
 
 #include "CombinedAudioMidiRegion.h"
 
+#include "NnLogger.h"
+
 CombinedAudioMidiRegion::CombinedAudioMidiRegion(NeuralNoteAudioProcessor* processor, Keyboard& keyboard)
     : mProcessor(processor)
     , mKeyboard(keyboard)
@@ -98,6 +100,9 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     } else {
         auto supported_format_string = mSupportedAudioFileExtensions.joinIntoString(", ");
 
+        NnLogger::write(NnLogger::Level::Warning,
+                        "CombinedAudioMidiRegion: Could not load the file: unsupported format ("
+                            + juce::File(files[0]).getFileExtension() + ").");
         juce::NativeMessageBox::showMessageBoxAsync(
             juce::MessageBoxIconType::NoIcon,
             "Could not load the file.",

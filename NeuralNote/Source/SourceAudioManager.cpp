@@ -6,6 +6,7 @@
 
 #include "SourceAudioManager.h"
 #include "PluginProcessor.h"
+#include "NnLogger.h"
 
 SourceAudioManager::SourceAudioManager(NeuralNoteAudioProcessor* inProcessor)
     : mProcessor(inProcessor)
@@ -160,6 +161,7 @@ void SourceAudioManager::startRecording()
 
     if (!file_creation_result.wasOk() || !file_creation_result_down.wasOk()) {
         mProcessor->clear();
+        NnLogger::write(NnLogger::Level::Error, "SourceAudioManager: File creation for recording failed.");
         NativeMessageBox::showMessageBoxAsync(
             MessageBoxIconType::NoIcon, "Error", "File creation for recording failed.");
         return;
@@ -207,6 +209,8 @@ void SourceAudioManager::startRecording()
 
     mIsRecording.store(true);
     mProcessor->setStateToRecording();
+
+    NnLogger::write(NnLogger::Level::Info, "SourceAudioManager: recording started at " + String(mSampleRate) + " Hz");
 }
 
 void SourceAudioManager::stopRecording()
@@ -226,6 +230,10 @@ void SourceAudioManager::stopRecording()
     mWriterThread.stopThread(1000);
     mWriterThreadDown.stopThread(1000);
 
+    NnLogger::write(NnLogger::Level::Info,
+                    "SourceAudioManager: recording stopped after "
+                        + String(static_cast<double>(mNumSamplesAcquiredDown) / TRANSCRIPTION_SAMPLE_RATE, 1) + " s");
+
     // Record then stop before a block came in: there is no audio to load, and going to AudioLoaded
     // would offer transport and transcription over an empty buffer.
     if (mNumSamplesAcquired == 0 || mNumSamplesAcquiredDown == 0) {
@@ -239,6 +247,7 @@ void SourceAudioManager::stopRecording()
     // Should def not happen
     if (!success) {
         mProcessor->clear();
+        NnLogger::write(NnLogger::Level::Error, "SourceAudioManager: Could not load the recorded audio sample.");
         NativeMessageBox::showMessageBoxAsync(
             MessageBoxIconType::NoIcon, "Could not load the recorded audio sample.", "");
         return;
@@ -251,6 +260,7 @@ void SourceAudioManager::stopRecording()
     // Should def not happen
     if (!success) {
         mProcessor->clear();
+        NnLogger::write(NnLogger::Level::Error, "SourceAudioManager: Could not load the recorded audio sample.");
         NativeMessageBox::showMessageBoxAsync(
             MessageBoxIconType::NoIcon, "Could not load the recorded audio sample.", "");
         return;
@@ -285,12 +295,19 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
 
         if (!success) {
             mProcessor->clear();
+            NnLogger::write(NnLogger::Level::Warning,
+                            "SourceAudioManager: Could not load the audio file (" + inFile.getFileExtension() + ").");
             NativeMessageBox::showMessageBoxAsync(
                 MessageBoxIconType::NoIcon,
                 "Could not load the audio file.",
                 "Check your file format (Accepted formats: .wav, .aiff, .flac, .mp3, .ogg).");
             return false;
         }
+
+        NnLogger::write(NnLogger::Level::Info,
+                        "SourceAudioManager: loaded a " + inFile.getFileExtension() + " file: "
+                            + String(mSourceAudioSampleRate) + " Hz, " + String(mSourceAudio.getNumChannels())
+                            + " channels, " + String(mSourceAudio.getNumSamples() / mSourceAudioSampleRate, 1) + " s");
 
         // Downmix and downsample to the rate the model expects, in one pass
         AudioUtils::resampleBufferToMono(

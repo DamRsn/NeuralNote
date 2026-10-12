@@ -4,12 +4,6 @@
 NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     : mAPVTS(*this, nullptr, NnId::ParametersId, ParameterHelpers::createParameterLayout())
 {
-    // Enable logging or not
-#if 0
-    mLogger.reset(FileLogger::createDefaultAppLogger("/tmp/NeuralNote", "log.txt", "YO! \n"));
-    Logger::setCurrentLogger(mLogger.get());
-#endif
-
     for (size_t i = 0; i < mParams.size(); i++) {
         auto pid = static_cast<ParameterHelpers::ParamIdEnum>(i);
         mParams[i] = mAPVTS.getParameter(ParameterHelpers::getIdStr(pid));
@@ -21,15 +15,21 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
 
     // After mPlayer: it pushes every fader it holds into that player's synth.
     mInstrumentMixer = std::make_unique<InstrumentMixer>(this);
+
+    NnLogger::write(NnLogger::Level::Info, "NeuralNoteAudioProcessor: instance created");
 }
 
 NeuralNoteAudioProcessor::~NeuralNoteAudioProcessor()
 {
-    Logger::setCurrentLogger(nullptr);
+    NnLogger::write(NnLogger::Level::Info, "NeuralNoteAudioProcessor: instance destroyed");
 }
 
 void NeuralNoteAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
+    NnLogger::write(NnLogger::Level::Debug,
+                    "NeuralNoteAudioProcessor: prepareToPlay: " + String(sampleRate) + " Hz, block size "
+                        + String(samplesPerBlock));
+
     mSourceAudioManager->prepareToPlay(sampleRate, samplesPerBlock);
     mPlayer->prepareToPlay(sampleRate, samplesPerBlock);
 }
@@ -86,9 +86,23 @@ void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInB
     // Create an XmlElement from the binary data
     std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 
+    if (xmlState == nullptr) {
+        NnLogger::write(NnLogger::Level::Warning,
+                        "NeuralNoteAudioProcessor: state rejected: not XML (" + String(sizeInBytes) + " bytes)");
+    }
+
     if (xmlState != nullptr) {
         // Convert XmlElement to ValueTree
         ValueTree full_state_tree = ValueTree::fromXml(*xmlState);
+
+        if (full_state_tree.isValid() && full_state_tree.hasType(NnId::FullStateId)) {
+            NnLogger::write(NnLogger::Level::Info,
+                            "NeuralNoteAudioProcessor: restoring state: " + String(sizeInBytes) + " bytes, saved by "
+                                + full_state_tree.getProperty(NnId::NeuralNoteVersionId).toString());
+        } else {
+            NnLogger::write(NnLogger::Level::Warning,
+                            "NeuralNoteAudioProcessor: state rejected: unexpected root " + xmlState->getTagName());
+        }
 
         if (full_state_tree.isValid() && full_state_tree.hasType(NnId::FullStateId)) {
             // Extract the parameters ValueTree

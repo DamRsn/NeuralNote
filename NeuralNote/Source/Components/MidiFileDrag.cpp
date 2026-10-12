@@ -6,6 +6,7 @@
 
 #include "NnFonts.h"
 #include "NnIcons.h"
+#include "NnLogger.h"
 #include "NnLook.h"
 
 MidiFileDrag::MidiFileDrag(NeuralNoteAudioProcessor* inProcessor)
@@ -42,6 +43,7 @@ void MidiFileDrag::mouseDown(const juce::MouseEvent& inEvent)
     }
 
     if (!NNFileUtils::ensureDirectoryExists(mTempDirectory)) {
+        NnLogger::write(NnLogger::Level::Error, "MidiFileDrag: Temporary directory for midi file failed.");
         juce::NativeMessageBox::showMessageBoxAsync(
             juce::MessageBoxIconType::NoIcon, "Error", "Temporary directory for midi file failed.");
         return;
@@ -61,6 +63,7 @@ void MidiFileDrag::mouseDown(const juce::MouseEvent& inEvent)
         overflow_mode);
 
     if (!success) {
+        NnLogger::write(NnLogger::Level::Error, "MidiFileDrag: Could not create the midi file.");
         juce::NativeMessageBox::showMessageBoxAsync(
             juce::MessageBoxIconType::NoIcon, "Error", "Could not create the midi file.");
         return;

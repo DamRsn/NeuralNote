@@ -8,6 +8,7 @@
 #include "InstrumentSelection.h"
 #include "NNFileUtils.h"
 #include "NnGlobalSettings.h"
+#include "NnLogger.h"
 #include "TranscriptionConstants.h"
 
 namespace
@@ -84,6 +85,22 @@ String notesToJson(const std::vector<NoteEvent>& inNotes)
 
     return JSON::toString(entries, format);
 }
+
+const char* outcomeToString(MuscriptorEngine::Outcome inOutcome)
+{
+    switch (inOutcome) {
+        case MuscriptorEngine::Outcome::Success:
+            return "success";
+        case MuscriptorEngine::Outcome::Cancelled:
+            return "cancelled";
+        case MuscriptorEngine::Outcome::Failed:
+            return "failed";
+        case MuscriptorEngine::Outcome::CannotResume:
+            return "cannot resume";
+    }
+
+    return "unknown";
+}
 } // namespace
 
 TranscriptionManager::TranscriptionManager(NeuralNoteAudioProcessor* inProcessor)
@@ -158,6 +175,9 @@ void TranscriptionManager::_handleFinishedJob()
 
     jassert(MessageManager::getInstance()->isThisTheMessageThread());
 
+    NnLogger::write(NnLogger::Level::Info,
+                    String("TranscriptionManager: job finished: ") + outcomeToString(mJobOutcome));
+
     // The job published its outcome as its last act, so nothing on the pool thread can touch the
     // state this manager owns from here on. Dropped before clear() runs below, which asserts it.
     mJobActive = false;
@@ -175,6 +195,7 @@ void TranscriptionManager::_handleFinishedJob()
         _updatePostProcessing();
         mProcessor->setStateToPopulatedAudioAndMidiRegions();
         _repaintPianoRoll();
+        NnLogger::write(NnLogger::Level::Info, "TranscriptionManager: transcription complete");
         return;
     }
 
@@ -188,6 +209,10 @@ void TranscriptionManager::_handleFinishedJob()
         keep = !mResumePoint.empty();
     }
 
+    NnLogger::write(NnLogger::Level::Info,
+                    keep ? "TranscriptionManager: paused, can be resumed"
+                         : "TranscriptionManager: transcription cleared");
+
     if (keep) {
         mProcessor->setStateToPaused();
         _repaintPianoRoll();
@@ -197,8 +222,6 @@ void TranscriptionManager::_handleFinishedJob()
         mProcessor->clearTranscription();
     }
 
-    // Shown rather than only pointing at the log: it is one line, and the log lives in /tmp, which
-    // is neither discoverable nor durable.
     if (mJobOutcome == Outcome::Failed) {
         String message = reason.isEmpty() ? String("The transcription model could not be loaded or run.")
                                           : "The transcription model could not be loaded or run: " + reason + ".";
@@ -207,14 +230,16 @@ void TranscriptionManager::_handleFinishedJob()
             message += " What was transcribed so far is kept, and can be resumed.";
         }
 
+        NnLogger::write(NnLogger::Level::Error, "TranscriptionManager: Transcription failed. " + message);
         NativeMessageBox::showMessageBoxAsync(MessageBoxIconType::NoIcon, "Transcription failed.", message);
     }
 
     if (mJobOutcome == Outcome::CannotResume) {
-        NativeMessageBox::showMessageBoxAsync(MessageBoxIconType::NoIcon,
-                                              "Transcription could not be resumed.",
-                                              "The paused transcription does not match the loaded audio. "
-                                              "Transcribe again to start over.");
+        const String message = "The paused transcription does not match the loaded audio. "
+                               "Transcribe again to start over.";
+        NnLogger::write(NnLogger::Level::Error, "TranscriptionManager: Transcription could not be resumed. " + message);
+        NativeMessageBox::showMessageBoxAsync(
+            MessageBoxIconType::NoIcon, "Transcription could not be resumed.", message);
     }
 }
 
@@ -307,11 +332,13 @@ double TranscriptionManager::getFinalizedThrough() const
 
 void TranscriptionManager::pauseTranscription()
 {
+    NnLogger::write(NnLogger::Level::Info, "TranscriptionManager: pause requested");
     mMuscriptorEngine.cancel();
 }
 
 void TranscriptionManager::discardTranscription()
 {
+    NnLogger::write(NnLogger::Level::Info, "TranscriptionManager: discard requested");
     mDiscardOnStop = true;
     mMuscriptorEngine.cancel();
 }
@@ -416,11 +443,11 @@ void TranscriptionManager::resumeTranscription()
 
     // Another checkpoint would continue another model's transcription.
     if (!NNFileUtils::isModelInstalled(*mTranscriptionModelSize)) {
-        NativeMessageBox::showMessageBoxAsync(MessageBoxIconType::NoIcon,
-                                              "Model not installed.",
-                                              "This transcription was started with the "
-                                                  + String(modelSizeToDisplayName(*mTranscriptionModelSize))
-                                                  + " model. Download it from the model menu to resume.");
+        const String message = "This transcription was started with the "
+                               + String(modelSizeToDisplayName(*mTranscriptionModelSize))
+                               + " model. Download it from the model menu to resume.";
+        NnLogger::write(NnLogger::Level::Warning, "TranscriptionManager: Model not installed. " + message);
+        NativeMessageBox::showMessageBoxAsync(MessageBoxIconType::NoIcon, "Model not installed.", message);
         return;
     }
 
@@ -448,6 +475,14 @@ void TranscriptionManager::_launchJob()
     // resumed run gets the selection its resume point was made with.
     mJobInstruments = InstrumentSelection::get(mProcessor->getValueTree());
     mJobDevice = NnGlobalSettings::getComputeDevice();
+
+    NnLogger::write(
+        NnLogger::Level::Info,
+        String("TranscriptionManager: ") + (mJobResumeFrom.empty() ? "starting" : "resuming") + ": model "
+            + modelSizeToString(mJobModelSize) + ", device "
+            + (mJobDevice.isAuto() ? String("auto") : String(mJobDevice.name) + " #" + String(mJobDevice.ordinal))
+            + ", " + (mJobInstruments.empty() ? String("all") : String(mJobInstruments.size())) + " instruments, "
+            + String(mProcessor->getSourceAudioManager()->getAudioSampleDuration(), 1) + " s of audio");
 
     mProcessor->setStateToProcessing();
 

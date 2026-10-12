@@ -35,6 +35,9 @@ juce::File getRecordingsDirectory();
 /** <NeuralNote>/crashes, where CrashReporter writes its minidumps. */
 juce::File getCrashReportsDirectory();
 
+/** <NeuralNote>/logs, where NnLogger writes. */
+juce::File getLogsDirectory();
+
 /** <temp>/neuralnote, for the file a MIDI drag hands the OS and nothing longer. */
 juce::File getMidiDragDirectory();
 

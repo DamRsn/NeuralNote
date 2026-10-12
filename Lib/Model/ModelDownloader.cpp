@@ -8,6 +8,7 @@
 
 #include "ModelManifest.h"
 #include "NNFileUtils.h"
+#include "NnLogger.h"
 
 namespace
 {
@@ -110,8 +111,8 @@ private:
         const juce::String failure = _download();
 
         if (failure.isNotEmpty() && !threadShouldExit()) {
-            juce::Logger::writeToLog("ModelDownloader: " + juce::String(modelSizeToString(mModelSize)) + ": "
-                                     + failure);
+            NnLogger::write(NnLogger::Level::Warning,
+                            "ModelDownloader: " + juce::String(modelSizeToString(mModelSize)) + ": " + failure);
 
             const juce::ScopedLock lock(mErrorLock);
             mErrorMessage = failure;
@@ -190,6 +191,9 @@ private:
         }
 
         if (digest != entry.sha256) {
+            NnLogger::write(NnLogger::Level::Error,
+                            "ModelDownloader: " + juce::String(modelSizeToString(mModelSize))
+                                + ": checksum mismatch, got " + digest);
             part.deleteFile();
             return "The download was corrupted. Try again";
         }
@@ -199,7 +203,8 @@ private:
             return "Could not move the model into " + directory.getFullPathName();
         }
 
-        juce::Logger::writeToLog("ModelDownloader: " + juce::String(modelSizeToString(mModelSize)) + " installed");
+        NnLogger::write(NnLogger::Level::Info,
+                        "ModelDownloader: " + juce::String(modelSizeToString(mModelSize)) + " installed");
         return {};
     }
 
@@ -245,9 +250,10 @@ private:
         const int status_code = stream.getStatusCode();
         const juce::String content_range = stream.getResponseHeaders()["Content-Range"];
 
-        juce::Logger::writeToLog("ModelDownloader: " + juce::String(modelSizeToString(mModelSize)) + ": from byte "
-                                 + juce::String(offset) + ", HTTP " + juce::String(status_code)
-                                 + (content_range.isEmpty() ? juce::String() : ", Content-Range " + content_range));
+        NnLogger::write(NnLogger::Level::Info,
+                        "ModelDownloader: " + juce::String(modelSizeToString(mModelSize)) + ": from byte "
+                            + juce::String(offset) + ", HTTP " + juce::String(status_code)
+                            + (content_range.isEmpty() ? juce::String() : ", Content-Range " + content_range));
 
         if (status_code == 206) {
             // "bytes <first>-<last>/<total>"
