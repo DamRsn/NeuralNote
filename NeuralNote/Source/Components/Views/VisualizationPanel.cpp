@@ -49,7 +49,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     mTranscribeButton.setColour(NnFlatButton::iconColourId, nn::colours::ctaText);
     mTranscribeButton.setColour(NnFlatButton::textColourId, nn::colours::ctaText);
     mTranscribeButton.setTooltip(NeuralNoteTooltips::transcribe);
-    mTranscribeButton.onClick = [this] { mProcessor->getTranscriptionManager()->launchTranscribeJob(); };
+    mTranscribeButton.onClick = [this] { mProcessor->getTranscriptionManager()->startTranscription(); };
     addChildComponent(mTranscribeButton);
 
     mModelDownloadPanel.onInstalledModelsChanged = [this] { _layOutTranscribeButton(); };

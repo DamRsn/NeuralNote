@@ -278,7 +278,8 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
 {
     const State state = mProcessor->getState();
 
-    if (state == EmptyAudioAndMidiRegions || state == AudioLoaded || state == PopulatedAudioAndMidiRegions) {
+    if (state == EmptyAudioAndMidiRegions || state == AudioLoaded || state == Paused
+        || state == PopulatedAudioAndMidiRegions) {
         mProcessor->clear();
         bool success = AudioUtils::loadAudioFile(inFile, mSourceAudio, mSourceAudioSampleRate);
 

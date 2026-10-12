@@ -6,6 +6,7 @@
 #define TranscriptionConstants_h
 
 #include <array>
+#include <optional>
 #include <string_view>
 
 // Must match msl::Transcriber::SAMPLE_RATE (static_assert in MuscriptorEngine.cpp).
@@ -57,8 +58,8 @@ inline const char* modelSizeToDisplayName(ModelSize inModelSize)
     return "Medium";
 }
 
-/** Anything modelSizeToString did not write -- including an empty string -- gives inFallback. */
-inline ModelSize modelSizeFromString(std::string_view inName, ModelSize inFallback)
+/** @return Nothing for anything modelSizeToString did not write, including an empty string. */
+inline std::optional<ModelSize> modelSizeFromString(std::string_view inName)
 {
     for (const ModelSize size: ALL_MODEL_SIZES) {
         if (inName == modelSizeToString(size)) {
@@ -66,7 +67,12 @@ inline ModelSize modelSizeFromString(std::string_view inName, ModelSize inFallba
         }
     }
 
-    return inFallback;
+    return std::nullopt;
+}
+
+inline ModelSize modelSizeFromString(std::string_view inName, ModelSize inFallback)
+{
+    return modelSizeFromString(inName).value_or(inFallback);
 }
 
 #endif // TranscriptionConstants_h

@@ -105,7 +105,7 @@ void NeuralNoteAudioProcessor::setStateInformation(const void* data, int sizeInB
             _updateValueTree(new_value_tree);
 
             // After the value tree, which is what loads the audio the notes belong to.
-            mTranscriptionManager->restoreFromStateTree(full_state_tree.getChildWithName(NnId::TranscriptionId));
+            mTranscriptionManager->restoreFromStateTree(full_state_tree);
         } else {
             jassertfalse;
         }

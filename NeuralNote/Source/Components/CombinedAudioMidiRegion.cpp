@@ -45,7 +45,8 @@ bool CombinedAudioMidiRegion::isInterestedInFileDrag(const StringArray& files)
     const State state = mProcessor->getState();
 
     // Anything but a run in flight or a recording: dropping replaces whatever is loaded.
-    return state == EmptyAudioAndMidiRegions || state == AudioLoaded || state == PopulatedAudioAndMidiRegions;
+    return state == EmptyAudioAndMidiRegions || state == AudioLoaded || state == Paused
+           || state == PopulatedAudioAndMidiRegions;
 }
 
 void CombinedAudioMidiRegion::mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel)

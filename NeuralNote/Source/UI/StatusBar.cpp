@@ -78,7 +78,7 @@ void StatusBar::setVerticalZoom(float inNorm)
 
 void StatusBar::updateEnablements()
 {
-    mProgress.setVisible(mProcessor.getState() == Processing);
+    mProgress.setVisible(mProcessor.isTranscriptionUnfinished());
 
     // The model segment follows the processor state, which the mixer does not announce.
     repaint();
