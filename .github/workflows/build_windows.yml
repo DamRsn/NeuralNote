@@ -12,8 +12,6 @@ jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 180
-    permissions:
-      contents: write
     env:
       VULKAN_SDK_VERSION: 1.4.363.0
       VULKAN_SDK_SHA256: 94A82D378F7A5E3E54C9DB7D2FB7016AF136E14AC0A18DBF0F2F67A36352D141
@@ -40,7 +38,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: NeuralNote/Assets/SoundFont
-          key: soundfont-${{ hashFiles('Tools/fetch_soundfont.py') }}
+          key: soundfont-${{ hashFiles('Tools/fetch_soundfont.py', 'Tools/make_soundfont.py') }}
 
       - name: Restore ccache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

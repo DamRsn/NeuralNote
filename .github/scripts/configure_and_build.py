@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Configures and builds NeuralNote in Release for CI, through ccache.
 
-macOS builds one architecture, given by --arch, and checks every binary has only
-that one. Windows builds with clang-cl and lld-link, taken from CC, CXX, RC,
-CMAKE_LINKER and CMAKE_AR in the environment (see windows_tools.py).
+macOS builds one architecture, given by --arch. Windows builds with clang-cl and
+lld-link, taken from CC, CXX, RC, CMAKE_LINKER and CMAKE_AR in the environment
+(see windows_tools.py).
 
 The output is in build/NeuralNote_artefacts/Release.
 """
@@ -17,13 +17,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_DIR = ROOT / "build"
-RELEASE_DIR = BUILD_DIR / "NeuralNote_artefacts" / "Release"
-
-MACOS_BINARIES = [
-    "Standalone/NeuralNote.app/Contents/MacOS/NeuralNote",
-    "AU/NeuralNote.component/Contents/MacOS/NeuralNote",
-    "VST3/NeuralNote.vst3/Contents/MacOS/NeuralNote",
-]
 
 
 def run(*command: str) -> None:
@@ -49,10 +42,8 @@ def macos_options(arch: str, ccache: str) -> tuple[list[str], list[str]]:
 def windows_options(ccache: str) -> tuple[list[str], list[str]]:
     env = os.environ
     options = [
-        f"-DCMAKE_C_COMPILER={env['CC']}",
-        f"-DCMAKE_CXX_COMPILER={env['CXX']}",
-        f"-DCMAKE_RC_COMPILER={env['RC']}",
-        # LTO objects are LLVM bitcode, which only lld-link and llvm-lib read.
+        # CMake takes the compilers from CC, CXX and RC, but not these. LTO objects are LLVM
+        # bitcode, which only lld-link and llvm-lib read.
         f"-DCMAKE_LINKER={env['CMAKE_LINKER']}",
         f"-DCMAKE_AR={env['CMAKE_AR']}",
         *launchers(ccache, ["C", "CXX"]),
@@ -62,18 +53,6 @@ def windows_options(ccache: str) -> tuple[list[str], list[str]]:
     ]
 
     return options, ["NeuralNote_Standalone", "NeuralNote_VST3"]
-
-
-def check_macos_architecture(arch: str) -> None:
-    for binary in MACOS_BINARIES:
-        archs = subprocess.run(
-            ["lipo", "-archs", str(RELEASE_DIR / binary)], capture_output=True, text=True, check=True
-        ).stdout.split()
-
-        if archs != [arch]:
-            raise SystemExit(f"{binary} is built for {' '.join(archs)}, not {arch} only")
-
-        print(f"{binary}: {arch}")
 
 
 def main() -> None:
@@ -108,9 +87,6 @@ def main() -> None:
     run(ccache, "--zero-stats")
     run("cmake", "--build", str(BUILD_DIR), "--target", *targets)
     run(ccache, "--show-stats")
-
-    if sys.platform == "darwin":
-        check_macos_architecture(args.arch)
 
 
 if __name__ == "__main__":

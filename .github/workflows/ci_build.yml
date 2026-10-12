@@ -29,20 +29,17 @@ jobs:
     permissions:
       contents: write
     outputs:
-      tag: ${{ steps.draft.outputs.tag }}
+      tag: ci-${{ github.run_number }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          sparse-checkout: |
-            CMakeLists.txt
-            .github/scripts
-          sparse-checkout-cone-mode: false
-
-      - id: draft
-        env:
+      # Reuses an existing draft, so a re-run of failed jobs uploads to its first attempt's draft.
+      - env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: python3 .github/scripts/create_draft_release.py
+          TAG: ci-${{ github.run_number }}
+        run: |
+          gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --draft --target "$GITHUB_SHA" \
+            --title "NeuralNote CI #$GITHUB_RUN_NUMBER" \
+            --notes "Built from \`$GITHUB_REF_NAME\` at $GITHUB_SHA by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
   windows-x64:
     needs: draft
