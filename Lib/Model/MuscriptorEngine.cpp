@@ -38,6 +38,7 @@ void MuscriptorEngine::reset()
         mFinalizedThrough = 0.0;
         mResumePoint.clear();
         mResumeProgress = 0.0f;
+        mAllReported = false;
     }
 
     mFinalNotes.clear();
@@ -149,6 +150,9 @@ MuscriptorEngine::Outcome MuscriptorEngine::transcribeToMIDI(ModelSize inModelSi
             if (!inUpdate.resume_point.empty()) {
                 mResumePoint = inUpdate.resume_point;
                 mResumeProgress = inUpdate.progress;
+            } else {
+                mResumePoint.clear();
+                mAllReported = true;
             }
         }
 
@@ -199,7 +203,7 @@ bool MuscriptorEngine::drainNewNotes(std::vector<NoteEvent>& ioNotes,
 
     // A chunk can decode no notes and still move the horizon or the resume point, which is a real
     // change: it is how far the caller may now play, and where it can resume from.
-    if (mStaging.empty() && mFinalizedThrough <= ioFinalizedThrough && mResumePoint.empty()) {
+    if (mStaging.empty() && mFinalizedThrough <= ioFinalizedThrough && mResumePoint.empty() && !mAllReported) {
         return false;
     }
 
@@ -211,6 +215,14 @@ bool MuscriptorEngine::drainNewNotes(std::vector<NoteEvent>& ioNotes,
         ioResumePoint = std::move(mResumePoint);
         mResumePoint.clear();
         ioResumeProgress = mResumeProgress;
+    }
+
+    // The caller's resume point predates the notes just handed over; resuming from it would report
+    // them again.
+    if (mAllReported) {
+        ioResumePoint.clear();
+        ioResumeProgress = 0.0f;
+        mAllReported = false;
     }
 
     return true;

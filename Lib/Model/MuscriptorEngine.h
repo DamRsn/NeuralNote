@@ -102,8 +102,8 @@ public:
      * Moves everything decoded since the last call onto the end of ioNotes, advances
      * ioFinalizedThrough to the time below which the transcription is now complete, and sets
      * ioResumePoint to where a later run can continue from, with ioResumeProgress the progress
-     * reached there. All under one lock, so the horizon and the resume point never describe more
-     * than the notes handed over with them.
+     * reached there, or clears both once the final notes are handed over. All under one lock, so
+     * the horizon and the resume point never describe more than the notes handed over with them.
      *
      * Thread-safe, and meant to be called while transcribeToMIDI runs on another thread.
      *
@@ -161,6 +161,8 @@ private:
     double mFinalizedThrough = 0.0;
     std::string mResumePoint;
     float mResumeProgress = 0.0f;
+    // The final update is staged: once it is drained there is nothing left to resume.
+    bool mAllReported = false;
 
     // The whole transcription. Written before the outcome is published, so whoever observes that
     // outcome can read it without further synchronisation.

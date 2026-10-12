@@ -36,7 +36,8 @@ public:
 
     /**
      * Stops the running transcription and keeps what it has transcribed, landing in Paused -- or in
-     * AudioLoaded if no chunk had finished yet.
+     * AudioLoaded if there is nothing to resume from: a fresh run stopped before its first chunk
+     * finished.
      */
     void pauseTranscription();
 
@@ -126,8 +127,8 @@ private:
 
     MuscriptorEngine mMuscriptorEngine;
 
-    // What the running job was launched with. All are written by _launchJob's callers before the
-    // job is queued and read only by the job, so they need no synchronisation of their own.
+    // What the running job was launched with. Written by _launchJob and its callers before the job
+    // is queued and read only by the job, so they need no synchronisation of their own.
     std::vector<msl::InstrumentGroup> mJobInstruments;
     ModelSize mJobModelSize = DEFAULT_MODEL_SIZE;
     ComputeDeviceChoice mJobDevice;
