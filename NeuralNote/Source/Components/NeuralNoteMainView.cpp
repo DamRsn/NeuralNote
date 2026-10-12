@@ -5,6 +5,7 @@
 #include "NeuralNoteMainView.h"
 
 #include "ComputeDevices.h"
+#include "CrashReporter.h"
 #include "MidiFileWriter.h"
 #include "NeuralNoteTooltips.h"
 #include "NNFileUtils.h"
@@ -357,6 +358,33 @@ void NeuralNoteMainView::_buildSettingsMenu()
     }
 
     mSettingsMenu->addSubMenu("MIDI export on channel overflow", overflow_menu);
+
+#if JUCE_WINDOWS
+    mSettingsMenu->addSeparator();
+
+    PopupMenu crash_menu;
+
+    auto crash_reports_item = PopupMenu::Item("Write a report when NeuralNote crashes");
+    crash_reports_item.setID(++item_id);
+    crash_reports_item.setEnabled(true);
+    mSettingsMenuItemsShouldBeTicked.emplace_back(crash_reports_item.itemID,
+                                                  [] { return SharedResourcePointer<CrashReporter>()->isEnabled(); });
+    crash_reports_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+    crash_reports_item.setAction([this] {
+        const SharedResourcePointer<CrashReporter> crash_reporter;
+        crash_reporter->setEnabled(!crash_reporter->isEnabled());
+        _refreshSettingsMenu();
+    });
+    crash_menu.addItem(crash_reports_item);
+
+    auto open_crash_reports_item = PopupMenu::Item("Open crash reports folder");
+    open_crash_reports_item.setID(++item_id);
+    open_crash_reports_item.setEnabled(true);
+    open_crash_reports_item.setAction([] { NNFileUtils::openDirectory(NNFileUtils::getCrashReportsDirectory()); });
+    crash_menu.addItem(open_crash_reports_item);
+
+    mSettingsMenu->addSubMenu("Crash reports", crash_menu);
+#endif
 
     auto check_updates_item = PopupMenu::Item("Check for updates");
     check_updates_item.setID(++item_id);

@@ -51,6 +51,10 @@ void setTooltipsVisible(bool inVisible);
 ComputeDeviceChoice getComputeDevice();
 void setComputeDevice(const ComputeDeviceChoice& inChoice);
 
+/** Whether CrashReporter is on. Off by default: its handlers are the whole host process's. */
+bool getCrashReportsEnabled();
+void setCrashReportsEnabled(bool inEnabled);
+
 } // namespace NnGlobalSettings
 
 #endif // NnGlobalSettings_h

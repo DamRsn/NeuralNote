@@ -147,7 +147,7 @@ ModelDownloadPanel::ModelDownloadPanel(NeuralNoteAudioProcessor& inProcessor)
     mOpenFolderButton.setColour(NnFlatButton::iconColourId, nn::colours::textIcon);
     mOpenFolderButton.setColour(NnFlatButton::textColourId, nn::colours::textButton);
     mOpenFolderButton.setWantsKeyboardFocus(false);
-    mOpenFolderButton.onClick = [] { NNFileUtils::openModelsDirectory(); };
+    mOpenFolderButton.onClick = [] { NNFileUtils::openDirectory(NNFileUtils::getModelsDirectory()); };
     addAndMakeVisible(mOpenFolderButton);
 
     mHasInstalledModel = NNFileUtils::isAnyModelInstalled();

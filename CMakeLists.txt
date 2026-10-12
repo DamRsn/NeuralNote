@@ -31,8 +31,35 @@ option(LTO "Enable Link Time Optimization" ON)
 option(NEURALNOTE_FETCH_SOUNDFONT "Download the soundfont at configure time if it is missing" ON)
 option(NEURALNOTE_ASIO "Enable ASIO devices on Windows (distributing it needs a Steinberg ASIO license agreement)" ON)
 
+option(NEURALNOTE_SYMBOLS "Build Release with debug info, to read crash reports with" ON)
+
 #static linking in Windows
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# Release debug info in every target down to ggml, so set before any add_subdirectory. Windows
+# writes PDBs beside the binaries, macOS dSYMs below; Linux keeps it in the binaries.
+if (NEURALNOTE_SYMBOLS)
+  if (NOT WIN32)
+    add_compile_options($<$<CONFIG:Release>:-g>)
+  else ()
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+      # /Z7 keeps each object's debug info inside it: no compiler PDB to track, and ccache still works.
+      add_compile_options($<$<CONFIG:Release>:/Z7>)
+
+      # /DEBUG turns /OPT:REF and /OPT:ICF off unless asked for. /PDBALTPATH records the PDB's file
+      # name in the binary, rather than the path it was built at.
+      set(nn_release_link_flags "/DEBUG:FULL /OPT:REF /OPT:ICF /PDBALTPATH:%_PDB%")
+    else ()
+      add_compile_options($<$<CONFIG:Release>:-g> $<$<CONFIG:Release>:-gcodeview>)
+      set(nn_release_link_flags
+              "-Xlinker /DEBUG:FULL -Xlinker /OPT:REF -Xlinker /OPT:ICF -Xlinker /PDBALTPATH:%_PDB%")
+    endif ()
+
+    foreach (kind EXE SHARED MODULE)
+      string(APPEND CMAKE_${kind}_LINKER_FLAGS_RELEASE " ${nn_release_link_flags}")
+    endforeach ()
+  endif ()
+endif ()
 
 add_subdirectory(ThirdParty/JUCE)
 add_subdirectory(ThirdParty/TinySoundFont)
@@ -194,6 +221,33 @@ endforeach ()
 if (${LTO})
   target_link_libraries(${BaseTargetName} PUBLIC juce_recommended_lto_flags)
   message(STATUS "Link Time Optimization (LTO) enabled")
+endif ()
+
+# Writes each format's dSYM beside its bundle, e.g. VST3/NeuralNote.vst3.dSYM. Single-config
+# generators only, as the presets use.
+if (NEURALNOTE_SYMBOLS AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
+  foreach (format Standalone VST3 AU)
+    set(format_target ${BaseTargetName}_${format})
+
+    if (NOT TARGET ${format_target})
+      continue()
+    endif ()
+
+    set(format_dir "${CMAKE_CURRENT_BINARY_DIR}/${BaseTargetName}_artefacts/${CMAKE_BUILD_TYPE}/${format}")
+
+    # With LTO, the debug info is in the object the linker generates, which it otherwise deletes
+    # before dsymutil can read it.
+    if (LTO)
+      file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lto")
+      target_link_options(${format_target} PRIVATE
+              "LINKER:-object_path_lto,${CMAKE_CURRENT_BINARY_DIR}/lto/${format_target}.o")
+    endif ()
+
+    add_custom_command(TARGET ${format_target} POST_BUILD
+            COMMAND dsymutil "$<TARGET_FILE:${format_target}>"
+                    -o "${format_dir}/$<TARGET_BUNDLE_DIR_NAME:${format_target}>.dSYM"
+            VERBATIM)
+  endforeach ()
 endif ()
 
 if (BUILD_UNIT_TESTS)
