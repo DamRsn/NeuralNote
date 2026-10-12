@@ -13,7 +13,8 @@
 class NeuralNoteAudioProcessor;
 
 /**
- * What a running transcription looks like: a caption, a bar, a percentage and a way to stop.
+ * What an unfinished transcription looks like: a caption, a bar, a percentage, and a button that
+ * pauses it while it runs and resumes it once paused.
  *
  * Lives in the status bar and is never modal -- the roll fills in as the run goes, so nothing may
  * cover it.
@@ -34,16 +35,21 @@ private:
     /** Polls the engine's progress; only repaints when the phase, the percentage or the pulse moved. */
     void _onVBlankCallback();
 
+    /** Shows pause while running and resume while paused. */
+    void _updateButton(bool inIsPaused);
+
     NeuralNoteAudioProcessor& mProcessor;
 
-    NnFlatButton mCancelButton {"CancelTranscription"};
+    NnFlatButton mPauseResumeButton {"PauseResumeTranscription"};
 
     juce::VBlankAttachment mVBlankAttachment;
 
-    // Mirrors the engine's pending request, from either this button or the toolbar's bin, so a second
-    // click does not read as the first one having done nothing. Cancellation cannot interrupt GPU
+    // Mirrors the engine's pending stop request, from either this button or the toolbar's bin, so a
+    // second click does not read as the first one having done nothing. Stopping cannot interrupt GPU
     // initialisation, which can take seconds.
     bool mIsCancelling = false;
+
+    bool mIsPaused = false;
 
     MuscriptorEngine::Phase mDisplayedPhase = MuscriptorEngine::Phase::LoadingModel;
     // Negative while the phase has no measurable progress yet.

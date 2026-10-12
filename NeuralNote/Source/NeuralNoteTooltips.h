@@ -13,7 +13,7 @@ namespace NeuralNoteTooltips
 
 const String record = "Record | r";
 
-const String clear = "Clear transcription, then audio | Shift + Backspace\nStops a running transcription";
+const String clear = "Clear transcription, then audio | Shift + Backspace\nDiscards a running transcription";
 
 const String play_pause = "Play / Pause | Space";
 
@@ -27,7 +27,9 @@ const String settings = "Settings";
 
 const String mute = "Mute / Unmute input | m";
 
-const String cancel_transcription = "Cancel transcription";
+const String pause_transcription = "Pause transcription. What is transcribed so far is kept";
+
+const String resume_transcription = "Resume transcription";
 
 const String model = "Choose the transcription model, or download another";
 

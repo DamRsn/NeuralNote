@@ -133,7 +133,8 @@ void NnToolbar::updateEnablements()
 
     // Not while recording: clearing would stop the recording behind the record button's back.
     const State state = mProcessor.getState();
-    mClearButton.setEnabled(state == AudioLoaded || state == Processing || state == PopulatedAudioAndMidiRegions);
+    mClearButton.setEnabled(state == AudioLoaded || state == Processing || state == Paused
+                            || state == PopulatedAudioAndMidiRegions);
 
     resized();
     repaint();
@@ -179,10 +180,11 @@ void NnToolbar::_clearOneStep()
 {
     switch (mProcessor.getState()) {
         case Processing:
-            // A cancelled run ends in clearTranscription(), so the audio stays for the next click.
-            mProcessor.getTranscriptionManager()->cancelTranscription();
+            // A discarded run ends in clearTranscription(), so the audio stays for the next click.
+            mProcessor.getTranscriptionManager()->discardTranscription();
             break;
 
+        case Paused:
         case PopulatedAudioAndMidiRegions:
             mProcessor.clearTranscription();
             break;

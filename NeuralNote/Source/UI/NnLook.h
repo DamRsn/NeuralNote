@@ -300,6 +300,7 @@ constexpr int progressBarHeight = 3;
 constexpr int progressPctWidth = 28;
 constexpr int cancelHitSize = 16;
 constexpr int cancelGlyphSize = 9;
+constexpr int pauseResumeGlyphSize = 10;
 constexpr int progressGap = 10;
 
 // ---- vertical zoom slider ------------------------------------------------
@@ -525,11 +526,8 @@ public:
 
     void drawTooltip(juce::Graphics& g, const juce::String& inText, int inWidth, int inHeight) override;
 
-    void drawCornerResizer(juce::Graphics& g,
-                           int inWidth,
-                           int inHeight,
-                           bool inIsMouseOver,
-                           bool inIsMouseDragging) override;
+    void drawCornerResizer(
+        juce::Graphics& g, int inWidth, int inHeight, bool inIsMouseOver, bool inIsMouseDragging) override;
 };
 
 /**
