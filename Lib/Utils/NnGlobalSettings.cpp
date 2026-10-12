@@ -19,6 +19,7 @@ namespace
     const char* TOOLTIPS_VISIBLE_KEY = "tooltipsVisible";
     const char* COMPUTE_DEVICE_KEY = "computeDevice";
     const char* COMPUTE_DEVICE_ORDINAL_KEY = "computeDeviceOrdinal";
+    const char* CRASH_REPORTS_ENABLED_KEY = "crashReportsEnabled";
 
     /**
      * Deleted by JUCE's own shutdown, while the message manager still exists: the file is a Timer,
@@ -72,6 +73,7 @@ namespace
         const ComputeDeviceChoice device = getComputeDevice();
         props.setValue(COMPUTE_DEVICE_KEY, juce::String(device.name));
         props.setValue(COMPUTE_DEVICE_ORDINAL_KEY, device.ordinal);
+        props.setValue(CRASH_REPORTS_ENABLED_KEY, getCrashReportsEnabled());
 
         props.save();
     }
@@ -127,6 +129,17 @@ void setComputeDevice(const ComputeDeviceChoice& inChoice)
 {
     properties().setValue(COMPUTE_DEVICE_KEY, juce::String(inChoice.name));
     properties().setValue(COMPUTE_DEVICE_ORDINAL_KEY, inChoice.ordinal);
+    _saveAllSettings();
+}
+
+bool getCrashReportsEnabled()
+{
+    return properties().getBoolValue(CRASH_REPORTS_ENABLED_KEY, false);
+}
+
+void setCrashReportsEnabled(bool inEnabled)
+{
+    properties().setValue(CRASH_REPORTS_ENABLED_KEY, inEnabled);
     _saveAllSettings();
 }
 

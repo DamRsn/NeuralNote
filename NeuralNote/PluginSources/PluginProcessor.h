@@ -3,6 +3,7 @@
 #include <atomic>
 #include <JuceHeader.h>
 
+#include "CrashReporter.h"
 #include "Resampler.h"
 #include "ProcessorBase.h"
 #include "ModelDownloader.h"
@@ -124,7 +125,12 @@ private:
 
     void _updateValueTree(const ValueTree& inNewState);
 
-    // First, so it is the last thing destroyed: it is still the default look and feel while the
+#if JUCE_WINDOWS
+    // First, so its handlers stay installed through the teardown of everything below.
+    SharedResourcePointer<CrashReporter> mCrashReporter;
+#endif
+
+    // Early, so it is among the last things destroyed: it is still the default look and feel while the
     // rest of this is going away. Shared because there is one default per binary rather than one
     // per instance, so two editors open at once have to be looking at the same object.
     SharedResourcePointer<nn::DefaultLookAndFeel> mDefaultLookAndFeel;

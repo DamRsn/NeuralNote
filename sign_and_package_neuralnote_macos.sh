@@ -67,6 +67,27 @@ echo
 
 chmod +x "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3}/Contents/MacOS/NeuralNote
 
+# Crash reports are read against the dSYMs, so each must match its binary before the binary is
+# stripped, and they are kept beside the installer.
+echo "Stripping Standalone, AU and VST3"
+for bundle in Standalone/NeuralNote.app AU/NeuralNote.component VST3/NeuralNote.vst3; do
+	binary=$PLUG_DIR/$bundle/Contents/MacOS/NeuralNote
+	dsym=$PLUG_DIR/$bundle.dSYM
+
+	if [[ "$(dwarfdump --uuid "$binary" | awk '{print $2, $3}')" != "$(dwarfdump --uuid "$dsym" | awk '{print $2, $3}')" ]]; then
+		>&2 echo "$dsym is missing or does not match $binary: build Release with NEURALNOTE_SYMBOLS=ON"
+		exit 1
+	fi
+
+	strip -S -x "$binary"
+done
+
+SYMBOLS_ZIP=$PWD/${PKG%.pkg}_dSYMs.zip
+mkdir -p "$(dirname "$SYMBOLS_ZIP")"
+rm -f "$SYMBOLS_ZIP"
+(cd "$PLUG_DIR" && zip -qr "$SYMBOLS_ZIP" Standalone/NeuralNote.app.dSYM AU/NeuralNote.component.dSYM VST3/NeuralNote.vst3.dSYM)
+echo "dSYMs saved to $SYMBOLS_ZIP"
+
 echo "Signing Standalone, AU and VST3"
 codesign --remove-signature "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3} || true
 codesign --entitlements entitlements.plist --options=runtime -s "$signingID" "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3}
