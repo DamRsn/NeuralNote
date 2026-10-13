@@ -49,7 +49,17 @@ jobs:
           restore-keys: ccache-windows-x64-
 
       - name: Build
+        env:
+          CCACHE_LOGFILE: ${{ runner.temp }}/ccache.log
         run: python .github/scripts/configure_and_build.py
+
+      - name: Show options ccache rejected
+        if: always()
+        run: |
+          if (-not (Test-Path "$env:RUNNER_TEMP/ccache.log")) { exit 0 }
+          $lines = Select-String -Path "$env:RUNNER_TEMP/ccache.log" -Pattern "Compiler option (\S+) is (unsupported|not supported)"
+          $lines | ForEach-Object { $_.Matches[0].Groups[1].Value -replace '^(-clang:-M[TF]|-[A-Za-z]+:?).*', '$1' } | Group-Object | Sort-Object Count -Descending | Format-Table Count, Name
+          $lines | Select-Object -First 10 | ForEach-Object { $_.Line }
 
       - name: Save ccache
         if: always()
