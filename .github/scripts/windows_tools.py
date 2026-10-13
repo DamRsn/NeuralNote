@@ -33,7 +33,7 @@ def download(url: str, sha256: str, destination: Path) -> None:
     # sdk.lunarg.com answers 403 to urllib's default User-Agent.
     request = urllib.request.Request(url, headers={"User-Agent": "NeuralNote-CI"})
 
-    with urllib.request.urlopen(request) as response, open(destination, "wb") as file:
+    with urllib.request.urlopen(request, timeout=60) as response, open(destination, "wb") as file:
         shutil.copyfileobj(response, file)
     digest = hashlib.sha256(destination.read_bytes()).hexdigest()
 

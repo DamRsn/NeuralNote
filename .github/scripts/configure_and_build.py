@@ -47,7 +47,6 @@ def windows_options(ccache: str) -> tuple[list[str], list[str]]:
         f"-DCMAKE_LINKER={env['CMAKE_LINKER']}",
         f"-DCMAKE_AR={env['CMAKE_AR']}",
         *launchers(ccache, ["C", "CXX"]),
-        f"-DCMAKE_USER_MAKE_RULES_OVERRIDE={(Path(__file__).parent / 'clang_cl_depfiles.cmake').as_posix()}",
         "-DNEURALNOTE_ASIO=ON",
         # Fails the configure if the SDK is missing, rather than building without the backend.
         "-DMUSCRIPTOR_VULKAN=ON",
@@ -87,7 +86,7 @@ def main() -> None:
 
     run(ccache, "--zero-stats")
     run("cmake", "--build", str(BUILD_DIR), "--target", *targets)
-    run(ccache, "--show-stats", "--verbose")
+    run(ccache, "--show-stats")
 
 
 if __name__ == "__main__":
