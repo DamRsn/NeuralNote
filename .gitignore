@@ -3,6 +3,7 @@
 SDKs
 
 build*/
+.ccache/
 
 cmake-*
 CMakeFiles

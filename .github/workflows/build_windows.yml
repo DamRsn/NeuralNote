@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
+          persist-credentials: false
 
       - name: Restore Vulkan SDK
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -64,4 +65,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release upload "${{ inputs.release-tag }}" Installers/Windows/Output/NeuralNoteInstaller.exe Installers/Windows/Output/NeuralNoteInstaller_PDBs.zip --clobber
+          RELEASE_TAG: ${{ inputs.release-tag }}
+        run: gh release upload "$env:RELEASE_TAG" Installers/Windows/Output/NeuralNoteInstaller.exe Installers/Windows/Output/NeuralNoteInstaller_PDBs.zip --clobber

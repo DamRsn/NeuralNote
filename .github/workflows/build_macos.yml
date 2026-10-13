@@ -12,6 +12,15 @@ on:
       release-tag:
         type: string
         required: true
+    secrets:
+      MACOS_CERTIFICATES_P12:
+        required: true
+      MACOS_CERTIFICATES_PASSWORD:
+        required: true
+      APPLE_ID:
+        required: true
+      APPLE_APP_PASSWORD:
+        required: true
 
 jobs:
   build:
@@ -26,6 +35,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
+          persist-credentials: false
 
       - name: Install tools
         run: |
@@ -49,7 +59,9 @@ jobs:
           restore-keys: ccache-macos-${{ inputs.arch }}-
 
       - name: Build
-        run: python3 .github/scripts/configure_and_build.py --arch ${{ inputs.arch }}
+        env:
+          ARCH: ${{ inputs.arch }}
+        run: python3 .github/scripts/configure_and_build.py --arch "$ARCH"
 
       - name: Save ccache
         if: always()
@@ -74,4 +86,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release upload "${{ inputs.release-tag }}" Installers/Mac/build/*.pkg Installers/Mac/build/*_dSYMs.zip --clobber
+          RELEASE_TAG: ${{ inputs.release-tag }}
+        run: gh release upload "$RELEASE_TAG" Installers/Mac/build/*.pkg Installers/Mac/build/*_dSYMs.zip --clobber

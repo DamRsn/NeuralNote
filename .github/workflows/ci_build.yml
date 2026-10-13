@@ -1,7 +1,7 @@
 name: CI build
 
-# Only people with write access can start a manual run, and no fork can trigger this workflow,
-# so the signing secrets never reach code they didn't push.
+# Only people with write access can start a manual run, and no fork can trigger this workflow.
+# The macOS jobs run the dispatched branch's code with the signing secrets loaded.
 on:
   workflow_dispatch:
     inputs:
@@ -59,7 +59,11 @@ jobs:
     with:
       arch: arm64
       release-tag: ${{ needs.draft.outputs.tag }}
-    secrets: inherit
+    secrets:
+      MACOS_CERTIFICATES_P12: ${{ secrets.MACOS_CERTIFICATES_P12 }}
+      MACOS_CERTIFICATES_PASSWORD: ${{ secrets.MACOS_CERTIFICATES_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
 
   macos-x64:
     needs: draft
@@ -70,4 +74,8 @@ jobs:
     with:
       arch: x86_64
       release-tag: ${{ needs.draft.outputs.tag }}
-    secrets: inherit
+    secrets:
+      MACOS_CERTIFICATES_P12: ${{ secrets.MACOS_CERTIFICATES_P12 }}
+      MACOS_CERTIFICATES_PASSWORD: ${{ secrets.MACOS_CERTIFICATES_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
