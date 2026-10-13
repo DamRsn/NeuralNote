@@ -4,7 +4,7 @@ NeuralNote is the audio plugin that brings **state-of-the-art audio-to-MIDI tran
 Audio Workstation. See the [website](https://damrsn.github.io/NeuralNote/).
 
 > [!NOTE]
-> 🎉 **NeuralNote v2.0.0 is out!** Download it from the [website](https://damrsn.github.io/NeuralNote/#download) or the [releases page](https://github.com/DamRsn/NeuralNote/releases).
+> 🎉 **NeuralNote v2 is out!** Download it from the [website](https://damrsn.github.io/NeuralNote/#download) or the [releases page](https://github.com/DamRsn/NeuralNote/releases).
 >
 > Testing so far covers only a few machines and GPUs. Whether something breaks or works great on your hardware,
 > please tell us in [GitHub issues](https://github.com/DamRsn/NeuralNote/issues) (see [Hardware](#models-and-performance)).
