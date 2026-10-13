@@ -16,6 +16,7 @@ CCACHE_VERSION and CCACHE_SHA256.
 
 import hashlib
 import os
+import shutil
 import subprocess
 import urllib.request
 import zipfile
@@ -28,7 +29,12 @@ TEMP = Path(os.environ["RUNNER_TEMP"])
 
 def download(url: str, sha256: str, destination: Path) -> None:
     print(f"Downloading {url}", flush=True)
-    urllib.request.urlretrieve(url, destination)
+
+    # sdk.lunarg.com answers 403 to urllib's default User-Agent.
+    request = urllib.request.Request(url, headers={"User-Agent": "NeuralNote-CI"})
+
+    with urllib.request.urlopen(request) as response, open(destination, "wb") as file:
+        shutil.copyfileobj(response, file)
     digest = hashlib.sha256(destination.read_bytes()).hexdigest()
 
     if digest.lower() != sha256.lower():
