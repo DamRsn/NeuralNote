@@ -57,13 +57,24 @@ if test -z "$signingID"; then
 	exit 1
 fi
 
-read -p "Enter your Apple ID: " APPLE_USERNAME
+# APPLE_ID and APPLE_APP_PASSWORD in the environment skip the prompts.
+APPLE_ID=${APPLE_ID:-}
+APPLE_APP_PASSWORD=${APPLE_APP_PASSWORD:-}
+if [[ ! -t 0 && ( -z "$APPLE_ID" || -z "$APPLE_APP_PASSWORD" ) ]]; then
+	>&2 echo "Set APPLE_ID and APPLE_APP_PASSWORD when not running in a terminal"
+	exit 1
+fi
+if test -z "$APPLE_ID"; then
+	read -p "Enter your Apple ID: " APPLE_ID
+fi
 APPLE_TEAMID=$(echo "$signingID" | cut -d'(' -f2 | cut -d')' -f1)
 if test -z "$APPLE_TEAMID"; then
 	read -p "Enter your Apple Team ID: " APPLE_TEAMID
 fi
-read -s -p "Enter your Apple ID password (App specific): " APPLE_PASSWORD
-echo
+if test -z "$APPLE_APP_PASSWORD"; then
+	read -s -p "Enter your Apple ID password (App specific): " APPLE_APP_PASSWORD
+	echo
+fi
 
 chmod +x "$PLUG_DIR"/{Standalone/NeuralNote.app,AU/NeuralNote.component,VST3/NeuralNote.vst3}/Contents/MacOS/NeuralNote
 
@@ -116,5 +127,5 @@ rm -r "$UNSIGNED_DIR"
 
 # Notarize the pkg and staple it
 echo "Notarize and staple installer"
-xcrun notarytool submit --apple-id "$APPLE_USERNAME" --team-id "$APPLE_TEAMID" --password "$APPLE_PASSWORD" --wait "$PKG"
+xcrun notarytool submit --apple-id "$APPLE_ID" --team-id "$APPLE_TEAMID" --password "$APPLE_APP_PASSWORD" --wait "$PKG"
 xcrun stapler staple "$PKG"

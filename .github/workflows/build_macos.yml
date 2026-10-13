@@ -1,0 +1,90 @@
+name: Build macOS
+
+# Builds, signs and notarizes the installer for one architecture, and uploads it with its dSYMs
+# to the draft release.
+on:
+  workflow_call:
+    inputs:
+      arch:
+        description: arm64 or x86_64
+        type: string
+        required: true
+      release-tag:
+        type: string
+        required: true
+    secrets:
+      MACOS_CERTIFICATES_P12:
+        required: true
+      MACOS_CERTIFICATES_PASSWORD:
+        required: true
+      APPLE_ID:
+        required: true
+      APPLE_APP_PASSWORD:
+        required: true
+
+jobs:
+  build:
+    # Apple Silicon; the x86_64 installer is cross-compiled on it.
+    runs-on: macos-latest
+    timeout-minutes: 180
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_MAXSIZE: 2G
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+
+      - name: Install tools
+        run: |
+          brew install ccache ninja
+          brew install --cask packages
+          xcrun -sdk macosx metal --version > /dev/null 2>&1 || xcodebuild -downloadComponent MetalToolchain
+          sw_vers
+          xcodebuild -version
+
+      - name: Restore soundfont
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: NeuralNote/Assets/SoundFont
+          key: soundfont-${{ hashFiles('Tools/fetch_soundfont.py', 'Tools/make_soundfont.py') }}
+
+      - name: Restore ccache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ccache
+          key: ccache-macos-${{ inputs.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: ccache-macos-${{ inputs.arch }}-
+
+      - name: Build
+        env:
+          ARCH: ${{ inputs.arch }}
+        run: python3 .github/scripts/configure_and_build.py --arch "$ARCH"
+
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ccache
+          key: ccache-macos-${{ inputs.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Import signing certificates
+        env:
+          MACOS_CERTIFICATES_P12: ${{ secrets.MACOS_CERTIFICATES_P12 }}
+          MACOS_CERTIFICATES_PASSWORD: ${{ secrets.MACOS_CERTIFICATES_PASSWORD }}
+        run: .github/scripts/macos_keychain.sh
+
+      - name: Sign, package and notarize
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: ./sign_and_package_neuralnote_macos.sh build/NeuralNote_artefacts/Release
+
+      - name: Upload to the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release-tag }}
+        run: gh release upload "$RELEASE_TAG" Installers/Mac/build/*.pkg Installers/Mac/build/*_dSYMs.zip --clobber

@@ -1,0 +1,69 @@
+name: Build Windows
+
+# Builds the x64 installer with clang-cl, and uploads it with its PDBs to the draft release.
+on:
+  workflow_call:
+    inputs:
+      release-tag:
+        type: string
+        required: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 180
+    env:
+      VULKAN_SDK_VERSION: 1.4.363.0
+      VULKAN_SDK_SHA256: 94A82D378F7A5E3E54C9DB7D2FB7016AF136E14AC0A18DBF0F2F67A36352D141
+      CCACHE_VERSION: 4.14.1
+      CCACHE_SHA256: 6219f3865ca59aec41ee4b678df171d5d35855ecb2b6dbbbd20690b3a68af7b4
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_MAXSIZE: 2G
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+
+      - name: Restore Vulkan SDK
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: C:\VulkanSDK\${{ env.VULKAN_SDK_VERSION }}
+          key: vulkan-sdk-${{ env.VULKAN_SDK_VERSION }}
+
+      - name: Set up toolchain
+        run: python .github/scripts/windows_tools.py
+
+      - name: Restore soundfont
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: NeuralNote/Assets/SoundFont
+          key: soundfont-${{ hashFiles('Tools/fetch_soundfont.py', 'Tools/make_soundfont.py') }}
+
+      - name: Restore ccache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ccache
+          key: ccache-windows-x64-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: ccache-windows-x64-
+
+      - name: Build
+        run: python .github/scripts/configure_and_build.py
+
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ccache
+          key: ccache-windows-x64-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Package
+        run: python .github/scripts/package_windows.py
+
+      - name: Upload to the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release-tag }}
+        run: gh release upload "$env:RELEASE_TAG" Installers/Windows/Output/NeuralNoteInstaller.exe Installers/Windows/Output/NeuralNoteInstaller_PDBs.zip --clobber

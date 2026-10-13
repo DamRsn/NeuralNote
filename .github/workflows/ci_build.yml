@@ -1,0 +1,81 @@
+name: CI build
+
+# Only people with write access can start a manual run, and no fork can trigger this workflow.
+# The macOS jobs run the dispatched branch's code with the signing secrets loaded.
+on:
+  workflow_dispatch:
+    inputs:
+      windows_x64:
+        description: Windows x64
+        type: boolean
+        default: true
+      macos_arm64:
+        description: macOS arm64
+        type: boolean
+        default: true
+      macos_x64:
+        description: macOS x64
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Draft releases are visible only to people with write access to the repository.
+  draft:
+    if: inputs.windows_x64 || inputs.macos_arm64 || inputs.macos_x64
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ci-${{ github.run_number }}
+    steps:
+      # Reuses an existing draft, so a re-run of failed jobs uploads to its first attempt's draft.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ci-${{ github.run_number }}
+        run: |
+          gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --draft --target "$GITHUB_SHA" \
+            --title "NeuralNote CI #$GITHUB_RUN_NUMBER" \
+            --notes "Built from \`$GITHUB_REF_NAME\` at $GITHUB_SHA by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+  windows-x64:
+    needs: draft
+    if: inputs.windows_x64
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build_windows.yml
+    with:
+      release-tag: ${{ needs.draft.outputs.tag }}
+
+  macos-arm64:
+    needs: draft
+    if: inputs.macos_arm64
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build_macos.yml
+    with:
+      arch: arm64
+      release-tag: ${{ needs.draft.outputs.tag }}
+    secrets:
+      MACOS_CERTIFICATES_P12: ${{ secrets.MACOS_CERTIFICATES_P12 }}
+      MACOS_CERTIFICATES_PASSWORD: ${{ secrets.MACOS_CERTIFICATES_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+
+  macos-x64:
+    needs: draft
+    if: inputs.macos_x64
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build_macos.yml
+    with:
+      arch: x86_64
+      release-tag: ${{ needs.draft.outputs.tag }}
+    secrets:
+      MACOS_CERTIFICATES_P12: ${{ secrets.MACOS_CERTIFICATES_P12 }}
+      MACOS_CERTIFICATES_PASSWORD: ${{ secrets.MACOS_CERTIFICATES_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
