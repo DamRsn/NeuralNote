@@ -49,7 +49,15 @@ jobs:
           restore-keys: ccache-windows-x64-
 
       - name: Build
+        env:
+          CCACHE_LOGFILE: ${{ runner.temp }}/ccache.log
         run: python .github/scripts/configure_and_build.py
+
+      - name: Show ccache log
+        if: always()
+        run: |
+          Select-String -Path "$env:RUNNER_TEMP/ccache.log" -Pattern "Command line:" | Select-Object -First 3
+          Select-String -Path "$env:RUNNER_TEMP/ccache.log" -Pattern "unsupported|not supported|too hard" | Select-Object -First 20
 
       - name: Save ccache
         if: always()
