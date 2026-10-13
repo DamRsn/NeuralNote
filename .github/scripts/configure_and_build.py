@@ -86,7 +86,7 @@ def main() -> None:
 
     run(ccache, "--zero-stats")
     run("cmake", "--build", str(BUILD_DIR), "--target", *targets)
-    run(ccache, "--show-stats")
+    run(ccache, "--show-stats", "--verbose")
 
 
 if __name__ == "__main__":
