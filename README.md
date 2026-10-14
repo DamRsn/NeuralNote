@@ -31,9 +31,8 @@ Audio Workstation. See the [website](https://damrsn.github.io/NeuralNote/).
 Download the latest release for your platform from the [website](https://damrsn.github.io/NeuralNote/#download) or 
 [releases page](https://github.com/DamRsn/NeuralNote/releases).
 
-- **macOS (Apple Silicon):** `NeuralNote_Installer_Mac_arm64.pkg` installs the Standalone app, VST3 and AU. It is
-  signed and notarized. An installer for Intel Macs will come later. In the meantime, you can
-  [build from source](#build-from-source).
+- **macOS:** `NeuralNote_Installer_Mac_arm64.pkg` for Apple Silicon, `NeuralNote_Installer_Mac_x64.pkg` for Intel Macs.
+  Both install the Standalone app, VST3 and AU, and are signed and notarized.
 - **Windows (x64):** `NeuralNote_Installer_Windows_x64.exe` installs the Standalone app and VST3. It is not code signed,
   so Windows may warn you before running it for the first time.
 - **Linux:** prebuilt binaries are coming soon. In the meantime, you can [build from source](#build-from-source).
@@ -178,7 +177,6 @@ public API. The GGUF weights it loads are available on
 ## Roadmap
 
 - Prebuilt binaries for Linux
-- Installer for Intel Macs
 - MIDI out, with per-instrument channel selection
 - CLI
 - Performance optimizations

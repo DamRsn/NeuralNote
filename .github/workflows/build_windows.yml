@@ -66,4 +66,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ inputs.release-tag }}
-        run: gh release upload "$env:RELEASE_TAG" Installers/Windows/Output/NeuralNoteInstaller.exe Installers/Windows/Output/NeuralNoteInstaller_PDBs.zip --clobber
+        run: gh release upload "$env:RELEASE_TAG" Installers/Windows/Output/NeuralNote_Installer_Windows_x64.exe Installers/Windows/Output/NeuralNote_Installer_Windows_x64_PDBs.zip --clobber
