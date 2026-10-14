@@ -7,7 +7,7 @@
 AppId={{C01E3C5A-F330-421C-94D7-6264FC93B676}
 AppName=NeuralNote
 AppVersion=2.1.0
-OutputBaseFilename=NeuralNoteInstaller
+OutputBaseFilename=NeuralNote_Installer_Windows_x64
 DefaultDirName={commonpf}\NeuralNote
 DisableProgramGroupPage=yes
 InfoBeforeFile=..\readme.txt
