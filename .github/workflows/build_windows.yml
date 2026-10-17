@@ -58,12 +58,14 @@ jobs:
           path: .ccache
           key: ccache-windows-x64-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Package
-        run: python .github/scripts/package_windows.py
+      - name: Stage binaries for signing
+        run: python .github/scripts/package_windows.py prepare
 
       - name: Upload to the draft release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ inputs.release-tag }}
-        run: gh release upload "$env:RELEASE_TAG" Installers/Windows/Output/NeuralNote_Installer_Windows_x64.exe Installers/Windows/Output/NeuralNote_Installer_Windows_x64_PDBs.zip --clobber
+        run: |
+          python -c "import os, shutil; shutil.make_archive('NeuralNote_Windows_x64_unsigned', 'zip', os.path.join(os.environ['RUNNER_TEMP'], 'signing', 'unsigned'))"
+          gh release upload "$env:RELEASE_TAG" NeuralNote_Windows_x64_unsigned.zip Installers/Windows/Output/NeuralNote_Installer_Windows_x64_PDBs.zip --clobber
