@@ -66,17 +66,10 @@ jobs:
           path: .ccache
           key: ccache-windows-x64-${{ github.run_id }}-${{ github.run_attempt }}
 
-      # SignPath checks each file's product name and version against the artifact configuration. Inno Setup
-      # writes ProductVersion into the installer and uninstaller over a placeholder of 50 spaces, so theirs
-      # keeps the trailing spaces.
+      # SignPath checks each file's product name and version against the artifact configuration.
       - name: Read version
         id: version
-        run: |
-          $version = (Get-Item build/NeuralNote_artefacts/Release/Standalone/NeuralNote.exe).VersionInfo.ProductVersion
-          "parameters<<EOF" >> $env:GITHUB_OUTPUT
-          "version: `"$version`"" >> $env:GITHUB_OUTPUT
-          "innoProductVersion: `"$($version.PadRight(50))`"" >> $env:GITHUB_OUTPUT
-          "EOF" >> $env:GITHUB_OUTPUT
+        run: '"version=$((Get-Item build/NeuralNote_artefacts/Release/Standalone/NeuralNote.exe).VersionInfo.ProductVersion)" >> $env:GITHUB_OUTPUT'
 
       - name: Stage binaries for signing
         run: python .github/scripts/package_windows.py prepare
@@ -100,7 +93,8 @@ jobs:
           signing-policy-slug: ${{ inputs.signing-policy }}
           artifact-configuration-slug: windows_binaries
           github-artifact-id: ${{ steps.upload-binaries.outputs.artifact-id }}
-          parameters: ${{ steps.version.outputs.parameters }}
+          parameters: |
+            version: "${{ steps.version.outputs.version }}"
           output-artifact-directory: ${{ runner.temp }}/signing/signed
 
       - name: Build installer
@@ -125,7 +119,8 @@ jobs:
           signing-policy-slug: ${{ inputs.signing-policy }}
           artifact-configuration-slug: windows_installer
           github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
-          parameters: ${{ steps.version.outputs.parameters }}
+          parameters: |
+            version: "${{ steps.version.outputs.version }}"
           skip-decompress: true
           output-artifact-directory: ${{ runner.temp }}/signing/installer
 
