@@ -1,11 +1,19 @@
 name: Build Windows
 
-# Builds the x64 installer with clang-cl, and uploads it with its PDBs to the draft release.
+# Builds the x64 installer with clang-cl, signs it and the binaries it installs through SignPath, and
+# uploads it with its PDBs to the draft release.
 on:
   workflow_call:
     inputs:
       release-tag:
         type: string
+        required: true
+      signing-policy:
+        description: SignPath signing policy slug
+        type: string
+        required: true
+    secrets:
+      SIGNPATH_API_TOKEN:
         required: true
 
 jobs:
@@ -58,14 +66,73 @@ jobs:
           path: .ccache
           key: ccache-windows-x64-${{ github.run_id }}-${{ github.run_attempt }}
 
+      # SignPath checks each file's product name and version against the artifact configuration. Inno Setup
+      # writes ProductVersion into the installer and uninstaller over a placeholder of 50 spaces, so theirs
+      # keeps the trailing spaces.
+      - name: Read version
+        id: version
+        run: |
+          $version = (Get-Item build/NeuralNote_artefacts/Release/Standalone/NeuralNote.exe).VersionInfo.ProductVersion
+          "parameters<<EOF" >> $env:GITHUB_OUTPUT
+          "version: `"$version`"" >> $env:GITHUB_OUTPUT
+          "innoProductVersion: `"$($version.PadRight(50))`"" >> $env:GITHUB_OUTPUT
+          "EOF" >> $env:GITHUB_OUTPUT
+
       - name: Stage binaries for signing
         run: python .github/scripts/package_windows.py prepare
+
+      - name: Upload binaries for signing
+        id: upload-binaries
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: unsigned-binaries
+          path: ${{ runner.temp }}/signing/unsigned
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+
+      - name: Sign binaries
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ inputs.signing-policy }}
+          artifact-configuration-slug: windows_binaries
+          github-artifact-id: ${{ steps.upload-binaries.outputs.artifact-id }}
+          parameters: ${{ steps.version.outputs.parameters }}
+          output-artifact-directory: ${{ runner.temp }}/signing/signed
+
+      - name: Build installer
+        run: python .github/scripts/package_windows.py installer
+
+      - name: Upload installer for signing
+        id: upload-installer
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: Installers/Windows/Output/NeuralNote_Installer_Windows_x64.exe
+          archive: false
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+
+      - name: Sign installer
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ inputs.signing-policy }}
+          artifact-configuration-slug: windows_installer
+          github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
+          parameters: ${{ steps.version.outputs.parameters }}
+          skip-decompress: true
+          output-artifact-directory: ${{ runner.temp }}/signing/installer
 
       - name: Upload to the draft release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ inputs.release-tag }}
-        run: |
-          python -c "import os, shutil; shutil.make_archive('NeuralNote_Windows_x64_unsigned', 'zip', os.path.join(os.environ['RUNNER_TEMP'], 'signing', 'unsigned'))"
-          gh release upload "$env:RELEASE_TAG" NeuralNote_Windows_x64_unsigned.zip Installers/Windows/Output/NeuralNote_Installer_Windows_x64_PDBs.zip --clobber
+          SIGNED_INSTALLER: ${{ runner.temp }}/signing/installer/NeuralNote_Installer_Windows_x64.exe
+        run: gh release upload "$env:RELEASE_TAG" "$env:SIGNED_INSTALLER" Installers/Windows/Output/NeuralNote_Installer_Windows_x64_PDBs.zip --clobber
