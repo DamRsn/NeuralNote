@@ -2,11 +2,23 @@
 #define ReleaseDir "cmake-build-release/NeuralNote_artefacts/Release"
 #endif
 
+; Taken from the built app, so the installer carries the same version as the binaries it installs.
+#define AppVersion GetStringFileInfo(AddBackslash(SourcePath) + "..\..\" + ReleaseDir + "\Standalone\NeuralNote.exe", "ProductVersion")
+#if AppVersion == ""
+  #error No ProductVersion in the Standalone NeuralNote.exe of ReleaseDir
+#endif
+
 [Setup]
 ; Identifies the installation across versions; must never change.
 AppId={{C01E3C5A-F330-421C-94D7-6264FC93B676}
 AppName=NeuralNote
-AppVersion=2.1.0
+AppVersion={#AppVersion}
+VersionInfoVersion={#AppVersion}
+#ifdef SignedUninstallerDir
+; The compiler writes the uninstaller to this directory and stops until it holds a signed copy.
+SignedUninstaller=yes
+SignedUninstallerDir={#SignedUninstallerDir}
+#endif
 OutputBaseFilename=NeuralNote_Installer_Windows_x64
 DefaultDirName={commonpf}\NeuralNote
 DisableProgramGroupPage=yes
