@@ -9,6 +9,10 @@ on:
         description: Windows x64
         type: boolean
         default: true
+      windows_x64_braswell:
+        description: Windows x64 (Braswell / Airmont, no AVX)
+        type: boolean
+        default: false
       macos_arm64:
         description: macOS arm64
         type: boolean
@@ -24,7 +28,7 @@ permissions:
 jobs:
   # Draft releases are visible only to people with write access to the repository.
   draft:
-    if: inputs.windows_x64 || inputs.macos_arm64 || inputs.macos_x64
+    if: inputs.windows_x64 || inputs.windows_x64_braswell || inputs.macos_arm64 || inputs.macos_x64
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -49,6 +53,17 @@ jobs:
     uses: ./.github/workflows/build_windows.yml
     with:
       release-tag: ${{ needs.draft.outputs.tag }}
+      cpu-target: generic
+
+  windows-x64-braswell:
+    needs: draft
+    if: inputs.windows_x64_braswell
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build_windows.yml
+    with:
+      release-tag: ${{ needs.draft.outputs.tag }}
+      cpu-target: braswell
 
   macos-arm64:
     needs: draft
