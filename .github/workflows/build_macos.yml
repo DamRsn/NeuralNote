@@ -38,8 +38,16 @@ jobs:
           persist-credentials: false
 
       - name: Install tools
+        env:
+          ARCH: ${{ inputs.arch }}
         run: |
           brew install ccache ninja
+          # The x86_64 CPU variants need llvm-objcopy, which Xcode lacks; the runner image's LLVM has it.
+          if [ "$ARCH" = "x86_64" ]; then
+            objcopy="$(brew --prefix llvm@20)/bin/llvm-objcopy"
+            test -x "$objcopy" || { echo "::error::No $objcopy on this runner image"; exit 1; }
+            echo "MUSCRIPTOR_LLVM_OBJCOPY=$objcopy" >> "$GITHUB_ENV"
+          fi
           brew install --cask packages
           xcrun -sdk macosx metal --version > /dev/null 2>&1 || xcodebuild -downloadComponent MetalToolchain
           sw_vers

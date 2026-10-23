@@ -6,6 +6,7 @@
 
 #include <utility>
 
+#include "muscriptor/device.hpp"
 #include "muscriptor/log.hpp"
 
 #include "NNFileUtils.h"
@@ -206,6 +207,10 @@ void NnLogger::_writeSessionHeader()
 #endif
 
     const juce::PluginHostType host;
+
+    // The first call picks the variant, for the life of the process.
+    const std::string_view cpu_variant = msl::cpuVariant();
+
     juce::String settings = juce::String("log level ") + levelToString(getLevel());
 
 #if JUCE_WINDOWS
@@ -220,6 +225,9 @@ void NnLogger::_writeSessionHeader()
         "OS: " + juce::SystemStats::getOperatingSystemName(),
         "CPU: " + juce::SystemStats::getCpuModel() + ", " + juce::String(juce::SystemStats::getNumPhysicalCpus())
             + " cores, " + juce::String(juce::SystemStats::getNumCpus()) + " threads",
+        "CPU backend: "
+            + (cpu_variant.empty() ? juce::String("none, no variant runs on this CPU")
+                                   : juce::String(std::string(cpu_variant))),
         "RAM: " + juce::String(juce::SystemStats::getMemorySizeInMegabytes()) + " MB",
         "JUCE: " + juce::SystemStats::getJUCEVersion(),
         "Settings: " + settings,

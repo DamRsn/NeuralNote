@@ -96,6 +96,12 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
                                   " or restart NeuralNote (or your DAW) if your GPUs have changed";
         }
 
+        // Whatever the device: the CPU always runs part of the model.
+        else if (loaded.error() == msl::Error::UnsupportedCpu) {
+            mLastErrorMessage = "This computer's processor is too old for NeuralNote, which needs the x86-64-v2"
+                                " instruction set (SSE4.2 and POPCNT)";
+        }
+
         else {
             mLastErrorMessage = msl::describe(loaded.error());
         }
@@ -110,7 +116,8 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
 
     NnLogger::write(NnLogger::Level::Info,
                     "MuscriptorEngine: model loaded on " + String(mTranscriber->device().name) + " ("
-                        + String(mTranscriber->device().backend) + ") in "
+                        + String(mTranscriber->device().backend) + "), CPU backend "
+                        + String(std::string(msl::cpuVariant())) + ", in "
                         + String(roundToInt(Time::getMillisecondCounterHiRes() - load_start_ms)) + " ms");
 
     return Outcome::Success;
