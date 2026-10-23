@@ -5,6 +5,11 @@ macOS builds one architecture, given by --arch. Windows builds with clang-cl and
 lld-link, taken from CC, CXX, RC, CMAKE_LINKER and CMAKE_AR in the environment
 (see windows_tools.py).
 
+On Windows, --cpu-target selects the instruction set:
+  generic   - baseline x86-64 (SSE2), same as before
+  braswell  - Intel Braswell / Airmont (Silvermont-class): SSE4.2, POPCNT, AES,
+              PCLMUL, RDRAND, but no AVX/AVX2/FMA/F16C/BMI
+
 The output is in build/NeuralNote_artefacts/Release.
 """
 
@@ -17,6 +22,33 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_DIR = ROOT / "build"
+
+# ggml SIMD switches. For Braswell we want SSE4.2 and friends ON, everything
+# AVX-class OFF. Setting them explicitly matters because GGML_NATIVE=OFF alone
+# can still enable AVX by default (see ggml's CMakeLists INS_ENB logic).
+GGML_BRASWELL_FLAGS = [
+    "-DGGML_NATIVE=OFF",
+    "-DGGML_SSE42=ON",
+    "-DGGML_AVX=OFF",
+    "-DGGML_AVX2=OFF",
+    "-DGGML_AVX512=OFF",
+    "-DGGML_AVX512_VBMI=OFF",
+    "-DGGML_AVX512_VNNI=OFF",
+    "-DGGML_AVX512_BF16=OFF",
+    "-DGGML_FMA=OFF",
+    "-DGGML_F16C=OFF",
+    "-DGGML_BMI2=OFF",
+    "-DGGML_AVX_VNNI=OFF",
+    "-DGGML_AVX_VNNI_INT8=OFF",
+    "-DGGML_AVX_VNNI_INT16=OFF",
+    "-DGGML_CPU_ALL_VARIANTS=OFF",
+    "-DGGML_BACKEND_DL=OFF",
+]
+
+# -march=silvermont is what GCC/Clang use for Airmont/Braswell; there is no
+# -march=airmont or -march=braswell. It emits SSE4.2/POPCNT/AES/PCLMUL/RDRAND
+# and forbids AVX/AVX2/FMA/F16C/BMI.
+BRASWELL_CFLAGS = "-march=silvermont"
 
 
 def run(*command: str) -> None:
@@ -39,7 +71,7 @@ def macos_options(arch: str, ccache: str) -> tuple[list[str], list[str]]:
     return options, ["NeuralNote_Standalone", "NeuralNote_VST3", "NeuralNote_AU"]
 
 
-def windows_options(ccache: str) -> tuple[list[str], list[str]]:
+def windows_options(ccache: str, cpu_target: str) -> tuple[list[str], list[str]]:
     env = os.environ
     options = [
         # CMake takes the compilers from CC, CXX and RC, but not these. LTO objects are LLVM
@@ -52,12 +84,25 @@ def windows_options(ccache: str) -> tuple[list[str], list[str]]:
         "-DMUSCRIPTOR_VULKAN=ON",
     ]
 
+    if cpu_target == "braswell":
+        options += [
+            *GGML_BRASWELL_FLAGS,
+            f"-DCMAKE_C_FLAGS={BRASWELL_CFLAGS}",
+            f"-DCMAKE_CXX_FLAGS={BRASWELL_CFLAGS}",
+        ]
+
     return options, ["NeuralNote_Standalone", "NeuralNote_VST3"]
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--arch", choices=["arm64", "x86_64"], help="macOS architecture to build")
+    parser.add_argument(
+        "--cpu-target",
+        choices=["generic", "braswell"],
+        default="generic",
+        help="Windows CPU target (default: generic, i.e. baseline x86-64)",
+    )
     args = parser.parse_args()
 
     ccache = os.environ.get("CCACHE_EXE") or shutil.which("ccache")
@@ -71,7 +116,7 @@ def main() -> None:
 
         options, targets = macos_options(args.arch, ccache)
     elif sys.platform == "win32":
-        options, targets = windows_options(ccache)
+        options, targets = windows_options(ccache, args.cpu_target)
     else:
         raise SystemExit(f"Unsupported platform: {sys.platform}")
 
