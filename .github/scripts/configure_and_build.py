@@ -88,7 +88,7 @@ def windows_options(ccache: str, cpu_target: str) -> tuple[list[str], list[str]]
         options += [
             *GGML_BRASWELL_FLAGS,
             f"-DCMAKE_C_FLAGS={BRASWELL_CFLAGS}",
-            f"-DCMAKE_CXX_FLAGS={BRASWELL_CFLAGS}",
+            f"-DCMAKE_CXX_FLAGS={BRASWELL_CFLAGS} /EHsc",
         ]
 
     return options, ["NeuralNote_Standalone", "NeuralNote_VST3"]
