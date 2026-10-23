@@ -6,12 +6,9 @@
 - clang-cl, lld-link, llvm-lib and llvm-rc from the LLVM the runner image ships.
   CC and CXX also reach ggml's nested vulkan-shaders-gen build, which sees only
   the environment.
-- The Vulkan SDK in C:\\VulkanSDK\\<version>, installed unless it is already
-  there (restored from the cache).
 - ccache.
 
-Versions and digests come from VULKAN_SDK_VERSION, VULKAN_SDK_SHA256,
-CCACHE_VERSION and CCACHE_SHA256.
+Versions and digests come from CCACHE_VERSION and CCACHE_SHA256.
 """
 
 import hashlib
@@ -64,29 +61,6 @@ def developer_environment() -> dict[str, str]:
     return changed
 
 
-def install_vulkan_sdk(version: str, sha256: str) -> Path:
-    root = Path(rf"C:\VulkanSDK\{version}")
-
-    if (root / "Bin" / "glslc.exe").exists():
-        print(f"Vulkan SDK {version} already in {root}")
-        return root
-
-    installer = TEMP / "vulkansdk.exe"
-    download(
-        f"https://sdk.lunarg.com/sdk/download/{version}/windows/vulkansdk-windows-X64-{version}.exe",
-        sha256, installer,
-    )
-    subprocess.run(
-        [str(installer), "--root", str(root), "--accept-licenses", "--default-answer", "--confirm-command", "install"],
-        check=True,
-    )
-
-    if not (root / "Bin" / "glslc.exe").exists():
-        raise SystemExit(f"glslc not found in {root} after installing the Vulkan SDK")
-
-    return root
-
-
 def install_ccache(version: str, sha256: str) -> Path:
     archive = TEMP / "ccache.zip"
     download(
@@ -113,7 +87,6 @@ def main() -> None:
     env = os.environ
     variables = developer_environment()
 
-    variables["VULKAN_SDK"] = str(install_vulkan_sdk(env["VULKAN_SDK_VERSION"], env["VULKAN_SDK_SHA256"]))
     variables["CCACHE_EXE"] = install_ccache(env["CCACHE_VERSION"], env["CCACHE_SHA256"]).as_posix()
 
     clang_cl = llvm_tool("clang-cl").as_posix()
