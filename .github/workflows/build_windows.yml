@@ -62,8 +62,10 @@ jobs:
         with:
           path: .ccache
           key: ccache-windows-x64-${{ inputs.cpu-target }}-${{ github.run_id }}-${{ github.run_attempt }}
-
+      
       - name: Package
+        env:
+          CPU_TARGET: ${{ inputs.cpu-target }}
         run: python .github/scripts/package_windows.py
 
       - name: Upload to the draft release
@@ -76,5 +78,5 @@ jobs:
           $suffix = if ("$env:CPU_TARGET" -eq "braswell") { "_braswell" } else { "" }
           gh release upload "$env:RELEASE_TAG" `
             "Installers/Windows/Output/NeuralNote_Installer_Windows_x64$suffix.exe" `
-            "Installers/Windows/Output/NeuralNote_Installer_Windows_x64$suffix_PDBs.zip" `
+            "Installers/Windows/Output/NeuralNote_Installer_Windows_x64${suffix}_PDBs.zip" `
             --clobber
