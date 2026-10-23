@@ -100,7 +100,7 @@ add_subdirectory(ThirdParty/muscriptor.cpp/cpp muscriptor)
 # code regardless of whether the plugin itself is built Debug or Release.
 # NEURALNOTE_MUSCRIPTOR_DEBUG opts back into following the plugin's build type.
 if (NOT NEURALNOTE_MUSCRIPTOR_DEBUG)
-  foreach (muscriptor_target muscriptor_ggml ggml ggml-base ggml-cpu ggml-metal pffft)
+  foreach (muscriptor_target muscriptor_ggml muscriptor_ggml_cpu ggml ggml-base ggml-cpu ggml-metal pffft)
     if (TARGET ${muscriptor_target})
       if (MSVC)
         target_compile_options(${muscriptor_target} PRIVATE /O2 /DNDEBUG)

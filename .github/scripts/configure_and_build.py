@@ -34,6 +34,9 @@ def macos_options(arch: str, ccache: str) -> tuple[list[str], list[str]]:
         *launchers(ccache, ["C", "CXX", "OBJC", "OBJCXX"]),
         "-DMUSCRIPTOR_METAL=ON",
         "-DMUSCRIPTOR_METAL_PRECOMPILED=ON",
+        # x86_64: ggml-cpu per instruction-set level, picked at run time; needs Homebrew's llvm for
+        # llvm-objcopy. arm64: the fixed ARM baseline, never the runner's own CPU.
+        "-DMUSCRIPTOR_CPU_VARIANTS=ON" if arch == "x86_64" else "-DMUSCRIPTOR_NATIVE=OFF",
     ]
 
     return options, ["NeuralNote_Standalone", "NeuralNote_VST3", "NeuralNote_AU"]
@@ -48,6 +51,8 @@ def windows_options(ccache: str) -> tuple[list[str], list[str]]:
         f"-DCMAKE_AR={env['CMAKE_AR']}",
         *launchers(ccache, ["C", "CXX"]),
         "-DNEURALNOTE_ASIO=ON",
+        # ggml-cpu per instruction-set level, picked at run time.
+        "-DMUSCRIPTOR_CPU_VARIANTS=ON",
         # Fails the configure if the SDK is missing, rather than building without the backend.
         "-DMUSCRIPTOR_VULKAN=ON",
     ]

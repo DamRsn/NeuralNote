@@ -38,8 +38,12 @@ jobs:
           persist-credentials: false
 
       - name: Install tools
+        env:
+          ARCH: ${{ inputs.arch }}
         run: |
           brew install ccache ninja
+          # llvm-objcopy for the x86_64 CPU variants. Apple clang still compiles.
+          if [ "$ARCH" = "x86_64" ]; then brew install llvm; fi
           brew install --cask packages
           xcrun -sdk macosx metal --version > /dev/null 2>&1 || xcodebuild -downloadComponent MetalToolchain
           sw_vers
