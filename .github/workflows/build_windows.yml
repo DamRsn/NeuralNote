@@ -1,12 +1,17 @@
 name: Build Windows
 
 # Builds the x64 installer with clang-cl, and uploads it with its PDBs to the draft release.
+# cpu-target: generic (baseline x86-64) or braswell (Silvermont/Airmont, no AVX).
 on:
   workflow_call:
     inputs:
       release-tag:
         type: string
         required: true
+      cpu-target:
+        description: CPU target (generic or braswell)
+        type: string
+        default: generic
 
 jobs:
   build:
@@ -45,18 +50,18 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .ccache
-          key: ccache-windows-x64-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: ccache-windows-x64-
+          key: ccache-windows-x64-${{ inputs.cpu-target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: ccache-windows-x64-${{ inputs.cpu-target }}-
 
       - name: Build
-        run: python .github/scripts/configure_and_build.py
+        run: python .github/scripts/configure_and_build.py --cpu-target ${{ inputs.cpu-target }}
 
       - name: Save ccache
         if: always()
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .ccache
-          key: ccache-windows-x64-${{ github.run_id }}-${{ github.run_attempt }}
+          key: ccache-windows-x64-${{ inputs.cpu-target }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Package
         run: python .github/scripts/package_windows.py
@@ -66,4 +71,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ inputs.release-tag }}
-        run: gh release upload "$env:RELEASE_TAG" Installers/Windows/Output/NeuralNote_Installer_Windows_x64.exe Installers/Windows/Output/NeuralNote_Installer_Windows_x64_PDBs.zip --clobber
+          CPU_TARGET: ${{ inputs.cpu-target }}
+        run: |
+          $suffix = if ("$env:CPU_TARGET" -eq "braswell") { "_braswell" } else { "" }
+          gh release upload "$env:RELEASE_TAG" `
+            "Installers/Windows/Output/NeuralNote_Installer_Windows_x64$suffix.exe" `
+            "Installers/Windows/Output/NeuralNote_Installer_Windows_x64$suffix_PDBs.zip" `
+            --clobber
