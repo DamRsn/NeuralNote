@@ -2,12 +2,17 @@
 #define ReleaseDir "cmake-build-release/NeuralNote_artefacts/Release"
 #endif
 
+#ifndef OutputSuffix
+; Empty for the generic build; "_braswell" for the Silvermont/Airmont target.
+#define OutputSuffix ""
+#endif
+
 [Setup]
 ; Identifies the installation across versions; must never change.
 AppId={{C01E3C5A-F330-421C-94D7-6264FC93B676}
 AppName=NeuralNote
 AppVersion=2.1.0
-OutputBaseFilename=NeuralNote_Installer_Windows_x64
+OutputBaseFilename=NeuralNote_Installer_Windows_x64{#OutputSuffix}
 DefaultDirName={commonpf}\NeuralNote
 DisableProgramGroupPage=yes
 InfoBeforeFile=..\readme.txt
@@ -22,7 +27,7 @@ SolidCompression=yes
 DisableDirPage=yes
 SetupIconFile=..\..\NeuralNote\Assets\Logo\NeuralNote.ico
 UninstallDisplayIcon={app}\NeuralNote.exe
-AppCopyright=Copyright (c) 2026 Damien Ronssin
+AppCopyright=Copyright (c) 2026 Damien Ronsyn
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
