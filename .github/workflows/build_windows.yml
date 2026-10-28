@@ -31,11 +31,11 @@ jobs:
           submodules: true
           persist-credentials: false
 
-      #- name: Restore Vulkan SDK
-      #  uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      # with:
-      #   path: C:\VulkanSDK\${{ env.VULKAN_SDK_VERSION }}
-      #   key: vulkan-sdk-${{ env.VULKAN_SDK_VERSION }}
+      - name: Restore Vulkan SDK
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+         path: C:\VulkanSDK\${{ env.VULKAN_SDK_VERSION }}
+         key: vulkan-sdk-${{ env.VULKAN_SDK_VERSION }}
 
       - name: Set up toolchain
         run: python .github/scripts/windows_tools.py
