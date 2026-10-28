@@ -27,7 +27,7 @@ SolidCompression=yes
 DisableDirPage=yes
 SetupIconFile=..\..\NeuralNote\Assets\Logo\NeuralNote.ico
 UninstallDisplayIcon={app}\NeuralNote.exe
-AppCopyright=Copyright (c) 2026 Damien Ronsyn
+AppCopyright=Copyright (c) 2026 Damien Ronssin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
