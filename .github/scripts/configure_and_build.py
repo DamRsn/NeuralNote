@@ -81,7 +81,7 @@ def windows_options(ccache: str, cpu_target: str) -> tuple[list[str], list[str]]
         *launchers(ccache, ["C", "CXX"]),
         "-DNEURALNOTE_ASIO=ON",
         # Fails the configure if the SDK is missing, rather than building without the backend.
-        "-DMUSCRIPTOR_VULKAN=OFF",
+        "-DMUSCRIPTOR_VULKAN=ON",
     ]
 
     if cpu_target == "braswell":
