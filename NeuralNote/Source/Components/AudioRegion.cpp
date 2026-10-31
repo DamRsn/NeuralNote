@@ -7,6 +7,7 @@
 #include "CombinedAudioMidiRegion.h"
 #include "NeuralNoteTooltips.h"
 #include "NnFonts.h"
+#include "NnGlobalSettings.h"
 #include "NnIcons.h"
 #include "NnLook.h"
 #include "WaveformBars.h"
@@ -200,8 +201,12 @@ void AudioRegion::_openFileChooser()
         patterns.add("*" + extension);
     }
 
-    mFileChooser = std::make_shared<juce::FileChooser>(
-        "Select Audio File", juce::File {}, patterns.joinIntoString(";"), true, false, this);
+    mFileChooser = std::make_shared<juce::FileChooser>("Select Audio File",
+                                                       NnGlobalSettings::getAudioLoadDirectory(),
+                                                       patterns.joinIntoString(";"),
+                                                       true,
+                                                       false,
+                                                       this);
 
     mFileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
                               [this](const juce::FileChooser& fc) {
@@ -210,8 +215,8 @@ void AudioRegion::_openFileChooser()
 
                                   auto* parent = dynamic_cast<CombinedAudioMidiRegion*>(getParentComponent());
 
-                                  if (parent) {
-                                      parent->filesDropped(StringArray(fc.getResult().getFullPathName()), 1, 1);
+                                  if (parent && parent->loadAudioFile(fc.getResult().getFullPathName())) {
+                                      NnGlobalSettings::setAudioLoadDirectory(fc.getResult().getParentDirectory());
                                   }
                               });
 }

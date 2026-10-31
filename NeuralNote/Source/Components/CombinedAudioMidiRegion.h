@@ -35,6 +35,9 @@ public:
 
     void filesDropped(const StringArray& files, int x, int y) override;
 
+    /** Loads a file as the source audio. False if its format is unsupported or the load failed. */
+    bool loadAudioFile(const String& inPath);
+
     void fileDragEnter(const StringArray& files, int x, int y) override;
 
     void fileDragExit(const StringArray& files) override;
