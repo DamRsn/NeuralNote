@@ -46,7 +46,7 @@ NeuralNote is a simple AudioFX plugin (VST®3/AU/Standalone app) that you apply 
 
 - Gather some audio:
   - Click record. This works both when recording live and when playing the track in your DAW.
-  - Or drop an audio file on the plugin (.wav, .aiff, .flac, .mp3 and .ogg (vorbis) are supported).
+  - Or drop an audio file on the plugin (.wav, .aiff, .flac, .mp3, .ogg (vorbis) and, on macOS, .m4a are supported).
 - Select the instruments to transcribe in the left panel, or select `Automatic` to let the model detect them.
   - Transcriptions tend to be better when the model is given the correct set of instruments.
 - Click `Transcribe`. The transcription runs in the background, and the MIDI fills into the piano roll as it is

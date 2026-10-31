@@ -19,7 +19,7 @@ namespace AudioUtils
 {
 
 /**
- * Load an audio file. wav, aiff, flac, ogg vorbis and mp3 files are supported.
+ * Load an audio file. wav, aiff, flac, ogg vorbis and mp3 files are supported, and m4a on macOS.
  * @param inFile Audio file to load.
  * @param outBuffer Buffer where to load audio data. Will be resized to correct number of channels and samples.
  * @param outSampleRate Will be set to audio file sample rate.

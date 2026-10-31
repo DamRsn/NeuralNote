@@ -64,6 +64,9 @@ std::unique_ptr<AudioFormatManager> createAudioFormatManager()
     audio_format_manager->registerFormat(new juce::AiffAudioFormat, false);
     audio_format_manager->registerFormat(new juce::FlacAudioFormat, false);
     audio_format_manager->registerFormat(new juce::OggVorbisAudioFormat, false);
+#if JUCE_MAC
+    audio_format_manager->registerFormat(new juce::CoreAudioFormat(juce::CoreAudioFormat::StreamKind::kM4a), false);
+#endif
 
     return audio_format_manager;
 }

@@ -300,7 +300,8 @@ bool SourceAudioManager::onFileDrop(const File& inFile)
             NativeMessageBox::showMessageBoxAsync(
                 MessageBoxIconType::NoIcon,
                 "Could not load the audio file.",
-                "Check your file format (Accepted formats: .wav, .aiff, .flac, .mp3, .ogg).");
+                "Check your file format (Accepted formats: "
+                    + AudioUtils::getSupportedAudioFileExtensions().joinIntoString(", ") + ").");
             return false;
         }
 
