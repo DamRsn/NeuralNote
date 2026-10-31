@@ -21,6 +21,8 @@ namespace
     const char* COMPUTE_DEVICE_ORDINAL_KEY = "computeDeviceOrdinal";
     const char* CRASH_REPORTS_ENABLED_KEY = "crashReportsEnabled";
     const char* LOG_LEVEL_KEY = "logLevel";
+    const char* AUDIO_LOAD_DIRECTORY_KEY = "audioLoadDirectory";
+    const char* MIDI_EXPORT_DIRECTORY_KEY = "midiExportDirectory";
 
     /**
      * Deleted by JUCE's own shutdown, while the message manager still exists: the file is a Timer,
@@ -59,6 +61,20 @@ namespace
     juce::PropertiesFile& properties()
     {
         return Store::getInstance()->file;
+    }
+
+    /** The stored directory, or empty if it is unset or no longer exists. The key is left as is,
+        so a folder on an unmounted drive comes back once the drive does. */
+    juce::File _getExistingDirectory(const char* inKey)
+    {
+        const juce::String path = properties().getValue(inKey);
+
+        if (!juce::File::isAbsolutePath(path)) {
+            return {};
+        }
+
+        const juce::File directory(path);
+        return directory.isDirectory() ? directory : juce::File {};
     }
 
     /** Each getter means "what is stored, or the default in force", so writing them all back
@@ -159,6 +175,29 @@ NnLogger::Level getLogLevel()
 void setLogLevel(NnLogger::Level inLevel)
 {
     properties().setValue(LOG_LEVEL_KEY, NnLogger::levelToString(inLevel));
+    _saveAllSettings();
+}
+
+juce::File getAudioLoadDirectory()
+{
+    return _getExistingDirectory(AUDIO_LOAD_DIRECTORY_KEY);
+}
+
+void setAudioLoadDirectory(const juce::File& inDirectory)
+{
+    properties().setValue(AUDIO_LOAD_DIRECTORY_KEY, inDirectory.getFullPathName());
+    _saveAllSettings();
+}
+
+juce::File getMidiExportDirectory()
+{
+    const juce::File directory = _getExistingDirectory(MIDI_EXPORT_DIRECTORY_KEY);
+    return directory == juce::File {} ? NNFileUtils::getDefaultMidiExportDirectory() : directory;
+}
+
+void setMidiExportDirectory(const juce::File& inDirectory)
+{
+    properties().setValue(MIDI_EXPORT_DIRECTORY_KEY, inDirectory.getFullPathName());
     _saveAllSettings();
 }
 

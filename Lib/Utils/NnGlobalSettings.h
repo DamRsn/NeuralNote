@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include <JuceHeader.h>
+
 #include "NnLogger.h"
 #include "TranscriptionConstants.h"
 
@@ -59,6 +61,15 @@ void setCrashReportsEnabled(bool inEnabled);
 /** Info by default. Saving does not apply it: see NnLogger::setLevel. */
 NnLogger::Level getLogLevel();
 void setLogLevel(NnLogger::Level inLevel);
+
+/** Where the audio file chooser last picked a file. Empty if unset or gone, which leaves the
+    starting folder to the OS. */
+juce::File getAudioLoadDirectory();
+void setAudioLoadDirectory(const juce::File& inDirectory);
+
+/** Where a MIDI file was last exported, or the default export directory if unset or gone. */
+juce::File getMidiExportDirectory();
+void setMidiExportDirectory(const juce::File& inDirectory);
 
 } // namespace NnGlobalSettings
 
