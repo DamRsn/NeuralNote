@@ -78,7 +78,8 @@ namespace
     }
 
     /** Each getter means "what is stored, or the default in force", so writing them all back
-        fills in the keys nobody has touched. */
+        fills in the keys nobody has touched. The directory keys are left out: writing back their
+        fallbacks would pin them, and only their own setters store them. */
     void _saveAllSettings()
     {
         auto& props = properties();

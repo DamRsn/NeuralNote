@@ -213,12 +213,10 @@ void AudioRegion::_openFileChooser()
                                   if (fc.getResults().isEmpty())
                                       return;
 
-                                  NnGlobalSettings::setAudioLoadDirectory(fc.getResult().getParentDirectory());
-
                                   auto* parent = dynamic_cast<CombinedAudioMidiRegion*>(getParentComponent());
 
-                                  if (parent) {
-                                      parent->filesDropped(StringArray(fc.getResult().getFullPathName()), 1, 1);
+                                  if (parent && parent->loadAudioFile(fc.getResult().getFullPathName())) {
+                                      NnGlobalSettings::setAudioLoadDirectory(fc.getResult().getParentDirectory());
                                   }
                               });
 }

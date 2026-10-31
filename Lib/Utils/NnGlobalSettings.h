@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include <JuceHeader.h>
+#include <juce_core/juce_core.h>
 
 #include "NnLogger.h"
 #include "TranscriptionConstants.h"
