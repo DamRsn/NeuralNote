@@ -61,6 +61,10 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
     // initialisation inside load().
     const std::vector<msl::Device>& devices = ComputeDevices::get();
 
+    // Milliseconds once the listing is done, and usually already checked by the time Transcribe is
+    // clicked. The library repeats the check; this copy says why a device was not used.
+    const std::vector<msl::DeviceSupport>* support = ComputeDevices::getSupport(inModelSize);
+
     msl::LoadOptions options;
     options.device = ComputeDevices::resolve(devices, inDevice);
     options.should_cancel = [this] { return mCancelRequested.load(); };
@@ -91,9 +95,17 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
         // Only an explicit choice can fail this way. The list lasts as long as the plugin binary is
         // loaded, which in a DAW can outlast closing NeuralNote.
         else if (loaded.error() == msl::Error::DeviceUnavailable && options.device.has_value()) {
-            mLastErrorMessage = ComputeDevices::label(devices, *options.device)
-                                + " could not be used. Choose Auto or CPU under Settings > Compute device,"
-                                  " or restart NeuralNote (or your DAW) if your GPUs have changed";
+            if (support != nullptr && !(*support)[*options.device].supported()) {
+                mLastErrorMessage = ComputeDevices::label(devices, *options.device)
+                                    + " cannot run the transcription model. Choose Auto or CPU under Settings >"
+                                      " Compute device";
+            }
+
+            else {
+                mLastErrorMessage = ComputeDevices::label(devices, *options.device)
+                                    + " could not be used. Choose Auto or CPU under Settings > Compute device,"
+                                      " or restart NeuralNote (or your DAW) if your GPUs have changed";
+            }
         }
 
         // Whatever the device: the CPU always runs part of the model.
@@ -113,6 +125,19 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
     }
 
     mTranscriber = std::move(*loaded);
+
+    // Auto on the CPU while there is a GPU: either it cannot run this model, or it failed to
+    // initialise.
+    const std::size_t cpu = devices.size() - 1;
+
+    if (const std::size_t gpu = msl::autoDevice(devices);
+        !options.device.has_value() && gpu != cpu && mTranscriber->device().backend == "CPU") {
+        const bool unsupported = support != nullptr && !(*support)[gpu].supported();
+
+        NnLogger::write(NnLogger::Level::Warning,
+                        "MuscriptorEngine: Auto runs on the CPU: " + String(ComputeDevices::label(devices, gpu))
+                            + (unsupported ? " cannot run this model" : " failed to initialise"));
+    }
 
     NnLogger::write(NnLogger::Level::Info,
                     "MuscriptorEngine: model loaded on " + String(mTranscriber->device().name) + " ("
