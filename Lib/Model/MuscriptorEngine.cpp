@@ -61,8 +61,10 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
     // initialisation inside load().
     const std::vector<msl::Device>& devices = ComputeDevices::get();
 
+    const std::optional<std::size_t> device_index = ComputeDevices::resolve(devices, inDevice);
+
     msl::LoadOptions options;
-    options.device = ComputeDevices::resolve(devices, inDevice);
+    options.device = device_index;
     options.should_cancel = [this] { return mCancelRequested.load(); };
     options.on_progress = [this](float inProgress) { mProgress = Progress {Phase::LoadingModel, inProgress}; };
 
@@ -73,6 +75,15 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
     const double load_start_ms = Time::getMillisecondCounterHiRes();
 
     auto loaded = msl::Transcriber::load(NNFileUtils::toPath(model_file), std::move(options));
+    const int load_ms = roundToInt(Time::getMillisecondCounterHiRes() - load_start_ms);
+
+    // After the load, so the check touches only the devices it tried. It records what it found for
+    // the Settings menu.
+    std::optional<ComputeDevices::Support> support;
+
+    if (loaded.has_value() || loaded.error() == msl::Error::DeviceUnavailable) {
+        support = ComputeDevices::checkSupport(inModelSize, inDevice);
+    }
 
     if (!loaded.has_value()) {
         if (loaded.error() == msl::Error::Cancelled) {
@@ -88,12 +99,24 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
                                   " then download it again";
         }
 
-        // Only an explicit choice can fail this way. The list lasts as long as the plugin binary is
-        // loaded, which in a DAW can outlast closing NeuralNote.
-        else if (loaded.error() == msl::Error::DeviceUnavailable && options.device.has_value()) {
-            mLastErrorMessage = ComputeDevices::label(devices, *options.device)
-                                + " could not be used. Choose Auto or CPU under Settings > Compute device,"
-                                  " or restart NeuralNote (or your DAW) if your GPUs have changed";
+        // Under Auto this needs a CPU that cannot run the model, which falls to the generic message.
+        // The list lasts as long as the plugin binary is loaded, which in a DAW can outlast closing
+        // NeuralNote.
+        else if (loaded.error() == msl::Error::DeviceUnavailable && device_index.has_value()) {
+            const std::optional<msl::DeviceSupport> device_support =
+                support.has_value() ? (*support)[*device_index] : std::nullopt;
+
+            if (device_support.has_value() && device_support->created() && !device_support->supported()) {
+                mLastErrorMessage = ComputeDevices::label(devices, *device_index)
+                                    + " cannot run the transcription model. Choose Auto or CPU under Settings >"
+                                      " Compute device";
+            }
+
+            else {
+                mLastErrorMessage = ComputeDevices::label(devices, *device_index)
+                                    + " could not be used. Choose Auto or CPU under Settings > Compute device,"
+                                      " or restart NeuralNote (or your DAW) if your GPUs have changed";
+            }
         }
 
         // Whatever the device: the CPU always runs part of the model.
@@ -117,8 +140,7 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
     NnLogger::write(NnLogger::Level::Info,
                     "MuscriptorEngine: model loaded on " + String(mTranscriber->device().name) + " ("
                         + String(mTranscriber->device().backend) + "), CPU backend "
-                        + String(std::string(msl::cpuVariant())) + ", in "
-                        + String(roundToInt(Time::getMillisecondCounterHiRes() - load_start_ms)) + " ms");
+                        + String(std::string(msl::cpuVariant())) + ", in " + String(load_ms) + " ms");
 
     return Outcome::Success;
 }

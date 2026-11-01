@@ -5,9 +5,15 @@
 #include "ComputeDevices.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <future>
+#include <map>
+#include <mutex>
 
+#include "muscriptor/muscriptor.hpp"
+
+#include "NNFileUtils.h"
 #include "NnLogger.h"
 
 namespace ComputeDevices
@@ -33,15 +39,75 @@ namespace
         return devices;
     }
 
-    /**
-     * A copy per caller: a shared_future is safe across threads only through separate copies. The
-     * static's destructor waits for the listing, so it cannot outlive the plugin binary.
-     */
+    std::atomic<bool> listingStarted {false};
+
+    /** A copy per caller: a shared_future is safe across threads only through separate copies. */
     std::shared_future<std::vector<msl::Device>> listing()
     {
         static const std::shared_future<std::vector<msl::Device>> future =
             std::async(std::launch::async, listDevices).share();
+        listingStarted = true;
         return future;
+    }
+
+    std::optional<Support> checkModel(const juce::File& inModelFile, const ComputeDeviceChoice& inDevice)
+    {
+        const std::vector<msl::Device>& devices = get();
+        const std::optional<std::size_t> index = resolve(devices, inDevice);
+        const juce::String target = index.has_value() ? juce::String(label(devices, *index)) : juce::String("Auto");
+
+        const double start_ms = juce::Time::getMillisecondCounterHiRes();
+        auto support = msl::Transcriber::checkDevices(NNFileUtils::toPath(inModelFile), index);
+        const int elapsed_ms = juce::roundToInt(juce::Time::getMillisecondCounterHiRes() - start_ms);
+
+        if (!support.has_value()) {
+            NnLogger::write(NnLogger::Level::Warning,
+                            "ComputeDevices: could not check " + inModelFile.getFileName() + " for " + target + ": "
+                                + msl::describe(support.error()));
+            return std::nullopt;
+        }
+
+        juce::StringArray results;
+        bool all_usable = true;
+
+        for (std::size_t i = 0; i < devices.size(); ++i) {
+            const std::optional<msl::DeviceSupport>& entry = (*support)[i];
+
+            if (!entry.has_value()) {
+                continue;
+            }
+
+            all_usable = all_usable && entry->supported();
+            results.add(juce::String(label(devices, i)) + ": "
+                        + (!entry->created()    ? "could not be created: " + juce::String(entry->creation_error)
+                           : entry->supported() ? juce::String("supported")
+                                                : "cannot run " + juce::String(entry->unsupported_op)));
+        }
+
+        NnLogger::write(all_usable ? NnLogger::Level::Info : NnLogger::Level::Warning,
+                        "ComputeDevices: checked " + inModelFile.getFileName() + " for " + target + " in "
+                            + juce::String(elapsed_ms) + " ms: " + results.joinIntoString(", "));
+
+        return std::move(*support);
+    }
+
+    /** A check of one model file for one device choice, valid while the file keeps this modification time. */
+    struct CheckRecord {
+        ModelSize model_size;
+        ComputeDeviceChoice device;
+        juce::Time modified;
+        Support support;
+    };
+
+    struct CheckRecords {
+        std::mutex mutex;
+        std::vector<CheckRecord> checks; // Oldest first.
+    };
+
+    CheckRecords& checkRecords()
+    {
+        static CheckRecords records;
+        return records;
     }
 
     /** @return How many devices before inIndex share its name. */
@@ -73,6 +139,75 @@ const std::vector<msl::Device>* tryGet()
 const std::vector<msl::Device>& get()
 {
     return listing().get();
+}
+
+std::optional<Support> knownSupport(ModelSize inModelSize)
+{
+    if (!NNFileUtils::isModelInstalled(inModelSize)) {
+        return std::nullopt;
+    }
+
+    const juce::Time modified = NNFileUtils::getModelFile(inModelSize).getLastModificationTime();
+
+    CheckRecords& records = checkRecords();
+    const std::lock_guard<std::mutex> lock(records.mutex);
+    std::optional<Support> found;
+
+    for (auto check = records.checks.rbegin(); check != records.checks.rend(); ++check) {
+        if (check->model_size != inModelSize || check->modified != modified) {
+            continue;
+        }
+
+        if (!found.has_value()) {
+            found = check->support;
+            continue;
+        }
+
+        for (std::size_t i = 0; i < found->size() && i < check->support.size(); ++i) {
+            if (!(*found)[i].has_value()) {
+                (*found)[i] = check->support[i];
+            }
+        }
+    }
+
+    return found;
+}
+
+std::optional<Support> checkSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice)
+{
+    if (!NNFileUtils::isModelInstalled(inModelSize)) {
+        return std::nullopt;
+    }
+
+    const juce::File model_file = NNFileUtils::getModelFile(inModelSize);
+    const juce::Time modified = model_file.getLastModificationTime();
+    std::optional<Support> support = checkModel(model_file, inDevice);
+
+    if (support.has_value()) {
+        CheckRecords& records = checkRecords();
+        const std::lock_guard<std::mutex> lock(records.mutex);
+
+        std::erase_if(records.checks, [&](const CheckRecord& inCheck) {
+            return inCheck.model_size == inModelSize && inCheck.device == inDevice;
+        });
+
+        records.checks.push_back(
+            {.model_size = inModelSize, .device = inDevice, .modified = modified, .support = *support});
+    }
+
+    return support;
+}
+
+void waitForBackgroundWork()
+{
+    if (listingStarted) {
+        listing().wait();
+    }
+}
+
+std::size_t autoIndex(const std::vector<msl::Device>& inDevices, const std::optional<Support>& inSupport)
+{
+    return inSupport.has_value() ? msl::autoDevice(inDevices, *inSupport) : msl::autoDevice(inDevices);
 }
 
 std::optional<std::size_t> resolve(const std::vector<msl::Device>& inDevices, const ComputeDeviceChoice& inChoice)

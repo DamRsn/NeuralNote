@@ -241,35 +241,59 @@ void NeuralNoteMainView::_buildSettingsMenu()
     String device_menu_name = "Compute device";
 
     if (const std::vector<msl::Device>* devices = ComputeDevices::tryGet()) {
+        // Against the model a transcription would load. Only devices an earlier load tried are marked.
+        std::optional<ComputeDevices::Support> support;
+
+        if (const auto model_size = NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize())) {
+            support = ComputeDevices::knownSupport(*model_size);
+        }
+
+        const auto is_supported = [&support](std::size_t inIndex) {
+            return !support.has_value() || !(*support)[inIndex].has_value() || (*support)[inIndex]->supported();
+        };
+
         const auto is_selected = [devices](std::optional<std::size_t> inIndex) {
             return ComputeDevices::resolve(*devices, NnGlobalSettings::getComputeDevice()) == inIndex;
         };
 
-        const auto add_device_item =
-            [&](const String& inLabel, std::optional<std::size_t> inIndex, const ComputeDeviceChoice& inChoice) {
-                auto device_item = PopupMenu::Item(inLabel);
-                device_item.setID(++item_id);
-                device_item.setEnabled(true);
-                mSettingsMenuItemsShouldBeTicked.emplace_back(device_item.itemID,
-                                                              [is_selected, inIndex] { return is_selected(inIndex); });
-                device_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
-                device_item.setAction([this, inChoice] {
-                    NnGlobalSettings::setComputeDevice(inChoice);
-                    _refreshSettingsMenu();
-                });
-                device_menu.addItem(device_item);
-            };
+        const auto add_device_item = [&](const String& inLabel,
+                                         std::optional<std::size_t> inIndex,
+                                         const ComputeDeviceChoice& inChoice,
+                                         bool inEnabled) {
+            auto device_item = PopupMenu::Item(inLabel);
+            device_item.setID(++item_id);
+            device_item.setEnabled(inEnabled);
+            mSettingsMenuItemsShouldBeEnabled.emplace_back(device_item.itemID, [inEnabled] { return inEnabled; });
+            mSettingsMenuItemsShouldBeTicked.emplace_back(device_item.itemID,
+                                                          [is_selected, inIndex] { return is_selected(inIndex); });
+            device_item.setTicked(mSettingsMenuItemsShouldBeTicked.back().second());
+            device_item.setAction([this, inChoice] {
+                NnGlobalSettings::setComputeDevice(inChoice);
+                _refreshSettingsMenu();
+            });
+            device_menu.addItem(device_item);
+        };
 
-        const String auto_label = "Auto (" + String(ComputeDevices::label(*devices, msl::autoDevice(*devices))) + ")";
+        const String auto_label =
+            "Auto (" + String(ComputeDevices::label(*devices, ComputeDevices::autoIndex(*devices, support))) + ")";
         const auto selected = ComputeDevices::resolve(*devices, NnGlobalSettings::getComputeDevice());
         device_menu_name +=
             ": " + (selected.has_value() ? String(ComputeDevices::label(*devices, *selected)) : auto_label);
 
-        add_device_item(auto_label, std::nullopt, {});
+        add_device_item(auto_label, std::nullopt, {}, true);
         device_menu.addSeparator();
 
         for (std::size_t i = 0; i < devices->size(); ++i) {
-            add_device_item(ComputeDevices::label(*devices, i), i, ComputeDevices::choiceFor(*devices, i));
+            const String device_label = ComputeDevices::label(*devices, i);
+
+            const bool created = !support.has_value() || !(*support)[i].has_value() || (*support)[i]->created();
+
+            add_device_item(is_supported(i) ? device_label
+                            : created       ? device_label + " (not supported)"
+                                            : device_label + " (unavailable)",
+                            i,
+                            ComputeDevices::choiceFor(*devices, i),
+                            is_supported(i));
         }
     }
 
