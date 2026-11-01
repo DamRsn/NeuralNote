@@ -3,7 +3,7 @@
 
 Moves the PDBs out of the release directory first, since the linker writes them
 beside the binaries, some inside the VST3 bundle, and the installer copies those
-directories whole. Writes NeuralNote_Installer_Windows_x64.exe and NeuralNote_Installer_Windows_x64_PDBs.zip
+directories whole. Writes NeuralNote_Installer_Windows_x64.exe and NeuralNote_Symbols_ForDebugging_Windows_x64.zip
 to Installers/Windows/Output.
 """
 
@@ -39,7 +39,7 @@ def main() -> None:
     collect_pdbs(symbols_dir)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    shutil.make_archive(str(OUTPUT_DIR / "NeuralNote_Installer_Windows_x64_PDBs"), "zip", symbols_dir)
+    shutil.make_archive(str(OUTPUT_DIR / "NeuralNote_Symbols_ForDebugging_Windows_x64"), "zip", symbols_dir)
 
     # neuralnote.iss resolves ReleaseDir from its own directory, two levels below the root.
     subprocess.run(
