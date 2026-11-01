@@ -5,6 +5,7 @@
 #include "ComputeDevices.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <future>
 #include <map>
@@ -38,33 +39,27 @@ namespace
         return devices;
     }
 
-    /**
-     * A copy per caller: a shared_future is safe across threads only through separate copies. The
-     * static's destructor waits for the listing, so it cannot outlive the plugin binary.
-     */
+    std::atomic<bool> listingStarted {false};
+
+    /** A copy per caller: a shared_future is safe across threads only through separate copies. */
     std::shared_future<std::vector<msl::Device>> listing()
     {
         static const std::shared_future<std::vector<msl::Device>> future =
             std::async(std::launch::async, listDevices).share();
+        listingStarted = true;
         return future;
     }
 
     using Support = std::optional<std::vector<msl::DeviceSupport>>;
 
-    Support checkModel(ModelSize inModelSize)
+    Support checkModel(const juce::File& inModelFile)
     {
         const std::vector<msl::Device>& devices = get();
-        const juce::File model_file = NNFileUtils::getModelFile(inModelSize);
-
-        if (!NNFileUtils::isModelInstalled(inModelSize)) {
-            return std::nullopt;
-        }
-
-        auto support = msl::Transcriber::checkDevices(NNFileUtils::toPath(model_file));
+        auto support = msl::Transcriber::checkDevices(NNFileUtils::toPath(inModelFile));
 
         if (!support.has_value()) {
             NnLogger::write(NnLogger::Level::Warning,
-                            "ComputeDevices: could not check " + model_file.getFileName() + ": "
+                            "ComputeDevices: could not check " + inModelFile.getFileName() + ": "
                                 + msl::describe(support.error()));
             return std::nullopt;
         }
@@ -73,7 +68,7 @@ namespace
             if (!(*support)[i].supported()) {
                 NnLogger::write(NnLogger::Level::Warning,
                                 "ComputeDevices: " + juce::String(label(devices, i)) + " cannot run "
-                                    + model_file.getFileName() + ": unsupported op "
+                                    + inModelFile.getFileName() + ": unsupported op "
                                     + juce::String((*support)[i].unsupported_op));
             }
         }
@@ -81,10 +76,15 @@ namespace
         return std::move(*support);
     }
 
-    /** One check per model size, for the life of the process. */
+    /** A check of one model file, valid while the file keeps this modification time. */
+    struct CachedCheck {
+        juce::Time modified;
+        std::shared_future<Support> result;
+    };
+
     struct SupportCache {
         std::mutex mutex;
-        std::map<ModelSize, std::shared_future<Support>> checks;
+        std::map<ModelSize, CachedCheck> checks;
     };
 
     SupportCache& supportCache()
@@ -93,28 +93,29 @@ namespace
         return cache;
     }
 
-    /** @return A copy of inModelSize's check, starting it if there is none or it found nothing. */
-    std::shared_future<Support> supportCheck(ModelSize inModelSize)
+    /**
+     * @return A copy of the check of inModelSize's installed file, started if that file has not been
+     *         checked, or nullopt when there is nothing to check: the model is not installed, or
+     *         inDevice is the CPU, which never needs the GPUs queried.
+     */
+    std::optional<std::shared_future<Support>> supportCheck(ModelSize inModelSize, const ComputeDeviceChoice& inDevice)
     {
+        if (inDevice.name == "CPU" || !NNFileUtils::isModelInstalled(inModelSize)) {
+            return std::nullopt;
+        }
+
+        const juce::File model_file = NNFileUtils::getModelFile(inModelSize);
+        const juce::Time modified = model_file.getLastModificationTime();
+
         SupportCache& cache = supportCache();
         const std::lock_guard<std::mutex> lock(cache.mutex);
+        CachedCheck& check = cache.checks[inModelSize];
 
-        auto it = cache.checks.find(inModelSize);
-
-        // One that found nothing is run again, so a model installed since gets checked. Nothing
-        // points into it: the getters return null for it.
-        if (it != cache.checks.end() && it->second.wait_for(std::chrono::seconds(0)) == std::future_status::ready
-            && !it->second.get().has_value()) {
-            cache.checks.erase(it);
-            it = cache.checks.end();
+        if (!check.result.valid() || check.modified != modified) {
+            check = {.modified = modified, .result = std::async(std::launch::async, checkModel, model_file).share()};
         }
 
-        if (it == cache.checks.end()) {
-            it = cache.checks.emplace(inModelSize, std::async(std::launch::async, checkModel, inModelSize).share())
-                     .first;
-        }
-
-        return it->second;
+        return check.result;
     }
 
     const std::vector<msl::DeviceSupport>* pointerTo(const Support& inSupport)
@@ -153,25 +154,42 @@ const std::vector<msl::Device>& get()
     return listing().get();
 }
 
-void prepareSupport(ModelSize inModelSize)
+void prepareSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice)
 {
-    supportCheck(inModelSize);
+    supportCheck(inModelSize, inDevice);
 }
 
-const std::vector<msl::DeviceSupport>* tryGetSupport(ModelSize inModelSize)
+const std::vector<msl::DeviceSupport>* tryGetSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice)
 {
-    const auto check = supportCheck(inModelSize);
+    const auto check = supportCheck(inModelSize, inDevice);
 
-    if (check.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+    if (!check.has_value() || check->wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
         return nullptr;
     }
 
-    return pointerTo(check.get());
+    return pointerTo(check->get());
 }
 
-const std::vector<msl::DeviceSupport>* getSupport(ModelSize inModelSize)
+const std::vector<msl::DeviceSupport>* getSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice)
 {
-    return pointerTo(supportCheck(inModelSize).get());
+    const auto check = supportCheck(inModelSize, inDevice);
+    return check.has_value() ? pointerTo(check->get()) : nullptr;
+}
+
+void waitForBackgroundWork()
+{
+    {
+        SupportCache& cache = supportCache();
+        const std::lock_guard<std::mutex> lock(cache.mutex);
+
+        for (const auto& [model_size, check]: cache.checks) {
+            check.result.wait();
+        }
+    }
+
+    if (listingStarted) {
+        listing().wait();
+    }
 }
 
 std::size_t autoIndex(const std::vector<msl::Device>& inDevices, const std::vector<msl::DeviceSupport>* inSupport)

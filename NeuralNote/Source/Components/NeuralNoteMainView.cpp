@@ -48,7 +48,7 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     ComputeDevices::prepare();
 
     if (const auto model_size = NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize())) {
-        ComputeDevices::prepareSupport(*model_size);
+        ComputeDevices::prepareSupport(*model_size, NnGlobalSettings::getComputeDevice());
     }
 
     mTopBar.getModelButton().onClick = [this] {
@@ -245,13 +245,12 @@ void NeuralNoteMainView::_buildSettingsMenu()
     String device_menu_name = "Compute device";
 
     if (const std::vector<msl::Device>* devices = ComputeDevices::tryGet()) {
-        // Against the model a transcription would load. Until that has been checked, every device
-        // is offered; loading checks again.
+        // Against the model a transcription would load. Until that has been checked, and while the
+        // CPU is chosen, every device is offered; loading checks again.
         const std::vector<msl::DeviceSupport>* support = nullptr;
 
         if (const auto model_size = NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize())) {
-            ComputeDevices::prepareSupport(*model_size);
-            support = ComputeDevices::tryGetSupport(*model_size);
+            support = ComputeDevices::tryGetSupport(*model_size, NnGlobalSettings::getComputeDevice());
         }
 
         const auto is_supported = [support](std::size_t inIndex) {

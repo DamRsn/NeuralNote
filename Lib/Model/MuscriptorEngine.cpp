@@ -62,8 +62,8 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
     const std::vector<msl::Device>& devices = ComputeDevices::get();
 
     // Milliseconds once the listing is done, and usually already checked by the time Transcribe is
-    // clicked. The library repeats the check; this copy says why a device was not used.
-    const std::vector<msl::DeviceSupport>* support = ComputeDevices::getSupport(inModelSize);
+    // clicked. load() checks the devices it tries again; this copy says why a device was not used.
+    const std::vector<msl::DeviceSupport>* support = ComputeDevices::getSupport(inModelSize, inDevice);
 
     msl::LoadOptions options;
     options.device = ComputeDevices::resolve(devices, inDevice);
@@ -126,17 +126,27 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
 
     mTranscriber = std::move(*loaded);
 
-    // Auto on the CPU while there is a GPU: either it cannot run this model, or it failed to
-    // initialise.
+    // Auto on the CPU while there is a GPU. ComputeDevices has logged the op each unsupported GPU
+    // lacks.
     const std::size_t cpu = devices.size() - 1;
 
-    if (const std::size_t gpu = msl::autoDevice(devices);
-        !options.device.has_value() && gpu != cpu && mTranscriber->device().backend == "CPU") {
-        const bool unsupported = support != nullptr && !(*support)[gpu].supported();
+    if (!options.device.has_value() && cpu > 0 && mTranscriber->device().backend == "CPU") {
+        const std::size_t tried = ComputeDevices::autoIndex(devices, support);
+        String reason;
 
-        NnLogger::write(NnLogger::Level::Warning,
-                        "MuscriptorEngine: Auto runs on the CPU: " + String(ComputeDevices::label(devices, gpu))
-                            + (unsupported ? " cannot run this model" : " failed to initialise"));
+        if (support == nullptr) {
+            reason = String(ComputeDevices::label(devices, tried)) + " could not be used";
+        }
+
+        else if (tried != cpu) {
+            reason = String(ComputeDevices::label(devices, tried)) + " failed to initialise";
+        }
+
+        else {
+            reason = "no GPU can run this model";
+        }
+
+        NnLogger::write(NnLogger::Level::Warning, "MuscriptorEngine: Auto runs on the CPU: " + reason);
     }
 
     NnLogger::write(NnLogger::Level::Info,

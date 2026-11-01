@@ -34,19 +34,27 @@ const std::vector<msl::Device>& get();
 
 /**
  * Starts checking inModelSize's checkpoint against the devices on a background thread, if it is
- * installed and has not been checked yet. Thread-safe and cheap after the first call.
+ * installed and its file has not been checked yet. Does nothing when inDevice is the CPU, so that
+ * choosing the CPU never queries the GPUs. Thread-safe and cheap after the first call.
  */
-void prepareSupport(ModelSize inModelSize);
+void prepareSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice);
 
 /**
  * @return Whether each device can run inModelSize's checkpoint, in the order of the device list, or
- *         null while that is still being checked, or when it cannot be (not installed, unreadable).
- *         Never blocks. Thread-safe.
+ *         null while that is still being checked, or when it is not (not installed, unreadable, or
+ *         inDevice is the CPU). Never blocks. Thread-safe.
  */
-const std::vector<msl::DeviceSupport>* tryGetSupport(ModelSize inModelSize);
+const std::vector<msl::DeviceSupport>* tryGetSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice);
 
 /** @return As tryGetSupport, starting the check if needed and waiting for it. Not for the message thread. */
-const std::vector<msl::DeviceSupport>* getSupport(ModelSize inModelSize);
+const std::vector<msl::DeviceSupport>* getSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice);
+
+/**
+ * Waits for the listing and for any support check still running. Call before the plugin binary can
+ * unload: they use statics of muscriptor.cpp and ggml that static destruction would otherwise free
+ * while they run.
+ */
+void waitForBackgroundWork();
 
 /**
  * @return The index of the device Auto runs on: among the devices inSupport marks supported, or
