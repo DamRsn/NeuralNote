@@ -245,16 +245,16 @@ void NeuralNoteMainView::_buildSettingsMenu()
     String device_menu_name = "Compute device";
 
     if (const std::vector<msl::Device>* devices = ComputeDevices::tryGet()) {
-        // Against the model a transcription would load. Until that has been checked, and while the
-        // CPU is chosen, every device is offered; loading checks again.
-        const std::vector<msl::DeviceSupport>* support = nullptr;
+        // Against the model a transcription would load. Only the devices a check has reached are
+        // marked; loading checks the others it tries.
+        std::optional<ComputeDevices::Support> support;
 
         if (const auto model_size = NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize())) {
             support = ComputeDevices::tryGetSupport(*model_size, NnGlobalSettings::getComputeDevice());
         }
 
-        const auto is_supported = [support](std::size_t inIndex) {
-            return support == nullptr || (*support)[inIndex].supported();
+        const auto is_supported = [&support](std::size_t inIndex) {
+            return !support.has_value() || !(*support)[inIndex].has_value() || (*support)[inIndex]->supported();
         };
 
         const auto is_selected = [devices](std::optional<std::size_t> inIndex) {

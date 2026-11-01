@@ -63,10 +63,11 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
 
     // Milliseconds once the listing is done, and usually already checked by the time Transcribe is
     // clicked. load() checks the devices it tries again; this copy says why a device was not used.
-    const std::vector<msl::DeviceSupport>* support = ComputeDevices::getSupport(inModelSize, inDevice);
+    const std::optional<ComputeDevices::Support> support = ComputeDevices::getSupport(inModelSize, inDevice);
+    const std::optional<std::size_t> device_index = ComputeDevices::resolve(devices, inDevice);
 
     msl::LoadOptions options;
-    options.device = ComputeDevices::resolve(devices, inDevice);
+    options.device = device_index;
     options.should_cancel = [this] { return mCancelRequested.load(); };
     options.on_progress = [this](float inProgress) { mProgress = Progress {Phase::LoadingModel, inProgress}; };
 
@@ -92,17 +93,21 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
                                   " then download it again";
         }
 
-        // Only an explicit choice can fail this way. The list lasts as long as the plugin binary is
-        // loaded, which in a DAW can outlast closing NeuralNote.
-        else if (loaded.error() == msl::Error::DeviceUnavailable && options.device.has_value()) {
-            if (support != nullptr && !(*support)[*options.device].supported()) {
-                mLastErrorMessage = ComputeDevices::label(devices, *options.device)
+        // Under Auto this needs a CPU that cannot run the model, which falls to the generic message.
+        // The list lasts as long as the plugin binary is loaded, which in a DAW can outlast closing
+        // NeuralNote.
+        else if (loaded.error() == msl::Error::DeviceUnavailable && device_index.has_value()) {
+            const std::optional<msl::DeviceSupport> device_support =
+                support.has_value() ? (*support)[*device_index] : std::nullopt;
+
+            if (device_support.has_value() && !device_support->supported()) {
+                mLastErrorMessage = ComputeDevices::label(devices, *device_index)
                                     + " cannot run the transcription model. Choose Auto or CPU under Settings >"
                                       " Compute device";
             }
 
             else {
-                mLastErrorMessage = ComputeDevices::label(devices, *options.device)
+                mLastErrorMessage = ComputeDevices::label(devices, *device_index)
                                     + " could not be used. Choose Auto or CPU under Settings > Compute device,"
                                       " or restart NeuralNote (or your DAW) if your GPUs have changed";
             }
@@ -130,11 +135,11 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
     // lacks.
     const std::size_t cpu = devices.size() - 1;
 
-    if (!options.device.has_value() && cpu > 0 && mTranscriber->device().backend == "CPU") {
+    if (!device_index.has_value() && cpu > 0 && mTranscriber->device().backend == "CPU") {
         const std::size_t tried = ComputeDevices::autoIndex(devices, support);
         String reason;
 
-        if (support == nullptr) {
+        if (!support.has_value()) {
             reason = String(ComputeDevices::label(devices, tried)) + " could not be used";
         }
 
