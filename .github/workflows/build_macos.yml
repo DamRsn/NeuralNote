@@ -95,4 +95,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ inputs.release-tag }}
-        run: gh release upload "$RELEASE_TAG" Installers/Mac/build/*.pkg Installers/Mac/build/*_dSYMs.zip --clobber
+        run: gh release upload "$RELEASE_TAG" Installers/Mac/build/*.pkg Installers/Mac/build/NeuralNote_Symbols_ForDebugging_Mac_*.zip --clobber
