@@ -47,10 +47,6 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     // Off this thread: the first listing initialises the GPU backends.
     ComputeDevices::prepare();
 
-    if (const auto model_size = NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize())) {
-        ComputeDevices::prepareSupport(*model_size, NnGlobalSettings::getComputeDevice());
-    }
-
     mTopBar.getModelButton().onClick = [this] {
         mVisualizationPanel.setModelPanelOpen(!mVisualizationPanel.isModelPanelVisible());
         mTopBar.syncModelButton(mVisualizationPanel.isModelPanelVisible());
@@ -245,12 +241,11 @@ void NeuralNoteMainView::_buildSettingsMenu()
     String device_menu_name = "Compute device";
 
     if (const std::vector<msl::Device>* devices = ComputeDevices::tryGet()) {
-        // Against the model a transcription would load. Only the devices a check has reached are
-        // marked; loading checks the others it tries.
+        // Against the model a transcription would load. Only devices an earlier load tried are marked.
         std::optional<ComputeDevices::Support> support;
 
         if (const auto model_size = NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize())) {
-            support = ComputeDevices::tryGetSupport(*model_size, NnGlobalSettings::getComputeDevice());
+            support = ComputeDevices::knownSupport(*model_size);
         }
 
         const auto is_supported = [&support](std::size_t inIndex) {
@@ -291,7 +286,11 @@ void NeuralNoteMainView::_buildSettingsMenu()
         for (std::size_t i = 0; i < devices->size(); ++i) {
             const String device_label = ComputeDevices::label(*devices, i);
 
-            add_device_item(is_supported(i) ? device_label : device_label + " (not supported)",
+            const bool created = !support.has_value() || !(*support)[i].has_value() || (*support)[i]->created();
+
+            add_device_item(is_supported(i) ? device_label
+                            : created       ? device_label + " (not supported)"
+                                            : device_label + " (unavailable)",
                             i,
                             ComputeDevices::choiceFor(*devices, i),
                             is_supported(i));

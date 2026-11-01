@@ -61,9 +61,6 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
     // initialisation inside load().
     const std::vector<msl::Device>& devices = ComputeDevices::get();
 
-    // Milliseconds once the listing is done, and usually already checked by the time Transcribe is
-    // clicked. load() checks the devices it tries again; this copy says why a device was not used.
-    const std::optional<ComputeDevices::Support> support = ComputeDevices::getSupport(inModelSize, inDevice);
     const std::optional<std::size_t> device_index = ComputeDevices::resolve(devices, inDevice);
 
     msl::LoadOptions options;
@@ -78,6 +75,15 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
     const double load_start_ms = Time::getMillisecondCounterHiRes();
 
     auto loaded = msl::Transcriber::load(NNFileUtils::toPath(model_file), std::move(options));
+    const int load_ms = roundToInt(Time::getMillisecondCounterHiRes() - load_start_ms);
+
+    // After the load, so the check touches only the devices it tried. It records what it found for
+    // the Settings menu.
+    std::optional<ComputeDevices::Support> support;
+
+    if (loaded.has_value() || loaded.error() == msl::Error::DeviceUnavailable) {
+        support = ComputeDevices::checkSupport(inModelSize, inDevice);
+    }
 
     if (!loaded.has_value()) {
         if (loaded.error() == msl::Error::Cancelled) {
@@ -100,7 +106,7 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
             const std::optional<msl::DeviceSupport> device_support =
                 support.has_value() ? (*support)[*device_index] : std::nullopt;
 
-            if (device_support.has_value() && !device_support->supported()) {
+            if (device_support.has_value() && device_support->created() && !device_support->supported()) {
                 mLastErrorMessage = ComputeDevices::label(devices, *device_index)
                                     + " cannot run the transcription model. Choose Auto or CPU under Settings >"
                                       " Compute device";
@@ -131,34 +137,10 @@ MuscriptorEngine::Outcome MuscriptorEngine::_loadModel(ModelSize inModelSize, co
 
     mTranscriber = std::move(*loaded);
 
-    // Auto on the CPU while there is a GPU. ComputeDevices has logged the op each unsupported GPU
-    // lacks.
-    const std::size_t cpu = devices.size() - 1;
-
-    if (!device_index.has_value() && cpu > 0 && mTranscriber->device().backend == "CPU") {
-        const std::size_t tried = ComputeDevices::autoIndex(devices, support);
-        String reason;
-
-        if (!support.has_value()) {
-            reason = String(ComputeDevices::label(devices, tried)) + " could not be used";
-        }
-
-        else if (tried != cpu) {
-            reason = String(ComputeDevices::label(devices, tried)) + " failed to initialise";
-        }
-
-        else {
-            reason = "no GPU can run this model";
-        }
-
-        NnLogger::write(NnLogger::Level::Warning, "MuscriptorEngine: Auto runs on the CPU: " + reason);
-    }
-
     NnLogger::write(NnLogger::Level::Info,
                     "MuscriptorEngine: model loaded on " + String(mTranscriber->device().name) + " ("
                         + String(mTranscriber->device().backend) + "), CPU backend "
-                        + String(std::string(msl::cpuVariant())) + ", in "
-                        + String(roundToInt(Time::getMillisecondCounterHiRes() - load_start_ms)) + " ms");
+                        + String(std::string(msl::cpuVariant())) + ", in " + String(load_ms) + " ms");
 
     return Outcome::Success;
 }

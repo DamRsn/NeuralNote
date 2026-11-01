@@ -32,43 +32,34 @@ const std::vector<msl::Device>* tryGet();
 /** @return The devices, waiting for the listing if needed. Not for the message thread. */
 const std::vector<msl::Device>& get();
 
-/**
- * What a check found for each device, in the order of the device list. A device the check did not
- * reach, or could not create, has no entry.
- */
+/** What a check found for each device, in the order of the device list. A device it did not reach has no entry. */
 using Support = std::vector<std::optional<msl::DeviceSupport>>;
 
 /**
- * Starts checking inModelSize's checkpoint on a background thread against the devices a load with
- * inDevice would try, if it is installed and that has not been checked for its file yet. Does
- * nothing when inDevice is the CPU, so that choosing the CPU never queries the GPUs. Thread-safe.
+ * @return What the recorded checks of inModelSize's installed file have found, the newest first
+ *         for each device, whatever device choice they were for, or nullopt when there are none.
+ *         Never blocks and touches no device. Thread-safe.
  */
-void prepareSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice);
+std::optional<Support> knownSupport(ModelSize inModelSize);
 
 /**
- * As prepareSupport, then returns everything the finished checks of inModelSize's installed file
- * have found, whatever device they were for, or nullopt when none has finished. Never blocks.
- * Thread-safe.
+ * Checks the devices a load of inModelSize with inDevice tries, and records the result for
+ * knownSupport. Call after that load, so the check touches only devices the load has already
+ * created or failed to create. Blocks; not for the message thread. Thread-safe.
+ *
+ * @return The result, or nullopt when the model is not installed or could not be checked.
  */
-std::optional<Support> tryGetSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice);
+std::optional<Support> checkSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice);
 
 /**
- * @return The check of the devices a load of inModelSize with inDevice tries, starting it if needed
- *         and waiting for it, or nullopt when there is none (not installed, unreadable, or inDevice
- *         is the CPU). Not for the message thread.
- */
-std::optional<Support> getSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice);
-
-/**
- * Waits for the listing and for any support check still running. Call before the plugin binary can
- * unload: they use statics of muscriptor.cpp and ggml that static destruction would otherwise free
- * while they run.
+ * Waits for the listing if it is still running. Call before the plugin binary can unload: it uses
+ * statics of muscriptor.cpp and ggml that static destruction would otherwise free while it runs.
  */
 void waitForBackgroundWork();
 
 /**
- * @return The index of the device Auto runs on: passing over the GPUs inSupport marks unsupported,
- *         or the first GPU when inSupport is nullopt.
+ * @return The index of the device Auto runs on as far as inSupport knows, as msl::autoDevice: the
+ *         first GPU in Auto order when nothing is known.
  */
 std::size_t autoIndex(const std::vector<msl::Device>& inDevices, const std::optional<Support>& inSupport);
 
