@@ -357,6 +357,13 @@ details b { color: var(--text-primary); font-weight: 500; }
   user-select: all;
 }
 
+/* ---- code signing policy ---------------------------------------------- */
+
+.policy { padding: 56px 0; }
+.policy p, .policy ul { margin: 0 0 12px; font-size: 14px; color: var(--text-icon); }
+.policy ul { padding-left: 20px; }
+.policy b { color: var(--text-primary); font-weight: 500; }
+
 /* ---- footer ----------------------------------------------------------- */
 
 .footer { padding: 40px 0 56px; border-top: 1px solid var(--div-strong); background: var(--bg-topbar); }
