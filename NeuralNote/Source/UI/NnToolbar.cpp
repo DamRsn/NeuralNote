@@ -7,6 +7,7 @@
 #include "NeuralNoteTooltips.h"
 #include "NNFileUtils.h"
 #include "NnFonts.h"
+#include "NnGlobalSettings.h"
 #include "NnIcons.h"
 #include "NnLogger.h"
 #include "NnLook.h"
@@ -147,7 +148,7 @@ void NnToolbar::_exportMidiFile()
         NNFileUtils::getMidiExportFileName(mProcessor.getSourceAudioManager()->getDroppedFilename());
 
     mFileChooser = std::make_shared<juce::FileChooser>(
-        "Export MIDI", NNFileUtils::getDefaultMidiExportDirectory().getChildFile(filename), "*.mid");
+        "Export MIDI", NnGlobalSettings::getMidiExportDirectory().getChildFile(filename), "*.mid");
 
     mFileChooser->launchAsync(
         juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
@@ -174,7 +175,10 @@ void NnToolbar::_exportMidiFile()
                 NnLogger::write(NnLogger::Level::Error, "NnToolbar: Could not write the MIDI file.");
                 juce::NativeMessageBox::showMessageBoxAsync(
                     juce::MessageBoxIconType::NoIcon, "Error", "Could not write the MIDI file.");
+                return;
             }
+
+            NnGlobalSettings::setMidiExportDirectory(file.getParentDirectory());
         });
 }
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Configures and builds NeuralNote in Release for CI, through ccache.
 
-macOS builds one architecture, given by --arch. Windows builds with clang-cl and
-lld-link, taken from CC, CXX, RC, CMAKE_LINKER and CMAKE_AR in the environment
-(see windows_tools.py).
+macOS builds one architecture, given by --arch. For x86_64, MUSCRIPTOR_LLVM_OBJCOPY
+in the environment, when set, names the llvm-objcopy the CPU variants use. Windows
+builds with clang-cl and lld-link, taken from CC, CXX, RC, CMAKE_LINKER and
+CMAKE_AR in the environment (see windows_tools.py).
 
 The output is in build/NeuralNote_artefacts/Release.
 """
@@ -35,8 +36,22 @@ def macos_options(arch: str, ccache: str) -> tuple[list[str], list[str]]:
         "-DMUSCRIPTOR_METAL=ON",
         "-DMUSCRIPTOR_METAL_PRECOMPILED=ON",
     ]
+    targets = ["NeuralNote_Standalone", "NeuralNote_VST3", "NeuralNote_AU"]
 
-    return options, ["NeuralNote_Standalone", "NeuralNote_VST3", "NeuralNote_AU"]
+    if arch == "x86_64":
+        # ggml-cpu per instruction-set level, picked at run time.
+        options.append("-DMUSCRIPTOR_CPU_VARIANTS=ON")
+
+        if objcopy := os.environ.get("MUSCRIPTOR_LLVM_OBJCOPY"):
+            options.append(f"-DMUSCRIPTOR_LLVM_OBJCOPY={objcopy}")
+
+        # Rosetta runs AVX2 without advertising it, so only this check catches it outside the variants.
+        targets.append("muscriptor_check_cpu_baseline")
+    else:
+        # The fixed ARM baseline, never the runner's own CPU.
+        options.append("-DMUSCRIPTOR_NATIVE=OFF")
+
+    return options, targets
 
 
 def windows_options(ccache: str) -> tuple[list[str], list[str]]:
@@ -48,11 +63,13 @@ def windows_options(ccache: str) -> tuple[list[str], list[str]]:
         f"-DCMAKE_AR={env['CMAKE_AR']}",
         *launchers(ccache, ["C", "CXX"]),
         "-DNEURALNOTE_ASIO=ON",
+        # ggml-cpu per instruction-set level, picked at run time.
+        "-DMUSCRIPTOR_CPU_VARIANTS=ON",
         # Fails the configure if the SDK is missing, rather than building without the backend.
         "-DMUSCRIPTOR_VULKAN=ON",
     ]
 
-    return options, ["NeuralNote_Standalone", "NeuralNote_VST3"]
+    return options, ["NeuralNote_Standalone", "NeuralNote_VST3", "muscriptor_check_cpu_baseline"]
 
 
 def main() -> None:

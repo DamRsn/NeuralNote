@@ -9,7 +9,7 @@ embeds in the installer to $RUNNER_TEMP/signing/unsigned, for signing.
 installer: puts the signed files from $RUNNER_TEMP/signing/signed in place and
 compiles the installer.
 
-Writes NeuralNote_Installer_Windows_x64.exe and NeuralNote_Installer_Windows_x64_PDBs.zip
+Writes NeuralNote_Installer_Windows_x64.exe and NeuralNote_Symbols_ForDebugging_Windows_x64.zip
 to Installers/Windows/Output.
 """
 
@@ -66,7 +66,7 @@ def prepare() -> None:
     collect_pdbs(symbols_dir)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    shutil.make_archive(str(OUTPUT_DIR / "NeuralNote_Installer_Windows_x64_PDBs"), "zip", symbols_dir)
+    shutil.make_archive(str(OUTPUT_DIR / "NeuralNote_Symbols_ForDebugging_Windows_x64"), "zip", symbols_dir)
 
     # With no signed uninstaller in its directory, the compile writes an unsigned one there and fails.
     shutil.rmtree(UNINSTALLER_DIR, ignore_errors=True)

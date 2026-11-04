@@ -89,25 +89,32 @@ void CombinedAudioMidiRegion::filesDropped(const StringArray& files, int x, int 
     ignoreUnused(y);
     mAudioRegion.setIsFileOver(false);
 
-    if (_isFileTypeSupported(files[0])) {
-        bool success = mProcessor->getSourceAudioManager()->onFileDrop(files[0]);
+    loadAudioFile(files[0]);
+}
 
-        if (success) {
-            refreshForAudioLength();
-        }
-
-        repaint();
-    } else {
+bool CombinedAudioMidiRegion::loadAudioFile(const String& inPath)
+{
+    if (!_isFileTypeSupported(inPath)) {
         auto supported_format_string = mSupportedAudioFileExtensions.joinIntoString(", ");
 
         NnLogger::write(NnLogger::Level::Warning,
                         "CombinedAudioMidiRegion: Could not load the file: unsupported format ("
-                            + juce::File(files[0]).getFileExtension() + ").");
+                            + juce::File(inPath).getFileExtension() + ").");
         juce::NativeMessageBox::showMessageBoxAsync(
             juce::MessageBoxIconType::NoIcon,
             "Could not load the file.",
             "Check your file format (Accepted formats: " + supported_format_string + ").");
+        return false;
     }
+
+    bool success = mProcessor->getSourceAudioManager()->onFileDrop(inPath);
+
+    if (success) {
+        refreshForAudioLength();
+    }
+
+    repaint();
+    return success;
 }
 
 void CombinedAudioMidiRegion::fileDragEnter(const StringArray& files, int x, int y)

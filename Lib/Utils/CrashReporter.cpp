@@ -17,6 +17,8 @@
 #include <windows.h>
 #include <dbghelp.h>
 
+#include "muscriptor/device.hpp"
+
 #include "NNFileUtils.h"
 #include "NnGlobalSettings.h"
 #include "NnLogger.h"
@@ -28,6 +30,9 @@ namespace
 
 // Set before the handlers are installed: after a crash, the heap may be what broke.
 std::wstring gDirectory;
+// The dump's comment stream, which WinDbg prints on opening it. The stack names ggml-cpu functions
+// without their variant.
+std::string gComment;
 
 LPTOP_LEVEL_EXCEPTION_FILTER gPreviousFilter = nullptr;
 decltype(SIG_DFL) gPreviousAbortHandler = SIG_DFL;
@@ -78,7 +83,11 @@ void writeMinidump(EXCEPTION_POINTERS* inException)
         const auto type = static_cast<MINIDUMP_TYPE>(MiniDumpWithIndirectlyReferencedMemory | MiniDumpWithThreadInfo
                                                      | MiniDumpWithUnloadedModules);
 
-        MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), file, type, &exception_info, nullptr, nullptr);
+        MINIDUMP_USER_STREAM comment {CommentStreamA, static_cast<ULONG>(gComment.size() + 1), gComment.data()};
+        MINIDUMP_USER_STREAM_INFORMATION user_streams {1, &comment};
+
+        MiniDumpWriteDump(
+            GetCurrentProcess(), GetCurrentProcessId(), file, type, &exception_info, &user_streams, nullptr);
         CloseHandle(file);
     }
 
@@ -155,6 +164,10 @@ void CrashReporter::_install()
 
     gDirectory = directory.getFullPathName().toWideCharPointer();
     gDirectory += L'\\';
+
+    const std::string_view cpu_variant = msl::cpuVariant();
+    gComment = "NeuralNote " + std::string(ProjectInfo::versionString) + ", CPU backend "
+               + (cpu_variant.empty() ? std::string("none") : std::string(cpu_variant));
 
     gPreviousFilter = SetUnhandledExceptionFilter(&onException);
     gPreviousAbortHandler = std::signal(SIGABRT, &onAbort);

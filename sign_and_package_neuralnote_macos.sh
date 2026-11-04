@@ -93,7 +93,7 @@ for bundle in Standalone/NeuralNote.app AU/NeuralNote.component VST3/NeuralNote.
 	strip -S -x "$binary"
 done
 
-SYMBOLS_ZIP=$PWD/${PKG%.pkg}_dSYMs.zip
+SYMBOLS_ZIP=$PWD/$(dirname "$PKG")/NeuralNote_Symbols_ForDebugging_Mac_${ARCH/x86_64/x64}.zip
 mkdir -p "$(dirname "$SYMBOLS_ZIP")"
 rm -f "$SYMBOLS_ZIP"
 (cd "$PLUG_DIR" && zip -qr "$SYMBOLS_ZIP" Standalone/NeuralNote.app.dSYM AU/NeuralNote.component.dSYM VST3/NeuralNote.vst3.dSYM)

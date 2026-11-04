@@ -4,8 +4,11 @@
 
 #include "NnLogger.h"
 
+#include <mutex>
+#include <set>
 #include <utility>
 
+#include "muscriptor/device.hpp"
 #include "muscriptor/log.hpp"
 
 #include "NNFileUtils.h"
@@ -80,6 +83,37 @@ NnLogger::Level fromMslLevel(msl::LogLevel inLevel)
     return NnLogger::Level::Info;
 }
 
+/**
+ * ggml-metal's kernels assume a SIMD-group width of 32, and it reports each pipeline's actual width
+ * only in a debug line. Writes each width once at Info, so any log shows what the GPU runs.
+ */
+void noteMetalSimdWidth(const juce::String& inText)
+{
+    const juce::String marker = "th_width =";
+    const int at = inText.indexOf(marker);
+
+    if (at < 0) {
+        return;
+    }
+
+    const int width = inText.substring(at + marker.length()).trim().getIntValue();
+
+    {
+        static std::mutex mutex;
+        static std::set<int> seen;
+        const std::lock_guard<std::mutex> lock(mutex);
+
+        if (!seen.insert(width).second) {
+            return;
+        }
+    }
+
+    const juce::String pipeline =
+        inText.fromFirstOccurrenceOf("loaded ", false, false).upToFirstOccurrenceOf(" ", false, false);
+    NnLogger::write(NnLogger::Level::Info,
+                    "Metal SIMD-group width " + juce::String(width) + ", first seen in " + pipeline);
+}
+
 void onMslLog(msl::LogLevel inLevel, std::string_view inText)
 {
     const juce::String text =
@@ -87,6 +121,7 @@ void onMslLog(msl::LogLevel inLevel, std::string_view inText)
 
     if (text.isNotEmpty()) {
         NnLogger::write(fromMslLevel(inLevel), "msl: " + text);
+        noteMetalSimdWidth(text);
     }
 }
 
@@ -206,6 +241,10 @@ void NnLogger::_writeSessionHeader()
 #endif
 
     const juce::PluginHostType host;
+
+    // The first call picks the variant, for the life of the process.
+    const std::string_view cpu_variant = msl::cpuVariant();
+
     juce::String settings = juce::String("log level ") + levelToString(getLevel());
 
 #if JUCE_WINDOWS
@@ -220,6 +259,9 @@ void NnLogger::_writeSessionHeader()
         "OS: " + juce::SystemStats::getOperatingSystemName(),
         "CPU: " + juce::SystemStats::getCpuModel() + ", " + juce::String(juce::SystemStats::getNumPhysicalCpus())
             + " cores, " + juce::String(juce::SystemStats::getNumCpus()) + " threads",
+        "CPU backend: "
+            + (cpu_variant.empty() ? juce::String("none, no variant runs on this CPU")
+                                   : juce::String(std::string(cpu_variant))),
         "RAM: " + juce::String(juce::SystemStats::getMemorySizeInMegabytes()) + " MB",
         "JUCE: " + juce::SystemStats::getJUCEVersion(),
         "Settings: " + settings,

@@ -1,6 +1,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#include "ComputeDevices.h"
+
 NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
     : mAPVTS(*this, nullptr, NnId::ParametersId, ParameterHelpers::createParameterLayout())
 {
@@ -21,6 +23,9 @@ NeuralNoteAudioProcessor::NeuralNoteAudioProcessor()
 
 NeuralNoteAudioProcessor::~NeuralNoteAudioProcessor()
 {
+    // A host deletes every instance before it unloads the binary.
+    ComputeDevices::waitForBackgroundWork();
+
     NnLogger::write(NnLogger::Level::Info, "NeuralNoteAudioProcessor: instance destroyed");
 }
 
