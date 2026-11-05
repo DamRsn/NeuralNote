@@ -31,8 +31,8 @@ Audio Workstation. See the [website](https://neuralnote.co/).
 Download the latest release for your platform from the [website](https://neuralnote.co/#download) or 
 [releases page](https://github.com/DamRsn/NeuralNote/releases).
 
-- **macOS:** `NeuralNote_Installer_Mac_arm64.pkg` for Apple Silicon, `NeuralNote_Installer_Mac_x64.pkg` for Intel Macs.
-  Both install the Standalone app, VST3 and AU, and are signed and notarized.
+- **macOS 11 or later:** `NeuralNote_Installer_Mac_arm64.pkg` for Apple Silicon, `NeuralNote_Installer_Mac_x64.pkg` for
+  Intel Macs. Both install the Standalone app, VST3 and AU, and are signed and notarized.
 - **Windows (x64):** `NeuralNote_Installer_Windows_x64.exe` installs the Standalone app and VST3. It is not code signed,
   so Windows may warn you before running it for the first time.
 - **Linux:** prebuilt binaries are coming soon. In the meantime, you can [build from source](#build-from-source).
