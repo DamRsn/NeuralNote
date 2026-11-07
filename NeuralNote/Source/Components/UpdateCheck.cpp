@@ -48,7 +48,7 @@ UpdateCheck::UpdateCheck()
     mSeeUpdateButton.setColour(NnFlatButton::outlineColourId, nn::colours::accent);
     mSeeUpdateButton.setColour(NnFlatButton::textColourId, nn::colours::accentText);
     mSeeUpdateButton.setWantsKeyboardFocus(false);
-    mSeeUpdateButton.onClick = [this] { mLatestReleaseUrl.launchInDefaultBrowser(); };
+    mSeeUpdateButton.onClick = [this] { mWebsiteUrl.launchInDefaultBrowser(); };
     addChildComponent(mSeeUpdateButton);
 
     // The same cross the status bar cancels a transcription with, for the same reason: the ten

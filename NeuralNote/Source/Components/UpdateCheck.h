@@ -55,10 +55,10 @@ private:
 
     juce::Time mHideTime;
 
-    static constexpr double mNotificationDurationSeconds = 10.0f;
+    static constexpr double mNotificationDurationSeconds = 30.0f;
     static constexpr double mTimeIncrementOnMouseOverSeconds = 3.0f;
 
-    const juce::URL mLatestReleaseUrl {"https://github.com/DamRsn/NeuralNote/releases/latest"};
+    const juce::URL mWebsiteUrl {"https://neuralnote.co"};
 };
 
 #endif //UPDATECHECK_H
