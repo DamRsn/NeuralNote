@@ -40,6 +40,26 @@ Download the latest release for your platform from the [website](https://neuraln
 The transcription model is not included. Download it from within NeuralNote the first time you open it (see
 [Models and performance](#models-and-performance)).
 
+## Privacy policy
+
+NeuralNote does not collect or send your audio, transcriptions or any personal data. It connects to the network only
+to:
+
+- check for a new version on launch, by reading the latest release from the GitHub API;
+- download a transcription model from [Hugging Face](https://huggingface.co/DamRsn/muscriptor-gguf), when you ask for
+  it.
+
+## Code signing policy
+
+Windows releases are signed through SignPath. Free code signing provided by [SignPath.io](https://about.signpath.io/),
+certificate by [SignPath Foundation](https://signpath.org/). Only the binaries built from this repository by its
+[GitHub Actions workflow](.github/workflows/ci_build.yml) are signed.
+
+- Committers and reviewers: [Damien Ronssin](https://github.com/DamRsn)
+- Approvers: [Damien Ronssin](https://github.com/DamRsn)
+
+macOS releases are signed with an Apple Developer ID certificate and notarized by Apple.
+
 ## Usage
 
 NeuralNote is a simple AudioFX plugin (VST®3/AU/Standalone app) that you apply to the track you want to transcribe.

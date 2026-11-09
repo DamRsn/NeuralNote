@@ -1,7 +1,7 @@
 name: CI build
 
 # Only people with write access can start a manual run, and no fork can trigger this workflow.
-# The macOS jobs run the dispatched branch's code with the signing secrets loaded.
+# The macOS and Windows jobs run the dispatched branch's code with the signing secrets loaded.
 on:
   workflow_dispatch:
     inputs:
@@ -9,6 +9,13 @@ on:
         description: Windows x64
         type: boolean
         default: true
+      windows_signing_policy:
+        description: Windows signing policy
+        type: choice
+        options:
+          - test-signing
+          - release-signing
+        default: test-signing
       macos_arm64:
         description: macOS arm64
         type: boolean
@@ -46,9 +53,14 @@ jobs:
     if: inputs.windows_x64
     permissions:
       contents: write
+      # SignPath reads the job and downloads the artifact to sign with the job's token.
+      actions: read
     uses: ./.github/workflows/build_windows.yml
     with:
       release-tag: ${{ needs.draft.outputs.tag }}
+      signing-policy: ${{ inputs.windows_signing_policy }}
+    secrets:
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
 
   macos-arm64:
     needs: draft
