@@ -8,8 +8,8 @@
 
 namespace
 {
-constexpr float NOTE_CORNER = 2.0f;
-constexpr float ONSET_EDGE_WIDTH = 2.0f;
+constexpr float NOTE_CORNER = 3.0f;
+constexpr float ONSET_EDGE_WIDTH = 2.5f;
 
 // No shading by velocity: the model emits none, so every audible note is drawn at full colour.
 
@@ -21,7 +21,7 @@ constexpr float MUTED_NOTE_ALPHA = 0.16f;
 constexpr double DRUM_MIN_DRAWN_SECONDS = 0.1;
 
 /** How far the lane stripes fall back while there is nothing drawn on them. */
-constexpr float EMPTY_LANE_ALPHA = 0.55f;
+constexpr float EMPTY_LANE_ALPHA = 0.62f;
 } // namespace
 
 PianoRoll::PianoRoll(NeuralNoteAudioProcessor* inProcessor, Keyboard& keyboard, double inBaseNumPixelsPerSecond)
