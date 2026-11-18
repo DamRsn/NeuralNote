@@ -270,7 +270,8 @@ void Sidebar::_paintHeader(juce::Graphics& g, juce::Rectangle<int> inBounds) con
 
     auto content = inBounds.reduced(PADDING_SIDE, 0).toFloat();
 
-    g.setColour(nn::colours::textLabel);
+    // Give the sidebar its own clear hierarchy, like a library panel in a desktop music app.
+    g.setColour(nn::colours::textPrimary);
     nn::drawTrackedText(
         g, "INSTRUMENTS", nn::fonts::sectionHeader(), content, juce::Justification::centredLeft, HEADER_TRACKING);
 

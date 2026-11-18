@@ -162,6 +162,10 @@ void InstrumentStrip::paint(juce::Graphics& g)
 
     if (soloed) {
         g.fillAll(nn::colours::soloRowTint());
+
+        // A slim green rail makes the active solo state readable without tinting the whole mixer.
+        g.setColour(nn::colours::accent);
+        g.fillRect(0, 0, 3, getHeight());
     }
 
     nn::drawBottomBorder(g, getLocalBounds(), nn::colours::divRow);
