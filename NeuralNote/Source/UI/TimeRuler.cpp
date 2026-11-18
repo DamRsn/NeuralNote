@@ -13,7 +13,7 @@ namespace
 // The spacings that read as round numbers of seconds. Anything between them would put labels at
 // times nobody thinks in.
 constexpr double DIVISIONS[] = {0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 30.0, 60.0};
-constexpr int LABEL_INSET = 6;
+constexpr int LABEL_INSET = 8;
 } // namespace
 
 TimeRuler::TimeRuler(NeuralNoteAudioProcessor* inProcessor, double inBaseNumPixelsPerSecond)
