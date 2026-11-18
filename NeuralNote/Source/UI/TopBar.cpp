@@ -14,15 +14,15 @@
 
 namespace
 {
-constexpr int PADDING_LEFT = 18;
-constexpr int PADDING_RIGHT = 14;
+constexpr int PADDING_LEFT = 20;
+constexpr int PADDING_RIGHT = 18;
 
 // Tighter than nn::metrics::controlGap: the transport's buttons draw no box when idle, so their
 // icons already sit apart.
-constexpr int TRANSPORT_GAP = 2;
+constexpr int TRANSPORT_GAP = 3;
 
-constexpr int PILL_PADDING = 12;
-constexpr int PILL_GAP = 9;
+constexpr int PILL_PADDING = 13;
+constexpr int PILL_GAP = 10;
 constexpr int MIX_TRACK_WIDTH = 86;
 constexpr int VOLUME_TRACK_WIDTH = 74;
 // Wide enough for -36.0, and what the instrument strips give the same readout.
@@ -32,7 +32,7 @@ constexpr int SETTINGS_WIDTH = 32;
 
 constexpr float LABEL_TRACKING = 0.08f;
 
-constexpr int MODEL_BUTTON_PADDING = 11;
+constexpr int MODEL_BUTTON_PADDING = 12;
 constexpr float MODEL_LABEL_TRACKING = 0.09f;
 
 juce::String modelButtonLabel(const char* inModelName)
@@ -111,7 +111,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     // One button showing whichever icon is the action available now: pause while it plays.
     mPlayPauseButton.setClickingTogglesState(true);
     mPlayPauseButton.setIcon(nn::icons::play, NnFlatButton::IconStyle::filled, 15.0f);
-    // The primary transport action gets Spotify's green accent; secondary transport controls stay muted.
+    // The primary transport action gets the studio accent; secondary transport controls stay muted.
     mPlayPauseButton.setColour(NnFlatButton::iconColourId, nn::colours::accent);
     mPlayPauseButton.setColour(NnFlatButton::iconOnColourId, nn::colours::accentText);
     mPlayPauseButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::accentFillActive());
