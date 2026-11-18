@@ -15,11 +15,11 @@
 
 namespace
 {
-constexpr int PADDING_SIDE = 14;
-constexpr int FILENAME_GAP = 12; // the least the filename keeps clear of the tempo pill
-constexpr int PILL_PADDING = 10;
+constexpr int PADDING_SIDE = 16;
+constexpr int FILENAME_GAP = 16; // the least the filename keeps clear of the tempo pill
+constexpr int PILL_PADDING = 12;
 constexpr int PILL_GAP = 8;
-constexpr int TEMPO_VALUE_WIDTH = 40;
+constexpr int TEMPO_VALUE_WIDTH = 44;
 constexpr int SPINNER_WIDTH = 7;
 constexpr int SPINNER_HEIGHT = 4;
 constexpr int SPINNER_GAP = 2;
