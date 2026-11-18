@@ -96,7 +96,7 @@ juce::Font mono(float inSizePx, int inWeight)
 // which line of the spec it comes from.
 juce::Font wordmark()
 {
-    static const auto font = sans(15.0f, 600);
+    static const auto font = sans(16.0f, 600);
     return font;
 }
 
@@ -108,13 +108,13 @@ juce::Font wordmarkVersion()
 
 juce::Font transportTime()
 {
-    static const auto font = mono(15.0f, 500);
+    static const auto font = mono(16.0f, 500);
     return font;
 }
 
 juce::Font transportTotal()
 {
-    static const auto font = mono(11.0f, 400);
+    static const auto font = mono(12.0f, 400);
     return font;
 }
 
