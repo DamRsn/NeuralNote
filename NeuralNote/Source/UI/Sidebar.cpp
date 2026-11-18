@@ -18,11 +18,11 @@
 
 namespace
 {
-constexpr int PADDING_SIDE = 14;
-constexpr int HEADER_GAP = 8;
+constexpr int PADDING_SIDE = 16;
+constexpr int HEADER_GAP = 10;
 constexpr int ADD_BUTTON_SIZE = 18;
-constexpr int MASTER_HEIGHT = 63;
-constexpr int MASTER_PAD_TOP = 12;
+constexpr int MASTER_HEIGHT = 68;
+constexpr int MASTER_PAD_TOP = 14;
 constexpr int MASTER_LABEL_HEIGHT = 12;
 constexpr float HEADER_TRACKING = 0.13f;
 
