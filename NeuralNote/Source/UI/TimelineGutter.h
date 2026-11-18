@@ -8,7 +8,7 @@
 #include <JuceHeader.h>
 
 /**
- * The fixed 46 px column to the left of the waveform and the ruler.
+ * The fixed 52 px column to the left of the waveform and the ruler.
  *
  * It exists so those two reserve exactly the width the piano roll's keyboard takes, which is what
  * keeps all three time axes aligned. The waveform's share carries the amplitude scale; the ruler's
