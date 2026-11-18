@@ -14,10 +14,10 @@
 
 namespace
 {
-constexpr int CORNER_LABEL_INSET = 10;
+constexpr int CORNER_LABEL_INSET = 12;
 
 /** So a near-silent passage still reads as audio rather than as an empty region. */
-constexpr float MIN_BAR_HEIGHT = 1.0f;
+constexpr float MIN_BAR_HEIGHT = 1.5f;
 
 constexpr float DASH_LENGTHS[] = {4.0f, 4.0f};
 constexpr int DROP_HINT_HEIGHT = 12;
