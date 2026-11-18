@@ -80,9 +80,8 @@ void AudioRegion::paint(Graphics& g)
     g.setColour(nn::colours::waveCentreLine());
     g.fillRect(0, getHeight() / 2, getWidth(), 1);
 
-    _paintWaveform(g);
-
     const auto playhead_x = static_cast<int>(std::round(mPlayhead.getPlayheadX()));
+    _paintWaveform(g, static_cast<float>(playhead_x));
 
     if (playhead_x > 0) {
         g.setColour(nn::colours::accentWashWave());
@@ -101,7 +100,7 @@ void AudioRegion::paint(Graphics& g)
                         0.1f);
 }
 
-void AudioRegion::_paintWaveform(Graphics& g) const
+void AudioRegion::_paintWaveform(Graphics& g, float inPlayedThroughX) const
 {
     const double pixels_per_second = mBaseNumPixelsPerSecond * mZoomLevel;
 
@@ -128,8 +127,10 @@ void AudioRegion::_paintWaveform(Graphics& g) const
                - juce::jlimit(-1.0f, 1.0f, inAmplitude) * nn::metrics::waveformAmpHalfSpan;
     };
 
-    juce::RectangleList<float> waveform;
-    waveform.ensureStorageAllocated(static_cast<int>(bars.count()));
+    juce::RectangleList<float> playedWaveform;
+    juce::RectangleList<float> unplayedWaveform;
+    playedWaveform.ensureStorageAllocated(static_cast<int>(bars.count()));
+    unplayedWaveform.ensureStorageAllocated(static_cast<int>(bars.count()));
 
     auto bar_start = WaveformBars::barStartSample(
         bars.firstBar, nn::metrics::waveformBarPitch, pixels_per_second, TRANSCRIPTION_SAMPLE_RATE);
@@ -153,14 +154,27 @@ void AudioRegion::_paintWaveform(Graphics& g) const
 
         // Integer x keeps the bar edges crisp; the y stays fractional so the envelope reads as a
         // curve rather than a staircase.
-        waveform.addWithoutMerging({static_cast<float>(bar) * nn::metrics::waveformBarPitch,
-                                    (top + bottom - height) / 2.0f,
-                                    nn::metrics::waveformBarWidth,
-                                    height});
+        const float x = static_cast<float>(bar) * nn::metrics::waveformBarPitch;
+        const float y = (top + bottom - height) / 2.0f;
+        const float right = x + nn::metrics::waveformBarWidth;
+
+        // Split a bar at the playhead when it crosses it, so the played state remains pixel-accurate.
+        if (right <= inPlayedThroughX) {
+            playedWaveform.addWithoutMerging({x, y, nn::metrics::waveformBarWidth, height});
+        } else if (x >= inPlayedThroughX) {
+            unplayedWaveform.addWithoutMerging({x, y, nn::metrics::waveformBarWidth, height});
+        } else {
+            playedWaveform.addWithoutMerging({x, y, inPlayedThroughX - x, height});
+            unplayedWaveform.addWithoutMerging(
+                {inPlayedThroughX, y, right - inPlayedThroughX, height});
+        }
     }
 
+    g.setColour(nn::colours::waveUnplayed);
+    g.fillRectList(unplayedWaveform);
+
     g.setColour(nn::colours::wavePlayed);
-    g.fillRectList(waveform);
+    g.fillRectList(playedWaveform);
 }
 
 void AudioRegion::_paintDropZone(Graphics& g) const

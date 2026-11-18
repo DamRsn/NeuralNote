@@ -44,7 +44,7 @@ private:
      * is absolute -- amplitude 1.0 is the "+1.0" the gutter prints, not the loudest sample -- so a
      * quiet recording draws as a quiet waveform.
      */
-    void _paintWaveform(Graphics& g) const;
+    void _paintWaveform(Graphics& g, float inPlayedThroughX) const;
 
     /** The dashed panel and its hint, drawn behind the load button while the region is empty. */
     void _paintDropZone(Graphics& g) const;
