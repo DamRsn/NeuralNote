@@ -117,7 +117,7 @@ void Keyboard::drawWhiteKey(int midiNoteNumber, Graphics& g, Rectangle<float> ar
         g.setColour(_keyColour(nn::colours::keyLabel));
         g.setFont(nn::fonts::scaleLabel());
         g.drawText("C" + String(octave_number),
-                   area.withTrimmedLeft(getBlackNoteLength()).withTrimmedRight(5.0f),
+                   area.withTrimmedLeft(getBlackNoteLength()).withTrimmedRight(6.0f),
                    juce::Justification::centredRight);
     }
 }
