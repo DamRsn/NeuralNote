@@ -10,31 +10,31 @@ namespace nn::fonts
 {
 namespace
 {
-    juce::Typeface::Ptr interRegular()
+    juce::Typeface::Ptr alloRegular()
     {
         static const auto face =
-            juce::Typeface::createSystemTypefaceFor(BinaryData::InterRegular_ttf, BinaryData::InterRegular_ttfSize);
+            juce::Typeface::createSystemTypefaceFor(BinaryData::AlloRegular_otf, BinaryData::AlloRegular_otfSize);
         return face;
     }
 
-    juce::Typeface::Ptr interMedium()
+    juce::Typeface::Ptr alloMedium()
     {
         static const auto face =
-            juce::Typeface::createSystemTypefaceFor(BinaryData::InterMedium_ttf, BinaryData::InterMedium_ttfSize);
+            juce::Typeface::createSystemTypefaceFor(BinaryData::AlloMedium_otf, BinaryData::AlloMedium_otfSize);
         return face;
     }
 
-    juce::Typeface::Ptr interSemiBold()
+    juce::Typeface::Ptr alloSemiBold()
     {
         static const auto face =
-            juce::Typeface::createSystemTypefaceFor(BinaryData::InterSemiBold_ttf, BinaryData::InterSemiBold_ttfSize);
+            juce::Typeface::createSystemTypefaceFor(BinaryData::AlloSemiBold_otf, BinaryData::AlloSemiBold_otfSize);
         return face;
     }
 
-    juce::Typeface::Ptr interBold()
+    juce::Typeface::Ptr alloBold()
     {
         static const auto face =
-            juce::Typeface::createSystemTypefaceFor(BinaryData::InterBold_ttf, BinaryData::InterBold_ttfSize);
+            juce::Typeface::createSystemTypefaceFor(BinaryData::AlloBold_otf, BinaryData::AlloBold_otfSize);
         return face;
     }
 
@@ -62,13 +62,13 @@ namespace
     juce::Typeface::Ptr sansFace(int inWeight)
     {
         if (inWeight >= 700)
-            return interBold();
+            return alloBold();
         if (inWeight >= 600)
-            return interSemiBold();
+            return alloSemiBold();
         if (inWeight >= 500)
-            return interMedium();
+            return alloMedium();
 
-        return interRegular();
+        return alloRegular();
     }
 
     juce::Typeface::Ptr monoFace(int inWeight)
