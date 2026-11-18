@@ -250,7 +250,7 @@ constexpr int sidebarHeader = 42;
 constexpr int stripHeight = 88;
 
 /** Shared left gutter for the waveform, the ruler and the piano roll -- keeps the time axes aligned. */
-constexpr int timelineGutter = 50;
+constexpr int timelineGutter = 52;
 
 // ---- waveform bars and amplitude axis ------------------------------------
 constexpr float waveformBarWidth = 3.0f;
@@ -317,7 +317,7 @@ constexpr int controlCorner = 8;
 constexpr int controlGap = 12; // between the boxes of neighbouring top bar and toolbar controls
 
 constexpr int stripChipSize = 24;
-constexpr int stripTextInset = 34; // chip (22) + gap (9)
+constexpr int stripTextInset = 34; // chip (24) + gap (9) + optical inset (1)
 
 // ---- level meters ----
 // The strip meter takes the fader row's own insets, so the two line up under the name.
