@@ -126,19 +126,19 @@ juce::Font filename()
 
 juce::Font instrumentName()
 {
-    static const auto font = sans(12.0f, 500);
+    static const auto font = sans(13.5f, 500);
     return font;
 }
 
 juce::Font buttonLabel()
 {
-    static const auto font = sans(11.5f, 500);
+    static const auto font = sans(12.5f, 500);
     return font;
 }
 
 juce::Font menuItem()
 {
-    static const auto font = sans(11.5f, 400);
+    static const auto font = sans(12.5f, 400);
     return font;
 }
 
@@ -158,37 +158,37 @@ juce::Font tempoValue()
 
 juce::Font sectionHeader()
 {
-    static const auto font = sans(10.0f, 600);
+    static const auto font = sans(10.5f, 600);
     return font;
 }
 
 juce::Font pillLabel()
 {
-    static const auto font = sans(9.5f, 500);
+    static const auto font = sans(10.0f, 500);
     return font;
 }
 
 juce::Font statusBar()
 {
-    static const auto font = mono(9.5f, 400);
+    static const auto font = mono(10.5f, 400);
     return font;
 }
 
 juce::Font meta()
 {
-    static const auto font = mono(9.0f, 400);
+    static const auto font = mono(9.5f, 400);
     return font;
 }
 
 juce::Font metaStrong()
 {
-    static const auto font = mono(9.0f, 600);
+    static const auto font = mono(9.5f, 600);
     return font;
 }
 
 juce::Font scaleLabel()
 {
-    static const auto font = mono(7.5f, 400);
+    static const auto font = mono(8.5f, 400);
     return font;
 }
 } // namespace nn::fonts
