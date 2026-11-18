@@ -247,7 +247,7 @@ constexpr int statusBarHeight = 30;
 
 constexpr int sidebarWidth = 262;
 constexpr int sidebarHeader = 42;
-constexpr int stripHeight = 80;
+constexpr int stripHeight = 88;
 
 /** Shared left gutter for the waveform, the ruler and the piano roll -- keeps the time axes aligned. */
 constexpr int timelineGutter = 50;
@@ -268,27 +268,27 @@ constexpr float waveformCentreY = waveformHeight * 0.5f + 0.5f;
 constexpr float waveformAmpHalfSpan = 51.0f;
 
 /** One white key's height in the key column at the default vertical zoom. See nn::zoom. */
-constexpr int pianoKeyHeight = 12;
+constexpr int pianoKeyHeight = 13;
 
 // ---- popup menus and the instrument dropdown ----------------------------
-constexpr int menuWidth = 252;
+constexpr int menuWidth = 264;
 constexpr int menuCorner = 8;
-constexpr int menuHeaderHeight = 28;
-constexpr int menuFooterHeight = 29;
-constexpr int menuRowHeight = 32;
+constexpr int menuHeaderHeight = 32;
+constexpr int menuFooterHeight = 32;
+constexpr int menuRowHeight = 34;
 constexpr int menuListMaxHeight = 274; // scrolls beyond this
-constexpr int menuPadX = 11;
+constexpr int menuPadX = 13;
 constexpr int menuListPadY = 4;
 constexpr int menuAnchorRight = 10; // from the sidebar's right edge
 constexpr int menuAnchorTop = 33; // from the top of the sidebar header
-constexpr int checkboxSize = 14;
+constexpr int checkboxSize = 16;
 constexpr int checkboxCorner = 3;
 
 // ---- empty-state call to action -----------------------------------------
-constexpr int ctaHeight = 34; // Transcribe
+constexpr int ctaHeight = 38; // Transcribe
 constexpr int ctaPadX = 17;
 constexpr int ctaGap = 9;
-constexpr int loadHeight = 32; // Load audio file
+constexpr int loadHeight = 36; // Load audio file
 constexpr int loadPadX = 15;
 constexpr int loadGap = 8;
 constexpr int dropZoneInset = 9;
@@ -297,7 +297,7 @@ constexpr int dropHintGap = 9;
 
 // ---- transcription progress, centred over the piano roll ----------------
 constexpr int progressBarWidth = 150;
-constexpr int progressBarHeight = 3;
+constexpr int progressBarHeight = 4;
 constexpr int progressPctWidth = 28;
 constexpr int cancelHitSize = 16;
 constexpr int cancelGlyphSize = 9;
@@ -305,30 +305,30 @@ constexpr int pauseResumeGlyphSize = 10;
 constexpr int progressGap = 10;
 
 // ---- vertical zoom slider ------------------------------------------------
-constexpr int zoomIconSize = 11;
-constexpr int zoomTrackWidth = 74;
-constexpr int zoomGap = 8;
+constexpr int zoomIconSize = 13;
+constexpr int zoomTrackWidth = 84;
+constexpr int zoomGap = 10;
 
-constexpr int controlHeight = 32; // top bar pills
-constexpr int toolbarButton = 30;
-constexpr int transportButtonW = 36;
-constexpr int transportButtonH = 32;
-constexpr int controlCorner = 7;
-constexpr int controlGap = 10; // between the boxes of neighbouring top bar and toolbar controls
+constexpr int controlHeight = 34; // top bar pills
+constexpr int toolbarButton = 34;
+constexpr int transportButtonW = 38;
+constexpr int transportButtonH = 34;
+constexpr int controlCorner = 8;
+constexpr int controlGap = 12; // between the boxes of neighbouring top bar and toolbar controls
 
-constexpr int stripChipSize = 22;
-constexpr int stripTextInset = 31; // chip (22) + gap (9)
+constexpr int stripChipSize = 24;
+constexpr int stripTextInset = 34; // chip (22) + gap (9)
 
 // ---- level meters ----
 // The strip meter takes the fader row's own insets, so the two line up under the name.
 constexpr int stripMeterSegs = 16;
 constexpr int stripMeterGap = 2;
-constexpr int stripMeterHeight = 3;
+constexpr int stripMeterHeight = 4;
 constexpr int stripMeterTopGap = 6; // below the fader row
 
 constexpr int masterMeterSegs = 26;
 constexpr int masterMeterGap = 3;
-constexpr int masterMeterHeight = 5;
+constexpr int masterMeterHeight = 6;
 constexpr int masterMeterTopGap = 12; // below the MASTER label row
 
 constexpr float meterCorner = 1.0f;
