@@ -10,18 +10,18 @@
 
 namespace
 {
-constexpr int PADDING_SIDE = 14;
-constexpr int PADDING_TOP = 11;
-constexpr int ROW_HEIGHT = 22;
-constexpr int TOGGLE_WIDTH = 20;
-constexpr int TOGGLE_HEIGHT = 18;
-constexpr int TOGGLE_GAP = 3;
-constexpr int FADER_TOP_GAP = 9;
-constexpr int FADER_HEIGHT = 11;
-constexpr int VALUE_WIDTH = 30;
-constexpr int VALUE_GAP = 9;
-constexpr int CHIP_CORNER = 5;
-constexpr int META_GAP = 1;
+constexpr int PADDING_SIDE = 16;
+constexpr int PADDING_TOP = 12;
+constexpr int ROW_HEIGHT = 26;
+constexpr int TOGGLE_WIDTH = 26;
+constexpr int TOGGLE_HEIGHT = 24;
+constexpr int TOGGLE_GAP = 5;
+constexpr int FADER_TOP_GAP = 10;
+constexpr int FADER_HEIGHT = 16;
+constexpr int VALUE_WIDTH = 34;
+constexpr int VALUE_GAP = 10;
+constexpr int CHIP_CORNER = 6;
+constexpr int META_GAP = 2;
 } // namespace
 
 InstrumentStrip::InstrumentStrip(InstrumentMixer& inMixer, int inProgram)
@@ -30,7 +30,7 @@ InstrumentStrip::InstrumentStrip(InstrumentMixer& inMixer, int inProgram)
 {
     auto setup_toggle = [this](NnFlatButton& button, juce::Colour inOnBackground, juce::Colour inOnText) {
         button.setClickingTogglesState(true);
-        button.setLabel(button.getName(), nn::fonts::metaStrong());
+        button.setLabel(button.getName(), nn::fonts::buttonLabel());
         button.setCornerRadius(4.0f);
         button.setColour(NnFlatButton::backgroundColourId, nn::colours::bgControlSubtle);
         button.setColour(NnFlatButton::backgroundOnColourId, inOnBackground);
@@ -186,7 +186,7 @@ void InstrumentStrip::paint(juce::Graphics& g)
     g.drawRoundedRectangle(chip.reduced(0.5f), CHIP_CORNER, 1.0f);
 
     g.setColour(mEntry.colour.withMultipliedAlpha(alpha));
-    g.setFont(nn::fonts::mono(8.0f, 600));
+    g.setFont(nn::fonts::mono(9.0f, 600));
     g.drawText(mEntry.abbreviation, chip.toNearestInt(), juce::Justification::centred);
 
     // The meta line sits under the name, each at its font's own height, and runs past the identity
