@@ -179,8 +179,38 @@ foreach (dir ${source_dirs})
   ENDIF ()
 endforeach ()
 
+# Allo is bundled into the plugin binary data. Download the pinned upstream release only
+# when a font is missing; the SHA-256 checks prevent silently accepting changed assets.
+set(NEURALNOTE_ALLO_VERSION "60992c5e12a4ad5cad41c54cd8dba370163a4828")
+set(NEURALNOTE_FONT_DIR "${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/Fonts")
+file(MAKE_DIRECTORY "${NEURALNOTE_FONT_DIR}")
+
+function(nn_fetch_font filename expected_sha256)
+  set(font_path "${NEURALNOTE_FONT_DIR}/${filename}")
+  if (NOT EXISTS "${font_path}")
+    file(DOWNLOAD
+      "https://raw.githubusercontent.com/joshpuckett/allo/${NEURALNOTE_ALLO_VERSION}/fonts/otf/${filename}"
+      "${font_path}"
+      EXPECTED_HASH "SHA256=${expected_sha256}"
+      TLS_VERIFY ON
+      STATUS download_status)
+    list(GET download_status 0 download_code)
+    if (NOT download_code EQUAL 0)
+      list(GET download_status 1 download_message)
+      message(FATAL_ERROR "Could not download Allo font ${filename}: ${download_message}")
+    endif ()
+  endif ()
+endfunction()
+
+nn_fetch_font("Allo-Regular.otf" "bbe9191ac54518785a7230b8c451d607d988d1f497004e6090b418e9c0796e98")
+nn_fetch_font("Allo-Medium.otf" "1fa33918da484caed8330a30a84508049d9b01722bc4ed2f52715bbe5c341784")
+nn_fetch_font("Allo-SemiBold.otf" "377d03a6a8555a04c5944ff72aa9822b605f14a78681296027a12c6393add528")
+nn_fetch_font("Allo-Bold.otf" "d168245516c0bdb6bc8f2fb3b5b90160513e1fa8907ee86e288e7d309b3bab64")
+
 #Binary data
-file(GLOB RESOURCES_FILES ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/Fonts/*.ttf)
+file(GLOB RESOURCES_FILES
+  ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/Fonts/*.ttf
+  ${CMAKE_CURRENT_LIST_DIR}/NeuralNote/Assets/Fonts/*.otf)
 
 # The soundfont is its own binary-data target: it is ~13 MB against a few hundred KB
 # of fonts and images, and keeping it separate means editing an icon does not
