@@ -44,13 +44,13 @@ private:
         int getSliderThumbRadius(juce::Slider&) override;
     };
 
-    static constexpr float TRACK_HEIGHT = 3.0f;
-    static constexpr float THUMB_WIDTH = 3.0f;
-    static constexpr float THUMB_HEIGHT = 11.0f;
+    static constexpr float TRACK_HEIGHT = 4.5f;
+    static constexpr float THUMB_WIDTH = 5.0f;
+    static constexpr float THUMB_HEIGHT = 15.0f;
 
     // Half the thumb, rounded up: the drag region is inset by whole pixels, so a travel of
     // THUMB_WIDTH / 2 could not be expressed exactly on both sides.
-    static constexpr int THUMB_INDENT = 2;
+    static constexpr int THUMB_INDENT = 3;
 
     // One instance shared by every fader, released with the last of them.
     juce::SharedResourcePointer<ThumbLayout> mThumbLayout;
