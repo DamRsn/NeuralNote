@@ -13,7 +13,7 @@ namespace
 {
 constexpr int PADDING_SIDE = 18;
 constexpr int SEGMENT_GAP = 16;
-constexpr int PROGRESS_GAP_TO_ZOOM = 28;
+constexpr int PROGRESS_GAP_TO_ZOOM = 24;
 
 void drawSegments(juce::Graphics& g, const juce::StringArray& inSegments, juce::Rectangle<int> inBounds)
 {
