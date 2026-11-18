@@ -23,12 +23,12 @@ constexpr int TRANSPORT_GAP = 3;
 
 constexpr int PILL_PADDING = 13;
 constexpr int PILL_GAP = 10;
-constexpr int MIX_TRACK_WIDTH = 86;
-constexpr int VOLUME_TRACK_WIDTH = 74;
+constexpr int MIX_TRACK_WIDTH = 94;
+constexpr int VOLUME_TRACK_WIDTH = 82;
 // Wide enough for -36.0, and what the instrument strips give the same readout.
 constexpr int VOLUME_VALUE_WIDTH = 30;
-constexpr int SPEAKER_ICON_SIZE = 13;
-constexpr int SETTINGS_WIDTH = 32;
+constexpr int SPEAKER_ICON_SIZE = 15;
+constexpr int SETTINGS_WIDTH = 34;
 
 constexpr float LABEL_TRACKING = 0.08f;
 
@@ -102,7 +102,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
         addAndMakeVisible(button);
     };
 
-    mBackButton.setIcon(nn::icons::skipToStart, NnFlatButton::IconStyle::filled, 15.0f);
+    mBackButton.setIcon(nn::icons::skipToStart, NnFlatButton::IconStyle::filled, 16.0f);
     mBackButton.setColour(NnFlatButton::iconColourId, nn::colours::textIcon);
     // onClick belongs to the main view: returning to the start also scrolls the timeline back,
     // which is not this component's to do.
@@ -110,7 +110,7 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
 
     // One button showing whichever icon is the action available now: pause while it plays.
     mPlayPauseButton.setClickingTogglesState(true);
-    mPlayPauseButton.setIcon(nn::icons::play, NnFlatButton::IconStyle::filled, 15.0f);
+    mPlayPauseButton.setIcon(nn::icons::play, NnFlatButton::IconStyle::filled, 16.0f);
     // The primary transport action gets the studio accent; secondary transport controls stay muted.
     mPlayPauseButton.setColour(NnFlatButton::iconColourId, nn::colours::accent);
     mPlayPauseButton.setColour(NnFlatButton::iconOnColourId, nn::colours::accentText);
