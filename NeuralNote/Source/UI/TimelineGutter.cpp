@@ -9,7 +9,7 @@
 
 namespace
 {
-constexpr int PADDING_RIGHT = 6;
+constexpr int PADDING_RIGHT = 7;
 constexpr float LABEL_HEIGHT = 9.0f;
 } // namespace
 
