@@ -20,10 +20,10 @@ namespace
 {
 constexpr int PADDING_SIDE = 16;
 constexpr int HEADER_GAP = 10;
-constexpr int ADD_BUTTON_SIZE = 18;
+constexpr int ADD_BUTTON_SIZE = 24;
 constexpr int MASTER_HEIGHT = 68;
 constexpr int MASTER_PAD_TOP = 14;
-constexpr int MASTER_LABEL_HEIGHT = 12;
+constexpr int MASTER_LABEL_HEIGHT = 14;
 constexpr float HEADER_TRACKING = 0.13f;
 
 // Where the master meter sits, from the panel's bounds. Shared by resized() and the paint below so
@@ -76,8 +76,8 @@ Sidebar::Sidebar(NeuralNoteAudioProcessor& inProcessor)
     mViewport.setScrollBarsShown(true, false);
     addAndMakeVisible(mViewport);
 
-    mAddButton.setIcon(nn::icons::plusStroked, NnFlatButton::IconStyle::stroked, 13.0f);
-    mAddButton.setCornerRadius(4.0f);
+    mAddButton.setIcon(nn::icons::plusStroked, NnFlatButton::IconStyle::stroked, 16.0f);
+    mAddButton.setCornerRadius(6.0f);
     mAddButton.setColour(NnFlatButton::backgroundColourId, nn::colours::bgControlSubtle);
     mAddButton.setColour(NnFlatButton::iconColourId, nn::colours::textIconSoft);
     mAddButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::accentFillToggle());
