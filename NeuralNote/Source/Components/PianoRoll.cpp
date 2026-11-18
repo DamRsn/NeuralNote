@@ -107,12 +107,11 @@ void PianoRoll::_drawLanes(Graphics& g) const
         g.setColour((_isWhiteKey(note) ? nn::colours::laneWhite : nn::colours::laneBlack).withMultipliedAlpha(alpha));
         g.fillRect(0.0f, lane_y, width, lane_height);
 
-        // An octave separator on each C, which is the only thing standing in for the vertical grid
-        // the design deliberately does without.
-        if (note % 12 == 0) {
-            g.setColour(nn::colours::divOctave.withMultipliedAlpha(alpha));
-            g.fillRect(0.0f, lane_y + lane_height - 1.0f, width, 1.0f);
-        }
+        // Fine pitch boundaries make it easier to follow notes across the keyboard range.
+        // C rows get a stronger divider so octaves remain easy to spot at a glance.
+        g.setColour((note % 12 == 0 ? nn::colours::divOctave : nn::colours::divPitch)
+                        .withMultipliedAlpha(alpha));
+        g.fillRect(0.0f, lane_y + lane_height - 1.0f, width, 1.0f);
     }
 }
 

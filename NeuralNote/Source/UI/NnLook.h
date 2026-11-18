@@ -42,7 +42,8 @@ inline const juce::Colour divStrong = rgb(0x282828); // top bar / sidebar edges
 inline const juce::Colour divSoft = rgb(0x242424); // section separators
 inline const juce::Colour divRow = rgb(0x222222); // between instrument strips
 inline const juce::Colour divTick = rgb(0x303030); // ruler ticks
-inline const juce::Colour divOctave = rgb(0x292929); // C-row separator in the grid
+inline const juce::Colour divPitch = rgb(0x202020); // subtle semitone boundaries in the piano roll
+inline const juce::Colour divOctave = rgb(0x303030); // stronger C-row separator in the grid
 
 // ---- text ---------------------------------------------------------------
 inline const juce::Colour textBright = rgb(0xf2f4f7); // wordmark, transport time, playhead
