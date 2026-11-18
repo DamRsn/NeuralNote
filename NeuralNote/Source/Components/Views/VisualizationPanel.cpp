@@ -41,7 +41,7 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
     // Loading a file no longer starts a transcription -- this is what does, once the user has had
     // the chance to pick instruments. Only on screen while the roll is empty and idle, and its
     // label is set in _layOutTranscribeButton, which knows what the selection is.
-    mTranscribeButton.setIcon(nn::icons::transcribeStroked, NnFlatButton::IconStyle::stroked, 15.0f);
+    mTranscribeButton.setIcon(nn::icons::transcribeStroked, NnFlatButton::IconStyle::stroked, 16.0f);
     mTranscribeButton.setPadding(nn::metrics::ctaPadX, nn::metrics::ctaPadX, nn::metrics::ctaGap);
     mTranscribeButton.setCornerRadius(nn::metrics::controlCorner);
     mTranscribeButton.setColour(NnFlatButton::backgroundColourId, nn::colours::ctaFill());
