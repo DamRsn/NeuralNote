@@ -111,9 +111,10 @@ TopBar::TopBar(NeuralNoteAudioProcessor& inProcessor)
     // One button showing whichever icon is the action available now: pause while it plays.
     mPlayPauseButton.setClickingTogglesState(true);
     mPlayPauseButton.setIcon(nn::icons::play, NnFlatButton::IconStyle::filled, 15.0f);
-    mPlayPauseButton.setColour(NnFlatButton::iconColourId, nn::colours::textPrimary);
-    mPlayPauseButton.setColour(NnFlatButton::iconOnColourId, nn::colours::textPrimary);
-    mPlayPauseButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::bgControlActive);
+    // The primary transport action gets Spotify's green accent; secondary transport controls stay muted.
+    mPlayPauseButton.setColour(NnFlatButton::iconColourId, nn::colours::accent);
+    mPlayPauseButton.setColour(NnFlatButton::iconOnColourId, nn::colours::accentText);
+    mPlayPauseButton.setColour(NnFlatButton::backgroundOnColourId, nn::colours::accentFillActive());
     mPlayPauseButton.onClick = [this] {
         const bool should_play = mPlayPauseButton.getToggleState();
 
