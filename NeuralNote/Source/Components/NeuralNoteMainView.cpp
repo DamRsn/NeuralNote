@@ -91,10 +91,13 @@ NeuralNoteMainView::~NeuralNoteMainView()
 
 void NeuralNoteMainView::resized()
 {
-    auto bounds = getLocalBounds();
+    auto bounds = getLocalBounds().reduced(12, 10);
 
     mTopBar.setBounds(bounds.removeFromTop(nn::metrics::topBarHeight));
-    mSidebar.setBounds(bounds.removeFromLeft(nn::metrics::sidebarWidth));
+    bounds.removeFromTop(10);
+    auto sidebarBounds = bounds.removeFromLeft(nn::metrics::sidebarWidth);
+    mSidebar.setBounds(sidebarBounds);
+    bounds.removeFromLeft(12);
     mVisualizationPanel.setBounds(bounds);
 
     // Just above the status bar. Wider than the panel needs -- it sizes itself to its message and
@@ -128,6 +131,13 @@ void NeuralNoteMainView::_setInstrumentMenuOpen(bool inIsOpen)
 void NeuralNoteMainView::paint(Graphics& g)
 {
     g.fillAll(nn::colours::bgRoot);
+    // Soft studio canvas: subtle top sheen and a quiet vignette keep the workspace from
+    // reading as a flat grey sheet without compromising control contrast.
+    g.setGradientFill(juce::ColourGradient(nn::colours::bgTopBar.withAlpha(0.65f),
+                                           0.0f, 0.0f,
+                                           nn::colours::bgRoot.withAlpha(0.0f),
+                                           0.0f, static_cast<float>(getHeight()), false));
+    g.fillRect(getLocalBounds());
 }
 
 void NeuralNoteMainView::timerCallback()
