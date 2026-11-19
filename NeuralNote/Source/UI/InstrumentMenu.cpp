@@ -18,8 +18,8 @@ const juce::String FOOTER = "TICK TO INCLUDE IN TRANSCRIPTION";
 constexpr float TITLE_TRACKING = 0.13f;
 constexpr float FOOTER_TRACKING = 0.04f;
 
-constexpr int SHADOW_RADIUS = 34;
-constexpr int SHADOW_DROP = 14;
+constexpr int SHADOW_RADIUS = 22;
+constexpr int SHADOW_DROP = 7;
 } // namespace
 
 InstrumentMenu::InstrumentMenu(NeuralNoteAudioProcessor& inProcessor)
