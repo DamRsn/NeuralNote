@@ -140,9 +140,20 @@ void VisualizationPanel::_updateNoteRange(bool inMayShrink)
     }
 }
 
+void VisualizationPanel::paint(Graphics& g)
+{
+    const auto surface = getLocalBounds().toFloat().reduced(0.5f);
+    g.setColour(nn::colours::bgPanel);
+    g.fillRoundedRectangle(surface, 14.0f);
+    g.setColour(juce::Colours::white.withAlpha(0.58f));
+    g.drawRoundedRectangle(surface.reduced(0.5f), 14.0f, 1.0f);
+}
+
+
 void VisualizationPanel::resized()
 {
-    auto bounds = getLocalBounds();
+    // Keep the editor contents inside a single softly elevated studio surface.
+    auto bounds = getLocalBounds().reduced(8);
 
     mToolbar.setBounds(bounds.removeFromTop(nn::metrics::toolbarHeight));
     mStatusBar.setBounds(bounds.removeFromBottom(nn::metrics::statusBarHeight));
