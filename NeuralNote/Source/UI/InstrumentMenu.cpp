@@ -57,7 +57,7 @@ juce::Rectangle<int> InstrumentMenu::_panelBounds() const
     const int list_height = juce::jmin(nn::metrics::menuListMaxHeight, mRowList.getIdealHeight());
     const int height = nn::metrics::menuHeaderHeight + list_height + nn::metrics::menuFooterHeight;
 
-    return {mAnchor.x - nn::metrics::menuWidth, mAnchor.y, nn::metrics::menuWidth, height};
+    return {mAnchor.x - nn::metrics::menuWidth / 2, mAnchor.y, nn::metrics::menuWidth, height};
 }
 
 void InstrumentMenu::resized()
