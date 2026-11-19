@@ -67,6 +67,8 @@ private:
 
     float _getNoteWidth(int inNote) const;
 
+    void _drawTimeGuides(Graphics& g) const;
+
     void _drawLanes(Graphics& g) const;
 
     void _drawNotes(Graphics& g) const;
