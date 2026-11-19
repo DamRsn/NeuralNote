@@ -44,10 +44,11 @@ void TimeRuler::setZoomLevel(double inZoomLevel)
 
 void TimeRuler::paint(juce::Graphics& g)
 {
+    // Lift the ruler slightly from the waveform area, with a clearer lower boundary.
     g.fillAll(nn::colours::bgPanel);
-    g.setColour(juce::Colours::white.withAlpha(0.42f));
+    g.setColour(juce::Colours::white.withAlpha(0.56f));
     g.fillRect(getLocalBounds().toFloat());
-    nn::drawBottomBorder(g, getLocalBounds(), nn::colours::divSoft);
+    nn::drawBottomBorder(g, getLocalBounds(), nn::colours::divStrong);
 
     if (!mProcessor->canPlay()) {
         return;
@@ -68,8 +69,9 @@ void TimeRuler::paint(juce::Graphics& g)
             break;
         }
 
-        g.setColour(nn::colours::divTick);
-        g.fillRect(static_cast<int>(x), 0, 1, getHeight());
+        const bool majorTick = (std::fmod(time, 5.0) < 0.001 || std::fmod(time, 5.0) > 4.999);
+        g.setColour(majorTick ? nn::colours::divStrong : nn::colours::divTick);
+        g.fillRect(static_cast<int>(x), majorTick ? 0 : getHeight() / 2, majorTick ? 1 : 1, majorTick ? getHeight() : getHeight() / 2);
 
         const int minutes = static_cast<int>(time) / 60;
         const int seconds = static_cast<int>(time) % 60;
