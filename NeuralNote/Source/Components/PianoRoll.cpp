@@ -113,7 +113,7 @@ void PianoRoll::_drawLanes(Graphics& g) const
         // C rows get a stronger divider so octaves remain easy to spot at a glance.
         g.setColour((note % 12 == 0 ? nn::colours::divOctave : nn::colours::divPitch)
                         .withMultipliedAlpha(alpha));
-        g.fillRect(0.0f, lane_y + lane_height - 1.0f, width, 1.0f);
+        g.fillRect(0.0f, lane_y + lane_height - 1.5f, width, 1.5f);
     }
 }
 
