@@ -45,6 +45,8 @@ void TimeRuler::setZoomLevel(double inZoomLevel)
 void TimeRuler::paint(juce::Graphics& g)
 {
     g.fillAll(nn::colours::bgPanel);
+    g.setColour(juce::Colours::white.withAlpha(0.42f));
+    g.fillRect(getLocalBounds().toFloat());
     nn::drawBottomBorder(g, getLocalBounds(), nn::colours::divSoft);
 
     if (!mProcessor->canPlay()) {
