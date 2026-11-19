@@ -71,15 +71,28 @@ void TimeRuler::paint(juce::Graphics& g)
 
         const bool majorTick = (std::fmod(time, 5.0) < 0.001 || std::fmod(time, 5.0) > 4.999);
         g.setColour(majorTick ? nn::colours::divStrong : nn::colours::divTick);
-        g.fillRect(static_cast<int>(x), majorTick ? 0 : getHeight() / 2, majorTick ? 1 : 1, majorTick ? getHeight() : getHeight() / 2);
+        g.fillRect(static_cast<int>(x), majorTick ? 0 : getHeight() / 2, 1, majorTick ? getHeight() : getHeight() / 2);
 
         const int minutes = static_cast<int>(time) / 60;
         const int seconds = static_cast<int>(time) % 60;
+        const juce::String label = juce::String(minutes) + ":" + juce::String(seconds).paddedLeft('0', 2);
+        const juce::Rectangle<float> labelBounds(static_cast<float>(x) + LABEL_INSET,
+                                                   (static_cast<float>(getHeight()) - 18.0f) / 2.0f,
+                                                   44.0f,
+                                                   18.0f);
 
-        g.setColour(nn::colours::textFaint);
-        g.drawText(juce::String(minutes) + ":" + juce::String(seconds).paddedLeft('0', 2),
-                   juce::Rectangle<int>(static_cast<int>(x) + LABEL_INSET, 0, 40, getHeight()),
-                   juce::Justification::centredLeft);
+        if (majorTick) {
+            // Five-second anchors get a quiet capsule, making the timeline easier to scan.
+            g.setColour(nn::colours::bgControlAlt.withAlpha(0.78f));
+            g.fillRoundedRectangle(labelBounds, 5.0f);
+            g.setColour(nn::colours::divSoft);
+            g.drawRoundedRectangle(labelBounds.reduced(0.5f), 5.0f, 0.8f);
+            g.setColour(nn::colours::textDim);
+        } else {
+            g.setColour(nn::colours::textFaint);
+        }
+
+        g.drawText(label, labelBounds.reduced(4.0f, 0.0f), juce::Justification::centredLeft);
     }
 }
 
