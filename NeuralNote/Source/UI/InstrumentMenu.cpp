@@ -191,9 +191,13 @@ void InstrumentMenu::RowList::paint(juce::Graphics& g)
         auto row = juce::Rectangle<int>(0, y, getWidth(), nn::metrics::menuRowHeight);
         y += nn::metrics::menuRowHeight;
 
-        if (i == mHoveredRow) {
-            g.setColour(nn::colours::popupRowHover);
-            g.fillRect(row);
+        if (ticked || i == mHoveredRow) {
+            g.setColour(ticked ? nn::colours::accent.withAlpha(0.10f) : nn::colours::popupRowHover);
+            g.fillRoundedRectangle(row.toFloat().reduced(4.0f, 2.0f), 8.0f);
+            if (ticked) {
+                g.setColour(nn::colours::accent.withAlpha(0.25f));
+                g.drawRoundedRectangle(row.toFloat().reduced(4.5f, 2.5f), 7.5f, 1.0f);
+            }
         }
 
         row = row.reduced(nn::metrics::menuPadX, 0);
