@@ -25,44 +25,44 @@ inline juce::Colour rgb(juce::uint32 hex)
     return juce::Colour(hex).withAlpha(1.0f);
 }
 
-// ---- surfaces: layered graphite / slate ---------------------------------
-inline const juce::Colour windowBorder = rgb(0x303A46);
-inline const juce::Colour bgRoot = rgb(0x141A21); // main content / piano roll bg
-inline const juce::Colour bgTopBar = rgb(0x19212A);
-inline const juce::Colour bgSidebar = rgb(0x1A222C);
-inline const juce::Colour bgPanel = rgb(0x1C2530); // waveform, ruler, status bar
-inline const juce::Colour bgGutter = bgSidebar; // key column, amplitude scale
-inline const juce::Colour bgControl = rgb(0x27323E); // top bar pills
-inline const juce::Colour bgControlAlt = rgb(0x222C37); // toolbar pills
-inline const juce::Colour bgControlSubtle = rgb(0x303D4A); // M/S off, "+" button, hover surface
-inline const juce::Colour bgControlActive = rgb(0x3A4856); // pause active, meter unlit
+// ---- surfaces: light studio / soft glass --------------------------------
+inline const juce::Colour windowBorder = rgb(0xC7D2E3);
+inline const juce::Colour bgRoot = rgb(0xE9EEF7);
+inline const juce::Colour bgTopBar = rgb(0xF4F7FC);
+inline const juce::Colour bgSidebar = rgb(0xEDF2FA);
+inline const juce::Colour bgPanel = rgb(0xF8FAFE);
+inline const juce::Colour bgGutter = rgb(0xE4EBF5);
+inline const juce::Colour bgControl = rgb(0xFFFFFF);
+inline const juce::Colour bgControlAlt = rgb(0xE8EFF8);
+inline const juce::Colour bgControlSubtle = rgb(0xDDE7F4);
+inline const juce::Colour bgControlActive = rgb(0xD0E2F8);
 
 // ---- dividers -----------------------------------------------------------
-inline const juce::Colour divStrong = rgb(0x35414E); // top bar / sidebar edges
-inline const juce::Colour divSoft = rgb(0x2D3945); // section separators
-inline const juce::Colour divRow = rgb(0x27333F); // between instrument strips
-inline const juce::Colour divTick = rgb(0x455361); // ruler ticks
-inline const juce::Colour divPitch = rgb(0x222D38); // subtle semitone boundaries in the piano roll
+inline const juce::Colour divStrong = rgb(0xC9D5E5); // top bar / sidebar edges
+inline const juce::Colour divSoft = rgb(0xD6E0ED); // section separators
+inline const juce::Colour divRow = rgb(0xE1E8F2); // between instrument strips
+inline const juce::Colour divTick = rgb(0xB6C7DA); // ruler ticks
+inline const juce::Colour divPitch = rgb(0xE5ECF5); // subtle semitone boundaries in the piano roll
 inline const juce::Colour divOctave = rgb(0x3A4856); // stronger C-row separator in the grid
 
 // ---- text ---------------------------------------------------------------
-inline const juce::Colour textBright = rgb(0xF3F6FA); // wordmark, transport time, playhead
-inline const juce::Colour textPrimary = rgb(0xE5EBF1); // default
-inline const juce::Colour textStrong = rgb(0xDCE4EC); // instrument names
-inline const juce::Colour textFile = rgb(0xDCE5ED); // filename, tempo value
-inline const juce::Colour textButton = rgb(0xC8D2DC); // toolbar button labels
-inline const juce::Colour textIcon = rgb(0xAAB7C4); // idle icons
-inline const juce::Colour textIconSoft = rgb(0x94A2B0);
-inline const juce::Colour textLabel = rgb(0x91A0AF); // section headers, muted names
-inline const juce::Colour textDim = rgb(0x9AA7B4); // dB values, M/S off
-inline const juce::Colour textFaint = rgb(0x758392); // total duration, ruler labels
-inline const juce::Colour textFainter = rgb(0x82909E); // status bar, meta lines
-inline const juce::Colour textScale = rgb(0x687786); // amplitude scale, corner label
-inline const juce::Colour textSeparator = rgb(0x465462); // status bar separator dot
+inline const juce::Colour textBright = rgb(0x17283E); // wordmark, transport time, playhead
+inline const juce::Colour textPrimary = rgb(0x26364D); // default
+inline const juce::Colour textStrong = rgb(0x1F3148); // instrument names
+inline const juce::Colour textFile = rgb(0x33465F); // filename, tempo value
+inline const juce::Colour textButton = rgb(0x43566F); // toolbar button labels
+inline const juce::Colour textIcon = rgb(0x657A95); // idle icons
+inline const juce::Colour textIconSoft = rgb(0x8295AD);
+inline const juce::Colour textLabel = rgb(0x71839A); // section headers, muted names
+inline const juce::Colour textDim = rgb(0x6B7D94); // dB values, M/S off
+inline const juce::Colour textFaint = rgb(0x8496AD); // total duration, ruler labels
+inline const juce::Colour textFainter = rgb(0x8496AA); // status bar, meta lines
+inline const juce::Colour textScale = rgb(0x91A2B8); // amplitude scale, corner label
+inline const juce::Colour textSeparator = rgb(0xA0B1C6); // status bar separator dot
 
 // ---- accent: restrained studio cyan -------------------------------------
-inline const juce::Colour accent = rgb(0x69C5D3);
-inline const juce::Colour accentText = rgb(0xD7F4F7);
+inline const juce::Colour accent = rgb(0x398DF3);
+inline const juce::Colour accentText = rgb(0xFFFFFF);
 inline const juce::Colour warn = rgb(0xE7B06B); // mute, clip, hot meter segments
 inline const juce::Colour rec = rgb(0xE58C98);
 inline const juce::Colour recIdle = rec.withMultipliedBrightness(0.48f);
@@ -118,15 +118,15 @@ inline juce::Colour accentWashEdge()
 // One set of segment colours for every meter, the master's. An instrument's own colour is already
 // carried by its chip and its fader, and repeating it here would make "hot" a different hue on
 // every row -- which is what the handoff draws, and what it should not.
-inline const juce::Colour meterLow = rgb(0x347C72);
-inline const juce::Colour meterMid = rgb(0x69C5D3);
+inline const juce::Colour meterLow = rgb(0x3D9C8C);
+inline const juce::Colour meterMid = rgb(0x398DF3);
 inline const juce::Colour meterHot = warn;
 
-inline const juce::Colour meterUnlitStrip = bgControlActive;
-inline const juce::Colour meterUnlitMaster = bgControlSubtle;
+inline const juce::Colour meterUnlitStrip = rgb(0xD5DFEB);
+inline const juce::Colour meterUnlitMaster = rgb(0xD5DFEB);
 
 // ---- waveform -----------------------------------------------------------
-inline const juce::Colour wavePlayed = rgb(0x69C5D3);
+inline const juce::Colour wavePlayed = rgb(0x398DF3);
 inline const juce::Colour waveUnplayed = rgb(0x46535F);
 
 inline juce::Colour waveCentreLine()
@@ -135,8 +135,8 @@ inline juce::Colour waveCentreLine()
 }
 
 // ---- piano roll ---------------------------------------------------------
-inline const juce::Colour keyWhite = rgb(0xDCE4EB);
-inline const juce::Colour keyBlack = rgb(0x111820);
+inline const juce::Colour keyWhite = rgb(0xFFFFFF);
+inline const juce::Colour keyBlack = rgb(0x6F8198);
 inline const juce::Colour keyLabel = textLabel;
 inline const juce::Colour laneBlack = rgb(0x17212A);
 inline const juce::Colour laneWhite = rgb(0x202B36);
@@ -153,13 +153,13 @@ inline juce::Colour untranscribedShade()
 }
 
 // ---- fader --------------------------------------------------------------
-inline const juce::Colour faderTrack = rgb(0x303C48);
-inline const juce::Colour faderTrackTop = rgb(0x3A4652); // top bar sliders
-inline const juce::Colour faderThumb = textPrimary;
-inline const juce::Colour faderThumbMuted = rgb(0x697786);
-inline const juce::Colour faderFillMuted = rgb(0x566472);
-inline const juce::Colour volumeFill = rgb(0x9AAAB8);
-inline const juce::Colour scrollbarThumb = rgb(0x526170);
+inline const juce::Colour faderTrack = rgb(0xD5E1EF);
+inline const juce::Colour faderTrackTop = rgb(0xCFDCEB); // top bar sliders
+inline const juce::Colour faderThumb = rgb(0xFFFFFF);
+inline const juce::Colour faderThumbMuted = rgb(0x8EA0B6);
+inline const juce::Colour faderFillMuted = rgb(0x91A4BC);
+inline const juce::Colour volumeFill = rgb(0x7C91AB);
+inline const juce::Colour scrollbarThumb = rgb(0xA5B7CD);
 
 inline juce::Colour mixSliderFill()
 {
@@ -193,15 +193,15 @@ inline juce::Colour soloRowTint()
 }
 
 // ---- popups -------------------------------------------------------------
-inline const juce::Colour popupBg = rgb(0x202A35);
-inline const juce::Colour popupBorder = rgb(0x465361);
-inline const juce::Colour popupFooterBg = rgb(0x1A242E);
-inline const juce::Colour popupRowHover = rgb(0x303D49);
-inline const juce::Colour popupTitle = textDim;
-inline const juce::Colour popupItem = rgb(0xB9C4CE); // unticked row label
-inline const juce::Colour popupItemTicked = textPrimary;
-inline const juce::Colour checkboxBorder = rgb(0x63717F);
-inline const juce::Colour checkboxTick = rgb(0x141A21); // drawn on top of the accent fill
+inline const juce::Colour popupBg = rgb(0xF8FAFE);
+inline const juce::Colour popupBorder = rgb(0xC3D1E2);
+inline const juce::Colour popupFooterBg = rgb(0xE9EFF7);
+inline const juce::Colour popupRowHover = rgb(0xDDEAF9);
+inline const juce::Colour popupTitle = rgb(0x6B7D94);
+inline const juce::Colour popupItem = rgb(0x526781); // unticked row label
+inline const juce::Colour popupItemTicked = rgb(0x243A55);
+inline const juce::Colour checkboxBorder = rgb(0x94A8C0);
+inline const juce::Colour checkboxTick = rgb(0xFFFFFF); // drawn on top of the accent fill
 
 inline juce::Colour popupShadow()
 {
@@ -211,7 +211,7 @@ inline juce::Colour popupShadow()
 // ---- empty states -------------------------------------------------------
 inline const juce::Colour ctaBorder = accent;
 inline const juce::Colour ctaText = accentText;
-inline const juce::Colour dropZoneBorder = rgb(0x3A4856);
+inline const juce::Colour dropZoneBorder = rgb(0xB4C9E0);
 
 // No disabled variants here: every disabled control is its enabled self at DISABLED_ALPHA.
 
