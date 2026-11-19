@@ -106,7 +106,7 @@ void NeuralNoteMainView::resized()
                             nn::metrics::menuRowHeight);
 
     mInstrumentMenu.setBounds(getLocalBounds());
-    mInstrumentMenu.setPanelAnchor(mSidebar.getPosition() + mSidebar.getMenuAnchor());
+    mInstrumentMenu.setPanelAnchor({getWidth() / 2, nn::metrics::topBarHeight + 18});
 }
 
 void NeuralNoteMainView::_setInstrumentMenuOpen(bool inIsOpen)
