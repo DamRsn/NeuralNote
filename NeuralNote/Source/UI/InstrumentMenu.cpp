@@ -57,7 +57,14 @@ juce::Rectangle<int> InstrumentMenu::_panelBounds() const
     const int list_height = juce::jmin(nn::metrics::menuListMaxHeight, mRowList.getIdealHeight());
     const int height = nn::metrics::menuHeaderHeight + list_height + nn::metrics::menuFooterHeight;
 
-    return {mAnchor.x - nn::metrics::menuWidth / 2, mAnchor.y, nn::metrics::menuWidth, height};
+    const auto parent = getParentComponent() != nullptr ? getParentComponent()->getLocalBounds() : getLocalBounds();
+    const int x = juce::jlimit(parent.getX() + 12,
+                               juce::jmax(parent.getX() + 12, parent.getRight() - nn::metrics::menuWidth - 12),
+                               mAnchor.x - nn::metrics::menuWidth / 2);
+    const int y = juce::jlimit(parent.getY() + 12,
+                               juce::jmax(parent.getY() + 12, parent.getBottom() - height - 12),
+                               mAnchor.y);
+    return {x, y, nn::metrics::menuWidth, height};
 }
 
 void InstrumentMenu::resized()
