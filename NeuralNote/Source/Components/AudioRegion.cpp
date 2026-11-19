@@ -68,6 +68,8 @@ void AudioRegion::updateEnablements()
 void AudioRegion::paint(Graphics& g)
 {
     g.fillAll(nn::colours::bgPanel);
+    g.setColour(juce::Colours::white.withAlpha(0.38f));
+    g.fillRect(getLocalBounds().toFloat());
     nn::drawBottomBorder(g, getLocalBounds(), nn::colours::divSoft);
 
     const auto num_samples_available = mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired();
