@@ -108,8 +108,16 @@ void Keyboard::drawWhiteKey(int midiNoteNumber, Graphics& g, Rectangle<float> ar
 {
     // A 1 px gap along the bottom edge, which is what separates one key from the next: the design
     // has no key outlines, so the background showing through is the only divider.
-    g.setColour(_keyColour(nn::colours::keyWhite));
+    const auto keyColour = _keyColour(nn::colours::keyWhite);
+    g.setGradientFill(juce::ColourGradient(keyColour.interpolatedWith(juce::Colours::white, 0.42f),
+                                           area.getX(), area.getY(),
+                                           keyColour.interpolatedWith(nn::colours::bgGutter, 0.06f),
+                                           area.getX(), area.getBottom(), false));
     g.fillRect(area.withTrimmedBottom(1.0f).withTrimmedRight(1.0f));
+
+    // A fine top catch-light gives each white key a little depth without a heavy outline.
+    g.setColour(juce::Colours::white.withAlpha(mIsDimmed ? 0.18f : 0.62f));
+    g.fillRect(area.withHeight(1.0f).withTrimmedRight(1.0f));
 
     if (midiNoteNumber % 12 == 0) {
         const int octave_number = midiNoteNumber / 12 - 1;
@@ -126,8 +134,17 @@ void Keyboard::drawBlackKey(int midiNoteNumber, Graphics& g, Rectangle<float> ar
 {
     ignoreUnused(midiNoteNumber);
 
-    g.setColour(_keyColour(nn::colours::keyBlack));
+    const auto keyColour = _keyColour(nn::colours::keyBlack);
+    g.setGradientFill(juce::ColourGradient(keyColour.interpolatedWith(juce::Colours::white, 0.10f),
+                                           area.getX(), area.getY(),
+                                           keyColour.interpolatedWith(juce::Colours::black, 0.14f),
+                                           area.getX(), area.getBottom(), false));
     g.fillRect(area.withTrimmedBottom(1.0f));
+
+    g.setColour(juce::Colours::white.withAlpha(mIsDimmed ? 0.05f : 0.16f));
+    g.fillRect(area.withHeight(1.0f));
+    g.setColour(juce::Colours::black.withAlpha(0.10f));
+    g.fillRect(area.removeFromRight(1.0f));
 }
 
 void Keyboard::drawUpDownButton(Graphics& g, int w, int h, bool isMouseOver, bool isButtonPressed, bool movesOctavesUp)
