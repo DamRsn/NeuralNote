@@ -91,13 +91,13 @@ NeuralNoteMainView::~NeuralNoteMainView()
 
 void NeuralNoteMainView::resized()
 {
-    auto bounds = getLocalBounds().reduced(12, 10);
+    auto bounds = getLocalBounds().reduced(16, 14);
 
     mTopBar.setBounds(bounds.removeFromTop(nn::metrics::topBarHeight));
-    bounds.removeFromTop(10);
+    bounds.removeFromTop(12);
     auto sidebarBounds = bounds.removeFromLeft(nn::metrics::sidebarWidth);
     mSidebar.setBounds(sidebarBounds);
-    bounds.removeFromLeft(12);
+    bounds.removeFromLeft(14);
     mVisualizationPanel.setBounds(bounds);
 
     // Just above the status bar. Wider than the panel needs -- it sizes itself to its message and
