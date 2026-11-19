@@ -95,8 +95,21 @@ void NnFlatButton::paintButton(juce::Graphics& g, bool inIsHighlighted, bool inI
         nn::surfaceFor(findColour(backgroundColourId), findColour(backgroundOnColourId), state);
 
     if (!background.isTransparent()) {
-        g.setColour(background.withMultipliedAlpha(alpha));
-        g.fillRoundedRectangle(bounds, mCornerRadius);
+        const auto buttonBounds = bounds.reduced(0.35f);
+        const auto top = background.brighter(0.10f).withMultipliedAlpha(alpha);
+        const auto bottom = background.darker(0.035f).withMultipliedAlpha(alpha);
+        g.setGradientFill(juce::ColourGradient(top,
+                                                buttonBounds.getX(),
+                                                buttonBounds.getY(),
+                                                bottom,
+                                                buttonBounds.getX(),
+                                                buttonBounds.getBottom(),
+                                                false));
+        g.fillRoundedRectangle(buttonBounds, mCornerRadius);
+        // A thin highlight on the upper edge makes light controls feel raised without
+        // relying on heavy blur shadows that would add repaint cost to transport controls.
+        g.setColour(juce::Colours::white.withAlpha(state.isEnabled ? 0.30f : 0.10f));
+        g.drawRoundedRectangle(buttonBounds.reduced(0.55f), mCornerRadius - 0.5f, 0.65f);
     }
 
     const juce::Colour outline = state.isOn ? findColour(outlineOnColourId) : findColour(outlineColourId);
