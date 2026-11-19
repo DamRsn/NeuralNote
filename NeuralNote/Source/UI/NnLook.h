@@ -247,7 +247,7 @@ constexpr int statusBarHeight = 30;
 
 constexpr int sidebarWidth = 292;
 constexpr int sidebarHeader = 54;
-constexpr int stripHeight = 108;
+constexpr int stripHeight = 112;
 
 /** Shared left gutter for the waveform, the ruler and the piano roll -- keeps the time axes aligned. */
 constexpr int timelineGutter = 60;
