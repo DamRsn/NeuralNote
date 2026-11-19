@@ -146,8 +146,15 @@ void PianoRoll::_drawNotes(Graphics& g) const
         const juce::Colour colour = mixer->colourForProgram(note_event.program);
         const float alpha = mixer->isAudible(note_event.program) ? 1.0f : MUTED_NOTE_ALPHA;
 
+        const auto noteBounds = juce::Rectangle<float>(x, note_y, width, note_height);
         g.setColour(colour.withAlpha(alpha));
-        g.fillRoundedRectangle(x, note_y, width, note_height, NOTE_CORNER);
+        g.fillRoundedRectangle(noteBounds, NOTE_CORNER);
+
+        // A fine edge and top sheen give the MIDI blocks a tactile surface without gradients or gloss.
+        g.setColour(juce::Colours::black.withAlpha(0.10f * alpha));
+        g.drawRoundedRectangle(noteBounds.reduced(0.5f), NOTE_CORNER, 0.8f);
+        g.setColour(juce::Colours::white.withAlpha(0.20f * alpha));
+        g.fillRect(noteBounds.withHeight(1.0f).reduced(1.0f, 0.0f));
 
         // A note-on marker. Without it a run of repeated notes at one pitch reads as one long one.
         if (width > 2.0f * ONSET_EDGE_WIDTH) {
