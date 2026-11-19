@@ -101,8 +101,12 @@ void StatusBar::resized()
 
 void StatusBar::paint(juce::Graphics& g)
 {
-    g.fillAll(nn::colours::bgPanel);
-    nn::drawTopBorder(g, getLocalBounds(), nn::colours::divSoft);
+    g.fillAll(nn::colours::bgRoot);
+    const auto footer = getLocalBounds().toFloat().reduced(8.0f, 3.0f);
+    g.setColour(juce::Colours::white.withAlpha(0.65f));
+    g.fillRoundedRectangle(footer, 9.0f);
+    g.setColour(nn::colours::divSoft);
+    g.drawRoundedRectangle(footer.reduced(0.5f), 9.0f, 1.0f);
 
     g.setColour(nn::colours::zoomIcon);
     g.strokePath(
