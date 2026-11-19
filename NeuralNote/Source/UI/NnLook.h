@@ -131,7 +131,7 @@ inline const juce::Colour waveUnplayed = rgb(0xA8B9CE);
 
 inline juce::Colour waveCentreLine()
 {
-    return juce::Colours::white.withAlpha(0.05f);
+    return rgb(0x9BAEC5).withAlpha(0.24f);
 }
 
 // ---- piano roll ---------------------------------------------------------
@@ -143,7 +143,7 @@ inline const juce::Colour laneWhite = rgb(0xF4F8FD);
 
 inline juce::Colour noteOnsetEdge()
 {
-    return juce::Colours::white.withAlpha(0.35f);
+    return rgb(0xA7BED8).withAlpha(0.42f);
 }
 
 /** Laid over the part of the roll the transcription has not reached yet. */
@@ -205,7 +205,7 @@ inline const juce::Colour checkboxTick = rgb(0xFFFFFF); // drawn on top of the a
 
 inline juce::Colour popupShadow()
 {
-    return juce::Colours::black.withAlpha(0.55f);
+    return juce::Colours::black.withAlpha(0.16f);
 }
 
 // ---- empty states -------------------------------------------------------
