@@ -69,7 +69,9 @@ void PianoRoll::updateEnablements()
 
 void PianoRoll::paint(Graphics& g)
 {
-    g.fillAll(nn::colours::bgRoot);
+    g.fillAll(nn::colours::bgPanel);
+    g.setColour(juce::Colours::white.withAlpha(0.22f));
+    g.fillRect(getLocalBounds().toFloat());
 
     if (!mProcessor->canPlay()) {
         return;
