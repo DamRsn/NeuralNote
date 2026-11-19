@@ -101,7 +101,7 @@ void AudioRegion::paint(Graphics& g)
     g.fillRoundedRectangle(labelChip, 6.0f);
     g.setColour(nn::colours::divSoft);
     g.drawRoundedRectangle(labelChip.reduced(0.5f), 6.0f, 0.8f);
-    g.setColour(nn::colours::accentWashEdge);
+    g.setColour(nn::colours::accentWashEdge());
     g.fillRoundedRectangle(labelChip.withSizeKeepingCentre(2.0f, 8.0f).translated(-50.0f, 0.0f), 1.0f);
     g.setColour(nn::colours::textScale);
     nn::drawTrackedText(g,
