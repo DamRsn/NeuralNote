@@ -89,6 +89,9 @@ void AudioRegion::paint(Graphics& g)
         g.setColour(nn::colours::accentWashWave());
         g.fillRect(0, 0, playhead_x, getHeight());
 
+        // A soft edge plus a crisp core makes the playback boundary easier to track.
+        g.setColour(nn::colours::accentWashEdge().withAlpha(0.22f));
+        g.fillRect(playhead_x - 2, 0, 4, getHeight());
         g.setColour(nn::colours::accentWashEdge());
         g.fillRect(playhead_x - 1, 0, 1, getHeight());
     }
