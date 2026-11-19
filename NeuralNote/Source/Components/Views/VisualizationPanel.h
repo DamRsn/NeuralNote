@@ -34,6 +34,8 @@ public:
 
     ~VisualizationPanel() override;
 
+    void paint(Graphics& g) override;
+
     void resized() override;
 
     void clear();
