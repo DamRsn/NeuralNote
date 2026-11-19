@@ -105,7 +105,11 @@ void NnToolbar::resized()
 void NnToolbar::paint(juce::Graphics& g)
 {
     g.fillAll(nn::colours::bgRoot);
-    nn::drawBottomBorder(g, getLocalBounds(), nn::colours::divSoft);
+    const auto bar = getLocalBounds().toFloat().reduced(8.0f, 4.0f);
+    g.setColour(juce::Colours::white.withAlpha(0.55f));
+    g.fillRoundedRectangle(bar, 10.0f);
+    g.setColour(nn::colours::divSoft);
+    g.drawRoundedRectangle(bar.reduced(0.5f), 10.0f, 1.0f);
 
     _paintTempoPill(g);
 
