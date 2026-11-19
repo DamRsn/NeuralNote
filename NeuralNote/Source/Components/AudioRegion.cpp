@@ -96,12 +96,19 @@ void AudioRegion::paint(Graphics& g)
         g.fillRect(playhead_x - 1, 0, 1, getHeight());
     }
 
+    const juce::Rectangle<float> labelChip(CORNER_LABEL_INSET - 4.0f, CORNER_LABEL_INSET - 3.0f, 116.0f, 20.0f);
+    g.setColour(nn::colours::bgControlAlt.withAlpha(0.82f));
+    g.fillRoundedRectangle(labelChip, 6.0f);
+    g.setColour(nn::colours::divSoft);
+    g.drawRoundedRectangle(labelChip.reduced(0.5f), 6.0f, 0.8f);
+    g.setColour(nn::colours::accentWashEdge);
+    g.fillRoundedRectangle(labelChip.withSizeKeepingCentre(2.0f, 8.0f).translated(-50.0f, 0.0f), 1.0f);
     g.setColour(nn::colours::textScale);
     nn::drawTrackedText(g,
                         "MIX WAVEFORM",
                         nn::fonts::meta(),
-                        juce::Rectangle<float>(CORNER_LABEL_INSET, CORNER_LABEL_INSET, 200.0f, 12.0f),
-                        juce::Justification::topLeft,
+                        labelChip.reduced(9.0f, 0.0f),
+                        juce::Justification::centredLeft,
                         0.1f);
 }
 
