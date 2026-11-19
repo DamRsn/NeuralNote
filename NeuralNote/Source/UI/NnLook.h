@@ -43,7 +43,7 @@ inline const juce::Colour divSoft = rgb(0xD6E0ED); // section separators
 inline const juce::Colour divRow = rgb(0xE1E8F2); // between instrument strips
 inline const juce::Colour divTick = rgb(0xB6C7DA); // ruler ticks
 inline const juce::Colour divPitch = rgb(0xE5ECF5); // subtle semitone boundaries in the piano roll
-inline const juce::Colour divOctave = rgb(0x3A4856); // stronger C-row separator in the grid
+inline const juce::Colour divOctave = rgb(0xC3D2E4); // stronger C-row separator in the grid
 
 // ---- text ---------------------------------------------------------------
 inline const juce::Colour textBright = rgb(0x17283E); // wordmark, transport time, playhead
@@ -127,7 +127,7 @@ inline const juce::Colour meterUnlitMaster = rgb(0xD5DFEB);
 
 // ---- waveform -----------------------------------------------------------
 inline const juce::Colour wavePlayed = rgb(0x398DF3);
-inline const juce::Colour waveUnplayed = rgb(0x46535F);
+inline const juce::Colour waveUnplayed = rgb(0xA8B9CE);
 
 inline juce::Colour waveCentreLine()
 {
@@ -138,8 +138,8 @@ inline juce::Colour waveCentreLine()
 inline const juce::Colour keyWhite = rgb(0xFFFFFF);
 inline const juce::Colour keyBlack = rgb(0x6F8198);
 inline const juce::Colour keyLabel = textLabel;
-inline const juce::Colour laneBlack = rgb(0x17212A);
-inline const juce::Colour laneWhite = rgb(0x202B36);
+inline const juce::Colour laneBlack = rgb(0xE6EDF6);
+inline const juce::Colour laneWhite = rgb(0xF4F8FD);
 
 inline juce::Colour noteOnsetEdge()
 {
@@ -234,7 +234,7 @@ inline const juce::Colour progressText = accentText;
 inline const juce::Colour zoomIcon = textFainter;
 inline const juce::Colour zoomTrack = faderTrack;
 inline const juce::Colour zoomFill = rgb(0xA2AFBC);
-inline const juce::Colour zoomThumb = rgb(0xDCE4EB);
+inline const juce::Colour zoomThumb = rgb(0xFFFFFF);
 } // namespace nn::colours
 
 namespace nn::metrics
