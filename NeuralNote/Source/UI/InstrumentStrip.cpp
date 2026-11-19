@@ -160,15 +160,22 @@ void InstrumentStrip::paint(juce::Graphics& g)
     const bool muted = mMixer.isMuted(mProgram);
     const bool soloed = mMixer.isSoloed(mProgram);
 
+    // Each instrument is presented as a compact floating mixer card instead of a flat list row.
+    // Keep the cards inside the viewport's spacing so the sidebar reads as a layered surface.
+    const auto card = getLocalBounds().toFloat().reduced(7.0f, 3.0f);
+    g.setColour(juce::Colours::black.withAlpha(0.025f));
+    g.fillRoundedRectangle(card.translated(0.0f, 2.0f), 10.0f);
+    g.setColour(soloed ? nn::colours::soloRowTint() : nn::colours::bgControl);
+    g.fillRoundedRectangle(card, 10.0f);
+    g.setColour(soloed ? nn::colours::accent.withAlpha(0.32f) : nn::colours::divSoft.withAlpha(0.65f));
+    g.drawRoundedRectangle(card.reduced(0.5f), 10.0f, 1.0f);
+
     if (soloed) {
-        g.fillAll(nn::colours::soloRowTint());
-
-        // A slim green rail makes the active solo state readable without tinting the whole mixer.
         g.setColour(nn::colours::accent);
-        g.fillRect(0, 0, 3, getHeight());
+        g.fillRoundedRectangle(juce::Rectangle<float>(3.0f, card.getHeight() - 16.0f)
+                                  .withCentre({card.getX() + 2.0f, card.getCentreY()}),
+                              1.5f);
     }
-
-    nn::drawBottomBorder(g, getLocalBounds(), nn::colours::divRow);
 
     const float alpha = muted ? nn::MUTED_ALPHA : 1.0f;
 
