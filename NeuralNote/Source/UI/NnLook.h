@@ -27,9 +27,9 @@ inline juce::Colour rgb(juce::uint32 hex)
 
 // ---- surfaces: light studio / soft glass --------------------------------
 inline const juce::Colour windowBorder = rgb(0xC7D2E3);
-inline const juce::Colour bgRoot = rgb(0xE9EEF7);
+inline const juce::Colour bgRoot = rgb(0xE5ECF6);
 inline const juce::Colour bgTopBar = rgb(0xF4F7FC);
-inline const juce::Colour bgSidebar = rgb(0xEDF2FA);
+inline const juce::Colour bgSidebar = rgb(0xF3F7FD);
 inline const juce::Colour bgPanel = rgb(0xF8FAFE);
 inline const juce::Colour bgGutter = rgb(0xE4EBF5);
 inline const juce::Colour bgControl = rgb(0xFFFFFF);
@@ -193,7 +193,7 @@ inline juce::Colour soloRowTint()
 }
 
 // ---- popups -------------------------------------------------------------
-inline const juce::Colour popupBg = rgb(0xF8FAFE);
+inline const juce::Colour popupBg = rgb(0xFFFFFF);
 inline const juce::Colour popupBorder = rgb(0xC3D1E2);
 inline const juce::Colour popupFooterBg = rgb(0xE9EFF7);
 inline const juce::Colour popupRowHover = rgb(0xDDEAF9);
@@ -245,12 +245,12 @@ constexpr int waveformHeight = 136;
 constexpr int rulerHeight = 24;
 constexpr int statusBarHeight = 30;
 
-constexpr int sidebarWidth = 262;
-constexpr int sidebarHeader = 42;
-constexpr int stripHeight = 88;
+constexpr int sidebarWidth = 292;
+constexpr int sidebarHeader = 54;
+constexpr int stripHeight = 96;
 
 /** Shared left gutter for the waveform, the ruler and the piano roll -- keeps the time axes aligned. */
-constexpr int timelineGutter = 52;
+constexpr int timelineGutter = 60;
 
 // ---- waveform bars and amplitude axis ------------------------------------
 constexpr float waveformBarWidth = 3.0f;
@@ -271,13 +271,13 @@ constexpr float waveformAmpHalfSpan = 51.0f;
 constexpr int pianoKeyHeight = 13;
 
 // ---- popup menus and the instrument dropdown ----------------------------
-constexpr int menuWidth = 340;
-constexpr int menuCorner = 8;
-constexpr int menuHeaderHeight = 48;
-constexpr int menuFooterHeight = 40;
-constexpr int menuRowHeight = 42;
-constexpr int menuListMaxHeight = 360; // scrolls beyond this
-constexpr int menuPadX = 20;
+constexpr int menuWidth = 380;
+constexpr int menuCorner = 16;
+constexpr int menuHeaderHeight = 58;
+constexpr int menuFooterHeight = 48;
+constexpr int menuRowHeight = 48;
+constexpr int menuListMaxHeight = 420; // scrolls beyond this
+constexpr int menuPadX = 24;
 constexpr int menuListPadY = 4;
 constexpr int menuAnchorRight = 10; // from the sidebar's right edge
 constexpr int menuAnchorTop = 33; // from the top of the sidebar header
