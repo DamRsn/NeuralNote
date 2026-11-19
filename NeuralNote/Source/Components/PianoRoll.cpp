@@ -78,6 +78,7 @@ void PianoRoll::paint(Graphics& g)
     }
 
     _drawLanes(g);
+    _drawTimeGuides(g);
     _drawNotes(g);
 
     const auto playhead_x = mPlayhead.isVisible() ? static_cast<int>(std::round(mPlayhead.getPlayheadX())) : 0;
@@ -88,6 +89,23 @@ void PianoRoll::paint(Graphics& g)
     }
 
     _drawTranscriptionFrontier(g);
+}
+
+void PianoRoll::_drawTimeGuides(Graphics& g) const
+{
+    const double guide_spacing = 5.0 * mBaseNumPixelsPerSecond * mZoomLevel;
+
+    if (guide_spacing <= 0.0) {
+        return;
+    }
+
+    // Match the ruler's five-second anchors so note lengths can be read against the source audio.
+    g.setColour(nn::colours::divStrong.withAlpha(0.42f));
+
+    for (double x = 0.0; x < static_cast<double>(getWidth()); x += guide_spacing) {
+        const int pixel = static_cast<int>(std::round(x));
+        g.drawVerticalLine(pixel, 0.0f, static_cast<float>(getHeight()));
+    }
 }
 
 void PianoRoll::_drawLanes(Graphics& g) const
