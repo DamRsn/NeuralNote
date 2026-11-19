@@ -139,8 +139,16 @@ void Sidebar::resized()
 
 void Sidebar::paint(juce::Graphics& g)
 {
-    g.fillAll(nn::colours::bgSidebar);
-    nn::drawRightBorder(g, getLocalBounds(), nn::colours::divStrong);
+    const auto panel = getLocalBounds().toFloat().reduced(1.0f);
+    // Layered ambient shadows and a bright inset edge give the sidebar a floating-card finish.
+    g.setColour(juce::Colours::black.withAlpha(0.035f));
+    g.fillRoundedRectangle(panel.translated(0.0f, 4.0f), 15.0f);
+    g.setColour(juce::Colours::black.withAlpha(0.025f));
+    g.fillRoundedRectangle(panel.translated(0.0f, 2.0f), 15.0f);
+    g.setColour(nn::colours::bgSidebar);
+    g.fillRoundedRectangle(panel, 15.0f);
+    g.setColour(juce::Colours::white.withAlpha(0.72f));
+    g.drawRoundedRectangle(panel.reduced(0.5f), 15.0f, 1.0f);
 
     _paintHeader(g, mHeaderBounds);
     paintMasterPanel(g, mMasterBounds);
