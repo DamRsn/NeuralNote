@@ -271,13 +271,13 @@ constexpr float waveformAmpHalfSpan = 51.0f;
 constexpr int pianoKeyHeight = 13;
 
 // ---- popup menus and the instrument dropdown ----------------------------
-constexpr int menuWidth = 264;
+constexpr int menuWidth = 340;
 constexpr int menuCorner = 8;
-constexpr int menuHeaderHeight = 32;
-constexpr int menuFooterHeight = 32;
-constexpr int menuRowHeight = 34;
-constexpr int menuListMaxHeight = 274; // scrolls beyond this
-constexpr int menuPadX = 13;
+constexpr int menuHeaderHeight = 48;
+constexpr int menuFooterHeight = 40;
+constexpr int menuRowHeight = 42;
+constexpr int menuListMaxHeight = 360; // scrolls beyond this
+constexpr int menuPadX = 20;
 constexpr int menuListPadY = 4;
 constexpr int menuAnchorRight = 10; // from the sidebar's right edge
 constexpr int menuAnchorTop = 33; // from the top of the sidebar header
