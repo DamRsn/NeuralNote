@@ -199,11 +199,12 @@ void InstrumentMenu::RowList::paint(juce::Graphics& g)
         y += nn::metrics::menuRowHeight;
 
         if (ticked || i == mHoveredRow) {
-            g.setColour(ticked ? nn::colours::accent.withAlpha(0.10f) : nn::colours::popupRowHover);
-            g.fillRoundedRectangle(row.toFloat().reduced(4.0f, 2.0f), 8.0f);
+            const auto highlight = row.toFloat().reduced(4.0f, 2.0f);
+            g.setColour(ticked ? nn::colours::accent.withAlpha(0.12f) : nn::colours::popupRowHover);
+            g.fillRoundedRectangle(highlight, 9.0f);
             if (ticked) {
-                g.setColour(nn::colours::accent.withAlpha(0.25f));
-                g.drawRoundedRectangle(row.toFloat().reduced(4.5f, 2.5f), 7.5f, 1.0f);
+                g.setColour(nn::colours::accent.withAlpha(0.34f));
+                g.drawRoundedRectangle(highlight.reduced(0.5f), 8.5f, 1.0f);
             }
         }
 
