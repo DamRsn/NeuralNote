@@ -167,7 +167,10 @@ void InstrumentStrip::paint(juce::Graphics& g)
     g.fillRoundedRectangle(card.translated(0.0f, 2.0f), 10.0f);
     g.setColour(soloed ? nn::colours::soloRowTint() : nn::colours::bgControl);
     g.fillRoundedRectangle(card, 10.0f);
-    g.setColour(soloed ? nn::colours::accent.withAlpha(0.32f) : nn::colours::divSoft.withAlpha(0.65f));
+    // A cool inset highlight keeps the white surface from looking like a flat rectangle.
+    g.setColour(juce::Colours::white.withAlpha(0.72f));
+    g.drawRoundedRectangle(card.reduced(1.0f), 9.0f, 0.8f);
+    g.setColour(soloed ? nn::colours::accent.withAlpha(0.30f) : nn::colours::divSoft.withAlpha(0.85f));
     g.drawRoundedRectangle(card.reduced(0.5f), 10.0f, 1.0f);
 
     if (soloed) {
