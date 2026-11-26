@@ -120,6 +120,7 @@ TranscriptionManager::~TranscriptionManager()
     // enough for GPU backend initialisation, which cannot be interrupted and took about 20 s on
     // the first run after a new build.
     mMuscriptorEngine.cancel();
+    mDettatoEngine.cancel();
 
     const bool jobs_finished = mThreadPool.removeAllJobs(true, 30000);
     jassertquiet(jobs_finished);
@@ -141,6 +142,11 @@ void TranscriptionManager::timerCallback()
 
 void TranscriptionManager::_drainEngine()
 {
+    // dettato has nothing to hand over before it finishes.
+    if (_isDettatoJob()) {
+        return;
+    }
+
     // Gated on the drain having something, so this runs at the model's pace -- once per 5 s of
     // audio -- rather than at the timer's.
     if (mMuscriptorEngine.drainNewNotes(mRawNotes, mFinalizedThrough, mResumePoint, mResumeProgress)) {
@@ -152,14 +158,22 @@ void TranscriptionManager::_drainEngine()
 
 void TranscriptionManager::_runModel()
 {
-    mJobOutcome = mMuscriptorEngine.transcribeToMIDI(
-        mJobModelSize,
-        mJobDevice,
-        mProcessor->getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
-        mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired(),
-        mJobInstruments,
-        mJobResumeFrom,
-        mJobStartProgress);
+    if (_isDettatoJob()) {
+        mJobOutcome = mDettatoEngine.transcribeToMIDI(NNFileUtils::getModelFile(mJobModelSize),
+                                                      mJobDevice,
+                                                      mJobAudio.data(),
+                                                      static_cast<int>(mJobAudio.size()),
+                                                      mJobAudioSampleRate);
+    } else {
+        mJobOutcome = mMuscriptorEngine.transcribeToMIDI(
+            mJobModelSize,
+            mJobDevice,
+            mProcessor->getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
+            mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired(),
+            mJobInstruments,
+            mJobResumeFrom,
+            mJobStartProgress);
+    }
 
     // Post-processing and the synth handoff belong to the message thread, which has been doing
     // both per chunk while this ran. All that is left here is to say so.
@@ -179,10 +193,13 @@ void TranscriptionManager::_handleFinishedJob()
     // state this manager owns from here on. Dropped before clear() runs below, which asserts it.
     mJobActive = false;
 
+    // The job is done with its copy of the audio.
+    mJobAudio = {};
+
     if (mJobOutcome == Outcome::Success) {
         // Replaces what this job streamed rather than extending it: transcribe()'s own result is
         // authoritative, and the streamed one is missing any note the model never closed.
-        auto final_notes = mMuscriptorEngine.takeFinalNotes();
+        auto final_notes = _isDettatoJob() ? mDettatoEngine.takeFinalNotes() : mMuscriptorEngine.takeFinalNotes();
         mRawNotes.resize(mNotesBeforeJob);
         mRawNotes.insert(mRawNotes.end(), final_notes.begin(), final_notes.end());
         mFinalizedThrough = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
@@ -197,11 +214,13 @@ void TranscriptionManager::_handleFinishedJob()
     }
 
     // Read before clearTranscription(), which resets the engine and with it the message.
-    const String reason = mMuscriptorEngine.getLastErrorMessage();
+    const String reason =
+        _isDettatoJob() ? mDettatoEngine.getLastErrorMessage() : mMuscriptorEngine.getLastErrorMessage();
     bool keep = !mDiscardOnStop && mJobOutcome != Outcome::CannotResume;
 
     if (keep) {
         // Whatever landed between the last timer tick and the stop belongs to the paused transcription.
+        // A dettato job leaves nothing, so pausing it ends as discarding it does.
         _drainEngine();
         keep = !mResumePoint.empty();
     }
@@ -317,7 +336,7 @@ MuscriptorEngine::Progress TranscriptionManager::getTranscriptionProgress() cons
         return {MuscriptorEngine::Phase::Transcribing, mResumeProgress};
     }
 
-    return mMuscriptorEngine.getProgress();
+    return _isDettatoJob() ? mDettatoEngine.getProgress() : mMuscriptorEngine.getProgress();
 }
 
 double TranscriptionManager::getFinalizedThrough() const
@@ -329,6 +348,12 @@ void TranscriptionManager::pauseTranscription()
 {
     NnLogger::write(NnLogger::Level::Info, "TranscriptionManager: pause requested");
     mMuscriptorEngine.cancel();
+    mDettatoEngine.cancel();
+}
+
+bool TranscriptionManager::canPauseTranscription() const
+{
+    return !_isDettatoJob();
 }
 
 void TranscriptionManager::discardTranscription()
@@ -336,11 +361,12 @@ void TranscriptionManager::discardTranscription()
     NnLogger::write(NnLogger::Level::Info, "TranscriptionManager: discard requested");
     mDiscardOnStop = true;
     mMuscriptorEngine.cancel();
+    mDettatoEngine.cancel();
 }
 
 bool TranscriptionManager::isCancelRequested() const
 {
-    return mMuscriptorEngine.isCancelRequested();
+    return mMuscriptorEngine.isCancelRequested() || mDettatoEngine.isCancelRequested();
 }
 
 void TranscriptionManager::clear()
@@ -350,6 +376,7 @@ void TranscriptionManager::clear()
     jassert(!mJobActive.load());
 
     mMuscriptorEngine.reset();
+    mDettatoEngine.reset();
     mJobFinished = false;
     mRawNotes.clear();
     mRawNotes.shrink_to_fit();
@@ -463,6 +490,7 @@ void TranscriptionManager::_launchJob()
     // this order means no click can be discarded, without having to argue about which thread
     // observes what.
     mMuscriptorEngine.reset();
+    mDettatoEngine.reset();
     mDiscardOnStop = false;
 
     // Read here, not in the job: the selection lives on the state tree, which belongs to this
@@ -470,6 +498,25 @@ void TranscriptionManager::_launchJob()
     // resumed run gets the selection its resume point was made with.
     mJobInstruments = InstrumentSelection::get(mProcessor->getValueTree());
     mJobDevice = NnGlobalSettings::getComputeDevice();
+
+    if (_isDettatoJob()) {
+        // dettato takes no selection: it names the instruments it hears.
+        mJobInstruments.clear();
+
+        // The whole mix in one channel, as the 16 kHz copy is.
+        const AudioBuffer<float>& source = mProcessor->getSourceAudioManager()->getSourceAudioForPlayback();
+        const int num_channels = source.getNumChannels();
+
+        mJobAudioSampleRate = mProcessor->getSourceAudioManager()->getSourceAudioSampleRate();
+        mJobAudio.assign(static_cast<std::size_t>(source.getNumSamples()), 0.0f);
+
+        for (int channel = 0; channel < num_channels; channel++) {
+            FloatVectorOperations::addWithMultiply(mJobAudio.data(),
+                                                   source.getReadPointer(channel),
+                                                   1.0f / static_cast<float>(num_channels),
+                                                   source.getNumSamples());
+        }
+    }
 
     NnLogger::write(
         NnLogger::Level::Info,
@@ -568,7 +615,9 @@ void TranscriptionManager::restoreFromStateTree(const ValueTree& inFullState)
     }
 
     mRawNotes = std::move(*notes);
-    mTranscriptionModelSize = model_size.value_or(DEFAULT_MODEL_SIZE);
+    // A model this version does not know, from a newer one, is labelled Medium, as it was before
+    // dettato became the default.
+    mTranscriptionModelSize = model_size.value_or(ModelSize::Medium);
 
     if (finished) {
         mFinalizedThrough = duration;

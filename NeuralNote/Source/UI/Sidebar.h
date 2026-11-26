@@ -35,8 +35,11 @@ public:
 
     void resized() override;
 
-    /** Re-derives whether the instrument picker can be opened, from the processor's state. */
+    /** Re-derives whether the instrument picker can be opened, from the processor's state and the model. */
     void updateEnablements();
+
+    /** @return Whether instruments can be picked for the next run. */
+    bool canPickInstruments() const;
 
     /**
      * Where the picker's top-right corner belongs, in this component's coordinates.
@@ -69,7 +72,10 @@ private:
     /** Creates or destroys strips so that one exists per instrument, in the mixer's order. */
     void _rebuildStrips();
 
-    /** Pushes the stored selection into the mixer, which is what puts a strip on screen for it. */
+    /**
+     * Pushes the stored selection into the mixer, which is what puts a strip on screen for it. Pushes
+     * none for a model that takes no selection.
+     */
     void _pushSelectionToMixer();
 
     void _paintHeader(juce::Graphics& g, juce::Rectangle<int> inBounds) const;

@@ -9,6 +9,7 @@
 #include <string>
 
 #include <JuceHeader.h>
+#include "DettatoEngine.h"
 #include "MuscriptorEngine.h"
 #include "TranscriptionConstants.h"
 
@@ -40,6 +41,12 @@ public:
      * finished.
      */
     void pauseTranscription();
+
+    /**
+     * @return Whether the running transcription can be paused and resumed later. A dettato run
+     *         cannot, having nothing to resume from: stopping it discards it. Message thread.
+     */
+    bool canPauseTranscription() const;
 
     /** Stops the running transcription and drops what it has transcribed, landing in AudioLoaded. */
     void discardTranscription();
@@ -123,9 +130,16 @@ private:
      */
     void _updateSavedTranscription();
 
+    /** Whether the job runs dettato rather than MuScriptor. Message thread and job. */
+    bool _isDettatoJob() const { return mJobModelSize == ModelSize::Dettato; }
+
     NeuralNoteAudioProcessor* mProcessor;
 
     MuscriptorEngine mMuscriptorEngine;
+
+    // The other model, for a job whose mJobModelSize is Dettato. It publishes nothing until it has
+    // finished and cannot be resumed, so such a job is never drained and never lands in Paused.
+    DettatoEngine mDettatoEngine;
 
     // What the running job was launched with. Written by _launchJob and its callers before the job
     // is queued and read only by the job, so they need no synchronisation of their own.
@@ -134,6 +148,12 @@ private:
     ComputeDeviceChoice mJobDevice;
     std::string mJobResumeFrom;
     float mJobStartProgress = 0.0f;
+
+    // What a dettato job transcribes: the source audio as one channel at the rate it is played at,
+    // not the 16 kHz copy, because the drum model needs 40 kHz or more. A copy, so that the job
+    // owns it. Empty otherwise.
+    std::vector<float> mJobAudio;
+    double mJobAudioSampleRate = 0.0;
 
     // The model's own output, accumulated chunk by chunk as the job decodes it. Message thread
     // only, and owned here rather than by the engine because it has to outlive it: the engine is

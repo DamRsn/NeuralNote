@@ -79,8 +79,12 @@ std::optional<ModelSize> getInstalledModelSize(ModelSize inPreferred)
         return inPreferred;
     }
 
-    if (isModelInstalled(DEFAULT_MODEL_SIZE)) {
-        return DEFAULT_MODEL_SIZE;
+    // Then Medium, the default before dettato, so that a settings file from then which names no
+    // size, or a size that is gone, falls back as it did.
+    for (const ModelSize size: {DEFAULT_MODEL_SIZE, ModelSize::Medium}) {
+        if (isModelInstalled(size)) {
+            return size;
+        }
     }
 
     for (const ModelSize size: ALL_MODEL_SIZES) {

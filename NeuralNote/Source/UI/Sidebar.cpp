@@ -10,7 +10,9 @@
 #include "InstrumentSelection.h"
 #include "MeterScale.h"
 #include "NeuralNoteTooltips.h"
+#include "NNFileUtils.h"
 #include "NnFonts.h"
+#include "NnGlobalSettings.h"
 #include "NnIcons.h"
 #include "NnLook.h"
 #include "Player.h"
@@ -55,6 +57,17 @@ void paintMasterPanel(juce::Graphics& g, juce::Rectangle<int> inBounds)
                         label_row.toFloat(),
                         juce::Justification::centredLeft,
                         HEADER_TRACKING);
+}
+
+/**
+ * dettato names the instruments it hears, and takes no selection. With no model installed yet, this
+ * goes by the one the settings prefer, which is dettato unless another was picked.
+ */
+bool modelTakesSelection()
+{
+    const ModelSize preferred = NnGlobalSettings::getModelSize();
+
+    return NNFileUtils::getInstalledModelSize(preferred).value_or(preferred) != ModelSize::Dettato;
 }
 
 } // namespace
@@ -110,10 +123,11 @@ Sidebar::~Sidebar()
 
 void Sidebar::updateEnablements()
 {
-    // The selection only takes effect when a run starts -- the library treats it as a decoder
-    // constraint rather than a filter -- so the button goes away once there are notes.
-    mAddButton.setVisible(!mProcessor.hasTranscription());
+    mAddButton.setVisible(canPickInstruments());
     repaint(mHeaderBounds);
+
+    // The model may have changed, and with it whether the selection has strips.
+    _pushSelectionToMixer();
 
     for (const auto& strip: mStripList.strips) {
         strip->setTranscriptionFinished(mProcessor.getState() == PopulatedAudioAndMidiRegions);
@@ -167,10 +181,18 @@ void Sidebar::valueTreePropertyChanged(juce::ValueTree& inTree, const juce::Iden
     }
 }
 
+bool Sidebar::canPickInstruments() const
+{
+    // The selection only takes effect when a run starts -- the library treats it as a decoder
+    // constraint rather than a filter -- so the button goes away once there are notes.
+    return !mProcessor.hasTranscription() && modelTakesSelection();
+}
+
 void Sidebar::_pushSelectionToMixer()
 {
+    // The selection itself is kept for when a model that takes one is picked again.
     mProcessor.getInstrumentMixer()->setSelectedPrograms(
-        InstrumentSelection::selectedPrograms(mProcessor.getValueTree()));
+        modelTakesSelection() ? InstrumentSelection::selectedPrograms(mProcessor.getValueTree()) : std::vector<int> {});
 }
 
 juce::Point<int> Sidebar::getMenuAnchor() const

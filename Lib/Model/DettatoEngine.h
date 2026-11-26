@@ -68,7 +68,7 @@ public:
      *
      * The notes are the model's own output: nothing is merged, filtered or otherwise
      * post-processed here.
-     * @param inModelFile The checkpoint to load, getDettatoManifestEntry()'s file.
+     * @param inModelFile The checkpoint to load, ModelSize::Dettato's file.
      * @param inDevice Where to run it. An explicit device that cannot be used fails the call rather
      *        than running elsewhere; Auto, which a device that is no longer listed resolves to,
      *        falls back to the CPU.

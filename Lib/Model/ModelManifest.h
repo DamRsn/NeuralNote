@@ -43,8 +43,17 @@ inline const ModelManifestEntry& getModelManifestEntry(ModelSize inModelSize)
         "muscriptor-medium-f16.gguf", 618442496, "3850cc9e5b436b17a09bd25b8f2615cb3366ab96a71e7b50f73a793a917fdf03"};
     static constexpr ModelManifestEntry LARGE {
         "muscriptor-large-f16.gguf", 2739142176, "35a750fb1ab1e77195cdc2c0b9b4aeea2f4d59f11f729f02af9920c4854ef72e"};
+    // dettato's one checkpoint, which holds its four networks.
+    static constexpr ModelManifestEntry DETTATO {"dettato-f16.gguf",
+                                                 73685536,
+                                                 "73f08bfcad22c401c1e584229f2b49cb8097a9b539cc81fd29dca573d7585480",
+                                                 "kobimusic/dettato-gguf",
+                                                 "73f622a5173c8c9112d7cf2081a0402d73746fc7",
+                                                 ""};
 
     switch (inModelSize) {
+        case ModelSize::Dettato:
+            return DETTATO;
         case ModelSize::Small:
             return SMALL;
         case ModelSize::Medium:
@@ -54,19 +63,6 @@ inline const ModelManifestEntry& getModelManifestEntry(ModelSize inModelSize)
     }
 
     return MEDIUM;
-}
-
-/** dettato's one checkpoint, which holds its four networks. Not a ModelSize: DettatoEngine loads it. */
-inline const ModelManifestEntry& getDettatoManifestEntry()
-{
-    static constexpr ModelManifestEntry DETTATO {"dettato-f16.gguf",
-                                                 73685536,
-                                                 "73f08bfcad22c401c1e584229f2b49cb8097a9b539cc81fd29dca573d7585480",
-                                                 "kobimusic/dettato-gguf",
-                                                 "73f622a5173c8c9112d7cf2081a0402d73746fc7",
-                                                 ""};
-
-    return DETTATO;
 }
 
 /** @return The URL inEntry is downloaded from. */

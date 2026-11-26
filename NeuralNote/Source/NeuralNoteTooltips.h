@@ -29,6 +29,8 @@ const String mute = "Mute / Unmute input | m";
 
 const String pause_transcription = "Pause transcription. What is transcribed so far is kept";
 
+const String stop_transcription = "Stop transcription. Dettato cannot resume, so nothing is kept";
+
 const String resume_transcription = "Resume transcription";
 
 const String model = "Choose the transcription model, or download another";

@@ -21,17 +21,23 @@ static constexpr double FIXED_NOTE_AMPLITUDE = 100.0 / 127.0;
 static constexpr int MIN_MIDI_NOTE = 0;
 static constexpr int MAX_MIDI_NOTE = 127;
 
-/** The three MuScriptor checkpoints. Nothing else can be loaded. */
-enum class ModelSize { Small, Medium, Large };
+/**
+ * The checkpoints that can be loaded, in the order the model panel lists them: dettato's one, which
+ * is another model behind the same picker rather than a size of anything, then MuScriptor's three sizes.
+ */
+enum class ModelSize { Dettato, Small, Medium, Large };
 
-static constexpr ModelSize DEFAULT_MODEL_SIZE = ModelSize::Medium;
+static constexpr ModelSize DEFAULT_MODEL_SIZE = ModelSize::Dettato;
 
-static constexpr std::array<ModelSize, 3> ALL_MODEL_SIZES = {ModelSize::Small, ModelSize::Medium, ModelSize::Large};
+static constexpr std::array<ModelSize, 4> ALL_MODEL_SIZES = {
+    ModelSize::Dettato, ModelSize::Small, ModelSize::Medium, ModelSize::Large};
 
 /** The name the converter gives this size, and what global.settings stores. */
 inline const char* modelSizeToString(ModelSize inModelSize)
 {
     switch (inModelSize) {
+        case ModelSize::Dettato:
+            return "dettato";
         case ModelSize::Small:
             return "small";
         case ModelSize::Medium:
@@ -47,6 +53,8 @@ inline const char* modelSizeToString(ModelSize inModelSize)
 inline const char* modelSizeToDisplayName(ModelSize inModelSize)
 {
     switch (inModelSize) {
+        case ModelSize::Dettato:
+            return "Dettato";
         case ModelSize::Small:
             return "Small";
         case ModelSize::Medium:

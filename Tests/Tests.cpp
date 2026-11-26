@@ -839,7 +839,7 @@ void testCheckpointsAreDownloadedFromTheirOwnRepo()
               std::string("the ") + modelSizeToString(size) + " checkpoint is downloaded from where it was");
     }
 
-    const ModelManifestEntry& dettato = getDettatoManifestEntry();
+    const ModelManifestEntry& dettato = getModelManifestEntry(ModelSize::Dettato);
 
     check(std::string(dettato.repo) != MODEL_REPO, "dettato's checkpoint has its own repo");
     check(getModelUrl(dettato)

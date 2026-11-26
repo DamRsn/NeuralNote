@@ -175,7 +175,9 @@ std::optional<Support> knownSupport(ModelSize inModelSize)
 
 std::optional<Support> checkSupport(ModelSize inModelSize, const ComputeDeviceChoice& inDevice)
 {
-    if (!NNFileUtils::isModelInstalled(inModelSize)) {
+    // The check is muscriptor.cpp's, of one of its own checkpoints. dettato.cpp has none: whether a
+    // device runs it is only known by loading it there.
+    if (inModelSize == ModelSize::Dettato || !NNFileUtils::isModelInstalled(inModelSize)) {
         return std::nullopt;
     }
 
