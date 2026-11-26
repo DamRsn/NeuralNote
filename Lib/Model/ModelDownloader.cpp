@@ -23,12 +23,6 @@ constexpr int CHUNK_BYTES = 1 << 20;
 // so a long download is not given up on because of a few drops spread across it.
 constexpr std::array<int, 3> RETRY_DELAYS_MS = {2000, 5000, 10000};
 
-juce::URL getModelUrl(ModelSize inModelSize)
-{
-    return juce::URL("https://huggingface.co/" + juce::String(MODEL_REPO) + "/resolve/" + MODEL_REVISION + "/"
-                     + MODEL_REPO_DIRECTORY + "/" + getModelManifestEntry(inModelSize).fileName);
-}
-
 size_t indexOf(ModelSize inModelSize)
 {
     return static_cast<size_t>(inModelSize);
@@ -220,7 +214,7 @@ private:
 
         mDownloadedBytes = offset;
 
-        juce::WebInputStream stream(getModelUrl(mModelSize), false);
+        juce::WebInputStream stream(juce::URL(juce::String(getModelUrl(inEntry))), false);
         stream.withConnectionTimeout(CONNECTION_TIMEOUT_MS).withNumRedirectsToFollow(MAX_REDIRECTS);
 
         if (offset > 0) {

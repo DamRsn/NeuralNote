@@ -1,19 +1,31 @@
 #include <JuceHeader.h>
 
+#include <algorithm>
+#include <array>
+#include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <map>
+#include <numbers>
+#include <optional>
 #include <span>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
+#include "ComputeDevices.h"
+#include "DettatoEngine.h"
+#include "ModelManifest.h"
 #include "NoteEvent.h"
 #include "NoteScheduler.h"
 #include "PianoRollRange.h"
+#include "SoundFontData.h"
 #include "SynthEvent.h"
 #include "WaveformBars.h"
 #include "WaveformPeaks.h"
+#include "tsf.h"
 
 // NoteScheduler is the one place that decides when a note stops, for the synth and for the plugin's
 // MIDI output alike, and it does so while the note list is replaced under it every few seconds by a
@@ -813,6 +825,367 @@ void testVisibleBarsCoverTheClipAndStopAtTheAudio()
           "a zero zoom gives nothing rather than dividing by it");
 }
 
+// A checkpoint is downloaded from the repo its manifest entry names. MuScriptor's entries name
+// none and must keep the address they always had; dettato's is a file at the root of its own repo.
+
+void testCheckpointsAreDownloadedFromTheirOwnRepo()
+{
+    for (const ModelSize size: {ModelSize::Small, ModelSize::Medium, ModelSize::Large}) {
+        const ModelManifestEntry& entry = getModelManifestEntry(size);
+
+        check(getModelUrl(entry)
+                  == std::string("https://huggingface.co/") + MODEL_REPO + "/resolve/" + MODEL_REVISION + "/"
+                         + MODEL_REPO_DIRECTORY + "/" + entry.fileName,
+              std::string("the ") + modelSizeToString(size) + " checkpoint is downloaded from where it was");
+    }
+
+    const ModelManifestEntry& dettato = getDettatoManifestEntry();
+
+    check(std::string(dettato.repo) != MODEL_REPO, "dettato's checkpoint has its own repo");
+    check(getModelUrl(dettato)
+              == std::string("https://huggingface.co/") + dettato.repo + "/resolve/" + dettato.revision + "/"
+                     + dettato.fileName,
+          "a file at the root of its repo has no directory in its address");
+}
+
+// DettatoEngine. What it does to the library's result and how it finds its device need no weights.
+// The transcriptions do, and are skipped without them: run with DETTATO_TEST_MODEL set to the path
+// of dettato-f16.gguf. They run on the CPU, for a minute or two.
+
+void testDettatoNotesBecomeNoteEvents()
+{
+    dtt::Transcription transcription;
+    transcription.tracks = {{"piano", PIANO, false}, {"synth bass", 38, false}, {"drums", 0, true}};
+    transcription.notes = {{0.5, 1.25, 60, 127, 0}, {0.5, 0.75, 36, 64, 2}, {1.0, 2.0, 40, 1, 1}};
+
+    const std::vector<NoteEvent> events = DettatoEngine::toNoteEvents(transcription);
+
+    check(events.size() == 3, "every note becomes an event");
+
+    if (events.size() != 3) {
+        return;
+    }
+
+    check(exactlyEqual(events[0].startTime, 0.5) && exactlyEqual(events[0].endTime, 1.25) && events[0].pitch == 60,
+          "onset, offset and pitch are carried over");
+    check(events[0].program == PIANO && events[2].program == BASS,
+          "a pitched note takes its track's program, folded onto its group's");
+    check(events[1].program == DRUMS && events[1].isDrum() && events[1].pitch == 36,
+          "a note of the drum track takes the drum program, whatever program the track carries");
+    check(!events[0].isDrum() && !events[2].isDrum(), "and no other note does");
+    check(exactlyEqual(events[0].amplitude, 1.0) && approximatelyEqual(events[1].amplitude, 64.0 / 127.0)
+              && approximatelyEqual(events[2].amplitude, 1.0 / 127.0),
+          "the velocity becomes the amplitude");
+}
+
+// dettato names its instruments by their General MIDI program. The plugin plays, names and colours
+// the one program of each MuScriptor group, and each program from 97 up.
+
+void testDettatoProgramsFoldOntoGroupPrograms()
+{
+    std::vector<int> group_programs;
+
+    for (const msl::InstrumentGroup group: msl::allInstrumentGroups()) {
+        if (group != msl::InstrumentGroup::Drums) {
+            group_programs.push_back(msl::programFor(group));
+        }
+    }
+
+    for (int program = 0; program <= 127; program++) {
+        const int folded = DettatoEngine::playableProgram(program);
+        const bool is_group_program =
+            std::find(group_programs.begin(), group_programs.end(), folded) != group_programs.end();
+
+        check(program >= 97 ? folded == program : is_group_program,
+              "program " + std::to_string(program) + " folds onto a named group's, or is kept from 97 up");
+        check(DettatoEngine::playableProgram(folded) == folded,
+              "folding program " + std::to_string(program) + " twice changes nothing");
+    }
+
+    // A program, and the one it is played with. 96 is the one MuScriptor gives to its drums.
+    constexpr std::array<std::pair<int, int>, 15> FOLDS = {{{0, 0},
+                                                            {4, 2},
+                                                            {6, 2},
+                                                            {13, 8},
+                                                            {21, 16},
+                                                            {38, 33},
+                                                            {44, 48},
+                                                            {54, 52},
+                                                            {62, 61},
+                                                            {65, 64},
+                                                            {73, 72},
+                                                            {79, 72},
+                                                            {96, 88},
+                                                            {104, 104},
+                                                            {120, 120}}};
+
+    for (const auto& [program, folded]: FOLDS) {
+        check(DettatoEngine::playableProgram(program) == folded,
+              "program " + std::to_string(program) + " folds onto " + std::to_string(folded));
+    }
+}
+
+void testFoldedProgramsHaveAPresetInTheSoundfont()
+{
+    tsf* font = tsf_load_memory(SoundFontData::NeuralNote_GM_sf3, SoundFontData::NeuralNote_GM_sf3Size);
+
+    check(font != nullptr, "the bundled soundfont loads");
+
+    // In bank 0, where InstrumentSynth looks a melodic program up.
+    for (int program = 0; font != nullptr && program <= 127; program++) {
+        check(tsf_get_presetindex(font, 0, DettatoEngine::playableProgram(program)) >= 0,
+              "the soundfont has a preset for what program " + std::to_string(program) + " folds onto");
+    }
+
+    tsf_close(font);
+}
+
+void testDettatoFindsItsDeviceByBackendAndName()
+{
+    // One machine as each library might list it: the same devices, in another order.
+    const std::vector<msl::Device> devices = {{"RTX", "Vulkan", false, 0},
+                                              {"RTX", "Vulkan", false, 0},
+                                              {"Iris", "Vulkan", true, 0},
+                                              {"CPU", "CPU", false, 0}};
+    const std::vector<dtt::Device> dettato_devices = {{"Iris", "Vulkan", true, 0},
+                                                      {"RTX", "Vulkan", false, 0},
+                                                      {"RTX", "Vulkan", false, 0},
+                                                      {"CPU", "CPU", false, 0}};
+
+    const auto find = [&devices](std::size_t inIndex, const std::vector<dtt::Device>& inDettatoDevices) {
+        return DettatoEngine::findDevice(devices, inIndex, inDettatoDevices);
+    };
+    using Index = std::optional<std::size_t>;
+
+    check(find(2, dettato_devices) == Index {0}, "a device is found by its name, not by its index");
+    check(find(0, dettato_devices) == Index {1} && find(1, dettato_devices) == Index {2},
+          "identical devices keep their order");
+    check(find(3, dettato_devices) == Index {3}, "the CPU is found");
+
+    check(find(1, {{"RTX", "Vulkan", false, 0}, {"CPU", "CPU", false, 0}}) == std::nullopt,
+          "a second identical device is not found where there is only one");
+    check(find(0, {{"RTX", "Metal", false, 0}, {"CPU", "CPU", false, 0}}) == std::nullopt,
+          "a device of the same name on another backend is not the same device");
+}
+
+/** @return Whatever DETTATO_TEST_MODEL names, or nothing when it is unset. */
+std::optional<File> getDettatoTestModel()
+{
+    const String path = SystemStats::getEnvironmentVariable("DETTATO_TEST_MODEL", {});
+
+    if (path.isEmpty()) {
+        return std::nullopt;
+    }
+
+    return File::getCurrentWorkingDirectory().getChildFile(path);
+}
+
+ComputeDeviceChoice getCpuChoice()
+{
+    const std::vector<msl::Device>& devices = ComputeDevices::get();
+
+    // The CPU is always last.
+    return ComputeDevices::choiceFor(devices, devices.size() - 1);
+}
+
+constexpr double TUNE_SAMPLE_RATE = 44100.0;
+constexpr double TUNE_SECONDS = 8.0;
+
+struct Tone {
+    int pitch;
+    double start;
+    double end;
+};
+
+constexpr std::array<Tone, 4> TUNE = {{{60, 0.5, 1.9}, {64, 2.0, 3.4}, {67, 3.5, 4.9}, {72, 5.0, 6.5}}};
+
+/**
+ * Four plucked tones of eight decaying harmonics, C4 E4 G4 C5, then five short bursts of noise for
+ * the drum model: 8 s, inRepeats times over.
+ */
+std::vector<float> makeTune(double inSampleRate, int inRepeats = 1)
+{
+    std::vector<float> tune(static_cast<size_t>(TUNE_SECONDS * inSampleRate), 0.0f);
+
+    for (const Tone& tone: TUNE) {
+        const double frequency = 440.0 * std::pow(2.0, (tone.pitch - 69) / 12.0);
+
+        for (auto i = static_cast<size_t>(tone.start * inSampleRate); i < static_cast<size_t>(tone.end * inSampleRate);
+             i++) {
+            const double t = static_cast<double>(i) / inSampleRate - tone.start;
+            double value = 0.0;
+
+            for (int harmonic = 1; harmonic <= 8; harmonic++) {
+                value += std::sin(2.0 * std::numbers::pi * frequency * harmonic * t) / harmonic
+                         * std::exp(-t * (1.5 + 0.6 * harmonic));
+            }
+
+            // A 3 ms attack, so the tone does not start on a click.
+            tune[i] += static_cast<float>(0.25 * value * std::min(1.0, t / 0.003));
+        }
+    }
+
+    Random random(3);
+
+    for (double start = 6.75; start < 7.9; start += 0.25) {
+        const auto first = static_cast<size_t>(start * inSampleRate);
+        const auto length = static_cast<size_t>(0.08 * inSampleRate);
+
+        for (size_t i = 0; i < length && first + i < tune.size(); i++) {
+            const double decay = std::exp(-static_cast<double>(i) / (0.012 * inSampleRate));
+            tune[first + i] += static_cast<float>(0.4 * (2.0 * random.nextDouble() - 1.0) * decay);
+        }
+    }
+
+    std::vector<float> audio;
+    audio.reserve(tune.size() * static_cast<size_t>(inRepeats));
+
+    for (int repeat = 0; repeat < inRepeats; repeat++) {
+        audio.insert(audio.end(), tune.begin(), tune.end());
+    }
+
+    return audio;
+}
+
+void testDettatoFailsWithoutItsCheckpoint()
+{
+    const File missing = File::getSpecialLocation(File::tempDirectory).getChildFile("neuralnote_no_such_model.gguf");
+    const std::vector<float> audio = makeTune(TUNE_SAMPLE_RATE);
+
+    DettatoEngine engine;
+    engine.reset();
+
+    check(engine.transcribeToMIDI(missing, {}, audio.data(), static_cast<int>(audio.size()), TUNE_SAMPLE_RATE)
+              == DettatoEngine::Outcome::Failed,
+          "a missing checkpoint fails the run");
+    check(!engine.getLastErrorMessage().empty(), "and says why");
+    check(engine.takeFinalNotes().empty(), "and leaves no notes");
+
+    engine.reset();
+    check(engine.getLastErrorMessage().empty(), "reset clears the reason");
+}
+
+void testDettatoTranscribesATune(const File& inModel)
+{
+    DettatoEngine engine;
+
+    // At the rate of a recording, and at the rate the rest of the plugin transcribes at, where
+    // there are no drums.
+    for (const double sample_rate: {TUNE_SAMPLE_RATE, TRANSCRIPTION_SAMPLE_RATE}) {
+        const std::string rate = " at " + std::to_string(static_cast<int>(sample_rate)) + " Hz";
+        const std::vector<float> audio = makeTune(sample_rate);
+        const double start_ms = Time::getMillisecondCounterHiRes();
+
+        engine.reset();
+        const DettatoEngine::Outcome outcome =
+            engine.transcribeToMIDI(inModel, getCpuChoice(), audio.data(), static_cast<int>(audio.size()), sample_rate);
+
+        check(outcome == DettatoEngine::Outcome::Success,
+              "the tune is transcribed" + rate + ": " + engine.getLastErrorMessage());
+        check(engine.getLastErrorMessage().empty(), "a run that succeeds leaves no error" + rate);
+
+        const DettatoEngine::Progress progress = engine.getProgress();
+        check(progress.phase == DettatoEngine::Phase::Transcribing && exactlyEqual(progress.fraction, 1.0f),
+              "the progress ends at the end" + rate);
+
+        const std::vector<NoteEvent> notes = engine.takeFinalNotes();
+        check(engine.takeFinalNotes().empty(), "the notes are handed over once" + rate);
+
+        int num_drum_hits = 0;
+
+        for (const NoteEvent& note: notes) {
+            num_drum_hits += note.isDrum() ? 1 : 0;
+
+            check(note.startTime >= 0.0 && note.endTime > note.startTime && note.startTime <= TUNE_SECONDS,
+                  "a note starts inside the audio and ends after it starts" + rate);
+            check(note.pitch >= MIN_MIDI_NOTE && note.pitch <= MAX_MIDI_NOTE, "a note has a MIDI pitch" + rate);
+            check(note.program >= 0 && note.program < NUM_INSTRUMENT_IDS, "a note has an instrument" + rate);
+            check(note.isDrum() || DettatoEngine::playableProgram(note.program) == note.program,
+                  "and it is one the synth can play" + rate);
+            check(note.amplitude > 0.0 && note.amplitude <= 1.0, "a note has an amplitude" + rate);
+        }
+
+        for (const Tone& tone: TUNE) {
+            const bool found = std::any_of(notes.begin(), notes.end(), [&tone](const NoteEvent& inNote) {
+                return !inNote.isDrum() && inNote.pitch == tone.pitch && std::abs(inNote.startTime - tone.start) < 0.1;
+            });
+
+            check(found, "note " + std::to_string(tone.pitch) + " is transcribed where it was played" + rate);
+        }
+
+        // The drum model only runs on audio at 40 kHz or more.
+        check((num_drum_hits > 0) == (sample_rate >= 40000.0), "the drums are transcribed, or are not," + rate);
+
+        std::printf("DettatoEngine: %d notes (%d drum hits)%s in %.1f s\n",
+                    static_cast<int>(notes.size()),
+                    num_drum_hits,
+                    rate.c_str(),
+                    (Time::getMillisecondCounterHiRes() - start_ms) / 1000.0);
+    }
+}
+
+void testDettatoCancelBeforeItStarts(const File& inModel)
+{
+    const std::vector<float> audio = makeTune(TUNE_SAMPLE_RATE);
+
+    DettatoEngine engine;
+    engine.reset();
+
+    // As when the user stops a job that is still queued.
+    engine.cancel();
+    check(engine.isCancelRequested(), "a request is held until the job starts");
+
+    check(
+        engine.transcribeToMIDI(inModel, getCpuChoice(), audio.data(), static_cast<int>(audio.size()), TUNE_SAMPLE_RATE)
+            == DettatoEngine::Outcome::Cancelled,
+        "a run cancelled before it starts is cancelled, not failed");
+    check(engine.getLastErrorMessage().empty() && engine.takeFinalNotes().empty(),
+          "and leaves neither an error nor notes");
+
+    engine.reset();
+    check(!engine.isCancelRequested(), "reset drops the request");
+}
+
+void testDettatoCancelWhileTranscribing(const File& inModel)
+{
+    // Long enough that most of the run is still ahead when the request lands.
+    const std::vector<float> audio = makeTune(TUNE_SAMPLE_RATE, 5);
+
+    DettatoEngine engine;
+    engine.reset();
+
+    DettatoEngine::Outcome outcome = DettatoEngine::Outcome::Success;
+    std::atomic<bool> finished {false};
+
+    std::thread job([&] {
+        outcome = engine.transcribeToMIDI(
+            inModel, getCpuChoice(), audio.data(), static_cast<int>(audio.size()), TUNE_SAMPLE_RATE);
+        finished = true;
+    });
+
+    // Until its first windows are done, so the request lands in the middle of the run.
+    const auto is_under_way = [&engine] {
+        const DettatoEngine::Progress progress = engine.getProgress();
+        return progress.phase == DettatoEngine::Phase::Transcribing && progress.fraction > 0.0f;
+    };
+
+    while (!finished && !is_under_way()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+
+    const double cancel_ms = Time::getMillisecondCounterHiRes();
+    engine.cancel();
+    job.join();
+
+    check(outcome == DettatoEngine::Outcome::Cancelled, "a run cancelled while transcribing is cancelled");
+    check(engine.getLastErrorMessage().empty() && engine.takeFinalNotes().empty(),
+          "and leaves neither an error nor notes");
+    check(engine.getProgress().fraction < 1.0f, "and did not run to the end");
+
+    std::printf("DettatoEngine: stopped %.1f s after cancel\n",
+                (Time::getMillisecondCounterHiRes() - cancel_ms) / 1000.0);
+}
+
 } // namespace
 
 int main()
@@ -851,6 +1224,22 @@ int main()
     testBarsTileTheAudioWithoutGaps();
     testBarStartsDoNotDependOnScroll();
     testVisibleBarsCoverTheClipAndStopAtTheAudio();
+
+    testCheckpointsAreDownloadedFromTheirOwnRepo();
+
+    testDettatoNotesBecomeNoteEvents();
+    testDettatoProgramsFoldOntoGroupPrograms();
+    testFoldedProgramsHaveAPresetInTheSoundfont();
+    testDettatoFindsItsDeviceByBackendAndName();
+    testDettatoFailsWithoutItsCheckpoint();
+
+    if (const std::optional<File> model = getDettatoTestModel()) {
+        testDettatoTranscribesATune(*model);
+        testDettatoCancelBeforeItStarts(*model);
+        testDettatoCancelWhileTranscribing(*model);
+    } else {
+        std::printf("Skipped the dettato transcriptions: DETTATO_TEST_MODEL is not set\n");
+    }
 
     if (gFailures > 0) {
         std::printf("%d check(s) failed\n", gFailures);
