@@ -24,11 +24,13 @@ constexpr int PARTIAL_TRANSCRIPTION_FORMAT_VERSION = 1;
 constexpr int SAVED_TIME_DECIMAL_PLACES = 6;
 
 /**
- * Reads the notes notesToJson wrote. Any malformed entry rejects the whole list; a note starting
- * outside [0, inDuration] is dropped. The end is not bounded: a note left open at the end of the
- * audio ends 10 ms after its onset, which can be past the last sample.
+ * Reads the notes notesToJson wrote, with the velocities velocitiesToJson wrote for them. Any
+ * malformed entry rejects the whole list; a note starting outside [0, inDuration] is dropped. The
+ * end is not bounded: a note left open at the end of the audio ends 10 ms after its onset, which can
+ * be past the last sample. Without one valid velocity per note, every note gets FIXED_NOTE_AMPLITUDE.
  */
-std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson, double inDuration)
+std::optional<std::vector<NoteEvent>>
+    parseNotes(const String& inJson, const String& inVelocitiesJson, double inDuration)
 {
     const var parsed = JSON::parse(inJson);
     const Array<var>* entries = parsed.getArray();
@@ -37,11 +39,24 @@ std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson, double in
         return std::nullopt;
     }
 
+    const var parsed_velocities = JSON::parse(inVelocitiesJson);
+    const Array<var>* velocities = parsed_velocities.getArray();
+
+    const auto is_velocity = [](const var& inValue) {
+        return inValue.isInt() && static_cast<int>(inValue) >= 1 && static_cast<int>(inValue) <= 127;
+    };
+
+    if (velocities != nullptr
+        && (velocities->size() != entries->size()
+            || !std::all_of(velocities->begin(), velocities->end(), is_velocity))) {
+        velocities = nullptr;
+    }
+
     std::vector<NoteEvent> notes;
     notes.reserve(static_cast<std::size_t>(entries->size()));
 
-    for (const var& entry: *entries) {
-        const Array<var>* fields = entry.getArray();
+    for (int i = 0; i < entries->size(); i++) {
+        const Array<var>* fields = entries->getReference(i).getArray();
 
         if (fields == nullptr || fields->size() != 4) {
             return std::nullopt;
@@ -52,7 +67,8 @@ std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson, double in
         note.endTime = fields->getReference(1);
         note.pitch = fields->getReference(2);
         note.program = fields->getReference(3);
-        note.amplitude = FIXED_NOTE_AMPLITUDE;
+        note.amplitude =
+            velocities != nullptr ? static_cast<int>(velocities->getReference(i)) / 127.0 : FIXED_NOTE_AMPLITUDE;
 
         const bool valid_times =
             std::isfinite(note.startTime) && std::isfinite(note.endTime) && note.endTime >= note.startTime;
@@ -84,6 +100,27 @@ String notesToJson(const std::vector<NoteEvent>& inNotes)
         JSON::FormatOptions {}.withSpacing(JSON::Spacing::none).withMaxDecimalPlaces(SAVED_TIME_DECIMAL_PLACES);
 
     return JSON::toString(entries, format);
+}
+
+/** The notes' MIDI velocities, in their order. Empty if they all have FIXED_NOTE_AMPLITUDE. */
+String velocitiesToJson(const std::vector<NoteEvent>& inNotes)
+{
+    const bool all_fixed = std::all_of(inNotes.begin(), inNotes.end(), [](const NoteEvent& inNote) {
+        return exactlyEqual(inNote.amplitude, FIXED_NOTE_AMPLITUDE);
+    });
+
+    if (all_fixed) {
+        return {};
+    }
+
+    Array<var> velocities;
+    velocities.ensureStorageAllocated(static_cast<int>(inNotes.size()));
+
+    for (const NoteEvent& note: inNotes) {
+        velocities.add(jlimit(1, 127, roundToInt(note.amplitude * 127.0)));
+    }
+
+    return JSON::toString(velocities, JSON::FormatOptions {}.withSpacing(JSON::Spacing::none));
 }
 
 const char* outcomeToString(MuscriptorEngine::Outcome inOutcome)
@@ -549,6 +586,7 @@ ValueTree TranscriptionManager::createStateTree() const
 
     if (!mSavedNotesJson.has_value()) {
         mSavedNotesJson = notesToJson(saved.notes);
+        mSavedVelocitiesJson = velocitiesToJson(saved.notes);
     }
 
     const bool finished = saved.resumePoint.empty();
@@ -561,6 +599,10 @@ ValueTree TranscriptionManager::createStateTree() const
                      nullptr);
     tree.setProperty(NnId::TranscriptionModelSizeId, modelSizeToString(saved.modelSize), nullptr);
     tree.setProperty(NnId::TranscriptionNotesId, *mSavedNotesJson, nullptr);
+
+    if (mSavedVelocitiesJson.isNotEmpty()) {
+        tree.setProperty(NnId::TranscriptionVelocitiesId, mSavedVelocitiesJson, nullptr);
+    }
 
     if (!finished) {
         tree.setProperty(NnId::FinalizedThroughId, saved.finalizedThrough, nullptr);
@@ -604,7 +646,9 @@ void TranscriptionManager::restoreFromStateTree(const ValueTree& inFullState)
     }
 
     const double duration = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
-    auto notes = parseNotes(tree.getProperty(NnId::TranscriptionNotesId).toString(), duration);
+    auto notes = parseNotes(tree.getProperty(NnId::TranscriptionNotesId).toString(),
+                            tree.getProperty(NnId::TranscriptionVelocitiesId).toString(),
+                            duration);
 
     const std::optional<ModelSize> model_size =
         modelSizeFromString(tree.getProperty(NnId::TranscriptionModelSizeId).toString().toStdString());

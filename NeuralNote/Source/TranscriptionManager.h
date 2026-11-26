@@ -188,8 +188,10 @@ private:
     };
 
     std::optional<SavedTranscription> mSavedTranscription;
-    // mSavedTranscription's notes as JSON, built on the first createStateTree after they change.
+    // mSavedTranscription's notes as JSON, and their velocities, built on the first createStateTree
+    // after they change.
     mutable std::optional<String> mSavedNotesJson;
+    mutable String mSavedVelocitiesJson;
     mutable CriticalSection mSavedTranscriptionLock;
 
     // How far mRawNotes is complete; see getFinalizedThrough.
