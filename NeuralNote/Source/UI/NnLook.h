@@ -137,6 +137,8 @@ inline juce::Colour waveCentreLine()
 inline const juce::Colour keyWhite = rgb(0xe2e4e8);
 inline const juce::Colour keyBlack = rgb(0x0e0f11);
 inline const juce::Colour keyLabel = textLabel;
+inline const juce::Colour keyLabelSecondary = textIcon;
+inline const juce::Colour keyLabelBlack = textFaint;
 inline const juce::Colour laneBlack = rgb(0x141519);
 inline const juce::Colour laneWhite = rgb(0x191a1e);
 
@@ -267,7 +269,7 @@ constexpr float waveformCentreY = waveformHeight * 0.5f + 0.5f;
 constexpr float waveformAmpHalfSpan = 51.0f;
 
 /** One white key's height in the key column at the default vertical zoom. See nn::zoom. */
-constexpr int pianoKeyHeight = 11;
+constexpr int pianoKeyHeight = 17;
 
 // ---- popup menus and the instrument dropdown ----------------------------
 constexpr int menuWidth = 244;
@@ -353,8 +355,8 @@ constexpr double maxEditorScale = 2.0; // 2560 x 1600
  */
 namespace nn::zoom
 {
-constexpr float rowHeightMin = 6.0f; // per semitone, at norm = 0
-constexpr float rowHeightRange = 37.6f;
+constexpr float rowHeightMin = 10.0f; // per semitone, at norm = 0
+constexpr float rowHeightRange = 34.0f;
 
 constexpr int whiteKeysPerOctave = 7;
 constexpr int semitonesPerOctave = 12;

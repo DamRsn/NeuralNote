@@ -70,7 +70,7 @@ public:
 
     PianoRoll* getPianoRoll();
 
-    const double mBaseNumPixelsPerSecond = 100.0;
+    const double mBaseNumPixelsPerSecond = 135.0;
 
     // The waveform, the ruler and the piano roll are stacked inside this one scrolling region, so
     // their time axes cannot drift apart -- which is the whole reason the ruler lives here.

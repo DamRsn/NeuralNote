@@ -31,6 +31,9 @@ public:
      */
     void setWhiteKeyHeight(float inHeightPx);
 
+	/** Scrolls the visible key window so inMidiNote sits near the middle when the column scrolls. */
+	void centerOnPitch(int inMidiNote);
+
     /** Holds the keys back while the roll beside them has nothing in it. */
     void setDimmed(bool inIsDimmed);
 

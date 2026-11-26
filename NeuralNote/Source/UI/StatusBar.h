@@ -5,8 +5,11 @@
 #ifndef StatusBar_h
 #define StatusBar_h
 
+#include <optional>
+
 #include <JuceHeader.h>
 
+#include "KeyDetector.h"
 #include "NnFlatSlider.h"
 #include "TranscriptionProgress.h"
 
@@ -41,6 +44,9 @@ public:
     /** Moves the slider without calling back, for the zoom the view picked for itself. */
     void setVerticalZoom(float inNorm);
 
+	/** Recomputes the detected key from currently audible melodic notes. */
+	void refreshDetectedKey();
+
 private:
     void changeListenerCallback(juce::ChangeBroadcaster* inSource) override;
 
@@ -50,6 +56,7 @@ private:
     NnFlatSlider mZoomSlider;
 
     juce::Rectangle<int> mZoomIconBounds;
+	std::optional<KeyDetector::DetectedKey> mDetectedKey;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(StatusBar)
 };

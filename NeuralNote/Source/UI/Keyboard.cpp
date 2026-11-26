@@ -11,6 +11,10 @@ namespace
 {
 /** How far the key column falls back while the roll beside it is empty. */
 constexpr float DIMMED_ALPHA = 0.4f;
+
+constexpr const char* NOTE_NAMES[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+constexpr float MIN_WHITE_SECONDARY_LABEL_HEIGHT = 8.0f;
+constexpr float MIN_BLACK_LABEL_HEIGHT = 6.5f;
 } // namespace
 
 Keyboard::Keyboard()
@@ -62,6 +66,18 @@ void Keyboard::setWhiteKeyHeight(float inHeightPx)
     sendChangeMessage();
 }
 
+void Keyboard::centerOnPitch(int inMidiNote)
+{
+	const int prev_lowest = getLowestVisibleKey();
+	const int target = juce::jlimit(getRangeStart(), getRangeEnd(), inMidiNote - _visibleSemitones() / 2);
+
+	setLowestVisibleKey(target);
+
+	if (getLowestVisibleKey() != prev_lowest) {
+		sendChangeMessage();
+	}
+}
+
 int Keyboard::_visibleSemitones() const
 {
     if (getKeyWidth() <= 0.0f) {
@@ -111,23 +127,34 @@ void Keyboard::drawWhiteKey(int midiNoteNumber, Graphics& g, Rectangle<float> ar
     g.setColour(_keyColour(nn::colours::keyWhite));
     g.fillRect(area.withTrimmedBottom(1.0f).withTrimmedRight(1.0f));
 
-    if (midiNoteNumber % 12 == 0) {
-        const int octave_number = midiNoteNumber / 12 - 1;
+	const int pitch_class = ((midiNoteNumber % 12) + 12) % 12;
+	const auto label_area = area.withTrimmedBottom(1.0f).withTrimmedLeft(getBlackNoteLength()).withTrimmedRight(5.0f);
 
-        g.setColour(_keyColour(nn::colours::keyLabel));
-        g.setFont(nn::fonts::scaleLabel());
-        g.drawText("C" + String(octave_number),
-                   area.withTrimmedLeft(getBlackNoteLength()).withTrimmedRight(5.0f),
-                   juce::Justification::centredRight);
-    }
+	g.setFont(nn::fonts::scaleLabel());
+
+	if (pitch_class == 0) {
+		const int octave_number = midiNoteNumber / 12 - 1;
+		g.setColour(_keyColour(nn::colours::keyLabel));
+		g.drawText("C" + String(octave_number), label_area, juce::Justification::centredRight);
+	} else if (area.getHeight() >= MIN_WHITE_SECONDARY_LABEL_HEIGHT) {
+		g.setColour(_keyColour(nn::colours::keyLabelSecondary));
+		g.drawText(NOTE_NAMES[pitch_class], label_area, juce::Justification::centredRight);
+	}
 }
 
 void Keyboard::drawBlackKey(int midiNoteNumber, Graphics& g, Rectangle<float> area)
 {
-    ignoreUnused(midiNoteNumber);
-
     g.setColour(_keyColour(nn::colours::keyBlack));
     g.fillRect(area.withTrimmedBottom(1.0f));
+
+	if (area.getHeight() >= MIN_BLACK_LABEL_HEIGHT) {
+		const int pitch_class = ((midiNoteNumber % 12) + 12) % 12;
+		g.setColour(_keyColour(nn::colours::keyLabelBlack));
+		g.setFont(nn::fonts::scaleLabel());
+		g.drawText(NOTE_NAMES[pitch_class],
+			area.withTrimmedBottom(1.0f).withTrimmedLeft(3.0f).withTrimmedRight(4.0f),
+			juce::Justification::centredRight);
+	}
 }
 
 void Keyboard::drawUpDownButton(Graphics& g, int w, int h, bool isMouseOver, bool isButtonPressed, bool movesOctavesUp)

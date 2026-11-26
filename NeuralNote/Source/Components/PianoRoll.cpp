@@ -131,9 +131,9 @@ void PianoRoll::_drawNotes(Graphics& g) const
 
         const auto [note_y, note_height] = _getNoteHeightAndWidthPianoRoll(note_event.pitch);
 
-        if (note_y < 0 || note_height >= height) {
-            continue;
-        }
+		if (note_y + note_height <= 0.0f || note_y >= height) {
+			continue;
+		}
 
         const double end_time = note_event.isDrum()
                                     ? std::max(note_event.endTime, note_event.startTime + DRUM_MIN_DRAWN_SECONDS)
