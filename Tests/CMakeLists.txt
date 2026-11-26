@@ -28,6 +28,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         juce::juce_cryptography
         juce::juce_dsp
         muscriptor_ggml
+        dettato_ggml
         tinysoundfont
         minimp3
         bin_data

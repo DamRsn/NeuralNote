@@ -95,12 +95,17 @@ endif ()
 set(BUILD_TESTING OFF)
 add_subdirectory(ThirdParty/muscriptor.cpp/cpp muscriptor)
 
-# muscriptor.cpp (and the ggml it fetches) can't follow a single-config
-# generator's global CMAKE_BUILD_TYPE selectively, so force it to optimized
-# code regardless of whether the plugin itself is built Debug or Release.
+# dettato.cpp, the second transcription model. After muscriptor.cpp, so that it
+# links the ggml that one fetched instead of fetching its own: a binary can only
+# hold one ggml. Its tools and tests are off when it is not the top-level project.
+add_subdirectory(ThirdParty/dettato.cpp/cpp dettato)
+
+# muscriptor.cpp and dettato.cpp (and the ggml they share) can't follow a
+# single-config generator's global CMAKE_BUILD_TYPE selectively, so force them to
+# optimized code regardless of whether the plugin itself is built Debug or Release.
 # NEURALNOTE_MUSCRIPTOR_DEBUG opts back into following the plugin's build type.
 if (NOT NEURALNOTE_MUSCRIPTOR_DEBUG)
-  foreach (muscriptor_target muscriptor_ggml muscriptor_ggml_cpu ggml ggml-base ggml-cpu ggml-metal pffft)
+  foreach (muscriptor_target muscriptor_ggml muscriptor_ggml_cpu dettato_ggml ggml ggml-base ggml-cpu ggml-metal pffft)
     if (TARGET ${muscriptor_target})
       if (MSVC)
         target_compile_options(${muscriptor_target} PRIVATE /O2 /DNDEBUG)
@@ -203,6 +208,7 @@ target_link_libraries(${BaseTargetName}
         juce::juce_cryptography
         juce::juce_dsp
         muscriptor_ggml
+        dettato_ggml
         tinysoundfont
         minimp3
         bin_data

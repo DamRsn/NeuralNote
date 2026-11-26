@@ -5,3 +5,7 @@
 	path = ThirdParty/muscriptor.cpp
 	url = https://github.com/DamRsn/muscriptor.cpp.git
 	branch = main
+[submodule "dettato.cpp"]
+	path = ThirdParty/dettato.cpp
+	url = https://github.com/hidude562/dettato.cpp.git
+	branch = main
