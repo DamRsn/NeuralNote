@@ -64,6 +64,7 @@ StatusBar::StatusBar(NeuralNoteAudioProcessor& inProcessor)
     addAndMakeVisible(mZoomSlider);
 
     mProcessor.getInstrumentMixer()->addChangeListener(this);
+	refreshDetectedKey();
 }
 
 StatusBar::~StatusBar()
@@ -76,9 +77,30 @@ void StatusBar::setVerticalZoom(float inNorm)
     mZoomSlider.setValue(inNorm, juce::dontSendNotification);
 }
 
+void StatusBar::refreshDetectedKey()
+{
+	std::optional<KeyDetector::DetectedKey> next_key;
+
+	if (mProcessor.hasTranscription()) {
+		const InstrumentMixer* mixer = mProcessor.getInstrumentMixer();
+		next_key = KeyDetector::detect(
+			mProcessor.getTranscriptionManager()->getNoteEventVector(),
+			[mixer](int inProgram) { return mixer->isAudible(inProgram); });
+	}
+
+	const bool changed = (next_key.has_value() != mDetectedKey.has_value())
+		|| (next_key.has_value() && !next_key->hasSameKey(*mDetectedKey));
+
+	if (changed) {
+		mDetectedKey = next_key;
+		repaint();
+	}
+}
+
 void StatusBar::updateEnablements()
 {
     mProgress.setVisible(mProcessor.isTranscriptionUnfinished());
+	refreshDetectedKey();
 
     // The model segment follows the processor state, which the mixer does not announce.
     repaint();
@@ -128,6 +150,10 @@ void StatusBar::paint(juce::Graphics& g)
         segments.add(nn::midiNoteName(mixer->getLowestPitch()) + " - " + nn::midiNoteName(mixer->getHighestPitch()));
     }
 
+	if (mDetectedKey.has_value()) {
+		segments.add("Key: " + juce::String(mDetectedKey->format()));
+	}
+
     const double duration = mProcessor.getSourceAudioManager()->getAudioSampleDuration();
 
     if (duration > 0.0) {
@@ -140,6 +166,7 @@ void StatusBar::paint(juce::Graphics& g)
 void StatusBar::changeListenerCallback(juce::ChangeBroadcaster* inSource)
 {
     if (inSource == mProcessor.getInstrumentMixer()) {
+		refreshDetectedKey();
         repaint();
     }
 }

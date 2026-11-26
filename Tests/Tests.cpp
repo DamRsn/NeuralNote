@@ -2,12 +2,14 @@
 
 #include <cmath>
 #include <cstdio>
+#include <initializer_list>
 #include <map>
 #include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "KeyDetector.h"
 #include "NoteEvent.h"
 #include "NoteScheduler.h"
 #include "PianoRollRange.h"
@@ -813,6 +815,89 @@ void testVisibleBarsCoverTheClipAndStopAtTheAudio()
           "a zero zoom gives nothing rather than dividing by it");
 }
 
+void testKeyDetectorMajorAndMinorWithEnharmonics()
+{
+	auto scale_notes = [](int inRootPitch, std::initializer_list<int> inOffsets, int inProgram = PIANO) {
+		std::vector<NoteEvent> notes;
+		double t = 0.0;
+		for (const int offset: inOffsets) {
+			const double duration = (offset == 0 || offset == 7) ? 1.5 : 0.6;
+			notes.push_back(makeNote(t, t + duration, inRootPitch + offset, inProgram));
+			t += duration;
+		}
+		return notes;
+	};
+
+	const auto c_maj = KeyDetector::detect(scale_notes(60, {0, 2, 4, 5, 7, 9, 11, 12}));
+	check(c_maj.has_value() && c_maj->format() == "C maj", "detects C major");
+
+	const auto a_min = KeyDetector::detect(scale_notes(57, {0, 2, 3, 5, 7, 8, 10, 12}));
+	check(a_min.has_value() && a_min->format() == "A min", "detects A minor");
+
+	const auto bb_maj = KeyDetector::detect(scale_notes(58, {0, 2, 4, 5, 7, 9, 11, 12}));
+	check(bb_maj.has_value() && bb_maj->format() == "Bb maj", "uses flat spelling for Bb major");
+
+	const auto f_sharp_maj = KeyDetector::detect(scale_notes(54, {0, 2, 4, 5, 7, 9, 11, 12}));
+	check(f_sharp_maj.has_value() && f_sharp_maj->format() == "F# maj", "uses sharp spelling for F# major");
+
+	const auto c_sharp_min = KeyDetector::detect(scale_notes(61, {0, 2, 3, 5, 7, 8, 11, 12}));
+	check(c_sharp_min.has_value() && c_sharp_min->format() == "C# min", "uses sharp spelling for C# minor");
+}
+
+void testKeyDetectorWeightsDurationAndFiltersAudible()
+{
+	std::vector<NoteEvent> notes = {
+		makeNote(0.0, 4.0, 60, PIANO),
+		makeNote(0.0, 3.0, 64, PIANO),
+		makeNote(0.0, 3.5, 67, PIANO),
+		makeNote(4.0, 4.1, 61, PIANO),
+		makeNote(4.1, 4.2, 66, PIANO),
+		makeNote(0.0, 6.0, 42, BASS),
+		makeNote(0.0, 5.0, 45, BASS),
+		makeNote(0.0, 5.0, 49, BASS),
+		makeNote(0.0, 5.0, 50, BASS),
+		makeNote(0.0, 5.0, 36, DRUMS),
+		makeNote(0.5, 5.5, 38, DRUMS),
+		makeNote(1.0, 6.0, 42, DRUMS),
+	};
+
+	const auto piano_only = KeyDetector::detect(notes, [](int inProgram) { return inProgram == PIANO; });
+	check(piano_only.has_value() && piano_only->format() == "C maj",
+		"duration weighting favors sustained C major triad over brief passing tones");
+
+	const auto bass_only = KeyDetector::detect(notes, [](int inProgram) { return inProgram == BASS; });
+	check(bass_only.has_value() && bass_only->format() == "F# min",
+		"filtering by audible instruments updates detected key");
+
+	const auto drums_only = KeyDetector::detect(notes, [](int inProgram) { return inProgram == DRUMS; });
+	check(!drums_only.has_value(), "drum hits are ignored for key detection");
+
+	const auto none_audible = KeyDetector::detect(notes, [](int) { return false; });
+	check(!none_audible.has_value(), "muted mix yields no key");
+}
+
+void testKeyDetectorRejectsInsufficientOrUniformInput()
+{
+	check(!KeyDetector::detect(std::vector<NoteEvent> {}).has_value(), "empty notes yield no key");
+
+	const std::vector<NoteEvent> two_pitches = {
+		makeNote(0.0, 1.0, 60),
+		makeNote(1.0, 2.0, 67),
+		makeNote(2.0, 3.0, 72),
+	};
+	check(!KeyDetector::detect(two_pitches).has_value(), "fewer than 3 pitch classes yield no key");
+
+	const std::vector<NoteEvent> zero_durations = {
+		makeNote(0.0, 0.0, 60),
+		makeNote(1.0, 1.0, 64),
+		makeNote(2.0, 2.0, 67),
+	};
+	check(!KeyDetector::detect(zero_durations).has_value(), "zero-duration notes yield no key");
+
+	const std::array<double, 12> uniform {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+	check(!KeyDetector::detectFromPitchClassWeights(uniform).has_value(), "uniform pitch distribution yields no key");
+}
+
 } // namespace
 
 int main()
@@ -851,6 +936,10 @@ int main()
     testBarsTileTheAudioWithoutGaps();
     testBarStartsDoNotDependOnScroll();
     testVisibleBarsCoverTheClipAndStopAtTheAudio();
+
+	testKeyDetectorMajorAndMinorWithEnharmonics();
+	testKeyDetectorWeightsDurationAndFiltersAudible();
+	testKeyDetectorRejectsInsufficientOrUniformInput();
 
     if (gFailures > 0) {
         std::printf("%d check(s) failed\n", gFailures);

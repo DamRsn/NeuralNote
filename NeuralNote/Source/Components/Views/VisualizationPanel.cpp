@@ -108,6 +108,15 @@ void VisualizationPanel::_applyVerticalZoom()
     // The range has to be re-derived against the new key height: zoomed out it widens to fill the
     // column, zoomed in it stays on the content and the keyboard scrolls within it.
     _updateNoteRange(mProcessor->getState() != Processing);
+
+	if (stored < 0.0) {
+		const InstrumentMixer* mixer = mProcessor->getInstrumentMixer();
+		const PianoRollRange::DisplayRange range = mKeyboard.getDisplayedRange();
+		const int centre_pitch = mixer->getTotalNoteCount() > 0
+			? (mixer->getLowestPitch() + mixer->getHighestPitch()) / 2
+			: (range.lowNote + range.highNote) / 2;
+		mKeyboard.centerOnPitch(centre_pitch);
+	}
 }
 
 void VisualizationPanel::changeListenerCallback(juce::ChangeBroadcaster* inSource)
@@ -254,6 +263,7 @@ bool VisualizationPanel::isModelPanelVisible() const
 void VisualizationPanel::repaintPianoRoll()
 {
     mCombinedAudioMidiRegion.repaintPianoRoll();
+	mStatusBar.refreshDetectedKey();
 }
 
 Viewport& VisualizationPanel::getAudioMidiViewport()
