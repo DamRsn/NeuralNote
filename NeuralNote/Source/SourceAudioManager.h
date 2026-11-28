@@ -80,6 +80,9 @@ public:
      */
     AudioBuffer<float>& getSourceAudioForPlayback();
 
+    /** @return The sample rate of the buffer getSourceAudioForPlayback returns. */
+    double getSourceAudioSampleRate() const;
+
     /**
      * Return a string containing the filename of the dropped audio file.
      * If the source audio was recorded (not loaded from file), an empty string is returned.

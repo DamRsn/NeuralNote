@@ -51,14 +51,16 @@ constexpr int POLL_HZ = 10;
 const juce::String VERIFYING_CAPTION = "VERIFYING";
 constexpr float CAPTION_TRACKING = 0.06f;
 
-/** Relative to the other sizes: they are the same model at three scales. */
+/** Relative to the other rows: dettato, the default, and three sizes of MuScriptor. */
 juce::String hintFor(ModelSize inModelSize)
 {
     switch (inModelSize) {
-        case ModelSize::Small:
-            return "Fastest";
-        case ModelSize::Medium:
+        case ModelSize::Dettato:
             return "Recommended";
+        case ModelSize::Small:
+            return "Fast";
+        case ModelSize::Medium:
+            return "Balanced";
         case ModelSize::Large:
             return "Largest, slowest";
     }
@@ -181,6 +183,8 @@ void ModelDownloadPanel::timerCallback()
     const bool installed_changed = has_installed_model != mHasInstalledModel;
     mHasInstalledModel = has_installed_model;
 
+    const std::optional<ModelSize> in_use_before = mInUse;
+
     // The title follows whether anything is installed, so that alone is worth a repaint.
     if (_updateRows(false) || installed_changed) {
         repaint();
@@ -189,12 +193,17 @@ void ModelDownloadPanel::timerCallback()
     if (installed_changed && onInstalledModelsChanged != nullptr) {
         onInstalledModelsChanged();
     }
+
+    if (mInUse != in_use_before && onModelInUseChanged != nullptr) {
+        onModelInUseChanged();
+    }
 }
 
 bool ModelDownloadPanel::_updateRows(bool inForce)
 {
     bool changed = inForce;
     const std::optional<ModelSize> in_use = NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize());
+    mInUse = in_use;
 
     for (auto& row: mRows) {
         ModelDownloader::Status status = mProcessor.getModelDownloader().getStatus(row->modelSize);

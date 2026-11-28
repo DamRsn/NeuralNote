@@ -298,6 +298,9 @@ license, reproduced in full below.
 The MuScriptor model weights are not part of NeuralNote. They are downloaded separately and
 are licensed CC BY-NC 4.0 by Kyutai and Mirelo: https://creativecommons.org/licenses/by-nc/4.0/
 
+The Dettato model weights are not part of NeuralNote either. They are downloaded separately and
+are licensed Apache-2.0 by KobiMusic: https://huggingface.co/kobimusic/dettato-gguf
+
 ================================================================================
 VST3 SDK (bundled with JUCE)
 https://github.com/steinbergmedia/vst3sdk
@@ -694,6 +697,78 @@ EXEMPLARY, OR CONSEQUENTIAL DAMAGES OR OTHER LIABILITY, WHETHER IN AN
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE
 SOFTWARE.
+
+================================================================================
+dettato.cpp
+https://github.com/hidude562/dettato.cpp
+License: Apache-2.0
+================================================================================
+
+dettato.cpp
+Copyright 2026 KobiMusic
+
+This product is a C++/ggml port of Dettato by KobiMusic (https://github.com/kobimusic/dettato), Apache-2.0,
+and runs its model weights (https://huggingface.co/kobimusic), Apache-2.0.
+
+It includes pocketfft (cpp/third_party/pocketfft), BSD-3-Clause (cpp/third_party/pocketfft/LICENSE.md):
+  Copyright (C) 2010-2024 Max-Planck-Society
+  Copyright (C) 2019-2020 Peter Bell
+  For the odd-sized DCT-IV transforms: Copyright (C) 2003, 2007-14 Matteo Frigo,
+  Copyright (C) 2003, 2007-14 Massachusetts Institute of Technology
+  For the prev_good_size search: Copyright (C) 2024 Tan Ping Liang, Peter Bell
+  For the safeguards against integer overflow in good_size search: Copyright (C) 2024 Cris Luengo
+  (as in the header of pocketfft_hdronly.h; LICENSE.md carries an older copyright line)
+
+It is built against ggml (https://github.com/ggml-org/ggml), MIT License, which the build fetches; the test suite
+fetches Catch2 (https://github.com/catchorg/Catch2), Boost Software License 1.0.
+
+The Apache License, Version 2.0, is reproduced in full at the top of this file.
+
+================================================================================
+pocketfft (via dettato.cpp)
+https://github.com/mreineck/pocketfft
+License: BSD-3-Clause
+================================================================================
+
+Copyright (C) 2010-2024 Max-Planck-Society
+Copyright (C) 2019-2020 Peter Bell
+
+For the odd-sized DCT-IV transforms:
+  Copyright (C) 2003, 2007-14 Matteo Frigo
+  Copyright (C) 2003, 2007-14 Massachusetts Institute of Technology
+
+For the prev_good_size search:
+  Copyright (C) 2024 Tan Ping Liang, Peter Bell
+
+For the safeguards against integer overflow in good_size search:
+  Copyright (C) 2024 Cris Luengo
+
+Authors: Martin Reinecke, Peter Bell
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this
+  list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
+* Neither the name of the copyright holder nor the names of its contributors may
+  be used to endorse or promote products derived from this software without
+  specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ================================================================================
 minimp3

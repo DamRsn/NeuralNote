@@ -48,6 +48,9 @@ public:
 
     bool isModelPanelVisible() const;
 
+    /** Called when the model transcriptions use changes, see ModelDownloadPanel::onModelInUseChanged. */
+    std::function<void()> onModelInUseChanged;
+
     Viewport& getAudioMidiViewport();
 
     CombinedAudioMidiRegion& getCombinedAudioMidiRegion();

@@ -8,6 +8,7 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include <JuceHeader.h>
 
@@ -36,6 +37,9 @@ public:
 
     /** Called when the models directory goes from holding no checkpoint to holding one, or back. */
     std::function<void()> onInstalledModelsChanged;
+
+    /** Called when the model transcriptions use changes: picked here, or its checkpoint added or removed. */
+    std::function<void()> onModelInUseChanged;
 
     /** Called when the cross is clicked. Hiding the panel is the owner's call. */
     std::function<void()> onCloseRequested;
@@ -86,6 +90,7 @@ private:
     NnFlatButton mOpenFolderButton {"OpenModelsFolder"};
 
     bool mHasInstalledModel = false;
+    std::optional<ModelSize> mInUse;
     int mHoveredRow = -1;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModelDownloadPanel)

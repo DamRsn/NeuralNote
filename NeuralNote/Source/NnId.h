@@ -80,6 +80,10 @@ inline static Identifier TranscriptionModelSizeId = "MODEL_SIZE";
 // the microsecond.
 inline static Identifier TranscriptionNotesId = "NOTES";
 
+// Their MIDI velocities, as a JSON array in the order of NOTES. Only there when the notes do not all
+// have FIXED_NOTE_AMPLITUDE: dettato's carry their own, MuScriptor's do not.
+inline static Identifier TranscriptionVelocitiesId = "VELOCITIES";
+
 // Seconds of audio the notes cover, from the start.
 inline static Identifier FinalizedThroughId = "FINALIZED_THROUGH";
 

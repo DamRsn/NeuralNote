@@ -24,11 +24,13 @@ constexpr int PARTIAL_TRANSCRIPTION_FORMAT_VERSION = 1;
 constexpr int SAVED_TIME_DECIMAL_PLACES = 6;
 
 /**
- * Reads the notes notesToJson wrote. Any malformed entry rejects the whole list; a note starting
- * outside [0, inDuration] is dropped. The end is not bounded: a note left open at the end of the
- * audio ends 10 ms after its onset, which can be past the last sample.
+ * Reads the notes notesToJson wrote, with the velocities velocitiesToJson wrote for them. Any
+ * malformed entry rejects the whole list; a note starting outside [0, inDuration] is dropped. The
+ * end is not bounded: a note left open at the end of the audio ends 10 ms after its onset, which can
+ * be past the last sample. Without one valid velocity per note, every note gets FIXED_NOTE_AMPLITUDE.
  */
-std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson, double inDuration)
+std::optional<std::vector<NoteEvent>>
+    parseNotes(const String& inJson, const String& inVelocitiesJson, double inDuration)
 {
     const var parsed = JSON::parse(inJson);
     const Array<var>* entries = parsed.getArray();
@@ -37,11 +39,24 @@ std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson, double in
         return std::nullopt;
     }
 
+    const var parsed_velocities = JSON::parse(inVelocitiesJson);
+    const Array<var>* velocities = parsed_velocities.getArray();
+
+    const auto is_velocity = [](const var& inValue) {
+        return inValue.isInt() && static_cast<int>(inValue) >= 1 && static_cast<int>(inValue) <= 127;
+    };
+
+    if (velocities != nullptr
+        && (velocities->size() != entries->size()
+            || !std::all_of(velocities->begin(), velocities->end(), is_velocity))) {
+        velocities = nullptr;
+    }
+
     std::vector<NoteEvent> notes;
     notes.reserve(static_cast<std::size_t>(entries->size()));
 
-    for (const var& entry: *entries) {
-        const Array<var>* fields = entry.getArray();
+    for (int i = 0; i < entries->size(); i++) {
+        const Array<var>* fields = entries->getReference(i).getArray();
 
         if (fields == nullptr || fields->size() != 4) {
             return std::nullopt;
@@ -52,7 +67,8 @@ std::optional<std::vector<NoteEvent>> parseNotes(const String& inJson, double in
         note.endTime = fields->getReference(1);
         note.pitch = fields->getReference(2);
         note.program = fields->getReference(3);
-        note.amplitude = FIXED_NOTE_AMPLITUDE;
+        note.amplitude =
+            velocities != nullptr ? static_cast<int>(velocities->getReference(i)) / 127.0 : FIXED_NOTE_AMPLITUDE;
 
         const bool valid_times =
             std::isfinite(note.startTime) && std::isfinite(note.endTime) && note.endTime >= note.startTime;
@@ -84,6 +100,27 @@ String notesToJson(const std::vector<NoteEvent>& inNotes)
         JSON::FormatOptions {}.withSpacing(JSON::Spacing::none).withMaxDecimalPlaces(SAVED_TIME_DECIMAL_PLACES);
 
     return JSON::toString(entries, format);
+}
+
+/** The notes' MIDI velocities, in their order. Empty if they all have FIXED_NOTE_AMPLITUDE. */
+String velocitiesToJson(const std::vector<NoteEvent>& inNotes)
+{
+    const bool all_fixed = std::all_of(inNotes.begin(), inNotes.end(), [](const NoteEvent& inNote) {
+        return exactlyEqual(inNote.amplitude, FIXED_NOTE_AMPLITUDE);
+    });
+
+    if (all_fixed) {
+        return {};
+    }
+
+    Array<var> velocities;
+    velocities.ensureStorageAllocated(static_cast<int>(inNotes.size()));
+
+    for (const NoteEvent& note: inNotes) {
+        velocities.add(jlimit(1, 127, roundToInt(note.amplitude * 127.0)));
+    }
+
+    return JSON::toString(velocities, JSON::FormatOptions {}.withSpacing(JSON::Spacing::none));
 }
 
 const char* outcomeToString(MuscriptorEngine::Outcome inOutcome)
@@ -120,6 +157,7 @@ TranscriptionManager::~TranscriptionManager()
     // enough for GPU backend initialisation, which cannot be interrupted and took about 20 s on
     // the first run after a new build.
     mMuscriptorEngine.cancel();
+    mDettatoEngine.cancel();
 
     const bool jobs_finished = mThreadPool.removeAllJobs(true, 30000);
     jassertquiet(jobs_finished);
@@ -141,6 +179,11 @@ void TranscriptionManager::timerCallback()
 
 void TranscriptionManager::_drainEngine()
 {
+    // dettato has nothing to hand over before it finishes.
+    if (_isDettatoJob()) {
+        return;
+    }
+
     // Gated on the drain having something, so this runs at the model's pace -- once per 5 s of
     // audio -- rather than at the timer's.
     if (mMuscriptorEngine.drainNewNotes(mRawNotes, mFinalizedThrough, mResumePoint, mResumeProgress)) {
@@ -152,14 +195,22 @@ void TranscriptionManager::_drainEngine()
 
 void TranscriptionManager::_runModel()
 {
-    mJobOutcome = mMuscriptorEngine.transcribeToMIDI(
-        mJobModelSize,
-        mJobDevice,
-        mProcessor->getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
-        mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired(),
-        mJobInstruments,
-        mJobResumeFrom,
-        mJobStartProgress);
+    if (_isDettatoJob()) {
+        mJobOutcome = mDettatoEngine.transcribeToMIDI(NNFileUtils::getModelFile(mJobModelSize),
+                                                      mJobDevice,
+                                                      mJobAudio.data(),
+                                                      static_cast<int>(mJobAudio.size()),
+                                                      mJobAudioSampleRate);
+    } else {
+        mJobOutcome = mMuscriptorEngine.transcribeToMIDI(
+            mJobModelSize,
+            mJobDevice,
+            mProcessor->getSourceAudioManager()->getDownsampledSourceAudioForTranscription().getWritePointer(0),
+            mProcessor->getSourceAudioManager()->getNumSamplesDownAcquired(),
+            mJobInstruments,
+            mJobResumeFrom,
+            mJobStartProgress);
+    }
 
     // Post-processing and the synth handoff belong to the message thread, which has been doing
     // both per chunk while this ran. All that is left here is to say so.
@@ -179,10 +230,13 @@ void TranscriptionManager::_handleFinishedJob()
     // state this manager owns from here on. Dropped before clear() runs below, which asserts it.
     mJobActive = false;
 
+    // The job is done with its copy of the audio.
+    mJobAudio = {};
+
     if (mJobOutcome == Outcome::Success) {
         // Replaces what this job streamed rather than extending it: transcribe()'s own result is
         // authoritative, and the streamed one is missing any note the model never closed.
-        auto final_notes = mMuscriptorEngine.takeFinalNotes();
+        auto final_notes = _isDettatoJob() ? mDettatoEngine.takeFinalNotes() : mMuscriptorEngine.takeFinalNotes();
         mRawNotes.resize(mNotesBeforeJob);
         mRawNotes.insert(mRawNotes.end(), final_notes.begin(), final_notes.end());
         mFinalizedThrough = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
@@ -197,11 +251,13 @@ void TranscriptionManager::_handleFinishedJob()
     }
 
     // Read before clearTranscription(), which resets the engine and with it the message.
-    const String reason = mMuscriptorEngine.getLastErrorMessage();
+    const String reason =
+        _isDettatoJob() ? mDettatoEngine.getLastErrorMessage() : mMuscriptorEngine.getLastErrorMessage();
     bool keep = !mDiscardOnStop && mJobOutcome != Outcome::CannotResume;
 
     if (keep) {
         // Whatever landed between the last timer tick and the stop belongs to the paused transcription.
+        // A dettato job leaves nothing, so pausing it ends as discarding it does.
         _drainEngine();
         keep = !mResumePoint.empty();
     }
@@ -317,7 +373,7 @@ MuscriptorEngine::Progress TranscriptionManager::getTranscriptionProgress() cons
         return {MuscriptorEngine::Phase::Transcribing, mResumeProgress};
     }
 
-    return mMuscriptorEngine.getProgress();
+    return _isDettatoJob() ? mDettatoEngine.getProgress() : mMuscriptorEngine.getProgress();
 }
 
 double TranscriptionManager::getFinalizedThrough() const
@@ -329,6 +385,12 @@ void TranscriptionManager::pauseTranscription()
 {
     NnLogger::write(NnLogger::Level::Info, "TranscriptionManager: pause requested");
     mMuscriptorEngine.cancel();
+    mDettatoEngine.cancel();
+}
+
+bool TranscriptionManager::canPauseTranscription() const
+{
+    return !_isDettatoJob();
 }
 
 void TranscriptionManager::discardTranscription()
@@ -336,11 +398,12 @@ void TranscriptionManager::discardTranscription()
     NnLogger::write(NnLogger::Level::Info, "TranscriptionManager: discard requested");
     mDiscardOnStop = true;
     mMuscriptorEngine.cancel();
+    mDettatoEngine.cancel();
 }
 
 bool TranscriptionManager::isCancelRequested() const
 {
-    return mMuscriptorEngine.isCancelRequested();
+    return mMuscriptorEngine.isCancelRequested() || mDettatoEngine.isCancelRequested();
 }
 
 void TranscriptionManager::clear()
@@ -350,6 +413,7 @@ void TranscriptionManager::clear()
     jassert(!mJobActive.load());
 
     mMuscriptorEngine.reset();
+    mDettatoEngine.reset();
     mJobFinished = false;
     mRawNotes.clear();
     mRawNotes.shrink_to_fit();
@@ -463,6 +527,7 @@ void TranscriptionManager::_launchJob()
     // this order means no click can be discarded, without having to argue about which thread
     // observes what.
     mMuscriptorEngine.reset();
+    mDettatoEngine.reset();
     mDiscardOnStop = false;
 
     // Read here, not in the job: the selection lives on the state tree, which belongs to this
@@ -470,6 +535,25 @@ void TranscriptionManager::_launchJob()
     // resumed run gets the selection its resume point was made with.
     mJobInstruments = InstrumentSelection::get(mProcessor->getValueTree());
     mJobDevice = NnGlobalSettings::getComputeDevice();
+
+    if (_isDettatoJob()) {
+        // dettato takes no selection: it names the instruments it hears.
+        mJobInstruments.clear();
+
+        // The whole mix in one channel, as the 16 kHz copy is.
+        const AudioBuffer<float>& source = mProcessor->getSourceAudioManager()->getSourceAudioForPlayback();
+        const int num_channels = source.getNumChannels();
+
+        mJobAudioSampleRate = mProcessor->getSourceAudioManager()->getSourceAudioSampleRate();
+        mJobAudio.assign(static_cast<std::size_t>(source.getNumSamples()), 0.0f);
+
+        for (int channel = 0; channel < num_channels; channel++) {
+            FloatVectorOperations::addWithMultiply(mJobAudio.data(),
+                                                   source.getReadPointer(channel),
+                                                   1.0f / static_cast<float>(num_channels),
+                                                   source.getNumSamples());
+        }
+    }
 
     NnLogger::write(
         NnLogger::Level::Info,
@@ -502,6 +586,7 @@ ValueTree TranscriptionManager::createStateTree() const
 
     if (!mSavedNotesJson.has_value()) {
         mSavedNotesJson = notesToJson(saved.notes);
+        mSavedVelocitiesJson = velocitiesToJson(saved.notes);
     }
 
     const bool finished = saved.resumePoint.empty();
@@ -514,6 +599,10 @@ ValueTree TranscriptionManager::createStateTree() const
                      nullptr);
     tree.setProperty(NnId::TranscriptionModelSizeId, modelSizeToString(saved.modelSize), nullptr);
     tree.setProperty(NnId::TranscriptionNotesId, *mSavedNotesJson, nullptr);
+
+    if (mSavedVelocitiesJson.isNotEmpty()) {
+        tree.setProperty(NnId::TranscriptionVelocitiesId, mSavedVelocitiesJson, nullptr);
+    }
 
     if (!finished) {
         tree.setProperty(NnId::FinalizedThroughId, saved.finalizedThrough, nullptr);
@@ -557,7 +646,9 @@ void TranscriptionManager::restoreFromStateTree(const ValueTree& inFullState)
     }
 
     const double duration = mProcessor->getSourceAudioManager()->getAudioSampleDuration();
-    auto notes = parseNotes(tree.getProperty(NnId::TranscriptionNotesId).toString(), duration);
+    auto notes = parseNotes(tree.getProperty(NnId::TranscriptionNotesId).toString(),
+                            tree.getProperty(NnId::TranscriptionVelocitiesId).toString(),
+                            duration);
 
     const std::optional<ModelSize> model_size =
         modelSizeFromString(tree.getProperty(NnId::TranscriptionModelSizeId).toString().toStdString());
@@ -568,7 +659,9 @@ void TranscriptionManager::restoreFromStateTree(const ValueTree& inFullState)
     }
 
     mRawNotes = std::move(*notes);
-    mTranscriptionModelSize = model_size.value_or(DEFAULT_MODEL_SIZE);
+    // A model this version does not know, from a newer one, is labelled Medium, as it was before
+    // dettato became the default.
+    mTranscriptionModelSize = model_size.value_or(ModelSize::Medium);
 
     if (finished) {
         mFinalizedThrough = duration;

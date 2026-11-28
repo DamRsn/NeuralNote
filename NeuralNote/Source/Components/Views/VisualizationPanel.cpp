@@ -8,6 +8,7 @@
 #include "NeuralNoteTooltips.h"
 #include "NNFileUtils.h"
 #include "NnFonts.h"
+#include "NnGlobalSettings.h"
 #include "NnIcons.h"
 #include "NnLook.h"
 
@@ -54,6 +55,11 @@ VisualizationPanel::VisualizationPanel(NeuralNoteAudioProcessor* processor)
 
     mModelDownloadPanel.onInstalledModelsChanged = [this] { _layOutTranscribeButton(); };
     mModelDownloadPanel.onCloseRequested = [this] { setModelPanelOpen(false); };
+    mModelDownloadPanel.onModelInUseChanged = [this] {
+        if (onModelInUseChanged != nullptr) {
+            onModelInUseChanged();
+        }
+    };
     addChildComponent(mModelDownloadPanel);
 
     mStatusBar.onVerticalZoomChange = [this](float inNorm) {
@@ -197,9 +203,14 @@ void VisualizationPanel::_layOutTranscribeButton()
 
     // Says what it is about to do, because the picker sits across the window in the sidebar and
     // the difference between a constrained run and a free one is minutes of work either way. With
-    // no audio there is nothing to be specific about, so it names the action only.
-    const auto instrument_count =
-        state == AudioLoaded ? static_cast<int>(InstrumentSelection::get(mProcessor->getValueTree()).size()) : 0;
+    // no audio there is nothing to be specific about, so it names the action only. So does dettato,
+    // which takes no selection.
+    const bool model_takes_selection =
+        NNFileUtils::getInstalledModelSize(NnGlobalSettings::getModelSize()) != ModelSize::Dettato;
+
+    const auto instrument_count = state == AudioLoaded && model_takes_selection
+                                      ? static_cast<int>(InstrumentSelection::get(mProcessor->getValueTree()).size())
+                                      : 0;
 
     mTranscribeButton.setLabel(instrument_count == 0 ? juce::String("Transcribe")
                                : instrument_count == 1

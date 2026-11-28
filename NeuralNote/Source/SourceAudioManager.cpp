@@ -416,6 +416,11 @@ AudioBuffer<float>& SourceAudioManager::getSourceAudioForPlayback()
     return mSourceAudio;
 }
 
+double SourceAudioManager::getSourceAudioSampleRate() const
+{
+    return mSourceAudioSampleRate;
+}
+
 String SourceAudioManager::getDroppedFilename() const
 {
     return mDroppedFilename;

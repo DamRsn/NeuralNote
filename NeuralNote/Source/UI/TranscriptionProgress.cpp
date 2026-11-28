@@ -51,15 +51,17 @@ TranscriptionProgress::TranscriptionProgress(NeuralNoteAudioProcessor& inProcess
 {
     mPauseResumeButton.setCornerRadius(4.0f);
     mPauseResumeButton.setWantsKeyboardFocus(false);
-    _updateButton(false);
+    _updateButton(false, true);
 
     // Not guarded on mIsCancelling: pausing is idempotent, and a button that stops responding to
     // the second click is a button the user has to assume is broken.
     mPauseResumeButton.onClick = [this] {
         auto* manager = mProcessor.getTranscriptionManager();
 
-        if (mProcessor.getState() == Processing) {
+        if (mProcessor.getState() == Processing && manager->canPauseTranscription()) {
             manager->pauseTranscription();
+        } else if (mProcessor.getState() == Processing) {
+            manager->discardTranscription();
         } else if (mProcessor.getState() == Paused) {
             manager->resumeTranscription();
         }
@@ -68,8 +70,15 @@ TranscriptionProgress::TranscriptionProgress(NeuralNoteAudioProcessor& inProcess
     addAndMakeVisible(mPauseResumeButton);
 }
 
-void TranscriptionProgress::_updateButton(bool inIsPaused)
+void TranscriptionProgress::_updateButton(bool inIsPaused, bool inCanPause)
 {
+    if (!inIsPaused && !inCanPause) {
+        mPauseResumeButton.setIcon(
+            nn::icons::crossStroked, NnFlatButton::IconStyle::stroked, nn::metrics::cancelGlyphSize);
+        mPauseResumeButton.setTooltip(NeuralNoteTooltips::stop_transcription);
+        return;
+    }
+
     mPauseResumeButton.setIcon(inIsPaused ? nn::icons::play : nn::icons::pause,
                                NnFlatButton::IconStyle::filled,
                                static_cast<float>(nn::metrics::pauseResumeGlyphSize));
@@ -147,12 +156,13 @@ void TranscriptionProgress::_onVBlankCallback()
 
     if (state != Processing && state != Paused) {
         // The run is over: drop the progress and the pulse, so the next one starts fresh.
-        if (mIsPaused) {
-            _updateButton(false);
+        if (mIsPaused || !mCanPause) {
+            _updateButton(false, true);
         }
 
         mIsCancelling = false;
         mIsPaused = false;
+        mCanPause = true;
         mDisplayedPhase = MuscriptorEngine::Phase::LoadingModel;
         mDisplayedPercent = -1;
         mPulse = 1.0f;
@@ -161,6 +171,7 @@ void TranscriptionProgress::_onVBlankCallback()
 
     const auto* manager = mProcessor.getTranscriptionManager();
     const bool is_paused = state == Paused;
+    const bool can_pause = is_paused || manager->canPauseTranscription();
 
     const MuscriptorEngine::Progress progress = manager->getTranscriptionProgress();
     float pulse = pulseAt(static_cast<double>(juce::Time::getMillisecondCounter()));
@@ -174,16 +185,17 @@ void TranscriptionProgress::_onVBlankCallback()
 
     const int percent = progress.fraction < 0.0f ? -1 : juce::roundToInt(100.0f * progress.fraction);
 
-    if (is_paused != mIsPaused) {
-        _updateButton(is_paused);
+    if (is_paused != mIsPaused || can_pause != mCanPause) {
+        _updateButton(is_paused, can_pause);
     }
 
     if (progress.phase == mDisplayedPhase && percent == mDisplayedPercent && juce::approximatelyEqual(pulse, mPulse)
-        && is_cancelling == mIsCancelling && is_paused == mIsPaused) {
+        && is_cancelling == mIsCancelling && is_paused == mIsPaused && can_pause == mCanPause) {
         return;
     }
 
     mIsPaused = is_paused;
+    mCanPause = can_pause;
     mIsCancelling = is_cancelling;
     mDisplayedPhase = progress.phase;
     mDisplayedPercent = percent;

@@ -47,6 +47,9 @@ NeuralNoteMainView::NeuralNoteMainView(NeuralNoteAudioProcessor& processor)
     // Off this thread: the first listing initialises the GPU backends.
     ComputeDevices::prepare();
 
+    // Whether instruments can be picked depends on the model.
+    mVisualizationPanel.onModelInUseChanged = [this] { updateEnablements(); };
+
     mTopBar.getModelButton().onClick = [this] {
         mVisualizationPanel.setModelPanelOpen(!mVisualizationPanel.isModelPanelVisible());
         mTopBar.syncModelButton(mVisualizationPanel.isModelPanelVisible());
@@ -207,9 +210,10 @@ void NeuralNoteMainView::updateEnablements()
     mSidebar.updateEnablements();
     mVisualizationPanel.updateEnablements();
 
-    // The selection is fixed once a transcription exists, and the "+" goes away with it. A menu
-    // left open over that would be offering a choice that no longer applies.
-    if (mProcessor.hasTranscription() && mInstrumentMenu.isVisible()) {
+    // The selection is fixed once a transcription exists, and the "+" goes away with it, as it does
+    // for a model that takes none. A menu left open over that would be offering a choice that no
+    // longer applies.
+    if (!mSidebar.canPickInstruments() && mInstrumentMenu.isVisible()) {
         _setInstrumentMenuOpen(false);
     }
 }

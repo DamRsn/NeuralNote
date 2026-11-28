@@ -61,7 +61,10 @@ bool isModelInstalled(ModelSize inModelSize);
 
 bool isAnyModelInstalled();
 
-/** inPreferred if it is installed, otherwise another installed size, or nothing if there is none. */
+/**
+ * inPreferred if it is installed, otherwise another installed size: the default first, then Medium.
+ * Nothing if there is none.
+ */
 std::optional<ModelSize> getInstalledModelSize(ModelSize inPreferred);
 
 /**

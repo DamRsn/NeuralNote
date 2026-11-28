@@ -49,12 +49,15 @@ NeuralNote is a simple AudioFX plugin (VST®3/AU/Standalone app) that you apply 
   - Or drop an audio file on the plugin (.wav, .aiff, .flac, .mp3, .ogg (vorbis) and, on macOS, .m4a are supported).
 - Select the instruments to transcribe in the left panel, or select `Automatic` to let the model detect them.
   - Transcriptions tend to be better when the model is given the correct set of instruments.
-- Click `Transcribe`. The transcription runs in the background, and the MIDI fills into the piano roll as it is
-  decoded. A progress bar is shown while it runs.
-  - Pause it with the button next to the progress bar, and resume it later from where it stopped, even after closing
-    and reopening the plugin or your DAW session. The bin button discards the transcription.
-- Click play to listen to the result without waiting for the transcription to finish. Only the part decoded so far
-  plays.
+  - Dettato always detects the instruments itself, and has no selection.
+- Click `Transcribe`. The transcription runs in the background, and a progress bar is shown while it runs. With
+  MuScriptor, the MIDI fills into the piano roll as it is decoded. With Dettato, it appears when the transcription
+  finishes.
+  - With MuScriptor, pause it with the button next to the progress bar, and resume it later from where it stopped,
+    even after closing and reopening the plugin or your DAW session. A Dettato transcription can be stopped with that
+    button, but not resumed. The bin button discards the transcription.
+- Click play to listen to the result. With MuScriptor, you don't have to wait for the transcription to finish: the
+  part decoded so far plays.
   - Adjust the mix between the source audio and the synthesized transcription.
   - Adjust the level of each instrument.
 - When you're happy with the result, drag and drop the MIDI from the plugin onto a MIDI track, or save the MIDI file
@@ -62,10 +65,19 @@ NeuralNote is a simple AudioFX plugin (VST®3/AU/Standalone app) that you apply 
 
 ## Models and performance
 
-MuScriptor comes in three sizes, `small`, `medium` and `large`, which trade speed for quality. NeuralNote downloads
-them as GGUF files from [`DamRsn/muscriptor-gguf`](https://huggingface.co/DamRsn/muscriptor-gguf) on Hugging Face.
-When no model is installed, all three sizes are available to download. The Model button in the top bar lets you
-switch between installed models, download other sizes, and open the folder where they are stored.
+NeuralNote transcribes with one of two models:
+
+- **Dettato**, the default, from [KobiMusic](https://kobi.music) ([code](https://github.com/kobimusic/dettato),
+  [checkpoints](https://huggingface.co/kobimusic/dettato-gguf)). Its four networks, 28M parameters in all, are a single
+  74 MB download. It finds the instruments in the mix by itself, and it doesn't stream: its notes appear when the
+  transcription finishes, and a stopped transcription starts over.
+- **MuScriptor** comes in three sizes, `small`, `medium` and `large`, which trade speed for quality.
+
+NeuralNote downloads them as GGUF files from Hugging Face: Dettato from
+[`kobimusic/dettato-gguf`](https://huggingface.co/kobimusic/dettato-gguf), MuScriptor from
+[`DamRsn/muscriptor-gguf`](https://huggingface.co/DamRsn/muscriptor-gguf). When no model is installed, all of them are
+available to download. The Model button in the top bar lets you switch between installed models, download others, and
+open the folder where they are stored.
 
 | OS      | Models folder                 |
 | ------- | ----------------------------- |
@@ -73,10 +85,11 @@ switch between installed models, download other sizes, and open the folder where
 | Windows | `%APPDATA%\NeuralNote\models` |
 | Linux   | `~/.config/NeuralNote/models` |
 
-The downloads are about 210 MB for `small`, 620 MB for `medium` and 2.7 GB for `large`.
+The downloads are about 74 MB for Dettato, and 210 MB for `small`, 620 MB for `medium` and 2.7 GB for `large`.
 
-You can also put a model file in that folder by hand. Use a file from `v1/` of the
-[HF repo](https://huggingface.co/DamRsn/muscriptor-gguf), unchanged and with its original name (e.g.
+You can also put a model file in that folder by hand. Use `dettato-f16.gguf` from
+[`kobimusic/dettato-gguf`](https://huggingface.co/kobimusic/dettato-gguf), or a file from `v1/` of
+[`DamRsn/muscriptor-gguf`](https://huggingface.co/DamRsn/muscriptor-gguf), unchanged and with its original name (e.g.
 `muscriptor-medium-f16.gguf`). NeuralNote only picks up files whose name and size match the ones it downloads.
 
 You can remove a model by deleting it from this folder, and re-download it at any time.
@@ -87,8 +100,9 @@ through Metal on macOS and Vulkan on Windows and Linux. A GPU is strongly recomm
 the CPU. The choice applies from the next transcription, and GPUs added or removed later are listed after restarting
 NeuralNote (or your DAW). Only a few GPUs have been tested so far. If transcription fails, gives wrong results or is
 unexpectedly slow on your machine, please open an issue, either [here](https://github.com/DamRsn/NeuralNote/issues) or
-in [muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp/issues) if the problem is in the engine itself. Please
-include your OS, GPU and model size.
+in [muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp/issues) or
+[dettato.cpp](https://github.com/hidude562/dettato.cpp/issues) if the problem is in the engine itself. Please include
+your OS, GPU and model.
 
 Approximate real-time factors measured on an Apple M1 Pro (above 1× means faster than real time):
 
@@ -100,6 +114,9 @@ Approximate real-time factors measured on an Apple M1 Pro (above 1× means faste
 
 See [muscriptor.cpp's performance notes](https://github.com/DamRsn/muscriptor.cpp/blob/main/docs/PERFORMANCE.md) for
 details.
+
+Dettato has not been timed on a Mac yet. On Linux with an NVIDIA RTX 5060 (Vulkan), NeuralNote transcribes a 4 minute
+song with Dettato in about 17 seconds (~14×), and with `small` in about 36 seconds (~7×).
 
 ## Build from source
 
@@ -165,14 +182,20 @@ On Windows, the Standalone app supports ASIO devices. Distributing a build with 
 [ASIO license agreement](https://www.steinberg.net/developers/prorietary-sdk/). To build without it, configure with
 `-DNEURALNOTE_ASIO=OFF`.
 
-## Reuse NeuralNote's transcription engine
+## Reuse NeuralNote's transcription engines
 
-The transcription engine is a separate, self-contained repo:
+MuScriptor's transcription engine is a separate, self-contained repo:
 [muscriptor.cpp](https://github.com/DamRsn/muscriptor.cpp). It is a C++/ggml port of MuScriptor, included here as a
 git submodule (`ThirdParty/muscriptor.cpp`) and linked as a static library. It takes 16 kHz mono float32 audio and
 returns note events. See its [`docs/API.md`](https://github.com/DamRsn/muscriptor.cpp/blob/main/docs/API.md) for the
 public API. The GGUF weights it loads are available on
 [Hugging Face](https://huggingface.co/DamRsn/muscriptor-gguf) (see [License](#license)).
+
+Dettato's is [dettato.cpp](https://github.com/hidude562/dettato.cpp), a C++/ggml port of Dettato with an API close to
+muscriptor.cpp's, included the same way (`ThirdParty/dettato.cpp`) and built on the same ggml. It takes mono float32
+audio at 16 kHz or more and returns notes grouped into instrument tracks. See its
+[`docs/API.md`](https://github.com/hidude562/dettato.cpp/blob/main/docs/API.md). The GGUF weights it loads are on
+[Hugging Face](https://huggingface.co/kobimusic/dettato-gguf).
 
 ## Roadmap
 
@@ -195,6 +218,9 @@ NeuralNote's code is published under the **Apache-2.0** license. See the [licens
 [Hugging Face](https://huggingface.co/DamRsn/muscriptor-gguf) under that same license. They may only be used
 non-commercially. The Apache-2.0 license covers NeuralNote's code only, not the weights.
 
+The Dettato model weights were released by KobiMusic under the Apache-2.0 license, and are downloaded from
+[Hugging Face](https://huggingface.co/kobimusic/dettato-gguf).
+
 #### Third-party libraries and assets
 
 Their full license notices are in [`Installers/license.txt`](Installers/license.txt).
@@ -206,6 +232,9 @@ Their full license notices are in [`Installers/license.txt`](Installers/license.
 - [ggml](https://github.com/ggml-org/ggml) (MIT license, fetched by muscriptor.cpp)
 - [PFFFT](https://bitbucket.org/jpommier/pffft) (BSD-style license, bundled in muscriptor.cpp)
 - [MuScriptor](https://github.com/muscriptor/muscriptor) model weights (CC BY-NC 4.0, see above)
+- [dettato.cpp](https://github.com/hidude562/dettato.cpp) (Apache-2.0 license)
+- [pocketfft](https://github.com/mreineck/pocketfft) (BSD-3-Clause license, bundled in dettato.cpp)
+- [Dettato](https://github.com/kobimusic/dettato) model weights (Apache-2.0 license)
 - [TinySoundFont](https://github.com/schellingb/TinySoundFont) (MIT license)
 - [MuseScore_General](https://ftp.osuosl.org/pub/musescore/soundfont/MuseScore_General/) soundfont (MIT license)
 - [FluidR3Mono_GM](https://github.com/musescore/MuseScore/tree/v2.3.2/share/sound) soundfont (MIT license)

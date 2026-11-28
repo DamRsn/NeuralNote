@@ -14,7 +14,8 @@ class NeuralNoteAudioProcessor;
 
 /**
  * What an unfinished transcription looks like: a caption, a bar, a percentage, and a button that
- * pauses it while it runs and resumes it once paused.
+ * pauses it while it runs and resumes it once paused. A run that cannot be paused, dettato's, gets
+ * a button that stops it instead.
  *
  * Lives in the status bar and is never modal -- the roll fills in as the run goes, so nothing may
  * cover it.
@@ -35,8 +36,8 @@ private:
     /** Polls the engine's progress; only repaints when the phase, the percentage or the pulse moved. */
     void _onVBlankCallback();
 
-    /** Shows pause while running and resume while paused. */
-    void _updateButton(bool inIsPaused);
+    /** Shows pause while running, or stop if the run cannot pause, and resume while paused. */
+    void _updateButton(bool inIsPaused, bool inCanPause);
 
     NeuralNoteAudioProcessor& mProcessor;
 
@@ -50,6 +51,9 @@ private:
     bool mIsCancelling = false;
 
     bool mIsPaused = false;
+
+    // Whether the running transcription can be paused, rather than only stopped.
+    bool mCanPause = true;
 
     MuscriptorEngine::Phase mDisplayedPhase = MuscriptorEngine::Phase::LoadingModel;
     // Negative while the phase has no measurable progress yet.
